@@ -21,7 +21,7 @@ export { BlockInserter, insertItem } from "./inserter";
 export { BlockTree } from "./outline";
 export { blockInfo, type BlockInfo } from "./blockMeta";
 export { blockTree, moveBlockTo, type BlockTreeItem } from "./blockops";
-export { registerDynamicBlocks, DYNAMIC_BLOCKS } from "./dynamic";
+export { registerDynamicBlocks, setDynamicPreview, DYNAMIC_BLOCKS, type DynamicPreviewData } from "./dynamic";
 export { registerBasicBlocks, Preformatted, SOCIAL_SERVICES } from "./basic";
 export { registerPattern, unregisterPattern, registeredPatterns, registerCorePatterns, insertPattern, patternNodes, PATTERN_CATEGORIES, type Pattern } from "./patterns";
 export { SyncedPattern, refreshSyncedPatterns, type PatternHost } from "./synced";

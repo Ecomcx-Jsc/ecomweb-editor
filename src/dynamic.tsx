@@ -3,6 +3,7 @@ import {
   AlignLeft, Calendar, Copyright, FileText, Globe, Heading1, Image, Languages, LayoutTemplate, List, ListX, Menu, MessageSquare, MoreHorizontal,
   PanelTop, Repeat, Search, Tags, Text, Type, User, type LucideIcon,
 } from "lucide-react";
+import { useSyncExternalStore, type ReactNode } from "react";
 import type { BlockEditProps } from "./blocks";
 import { registerBlock } from "./blocks";
 
@@ -23,6 +24,7 @@ const vi: Dict = {
   order: "Thứ tự", desc: "Mới trước", asc: "Cũ trước", layout: "Bố cục", list: "Danh sách", grid: "Lưới", columns: "Số cột",
   slug: "Phần (slug, vd header)", tagName: "Thẻ HTML", left: "Trái", center: "Giữa", right: "Phải", justify: "Đều",
   inheritSummary: "danh sách của trang", partSummary: "phần “{v}”", menuSummary: "vị trí “{v}”",
+  searchPlaceholder: "Tìm kiếm…", commentsCount: "Bình luận ({v})", noMenu: "(chưa gán menu cho vị trí này)",
 };
 const en: Dict = {
   siteTitle: "Site title", siteLogo: "Logo", siteTagline: "Tagline", navigation: "Navigation", search: "Search", languageSwitcher: "Language switcher",
@@ -37,6 +39,7 @@ const en: Dict = {
   order: "Order", desc: "Newest first", asc: "Oldest first", layout: "Layout", list: "List", grid: "Grid", columns: "Columns",
   slug: "Part (slug, e.g. header)", tagName: "HTML tag", left: "Left", center: "Center", right: "Right", justify: "Justify",
   inheritSummary: "list of the page", partSummary: "part “{v}”", menuSummary: "location “{v}”",
+  searchPlaceholder: "Search…", commentsCount: "Comments ({v})", noMenu: "(no menu assigned to this location)",
 };
 
 const s = (label: string, extra: Partial<BlockAttrSpec> = {}): BlockAttrSpec => ({ type: "string", label, ...extra });
@@ -72,6 +75,59 @@ const SPECS: Array<[string, LucideIcon, "none" | "blocks", Record<string, BlockA
   ["templatePart", PanelTop, "none", { slug: s("slug"), tagName: s("tagName", { enum: ["div", "header", "footer", "aside", "section"], default: "div" }) }],
 ];
 
+/** Dữ liệu thật của website để khối động hiện đúng nội dung trong trình soạn (Trình dựng nạp vào — không có thì chỉ hiện tên khối). */
+export interface DynamicPreviewData {
+  site?: { title?: string; tagline?: string; logo?: string | null };
+  /** Tên các mục menu theo vị trí ("primary" → ["Trang chủ", "Giới thiệu"]). */
+  menus?: Record<string, string[]>;
+  /** Bài / trang mẫu đang xem trong khung website. */
+  post?: { title?: string; date?: string; author?: string; excerpt?: string; content?: string; image?: string | null; terms?: string[]; comments?: number };
+  languages?: string[];
+}
+let previewData: DynamicPreviewData = {};
+const previewListeners = new Set<() => void>();
+/** Nạp dữ liệu xem trước cho khối động (mọi trình soạn đang mở vẽ lại ngay). */
+export function setDynamicPreview(data: DynamicPreviewData) { previewData = data; previewListeners.forEach((f) => f()); }
+const usePreviewData = () => useSyncExternalStore((cb) => { previewListeners.add(cb); return () => { previewListeners.delete(cb); }; }, () => previewData);
+
+/** Nội dung thật của khối động (như trên website, gọn) — null khi chưa có dữ liệu. */
+function DynamicPreview({ name, attrs, t }: { name: string; attrs: Record<string, any>; t: (k: string) => string }) {
+  const d = usePreviewData();
+  const fill = (k: string, v: unknown) => t(k).replace("{v}", String(v ?? ""));
+  const align = attrs.textAlign ? { textAlign: attrs.textAlign as "left" } : undefined;
+  const heading = (level: number | undefined, text: string) => {
+    const size = [15, 26, 22, 19, 17, 15, 14][Math.max(0, Math.min(6, level ?? 0))];
+    return <div className="cms-ed-dp-heading" style={{ fontSize: size, fontWeight: level ? 700 : 500, ...align }}>{text}</div>;
+  };
+  let el: ReactNode = null;
+  switch (name) {
+    case "siteTitle": if (d.site?.title) el = heading(attrs.level ?? 0, d.site.title); break;
+    case "siteTagline": if (d.site?.tagline) el = <div style={align}>{d.site.tagline}</div>; break;
+    case "siteLogo": if (d.site) el = d.site.logo ? <img src={d.site.logo} alt="" style={{ maxHeight: 40, width: attrs.width ? Number(attrs.width) : undefined }} /> : heading(1, d.site.title ?? ""); break;
+    case "navigation": {
+      if (!d.menus) break;
+      const items = d.menus[attrs.location ?? "primary"];
+      el = items?.length
+        ? <ul className={`cms-ed-dp-menu is-${attrs.orientation === "vertical" ? "vertical" : "horizontal"}`}>{items.map((x, i) => <li key={i}>{x}</li>)}</ul>
+        : <div className="cms-ed-dp-muted">{t("noMenu")}</div>;
+      break;
+    }
+    case "search": el = <div className="cms-ed-dp-search"><span>{attrs.placeholder || t("searchPlaceholder")}</span><b>{attrs.buttonText || t("search")}</b></div>; break;
+    case "languageSwitcher": if (d.languages?.length) el = <div className="cms-ed-dp-muted">{d.languages.join(" · ")}</div>; break;
+    case "copyright": if (d.site) el = <div style={align}>© {new Date().getFullYear()} {attrs.text || d.site.title}</div>; break;
+    case "postTitle": if (d.post?.title) el = heading(attrs.level ?? 1, d.post.title); break;
+    case "postExcerpt": if (d.post?.excerpt) el = <div className="cms-ed-dp-muted" style={align}>{d.post.excerpt}</div>; break;
+    case "postDate": if (d.post?.date) el = <div className="cms-ed-dp-muted" style={align}>{d.post.date}</div>; break;
+    case "postAuthor": if (d.post?.author) el = <div className="cms-ed-dp-muted" style={align}>{d.post.author}</div>; break;
+    case "postTerms": if (d.post?.terms?.length) el = <div className="cms-ed-dp-muted" style={align}>{d.post.terms.join(attrs.separator ?? ", ")}</div>; break;
+    case "featuredImage": if (d.post?.image) el = <img src={d.post.image} alt="" className="cms-ed-dp-image" />; break;
+    case "postContent": if (d.post?.content) el = <div className="cms-ed-dp-content">{d.post.content}</div>; break;
+    case "comments": if (d.post) el = <div className="cms-ed-dp-muted">{fill("commentsCount", d.post.comments ?? 0)}</div>; break;
+    case "pagination": el = <div className="cms-ed-dp-muted">« 1 2 3 »</div>; break;
+  }
+  return el ? <div className="cms-ed-dynamic-preview" contentEditable={false}>{el}</div> : null;
+}
+
 /** Dòng tóm tắt cạnh tên khối (thuộc tính quan trọng nhất) — để nhìn là biết khối đang lấy gì. */
 function summary(name: string, t: (k: string) => string) {
   return function Summary({ attrs, children }: BlockEditProps) {
@@ -80,7 +136,7 @@ function summary(name: string, t: (k: string) => string) {
       : name === "templatePart" ? (attrs.slug ? fill("partSummary", attrs.slug) : "")
       : name === "query" ? (attrs.inherit !== false ? t("inheritSummary") : `${attrs.postType ?? "post"} · ${attrs.perPage ?? 10}`)
       : "";
-    return <>{text && <div className="cms-ed-dynamic-summary" contentEditable={false}>{text}</div>}{children}</>;
+    return <>{text && <div className="cms-ed-dynamic-summary" contentEditable={false}>{text}</div>}<DynamicPreview name={name} attrs={attrs} t={t} />{children}</>;
   };
 }
 
