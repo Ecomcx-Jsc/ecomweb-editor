@@ -25,6 +25,7 @@ import type { PatternHost } from "./synced";
 import { BlockHandle, BlockKeys } from "./handle";
 import { BlockSettingsBar, layoutItems } from "./layoutUi";
 import { BlockToolbar } from "./toolbar";
+import { OverlayBoundary } from "./boundary";
 import { CanvasHandles } from "./handles";
 import { documentStyleCss, presetsCss } from "./styleattr";
 import type { StylePresets } from "@ecomcx/ecomweb-content";
@@ -409,16 +410,16 @@ export function Editor({ initial, onChange, media, labels, extensions: localPack
   return (
     <div className={cx("cms-editor", className)}>
       {editor && <div className={cx("cms-ed-toolbar", toolbarClassName)}><Toolbar editor={editor} t={t} requestMedia={requestMedia} items={items} /></div>}
-      {editor && <SelectionMenu editor={editor} t={t} />}
+      {editor && <OverlayBoundary editor={editor} name="SelectionMenu"><SelectionMenu editor={editor} t={t} /></OverlayBoundary>}
       {editor && <DocumentStyles editor={editor} presets={presets} />}
       <EditorContent editor={editor} />
       <SlashMenu store={slash} t={t} />
-      {editor && <BlockHandle editor={editor} t={t} menuRequest={menuRequest} />}
-      {editor && <AskPopover store={asker} editor={editor} t={t} />}
-      {editor && <BlockSettingsBar editor={editor} t={t} />}
-      {editor && <BlockToolbar editor={editor} t={t} media={media} requestMedia={requestMedia} />}
-      {editor && <CanvasHandles editor={editor} t={t} />}
-      {editor && <Stats editor={editor} t={t} />}
+      {editor && <OverlayBoundary editor={editor} name="BlockHandle"><BlockHandle editor={editor} t={t} menuRequest={menuRequest} /></OverlayBoundary>}
+      {editor && <OverlayBoundary editor={editor} name="AskPopover"><AskPopover store={asker} editor={editor} t={t} /></OverlayBoundary>}
+      {editor && <OverlayBoundary editor={editor} name="BlockSettingsBar"><BlockSettingsBar editor={editor} t={t} /></OverlayBoundary>}
+      {editor && <OverlayBoundary editor={editor} name="BlockToolbar"><BlockToolbar editor={editor} t={t} media={media} requestMedia={requestMedia} /></OverlayBoundary>}
+      {editor && <OverlayBoundary editor={editor} name="CanvasHandles"><CanvasHandles editor={editor} t={t} /></OverlayBoundary>}
+      {editor && <OverlayBoundary editor={editor} name="Stats"><Stats editor={editor} t={t} /></OverlayBoundary>}
     </div>
   );
 }

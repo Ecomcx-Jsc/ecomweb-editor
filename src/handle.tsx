@@ -85,7 +85,7 @@ export function BlockHandle({ editor, t, menuRequest }: { editor: TiptapEditor; 
         if (menuOpen.current) return;
         let block = hover.current;
         // Khối đang trỏ chuột có thể đã đổi chỗ / bị xoá sau giao dịch → kiểm lại
-        if (block) { const n = editor.state.doc.nodeAt(block.pos); block = n ? blockFromPos(editor.state.doc, block.pos) : null; }
+        if (block) { const n = block.pos < editor.state.doc.content.size ? editor.state.doc.nodeAt(block.pos) : null; block = n ? blockFromPos(editor.state.doc, block.pos) : null; }
         if (!block && (editor.isFocused || overHandle.current)) block = currentBlock(editor.state);
         const dom = block ? (view.nodeDOM(block.pos) as HTMLElement | null) : null;
         setShown(block && dom?.getBoundingClientRect ? { block, rect: dom.getBoundingClientRect() } : null);
@@ -131,6 +131,8 @@ export function BlockHandle({ editor, t, menuRequest }: { editor: TiptapEditor; 
 
   if (!shown) return null;
   const { block, rect } = shown;
+  // Khối đã bị xoá / tài liệu ngắn lại sau giao dịch (vd chọn tất cả rồi xoá) mà chưa kịp tính lại vị trí → chưa vẽ
+  if (block.pos >= editor.state.doc.content.size || editor.state.doc.nodeAt(block.pos) !== block.node) return null;
   const $p = editor.state.doc.resolve(Math.min(block.pos, editor.state.doc.content.size));
   const index = $p.index(), count = $p.parent.childCount;
   const hasParent = !!parentBlock(editor.state.doc, block);
