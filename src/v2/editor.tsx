@@ -1,6 +1,6 @@
 import type { RichNode } from "@ecomcx/ecomweb-content";
 import { normalizeContent } from "@ecomcx/ecomweb-content";
-import { ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight } from "lucide-react";
+import { ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { coreBlockTypes, registerCoreBlocks } from "./blocks";
 import { registeredPatterns, syncPluginBlocks } from "./compat";
@@ -216,6 +216,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
           <ToolButton label={labels.redo} disabled={!store.canRedo} onClick={() => store.redo()}><Redo2 className="ecx-icon" /></ToolButton>
           {!p.distractionFree && <ToolButton label={labels.listView} active={left === "list"} onClick={() => setLeft(left === "list" ? null : "list")}><ListTree className="ecx-icon" /></ToolButton>}
           <FrameToggle />
+          {p.mode === "visual" && <ZoomToggle />}
         </div>
         <div className="ecx-topbar-end">
           <div className="ecx-tool-group" role="group" aria-label="Device">
@@ -245,6 +246,12 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
 }
 
 /** Bật / tắt hiện template quanh trang (khi có template bao quanh). */
+function ZoomToggle() {
+  const { ui, labels } = useEditor();
+  useUiTick();
+  return <ToolButton label={labels.zoomOut} active={ui.zoomOut} onClick={() => { ui.setZoomOut(!ui.zoomOut); if (ui.zoomOut) ui.announce(labels.zoomOutHint); }}><ZoomOut className="ecx-icon" /></ToolButton>;
+}
+
 function FrameToggle() {
   const { store, labels } = useEditor();
   const hasFrame = useEditorState((s) => !!s.docs.frame);

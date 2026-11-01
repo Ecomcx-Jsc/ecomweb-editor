@@ -26,6 +26,8 @@ export interface EditorHost {
    * "Tạo mẫu" từ các khối đang chọn: ứng dụng hỏi tên / nhóm / đồng bộ rồi lưu. Trả về mẫu đã tạo (đồng bộ → các khối được
    * thay bằng tham chiếu tới mẫu), null = huỷ. Không có → ẩn lệnh.
    */
+  /** Bài thật cho "Danh sách bài" theo thiết lập của khối (soạn thấy đúng bài sẽ hiện). Không có → dynamic.posts. */
+  queryPosts?(query: QueryArgs): Promise<DynamicPost[]>;
   createPattern?(content: SavedContent): Promise<{ ref: number; synced: boolean } | null>;
 }
 
@@ -51,11 +53,17 @@ export interface DocumentHost {
   save?(ref: NestedDocRef, blocks: BNode[], content: SavedContent): Promise<void>;
 }
 
+export type DynamicPost = { title?: string; date?: string; author?: string; excerpt?: string; image?: string | null; terms?: string[]; comments?: number; link?: string };
+
+/** Thiết lập của khối "Danh sách bài" (attrs của query). */
+export interface QueryArgs { inherit: boolean; postType: string; perPage: number; category?: string; tag?: string; orderBy: string; order: "asc" | "desc" }
+
 export interface DynamicData {
   site?: { title?: string; tagline?: string; logo?: string | null };
   menus?: Record<string, Array<{ title: string; url?: string }>>;
-  post?: { title?: string; date?: string; author?: string; excerpt?: string; image?: string | null; terms?: string[]; comments?: number };
-  posts?: Array<{ title: string; date?: string; excerpt?: string; image?: string | null }>;
+  post?: DynamicPost;
+  /** Bài mẫu cho "Danh sách bài" khi không có queryPosts. */
+  posts?: DynamicPost[];
   languages?: string[];
 }
 

@@ -8,9 +8,19 @@ import type { EditingMode } from "./store";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 
+/** Phần (khối cấp cao nhất của tài liệu đang sửa) chứa phần tử khối — null nếu nằm ngoài (template bị khoá). */
+export function sectionOf(store: ReturnType<typeof useEditor>["store"], el: HTMLElement | null): string | null {
+  const active = store.activeDocId;
+  for (let cur = el; cur; cur = cur.parentElement?.closest<HTMLElement>("[data-ecx-block]") ?? null) {
+    const loc = store.locate(cur.dataset.ecxBlock!);
+    if (loc && loc.docId === active && !loc.parent) return loc.block.id;
+  }
+  return null;
+}
+
 /** Props gắn vào phần tử gốc của khối: chọn, viền, kiểu dáng, neo. */
 export function useBlockProps(block: BNode, state: { selected: boolean; editing: boolean; mode: EditingMode }): BlockProps {
-  const { store, registry } = useEditor();
+  const { store, registry, ui } = useEditor();
   const a = block.attrs;
   const style = a.style && typeof a.style === "object" ? normalizeStyle(a.style) : undefined;
   const type = registry.get(block.type);
@@ -20,6 +30,13 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     const own = target.closest<HTMLElement>("[data-ecx-block]");
     if (own?.dataset.ecxBlock !== block.id) return; // khối con tự xử lý
     e.stopPropagation();
+    if (ui.zoomOut) {
+      // Thu nhỏ: chọn cả phần (khối cấp cao nhất của tài liệu đang sửa) chứa chỗ bấm, không đặt con trỏ chữ
+      e.preventDefault();
+      const section = sectionOf(store, own);
+      if (section) { store.select([section], { editing: null }); (own.ownerDocument.activeElement as HTMLElement | null)?.blur?.(); own.ownerDocument.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true }); }
+      return;
+    }
     if (store.modeOf(block.id) === "disabled") return;
     const rich = target.closest<HTMLElement>("[data-ecx-rich]");
     if (rich && rich.isContentEditable && !e.shiftKey) return; // bấm vào chữ: ProseMirror đặt con trỏ, focus báo đang gõ
@@ -35,7 +52,7 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     } else store.select([block.id], { editing: null });
     if (own.isContentEditable) own.ownerDocument.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true });
     else own.focus({ preventScroll: true });
-  }, [block.id, store]);
+  }, [block.id, store, ui]);
   return {
     ref: null,
     "data-ecx-block": block.id,

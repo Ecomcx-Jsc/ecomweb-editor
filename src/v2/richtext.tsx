@@ -11,6 +11,7 @@ import { charToPos, docToInline, inlineToDoc, sameInline, type SchemaKind } from
 import type { BlockProps } from "./registry";
 import type { EditorStore } from "./store";
 import { pasteIntoBlock } from "./clipboard";
+import { flatten } from "./ops";
 
 /**
  * Ô gõ chữ: ProseMirror gắn thẳng vào phần tử của khối (<p>, <h2>…) — không thêm thẻ bọc, nên CSS của theme áp đúng.
@@ -92,6 +93,12 @@ export function RichText(props: RichTextProps) {
       },
       handlePaste: (v, event) => (propsRef.current.onChange ? false : pasteIntoBlock(ctx, propsRef.current.blockId, v, event)),
       handleDOMEvents: {
+        // Kéo chuột từ ô này sang khối chữ khác → chọn chữ qua nhiều khối
+        mousedown: (v, e) => {
+          const p = propsRef.current;
+          if (e.button === 0 && !e.shiftKey && !p.onChange && !p.field) trackRangeDrag(store, v, p.blockId);
+          return false;
+        },
         focus: () => {
           const p = propsRef.current;
           ui.activeRich = viewKey(p.blockId, p.field);
@@ -245,6 +252,9 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef, keepCaret: (
   return keymap({
     ArrowDown: (_s, _d, view) => slashKey("ArrowDown")() || (!!view && view.endOfTextblock("down") && nav(view, 1)),
     ArrowUp: (_s, _d, view) => slashKey("ArrowUp")() || (!!view && view.endOfTextblock("up") && nav(view, -1)),
+    // Shift+mũi tên ra ngoài khối: chọn chữ sang khối kế
+    "Shift-ArrowDown": (_s, _d, view) => !!view && textMode() && !pr.current.field && view.endOfTextblock("down") && startRange(store, view, pr.current.blockId, 1),
+    "Shift-ArrowUp": (_s, _d, view) => !!view && textMode() && !pr.current.field && view.endOfTextblock("up") && startRange(store, view, pr.current.blockId, -1),
     ArrowLeft: fresh((_s, _d, view) => !!view && atStart(view) && nav(view, -1)),
     ArrowRight: fresh((_s, _d, view) => !!view && atEnd(view) && nav(view, 1)),
     Escape: (_s, _d, view) => {
@@ -445,3 +455,55 @@ export function caretRect(view: EditorView, ui: EditorUi) {
 }
 
 export const isEmptyInline = (inline: RichNode[] | undefined) => !inlineLength(inline);
+
+// ---------------------------------------------------------------------------
+// Chọn chữ qua nhiều khối
+// ---------------------------------------------------------------------------
+/** Rời ô gõ, focus về khung soạn (phím của dải chữ do khung soạn xử lý), bỏ vùng chọn của trình duyệt. */
+function leaveForRange(view: EditorView) {
+  const doc = view.dom.ownerDocument;
+  (view.dom as HTMLElement).blur();
+  doc.getSelection()?.removeAllRanges();
+  doc.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true });
+}
+
+function startRange(store: EditorStore, view: EditorView, id: string, dir: -1 | 1): boolean {
+  const loc = store.locate(id);
+  if (!loc) return false;
+  const order = flatten(store.getState().docs[loc.docId].blocks).filter((b) => b.inline);
+  const next = order[order.findIndex((b) => b.id === id) + dir];
+  if (!next) return false;
+  const anchor = { id, offset: (syncSelection(view) ?? view.state).selection.anchor };
+  leaveForRange(view);
+  store.selectText(anchor, { id: next.id, offset: dir > 0 ? inlineLength(next.inline) : 0 });
+  return true;
+}
+
+/** Theo chuột từ lúc bấm trong ô gõ tới lúc nhả: sang khối chữ khác → dải chữ; quay về ô cũ → chọn chữ trong ô. */
+function trackRangeDrag(store: EditorStore, view: EditorView, id: string) {
+  const doc = view.dom.ownerDocument;
+  let anchor: number | null = null;
+  let crossed = false;
+  const move = (e: MouseEvent) => {
+    if (!(e.buttons & 1)) return up();
+    const rich = (doc.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)?.closest<HTMLElement>("[data-ecx-rich]:not([data-ecx-field])");
+    const bid = rich?.closest<HTMLElement>("[data-ecx-block]")?.dataset.ecxBlock;
+    if (!bid) return;
+    const target = bid === id ? view : richViews.get(bid);
+    if (!target) return;
+    if (bid === id && !crossed) return; // trong cùng ô: ProseMirror tự chọn
+    if (anchor == null) anchor = view.state.selection.anchor;
+    const pos = target.posAtCoords({ left: e.clientX, top: e.clientY })?.pos ?? 0;
+    if (!crossed) { crossed = true; leaveForRange(view); }
+    e.preventDefault();
+    store.selectText({ id, offset: anchor }, { id: bid, offset: pos });
+    if (bid === id) crossed = false;
+  };
+  const up = () => {
+    doc.removeEventListener("mousemove", move);
+    doc.removeEventListener("mouseup", up);
+    if (store.getState().range) { doc.getSelection()?.removeAllRanges(); doc.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true }); }
+  };
+  doc.addEventListener("mousemove", move);
+  doc.addEventListener("mouseup", up);
+}

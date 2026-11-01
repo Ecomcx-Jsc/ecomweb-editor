@@ -1,7 +1,9 @@
 import { CalendarDays, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
-import type { CSSProperties, ReactNode } from "react";
-import { DocBlocks, InnerBlocks, NestedDoc } from "../blocklist";
-import { DocScopeProvider, useDocScope, useEditor, useEditorState } from "../context";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../blocklist";
+import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
+import type { DynamicPost, QueryArgs } from "../host";
+import type { BNode } from "../model";
 import { makeBlock } from "../model";
 import type { BlockEditProps, BlockType } from "../registry";
 
@@ -11,7 +13,7 @@ const merge = (bp: BlockEditProps["blockProps"], className: string, style?: CSSP
 const TEXT_ALIGN = { type: "string" as const, enum: ["left", "center", "right", "justify"] };
 
 /** Khối động: hiện dữ liệu thật do ứng dụng cung cấp (host.dynamic), không có thì hiện tên khối. */
-function useDynamic() { return useEditor().host.dynamic ?? {}; }
+const useDynamic = useDynamicData;
 
 function SiteTitleEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
@@ -111,16 +113,66 @@ function PostContentEdit({ blockProps }: BlockEditProps) {
 function QueryEdit({ block, blockProps }: BlockEditProps) {
   return <div {...merge(blockProps, "ecx-query")}><InnerBlocks parent={block} /></div>;
 }
-/** Khuôn mỗi bài: sửa bài đầu, các bài sau là bản xem trước. */
-function PostTemplateEdit({ block, blockProps }: BlockEditProps) {
-  const d = useDynamic();
+/** Thiết lập của khối query (mặc định giống website). */
+export function queryArgs(a: Record<string, unknown>): QueryArgs {
+  return {
+    inherit: a.inherit !== false, postType: typeof a.postType === "string" && a.postType ? a.postType : "post",
+    perPage: Math.min(100, Math.max(1, Number(a.perPage) || 10)),
+    category: typeof a.category === "string" && a.category ? a.category : undefined, tag: typeof a.tag === "string" && a.tag ? a.tag : undefined,
+    orderBy: typeof a.orderBy === "string" ? a.orderBy : "date", order: a.order === "asc" ? "asc" : "desc",
+  };
+}
+/** Bài của danh sách: host.queryPosts theo thiết lập, không có thì bài mẫu (dynamic.posts). */
+function useQueryPosts(q: QueryArgs): DynamicPost[] | undefined {
+  const { host } = useEditor();
+  const key = JSON.stringify(q);
+  const [posts, setPosts] = useState<{ key: string; list: DynamicPost[] } | null>(null);
+  useEffect(() => {
+    if (!host.queryPosts) return;
+    let alive = true;
+    const t = setTimeout(() => host.queryPosts!(q).then((list) => { if (alive) setPosts({ key, list }); }, () => { if (alive) setPosts({ key, list: [] }); }), 150);
+    return () => { alive = false; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key, host]);
+  if (host.queryPosts) return posts?.list;
+  return host.dynamic?.posts;
+}
+/** Bản sao chỉ xem của khuôn (id riêng cho mỗi mục: không trùng ô gõ, không chọn được). */
+const previewClone = (n: BNode, tag: string): BNode => ({ ...n, id: `${n.id}~${tag}`, content: n.content?.map((c) => previewClone(c, tag)) });
+function PreviewBlocks({ nodes, tag }: { nodes: BNode[]; tag: string }) {
+  const scope = useDocScope();
+  const clones = useMemo(() => nodes.map((n) => previewClone(n, tag)), [nodes, tag]);
+  return <DocScopeProvider value={{ ...scope, mode: "disabled" }}>{clones.map((n) => <Block key={n.id} node={n} />)}</DocScopeProvider>;
+}
+/**
+ * Khuôn mỗi bài: mỗi mục là một bài thật của danh sách; mục đang chọn sửa được (khối bài hiện dữ liệu của bài đó),
+ * các mục khác là bản xem trước — bấm vào để sửa khuôn ngay trên bài đó.
+ */
+function PostTemplateEdit({ block, blockProps, editable, labels }: BlockEditProps) {
+  const { store, ui } = useEditor();
+  // Khối cha (query) đổi thiết lập → vẽ lại (khối này không đổi tham chiếu)
+  const queryAttrs = useEditorState(useCallback(() => store.locate(block.id)?.parent?.attrs, [block.id, store])) ?? {};
+  const q = queryArgs(queryAttrs);
+  const posts = useQueryPosts(q);
+  const [active, setActive] = useState(0);
   const grid = block.attrs.layout === "grid";
   const cols = Math.min(6, Math.max(1, Number(block.attrs.columns) || 3));
-  const extra = Math.max(0, Math.min(5, (d.posts?.length ?? 3) - 1));
+  const count = posts ? Math.max(1, Math.min(posts.length, q.perPage, 6)) : 3;
+  const current = Math.min(active, count - 1);
+  const vi = labels.lang === "vi";
   return (
-    <ul {...(merge(blockProps, cx("ecx-post-template", grid && "is-grid"), grid ? { display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "1.5rem" } : undefined) as object)}>
-      <li className="ecx-post"><InnerBlocks parent={block} /></li>
-      {Array.from({ length: extra }, (_, i) => <li key={i} className="ecx-post ecx-post-preview" aria-hidden="true"><div className="ecx-preview-bar" /><div className="ecx-preview-bar is-short" /></li>)}
+    <ul {...(merge(blockProps, cx("ecx-post-template", grid && "is-grid"), grid ? { display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "1.5rem" } : undefined) as object)} data-ecx-posts={posts ? posts.length : ""}>
+      {posts && !posts.length && <li className="ecx-post ecx-post-none">{vi ? "Không có bài nào khớp thiết lập — khuôn vẫn sửa được:" : "No posts match these settings — the template is still editable:"}</li>}
+      {Array.from({ length: count }, (_, i) => {
+        const post = posts?.[i] ?? null;
+        if (i === current) return <li key="edit" className={cx("ecx-post", count > 1 && "is-active")}><LoopPostContext.Provider value={post}><InnerBlocks parent={block} /></LoopPostContext.Provider></li>;
+        return (
+          <li key={i} className="ecx-post ecx-post-preview" data-ecx-post-index={i} title={vi ? "Bấm để sửa khuôn trên bài này" : "Click to edit the template on this post"}
+            onMouseDownCapture={(e) => { if (!editable || ui.zoomOut || e.button !== 0) return; e.preventDefault(); e.stopPropagation(); setActive(i); }}>
+            <LoopPostContext.Provider value={post}><PreviewBlocks nodes={block.content ?? []} tag={`p${i}`} /></LoopPostContext.Provider>
+          </li>
+        );
+      })}
     </ul>
   );
 }

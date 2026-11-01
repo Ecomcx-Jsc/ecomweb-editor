@@ -41,6 +41,9 @@
 .ecx-canvas-wrap { flex: 1; display: flex; justify-content: center; align-items: stretch; overflow: auto; }
 .ecx-canvas-frame { display: block; height: 100%; border: 0; background: #fff; transition: width .25s var(--ecx-ed-ease); }
 .ecx-canvas-wrap.is-tablet, .ecx-canvas-wrap.is-mobile { padding: 20px 0; }
+/* Thu nhỏ: khung gấp đôi thu còn nửa — giữ khung ở mép trái (không căn giữa phần tràn), không cuộn khung ngoài */
+.ecx-canvas-wrap.is-zoomed-out { overflow: hidden; background: var(--ecx-ed-bg); }
+.ecx-canvas-wrap.is-zoomed-out.is-desktop { justify-content: flex-start; }
 .ecx-canvas-wrap.is-tablet .ecx-canvas-frame, .ecx-canvas-wrap.is-mobile .ecx-canvas-frame { border-radius: 12px; box-shadow: var(--ecx-ed-shadow); outline: 1px solid var(--ecx-ed-line); }
 @media (max-width: 960px) {
   .ecx-right, .ecx-left { position: absolute; top: 0; bottom: 0; z-index: 20; box-shadow: var(--ecx-ed-shadow); }

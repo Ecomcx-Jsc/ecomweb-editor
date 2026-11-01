@@ -3,12 +3,12 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, typ
 import { createPortal } from "react-dom";
 import { DocBlocks } from "./blocklist";
 import { BLOCKS_MIME, blocksFromClipboard, serializeBlocks } from "./clipboard";
-import { DocScopeProvider, useEditor, useEditorState } from "./context";
+import { DocScopeProvider, useEditor, useEditorState, useUiTick } from "./context";
 import { usePrefs } from "./prefs";
 import { CANVAS_CSS } from "./canvas-css";
 import { makeBlock, type BNode } from "./model";
 import { flatten, topLevelOrdered } from "./ops";
-import { insertSibling } from "./richtext";
+import { insertSibling, now, richViews } from "./richtext";
 
 export type Device = "desktop" | "tablet" | "mobile";
 export const DEVICE_WIDTH: Record<Device, number | null> = { desktop: null, tablet: 768, mobile: 390 };
@@ -26,6 +26,9 @@ export interface CanvasProps {
 const SRC_DOC = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body class="ecx-canvas-body"></body></html>`;
 
 /** Khung soạn: iframe mang CSS của website → soạn thấy đúng phông, màu, khoảng cách; media query theo bề rộng thiết bị. */
+/** Tỉ lệ của chế độ thu nhỏ. */
+export const ZOOM_OUT = 0.5;
+
 export function Canvas({ device = "desktop", className, contentClassName = "ecx-content", before, after }: CanvasProps) {
   const { ui, labels } = useEditor();
   const frameRef = useRef<HTMLIFrameElement>(null);
@@ -49,19 +52,25 @@ export function Canvas({ device = "desktop", className, contentClassName = "ecx-
 
   useEffect(() => () => { if (ui.canvasFrame === frameRef.current) { ui.canvasFrame = null; ui.canvasDoc = null; } }, [ui]);
 
+  useUiTick();
   const width = DEVICE_WIDTH[device];
+  // Thu nhỏ: khung soạn vẽ ở cỡ gấp đôi rồi thu còn một nửa → thấy cả trang, toạ độ kéo thả / thanh công cụ tự tính theo tỉ lệ
+  const zoom = ui.zoomOut ? ZOOM_OUT : 1;
+  const style = zoom === 1 ? { width: width ? `${width}px` : "100%" }
+    : { width: width ? `${width}px` : `${100 / zoom}%`, height: `${100 / zoom}%`, transform: `scale(${zoom})`, transformOrigin: width ? "top center" : "top left", flex: "none" };
   return (
-    <div className={["ecx-canvas-wrap", `is-${device}`, className].filter(Boolean).join(" ")}>
+    <div className={["ecx-canvas-wrap", `is-${device}`, zoom !== 1 && "is-zoomed-out", className].filter(Boolean).join(" ")}>
       <iframe ref={frameRef} className="ecx-canvas-frame" title={labels.canvas} srcDoc={SRC_DOC} onLoad={onLoad}
-        style={{ width: width ? `${width}px` : "100%" }} data-ecx-canvas="" />
+        style={style} data-ecx-canvas="" />
       {doc && createPortal(<CanvasRoot doc={doc} contentClassName={contentClassName} before={before} after={after} />, doc.body)}
     </div>
   );
 }
 
 function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; contentClassName: string; before?: ReactNode; after?: ReactNode }) {
-  const { store, labels, prefs } = useEditor();
+  const { store, labels, prefs, ui } = useEditor();
   const spotlight = usePrefs(prefs).spotlight;
+  useUiTick();
   const focus = useEditorState((s) => s.focus[s.focus.length - 1] ?? null);
   const rootId = useEditorState((s) => s.rootId);
   const frameId = useEditorState((s) => s.frameId);
@@ -73,9 +82,12 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   useCanvasStyles(doc);
   useCanvasKeys(doc);
   useCanvasEvents(doc);
+  const hasRange = useRangeHighlight(doc);
   return (
-    <div className={["ecx-canvas-root", contentClassName, focus && "is-focus-mode", spotlight && "is-spotlight"].filter(Boolean).join(" ")} data-ecx-doc={activeId} tabIndex={-1}
+    <div className={["ecx-canvas-root", contentClassName, focus && "is-focus-mode", spotlight && "is-spotlight", ui.zoomOut && "is-zoomed-out", hasRange && "has-text-range"].filter(Boolean).join(" ")} data-ecx-doc={activeId} tabIndex={-1}
+      onDoubleClick={() => { if (ui.zoomOut) zoomIn(store, ui); }}
       onMouseDown={(e) => {
+        if (ui.zoomOut) return store.clearSelection();
         // Bấm vào chỗ trống: bỏ chọn; bấm dưới khối cuối: thêm / đưa con trỏ vào đoạn trống cuối
         if (e.target !== e.currentTarget) return;
         const d = store.doc(activeId);
@@ -206,13 +218,45 @@ function useCanvasKeys(doc: Document) {
       if (typing(doc.activeElement)) return;
       // Phím điều hướng của trình duyệt khi không gõ chữ (Safari: ⌘← / ⌘→ = quay lại / tới trang; Backspace ở trình duyệt cũ)
       // → chặn, không thì rời trình soạn và mất bài đang sửa
-      if ((e.metaKey || e.altKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); return; }
+      if ((e.metaKey || e.altKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight") && !store.getState().range) { e.preventDefault(); return; }
+      // Đang chọn chữ qua nhiều khối: xoá / gõ đè / Enter / mở rộng / thu về
+      const range = store.getState().range;
+      if (range) {
+        if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); now(() => store.deleteRange()); return; }
+        if (e.key === "Escape") { e.preventDefault(); store.clearSelection(); return; }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          now(() => store.batch(() => { if (store.deleteRange()) { const c = store.getState().caret; if (c) store.splitText(c.id, c.offset); } }));
+          return;
+        }
+        if (e.shiftKey && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); store.extendRange(e.key === "ArrowDown" ? 1 : -1); return; }
+        if (!e.shiftKey && /^Arrow/.test(e.key)) {
+          e.preventDefault();
+          const info = store.rangeInfo();
+          const p = info && (e.key === "ArrowDown" || e.key === "ArrowRight" ? info.to : info.from);
+          if (p) store.focusText(p.id, p.offset);
+          return;
+        }
+        if (!mod && !e.altKey && e.key.length === 1) { e.preventDefault(); now(() => store.deleteRange(e.key)); return; }
+      }
       if (e.key === "Backspace" && !store.getState().selection.ids.length) { e.preventDefault(); return; }
       const ids = store.getState().selection.ids;
       if (mod && k === "a") {
         e.preventDefault();
         store.select(store.getState().docs[store.activeDocId].blocks.map((b) => b.id), { editing: null });
         return;
+      }
+      if (ui.zoomOut) {
+        // Thu nhỏ: Enter / Esc về cỡ thường; mũi tên đi giữa các phần
+        if (e.key === "Escape" || (e.key === "Enter" && ids.length)) { e.preventDefault(); zoomIn(store, ui); return; }
+        if ((e.key === "ArrowDown" || e.key === "ArrowUp") && !e.shiftKey) {
+          e.preventDefault();
+          const top = store.getState().docs[store.activeDocId]?.blocks ?? [];
+          const i = ids.length ? top.findIndex((b) => b.id === ids[0]) : -1;
+          const next = top[Math.max(0, Math.min(top.length - 1, i + (e.key === "ArrowDown" ? 1 : -1)))];
+          if (next) { store.select([next.id], { editing: null }); ui.blockEl(next.id)?.scrollIntoView({ block: "nearest" }); }
+          return;
+        }
       }
       if (!ids.length) return;
       if (e.altKey && e.key === "F10") { e.preventDefault(); ui.focusToolbar(); return; }
@@ -244,6 +288,7 @@ function useCanvasKeys(doc: Document) {
       if (mod && e.altKey && k === "y") { e.preventDefault(); insertSibling(store, ids[ids.length - 1], 1); return; }
     };
     const selectedNodes = (): BNode[] => {
+      if (store.getState().range) return store.rangeContent();
       const ids = store.getState().selection.ids;
       const loc = ids.length ? store.locate(ids[0]) : null;
       if (!loc) return [];
@@ -258,13 +303,16 @@ function useCanvasKeys(doc: Document) {
       e.clipboardData.setData("text/html", s.html);
       e.clipboardData.setData("text/plain", s.text);
       e.preventDefault();
-      if (cut) store.remove(nodes.map((n) => n.id));
+      if (cut && store.getState().range) store.deleteRange();
+      else if (cut) store.remove(nodes.map((n) => n.id));
     };
     const onPaste = (e: ClipboardEvent) => {
       if (typing(doc.activeElement) || !e.clipboardData) return;
       const nodes = blocksFromClipboard(e.clipboardData);
       if (!nodes.length) return;
       e.preventDefault();
+      // Dán đè lên dải chữ: xoá rồi chèn sau khối còn lại
+      if (store.getState().range && store.deleteRange()) { const c = store.getState().caret; if (c) { store.insertAfter(c.id, nodes, { replaceEmpty: true }); return; } }
       const ids = store.getState().selection.ids;
       if (ids.length) store.insertAfter(ids[ids.length - 1], nodes, { replaceEmpty: false });
       else {
@@ -288,3 +336,44 @@ function useCanvasKeys(doc: Document) {
 
 /** Khối không chọn riêng bằng phím mũi tên (đi thẳng vào chữ bên trong). */
 const HIDDEN_NAV = new Set(["listItem", "taskItem", "tableRow"]);
+
+/** Thôi thu nhỏ: phần đang chọn cuộn vào giữa màn hình. */
+export function zoomIn(store: { getState(): { selection: { ids: string[] } } }, ui: { setZoomOut(v: boolean): void; blockEl(id: string): HTMLElement | null }) {
+  ui.setZoomOut(false);
+  const id = store.getState().selection.ids[0];
+  if (id) requestAnimationFrame(() => ui.blockEl(id)?.scrollIntoView({ block: "center" }));
+}
+
+/**
+ * Tô dải chữ chọn qua nhiều khối: CSS Custom Highlight (không đụng vùng chọn / focus của ô gõ); khối nguyên ở giữa (ảnh…)
+ * có viền chọn. Trình duyệt chưa có Highlight → tô cả khối chữ.
+ */
+function useRangeHighlight(doc: Document): boolean {
+  const { store, ui } = useEditor();
+  const range = useEditorState((s) => s.range);
+  const revision = useEditorState((s) => s.revision);
+  useLayoutEffect(() => {
+    const win = doc.defaultView as (Window & { Highlight?: new (...r: Range[]) => unknown; CSS: { highlights?: Map<string, unknown> } }) | null;
+    const marked: HTMLElement[] = [];
+    const info = range ? store.rangeInfo() : null;
+    if (info && win) {
+      const a = richViews.get(info.from.id), b = richViews.get(info.to.id);
+      const highlights = win.CSS?.highlights;
+      if (a && b && highlights && win.Highlight) {
+        try {
+          const r = doc.createRange();
+          const s = a.domAtPos(Math.min(info.from.offset, a.state.doc.content.size)), t = b.domAtPos(Math.min(info.to.offset, b.state.doc.content.size));
+          r.setStart(s.node, s.offset);
+          r.setEnd(t.node, t.offset);
+          highlights.set("ecx-range", new win.Highlight(r));
+        } catch { highlights.delete("ecx-range"); }
+      } else for (const tb of info.texts) { const el = ui.blockEl(tb.id); if (el) { el.classList.add("is-in-range"); marked.push(el); } }
+      for (const id of info.whole) { const el = ui.blockEl(id); if (el) { el.classList.add("is-in-range"); marked.push(el); } }
+    }
+    return () => {
+      win?.CSS?.highlights?.delete("ecx-range");
+      for (const el of marked) el.classList.remove("is-in-range");
+    };
+  }, [range, revision, doc, store, ui]);
+  return !!range;
+}

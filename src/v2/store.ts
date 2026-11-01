@@ -54,7 +54,12 @@ export interface EditorState {
    * khối "Nội dung bài" trong template là chỗ sửa tài liệu gốc. null = chỉ hiện tài liệu gốc.
    */
   frameId: string | null;
+  /** Chọn chữ qua nhiều khối (kéo chuột / Shift+mũi tên ra ngoài khối): điểm neo → điểm đầu, cùng một tài liệu. null = không. */
+  range: TextRange | null;
 }
+
+export interface TextPoint { id: string; offset: number }
+export interface TextRange { anchor: TextPoint; head: TextPoint }
 
 interface Change { docId: string; before: BNode[]; after: BNode[] }
 interface HistoryEntry {
@@ -99,6 +104,7 @@ export class EditorStore {
       focus: [],
       selection: emptySel,
       caret: null,
+      range: null,
       revision: 0,
       frameId: null,
     };
@@ -113,7 +119,8 @@ export class EditorStore {
   getState = (): EditorState => this.state;
   subscribe = (l: () => void) => { this.listeners.add(l); return () => { this.listeners.delete(l); }; };
   private emit() { this.listeners.forEach((l) => l()); }
-  private set(next: Partial<EditorState>) { this.state = { ...this.state, ...next }; this.emit(); }
+  // Đổi vùng chọn / con trỏ mà không nói gì về dải chữ → bỏ dải chữ
+  private set(next: Partial<EditorState>) { this.state = { ...this.state, ...(("selection" in next || "caret" in next) && !("range" in next) ? { range: null } : {}), ...next }; this.emit(); }
 
   get canUndo() { return this.undoStack.length > 0; }
   get canRedo() { return this.redoStack.length > 0; }
@@ -313,7 +320,7 @@ export class EditorStore {
     if (s.editing === id && !s.ids.length) return;
     this.set({ selection: { ids: [], editing: id } });
   }
-  clearSelection() { if (this.state.selection.ids.length || this.state.selection.editing) this.set({ selection: emptySel }); }
+  clearSelection() { if (this.state.selection.ids.length || this.state.selection.editing || this.state.range) this.set({ selection: emptySel }); }
   /** Shift+bấm: chọn dải khối cùng cha từ khối đang chọn tới `id`. */
   selectRange(id: string) {
     const anchor = this.currentIds[0];
@@ -329,6 +336,81 @@ export class EditorStore {
     const list = ia.parent ? ia.parent.content! : this.state.docs[a.docId].blocks;
     const [lo, hi] = ia.index <= ib.index ? [ia.index, ib.index] : [ib.index, ia.index];
     this.select(list.slice(lo, hi + 1).map((x) => x.id));
+  }
+  // -------------------------------------------------------------------------
+  // Chọn chữ qua nhiều khối
+  // -------------------------------------------------------------------------
+  /** Chọn chữ từ `anchor` tới `head` (khối chữ cùng tài liệu). Cùng một khối → chọn chữ trong khối đó. */
+  selectText(anchor: TextPoint, head: TextPoint) {
+    const a = this.locate(anchor.id), h = this.locate(head.id);
+    if (!a || !h || a.docId !== h.docId || !a.block.inline || !h.block.inline) return;
+    if (anchor.id === head.id) return this.focusText(anchor.id, Math.min(anchor.offset, head.offset), Math.max(anchor.offset, head.offset));
+    const r = this.state.range;
+    if (r && r.anchor.id === anchor.id && r.anchor.offset === anchor.offset && r.head.id === head.id && r.head.offset === head.offset) return;
+    this.set({ range: { anchor, head }, selection: emptySel, caret: null });
+  }
+  /** Dải chữ theo thứ tự tài liệu: điểm đầu / cuối, khối chữ nằm trong, khối bị bỏ trọn (giữa hai đầu). */
+  rangeInfo() {
+    const r = this.state.range;
+    if (!r) return null;
+    const loc = this.locate(r.anchor.id);
+    if (!loc) return null;
+    const blocks = this.state.docs[loc.docId].blocks;
+    const all = flatten(blocks);
+    const ia = all.findIndex((b) => b.id === r.anchor.id), ih = all.findIndex((b) => b.id === r.head.id);
+    if (ia < 0 || ih < 0) return null;
+    const [from, to] = ia <= ih ? [r.anchor, r.head] : [r.head, r.anchor];
+    const fi = Math.min(ia, ih), li = Math.max(ia, ih);
+    const first = all[fi], last = all[li];
+    const lastLoc = this.locate(last.id)!;
+    const between = all.slice(fi + 1, li).filter((b) => !lastLoc.ancestors.includes(b.id));
+    const whole = topLevelOrdered(blocks, between.map((b) => b.id));
+    const texts = all.slice(fi, li + 1).filter((b) => b.inline);
+    return { docId: loc.docId, from, to, first, last, whole, texts };
+  }
+  /** Bản sao phần đã chọn (chép / cắt): đầu, khối giữa nguyên vẹn, cuối. */
+  rangeContent(): BNode[] {
+    const info = this.rangeInfo();
+    if (!info) return [];
+    const blocks = this.state.docs[info.docId].blocks;
+    const head = { ...cloneBlock(info.first), inline: splitInline(info.first.inline!, info.from.offset)[1] };
+    const tail = { ...cloneBlock(info.last), inline: splitInline(info.last.inline!, info.to.offset)[0] };
+    return [head, ...info.whole.map((id) => cloneBlock(findBlock(blocks, id)!.block)), tail];
+  }
+  /** Xoá phần đã chọn (thay bằng `text` nếu có): nối phần còn lại của khối cuối vào khối đầu. Khối bị khoá → không làm gì. */
+  deleteRange(text = ""): boolean {
+    const info = this.rangeInfo();
+    if (!info) return false;
+    const { docId, from, to, first, last, whole } = info;
+    if (![...whole, last.id].every((id) => this.canRemove(id))) return false;
+    const blocks = this.state.docs[docId].blocks;
+    const lastLoc = this.locate(last.id)!, firstLoc = this.locate(first.id)!;
+    const keep = splitInline(first.inline!, from.offset)[0];
+    const rest = splitInline(last.inline!, to.offset)[1];
+    const typed: RichNode[] = text ? [{ type: "text", text }] : [];
+    let next = mapBlock(blocks, first.id, (b) => ({ ...b, inline: joinInline(joinInline(keep, typed), rest) }));
+    next = removeBlocks(next, [...whole, last.id]);
+    // Khối chứa khối cuối (mục danh sách, trích dẫn…) trống sau khi xoá → bỏ luôn
+    for (const anc of [...lastLoc.ancestors].reverse()) {
+      if (firstLoc.ancestors.includes(anc)) break;
+      const n = findBlock(next, anc)?.block;
+      if (!n?.content || n.content.length) break;
+      next = removeBlocks(next, [anc]);
+    }
+    const at = inlineLength(keep) + text.length;
+    this.commit(docId, next, { select: { ids: [], editing: first.id }, caret: { id: first.id, offset: at } });
+    return true;
+  }
+  /** Shift+mũi tên khi đang chọn qua nhiều khối: kéo đầu dải sang khối chữ kế (xuống: tới cuối khối, lên: tới đầu khối). */
+  extendRange(dir: -1 | 1) {
+    const r = this.state.range;
+    const loc = r && this.locate(r.head.id);
+    if (!r || !loc) return;
+    const order = flatten(this.state.docs[loc.docId].blocks).filter((b) => b.inline);
+    const i = order.findIndex((b) => b.id === r.head.id);
+    const next = order[i + dir];
+    if (!next) return this.selectText(r.anchor, { id: r.head.id, offset: dir > 0 ? inlineLength(loc.block.inline) : 0 });
+    this.selectText(r.anchor, { id: next.id, offset: dir > 0 ? inlineLength(next.inline) : 0 });
   }
   focusText(id: string, offset = -1, to?: number) { this.set({ caret: { id, offset, to }, selection: { ids: [], editing: id } }); }
   consumeCaret(id: string): Caret | null {

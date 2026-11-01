@@ -59,6 +59,13 @@ if (params.get("plugin")) {
 }
 
 const saves: Array<{ kind: string; ref: unknown; content: unknown }> = [];
+const queries: unknown[] = [];
+const POSTS = [
+  { title: "Khai trương cửa hàng", date: "30/10/2026", terms: ["tin-tuc"] },
+  { title: "Bộ sưu tập mùa đông", date: "28/10/2026", terms: ["san-pham"] },
+  { title: "Giảm giá cuối tuần", date: "25/10/2026", terms: ["tin-tuc"] },
+  { title: "Hướng dẫn chọn size", date: "20/10/2026", terms: ["huong-dan"] },
+];
 const host: EditorHost = {
   canvasStyles: [contentCss, { css: "body { font-family: Georgia, serif; color: #222; } .ecx-site-title { font-weight: 700; } .ecx-navigation-menu { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0; } .ecx-group { display: flex; justify-content: space-between; align-items: center; }" }],
   presets: { colors: { primary: "#1a597b", accent: "#f26251", muted: "#757575" }, gradients: { brand: "linear-gradient(135deg, #1a597b, #f26251)" }, shadows: { soft: "0 2px 8px rgb(0 0 0 / .12)" } },
@@ -66,6 +73,13 @@ const host: EditorHost = {
     site: { title: "ECOMCX Demo", tagline: "Website mẫu" },
     menus: { primary: [{ title: "Trang chủ" }, { title: "Giới thiệu" }, { title: "Liên hệ" }] },
     post: { title: "Bài viết mẫu", date: "01/11/2026", author: "Admin", excerpt: "Tóm tắt bài viết mẫu." },
+  },
+  async queryPosts(q) {
+    await new Promise((r) => setTimeout(r, 20));
+    queries.push(q);
+    let list = POSTS.filter((x) => !q.category || x.terms.includes(q.category));
+    if (q.orderBy === "title") list = [...list].sort((a, b) => a.title.localeCompare(b.title, "vi") * (q.order === "asc" ? 1 : -1));
+    return list.slice(0, q.perPage);
   },
   documents: {
     async load(ref) {
@@ -89,7 +103,9 @@ const bigDoc = big ? { type: "doc", content: Array.from({ length: big }, (_, i) 
   : i % 30 === 0 ? { type: "group", content: [p(`Nhóm ${i}`), p("Chữ trong nhóm")] }
   : p(`Đoạn ${i}: Tiếng Việt có dấu để đo tốc độ gõ và vẽ lại khi tài liệu rất dài.`)) } : null;
 const doc = params.get("doc");
-const initial = bigDoc ?? (params.get("empty") ? null : doc === "post" || params.get("frame") ? post : doc === "rich" ? rich : template);
+// ?doc=loop: template có "Danh sách bài" (bài lấy qua host.queryPosts)
+const loop = { type: "doc", content: [h(1, "Tin tức"), { type: "query", attrs: { inherit: false, perPage: 3 }, content: [{ type: "postTemplate", attrs: { layout: "list" }, content: [{ type: "postTitle", attrs: { level: 2 } }, { type: "postDate" }, p("Đọc thêm")] }, { type: "pagination" }] }] };
+const initial = bigDoc ?? (params.get("empty") ? null : doc === "post" || params.get("frame") ? post : doc === "rich" ? rich : doc === "loop" ? loop : template);
 const store = new EditorStore({ kind: doc === "post" || doc === "rich" || params.get("frame") ? "post" : "template", title: "Trang chủ", blocks: blocksFromContent(initial) });
 const frame = params.get("frame") ? { content: frameTemplate, title: "Trang đơn" } : undefined;
 let changes = 0;
@@ -112,7 +128,7 @@ function check(): string[] {
   }
   return errors;
 }
-(window as unknown as { __ecx: unknown }).__ecx = { store, saves, check, get changes() { return changes; } };
+(window as unknown as { __ecx: unknown }).__ecx = { store, saves, queries, check, get changes() { return changes; } };
 
 createRoot(document.getElementById("root")!).render(
   <BlockEditor store={store} host={host} lang={params.get("lang") === "en" ? "en" : "vi"} dynamicBlocks frame={frame}

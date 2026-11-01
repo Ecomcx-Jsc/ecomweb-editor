@@ -3,6 +3,7 @@ import type { EditorContextValue, DropTarget } from "./context";
 import type { InsertOption } from "./inserter";
 import type { BNode } from "./model";
 import { canContain } from "./structure";
+import { sectionOf } from "./blocklist";
 
 /**
  * Kéo thả bằng pointer (không dùng HTML5 drag): kéo khối (tay nắm, cây khối) hoặc khối mới (thư viện) vào khung soạn.
@@ -135,6 +136,15 @@ function findTarget(ctx: EditorContextValue, x: number, y: number, src: Source):
   }
   void el;
   el = null;
+  // Thu nhỏ: chỉ thả giữa các phần (trước / sau khối cấp cao nhất của tài liệu đang sửa)
+  if (ui.zoomOut) {
+    const sid = sectionOf(store, blockEl);
+    const loc = sid ? store.locate(sid) : null;
+    if (!loc) return null;
+    const r = ui.blockEl(sid!)!.getBoundingClientRect();
+    const after = iy > r.top + r.height / 2;
+    return validate(store, src, { docId: loc.docId, parentId: null, index: loc.index + (after ? 1 : 0), rect: toParentRect(new DOMRect(r.left, (after ? r.bottom : r.top) - 2, r.width, 4)), horizontal: false });
+  }
   let id = blockEl.dataset.ecxBlock!;
   for (let guard = 0; guard < 12; guard++) {
     const loc = store.locate(id);

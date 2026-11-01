@@ -387,3 +387,54 @@ test("gắn dữ liệu: attrs.bindings qua lưu → đọc lại còn nguyên; 
   assert.equal(h.type, "heading");
   assert.deepEqual(h.attrs.bindings, bindings);
 });
+
+test("chọn chữ qua nhiều khối: xoá nối phần còn lại, gõ thay thế, khối giữa bị bỏ trọn; hoàn tác một bước", () => {
+  const t = (s: string) => [{ type: "text" as const, text: s }];
+  const a = makeBlock("paragraph", {}, t("Xin chào bạn")), img = makeBlock("image", { src: "/a.png" }), b = makeBlock("heading", { level: 2 }, t("Tiêu đề hai")), c = makeBlock("paragraph", {}, t("Cuối"));
+  const st = store(a, img, b, c);
+  st.selectText({ id: b.id, offset: 4 }, { id: a.id, offset: 4 }); // kéo ngược: head trước anchor
+  const info = st.rangeInfo()!;
+  assert.equal(info.first.id, a.id);
+  assert.deepEqual(info.whole, [img.id]);
+  assert.deepEqual(st.rangeContent().map((n) => [n.type, n.inline ? inlineText(n.inline) : ""]), [["paragraph", "chào bạn"], ["image", ""], ["heading", "Tiêu"]]);
+  assert.ok(st.deleteRange("X"));
+  const blocks = st.getState().docs.root.blocks;
+  assert.deepEqual(blocks.map((x) => [x.type, x.inline ? inlineText(x.inline) : ""]), [["paragraph", "Xin X đề hai"], ["paragraph", "Cuối"]]);
+  assert.deepEqual(st.getState().caret, { id: a.id, offset: 5 });
+  assert.equal(st.getState().range, null);
+  st.undo();
+  assert.equal(st.getState().docs.root.blocks.length, 4);
+});
+
+test("chọn chữ qua nhiều khối: vào trong danh sách — mục cuối trống bị bỏ; khối khoá chặn xoá; Shift+mũi tên mở rộng", () => {
+  const t = (s: string) => [{ type: "text" as const, text: s }];
+  const p = makeBlock("paragraph", {}, t("Mở đầu"));
+  const i1 = makeBlock("listItem", {}, [makeBlock("paragraph", {}, t("Một"))]);
+  const i2 = makeBlock("listItem", {}, [makeBlock("paragraph", {}, t("Hai"))]);
+  const list = makeBlock("bulletList", {}, [i1, i2]);
+  const st = store(p, list);
+  const two = st.getState().docs.root.blocks[1].content![1].content![0];
+  st.selectText({ id: p.id, offset: 3 }, { id: two.id, offset: 3 });
+  assert.deepEqual(st.rangeInfo()!.whole, [i1.id]);
+  st.deleteRange();
+  const after = st.getState().docs.root.blocks;
+  assert.equal(inlineText(after[0].inline!), "Mở ");
+  assert.equal(after.length, 1, "danh sách trống sau khi bỏ hai mục → bỏ luôn");
+  // Khoá
+  const q = makeBlock("paragraph", {}, t("A")), locked = makeBlock("paragraph", { lock: { remove: true } }, t("B")), r = makeBlock("paragraph", {}, t("C"));
+  const st2 = store(q, locked, r);
+  st2.selectText({ id: q.id, offset: 0 }, { id: r.id, offset: 1 });
+  assert.equal(st2.deleteRange(), false);
+  assert.equal(st2.getState().docs.root.blocks.length, 3);
+  // Mở rộng / thu về một khối
+  st2.selectText({ id: q.id, offset: 1 }, { id: locked.id, offset: 1 });
+  st2.extendRange(1);
+  assert.deepEqual(st2.getState().range!.head, { id: r.id, offset: 1 });
+  st2.extendRange(-1); st2.extendRange(-1);
+  assert.equal(st2.getState().range, null);
+  assert.deepEqual(st2.getState().caret, { id: q.id, offset: 0, to: 1 });
+  // Chọn khối khác → bỏ dải chữ
+  st2.selectText({ id: q.id, offset: 0 }, { id: r.id, offset: 1 });
+  st2.select([r.id]);
+  assert.equal(st2.getState().range, null);
+});

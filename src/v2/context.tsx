@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
 import type { EditorStore, EditorState, EditingMode } from "./store";
 import type { BlockTypeRegistry } from "./registry";
-import type { EditorHost } from "./host";
+import type { DynamicData, DynamicPost, EditorHost } from "./host";
 import type { V2Labels } from "./labels";
 import type { PrefsStore } from "./prefs";
 
@@ -30,6 +30,9 @@ export class EditorUi {
   drag: DragState | null = null;
   /** Đang gõ chữ: ẩn thanh công cụ cho khỏi che chữ (rê chuột thì hiện lại). */
   typing = false;
+  /** Thu nhỏ: cả trang trong tầm nhìn, chỉ chọn / sắp xếp các phần (khối cấp cao nhất). */
+  zoomOut = false;
+  setZoomOut(v: boolean) { if (this.zoomOut !== v) { this.zoomOut = v; this.bump(); } }
   setTyping(v: boolean) { if (this.typing !== v) { this.typing = v; this.bump(); } }
   /** Bàn phím của popover chèn khối khi đang gõ "/" (khối chữ chuyển phím lên/xuống/Enter/Esc sang). */
   inserterKey: ((key: string) => boolean) | null = null;
@@ -129,4 +132,13 @@ export function DocScopeProvider({ value, children }: { value: DocScope; childre
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const stable = useMemo(() => value, [value.docId, value.mode, value.depth, chain]);
   return <DocScopeContext.Provider value={stable}>{children}</DocScopeContext.Provider>;
+}
+
+/** Bài của mục đang vẽ trong "Danh sách bài" — khối bài (tiêu đề, ảnh…) và gắn dữ liệu core/post đọc bài này. */
+export const LoopPostContext = createContext<DynamicPost | null>(null);
+/** Dữ liệu động của chỗ đang vẽ: host.dynamic, với `post` là bài của mục danh sách bài (nếu nằm trong). */
+export function useDynamicData(): DynamicData {
+  const { host } = useEditor();
+  const post = useContext(LoopPostContext);
+  return useMemo(() => (post ? { ...host.dynamic, post } : host.dynamic ?? {}), [host.dynamic, post]);
 }

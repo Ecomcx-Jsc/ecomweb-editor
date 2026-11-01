@@ -1,6 +1,6 @@
 import { Database, Unlink } from "lucide-react";
 import { createElement, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
-import { useEditor } from "./context";
+import { useDynamicData, useEditor } from "./context";
 import type { DynamicData } from "./host";
 import type { BNode } from "./model";
 import type { BlockProps } from "./registry";
@@ -69,7 +69,7 @@ export const bindingsOf = (b: BNode) => (b.attrs.bindings as Record<string, Bind
 
 /** Giá trị xem trước của thuộc tính được gắn (undefined = chưa gắn / nguồn chưa có dữ liệu mẫu). */
 export function useBindingPreview(block: BNode, attr: string): { bound: boolean; value?: string; label?: string } {
-  const { host } = useEditor();
+  const dynamic = useDynamicData();
   useSyncExternalStore(subscribe, bindingSources, bindingSources);
   const b = bindingsOf(block)?.[attr];
   const src = b ? sources.get(b.source) : undefined;
@@ -78,10 +78,10 @@ export function useBindingPreview(block: BNode, attr: string): { bound: boolean;
   useEffect(() => {
     let alive = true;
     if (!b || !src?.preview) { setValue(undefined); return; }
-    Promise.resolve(src.preview(b.args ?? {}, { dynamic: host.dynamic })).then((v) => { if (alive) setValue(v == null || v === "" ? undefined : String(v)); }, () => { if (alive) setValue(undefined); });
+    Promise.resolve(src.preview(b.args ?? {}, { dynamic })).then((v) => { if (alive) setValue(v == null || v === "" ? undefined : String(v)); }, () => { if (alive) setValue(undefined); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, src, host.dynamic]);
+  }, [key, src, dynamic]);
   if (!b) return { bound: false };
   const field = src?.fields?.find((f) => f.value === b.args?.[src.argKey ?? "field"])?.label ?? String(b.args?.[src?.argKey ?? "field"] ?? "");
   return { bound: true, value, label: `${src?.label ?? b.source}${field ? ` › ${field}` : ""}` };
