@@ -30,18 +30,27 @@ function SiteLogoEdit({ block, blockProps }: BlockEditProps) {
   const w = Number(block.attrs.width) || 120;
   return <div {...merge(blockProps, "ecx-site-logo")}>{d.site?.logo ? <img src={d.site.logo} alt="" width={w} draggable={false} /> : <span className="ecx-logo-placeholder" style={{ width: w }}><ImageIcon className="ecx-icon" /></span>}</div>;
 }
+/** Menu: cùng markup với website (theme-sdk) — nav.ecx-navigation-menu > ul > li > a, nút ☰ cho điện thoại. */
 function NavigationEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
+  const { labels } = useEditor();
   const location = String(block.attrs.location ?? "primary");
   const items = d.menus?.[location];
-  const { labels } = useEditor();
-  return (
-    <div {...merge(blockProps, cx("ecx-navigation", `ecx-navigation-${block.attrs.orientation ?? "horizontal"}`))}>
-      <div className="ecx-navigation-items">
-        <ul className="ecx-navigation-menu">
-          {items?.length ? items.map((it, i) => <li key={i}><a>{it.title}</a></li>) : <li><a>{labels.lang === "vi" ? `(menu “${location}”)` : `(menu “${location}”)`}</a></li>}
-        </ul>
+  const mobile = block.attrs.mobile !== false;
+  const vi = labels.lang === "vi";
+  if (!items?.length) {
+    return (
+      <div {...merge(blockProps, "ecx-navigation ecx-placeholder-block")}>
+        <span className="ecx-placeholder-title"><Menu className="ecx-icon" /> {vi ? "Menu" : "Menu"} · {location}</span>
+        <span className="ecx-placeholder-summary">{vi ? "Chưa có menu nào gán cho vị trí này — gán ở Giao diện › Menu, hoặc chọn vị trí khác trong bảng cài đặt." : "No menu is assigned to this location — assign one in Appearance › Menus, or pick another location."}</span>
       </div>
+    );
+  }
+  const menu = <nav className="ecx-navigation-menu" aria-label={location}><ul>{items.map((it, i) => <li key={i}><a href={it.url} onClick={(e) => e.preventDefault()}>{it.title}</a></li>)}</ul></nav>;
+  return (
+    <div {...merge(blockProps, cx("ecx-navigation", `ecx-navigation-${block.attrs.orientation ?? "horizontal"}`, mobile && "has-mobile"))}>
+      <div className="ecx-navigation-items">{menu}</div>
+      {mobile && <details className="ecx-navigation-toggle"><summary aria-label={vi ? "Menu" : "Menu"}>☰</summary>{menu}</details>}
     </div>
   );
 }

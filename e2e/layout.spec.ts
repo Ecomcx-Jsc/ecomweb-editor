@@ -47,7 +47,7 @@ test.describe("bố cục + hiệu ứng", () => {
     const insp = page.locator(".ecx-inspector");
     await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
     // Khổ điện thoại trong bảng Kiểu dáng rồi đặt 1 cột
-    await insp.getByRole("button", { name: /Điện thoại|Mobile/ }).first().click();
+    await insp.getByRole("radio", { name: /Điện thoại|Mobile/ }).first().click();
     await insp.getByLabel("Số cột").selectOption("1");
     const g = await groupOf(page);
     expect(g.attrs.style.layout.columns).toEqual({ base: 3, mobile: 1 });

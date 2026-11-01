@@ -1,5 +1,5 @@
 import { embedInfo, isSafeUrl } from "@ecomcx/ecomweb-content";
-import { Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Share2, Video, Play, Globe } from "lucide-react";
+import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Play, Globe, X } from "lucide-react";
 import { useState } from "react";
 import { useEditor } from "../context";
 import type { BlockEditProps, BlockType } from "../core/registry";
@@ -134,12 +134,61 @@ function HtmlEdit({ block, blockProps, setAttrs, selected, editable }: BlockEdit
   );
 }
 
-function SocialEdit({ block, blockProps }: BlockEditProps) {
-  const links = (Array.isArray(block.attrs.links) ? block.attrs.links : []) as Array<{ service: string; url: string; label?: string }>;
+/** Mạng xã hội hỗ trợ (cùng danh sách với website — theme-sdk). */
+const SOCIAL: Array<[string, string]> = [
+  ["facebook", "Facebook"], ["zalo", "Zalo"], ["messenger", "Messenger"], ["youtube", "YouTube"], ["tiktok", "TikTok"], ["instagram", "Instagram"], ["x", "X"],
+  ["threads", "Threads"], ["linkedin", "LinkedIn"], ["telegram", "Telegram"], ["pinterest", "Pinterest"], ["github", "GitHub"], ["email", "Email"], ["website", "Website"],
+];
+const socialName = (s: string) => SOCIAL.find(([v]) => v === s)?.[1] ?? s;
+type SocialLink = { service: string; url: string; label?: string };
+const linksOf = (a: Record<string, unknown>) => (Array.isArray(a.links) ? a.links : []) as SocialLink[];
+
+function SocialEdit({ block, blockProps, labels }: BlockEditProps) {
+  const links = linksOf(block.attrs).filter((l) => l.url);
+  const a = block.attrs;
+  if (!links.length) {
+    return (
+      <div {...(blockProps as object)} className={cx(blockProps.className, "ecx-placeholder-block")}>
+        <span className="ecx-placeholder-title"><Share2 className="ecx-icon" /> {labels.lang === "vi" ? "Mạng xã hội" : "Social links"}</span>
+        <span className="ecx-placeholder-summary">{labels.lang === "vi" ? "Thêm liên kết ở bảng cài đặt bên phải." : "Add links in the settings panel."}</span>
+      </div>
+    );
+  }
   return (
-    <ul {...(blockProps as object)} className={cx(blockProps.className, "ecx-social", `is-${block.attrs.size ?? "medium"}`, typeof block.attrs.align === "string" && `is-${block.attrs.align}`)}>
-      {links.length ? links.map((l, i) => <li key={i}><span className={`ecx-social-${l.service}`}>{l.label || l.service}</span></li>) : <li className="ecx-placeholder-title"><Share2 className="ecx-icon" /> Social</li>}
+    <ul {...(blockProps as object)} className={cx(blockProps.className, "ecx-social", `is-${a.size ?? "medium"}`, typeof a.align === "string" && `is-${a.align}`, !!a.showLabels && "has-labels")}>
+      {links.map((l, i) => <li key={i}><a className={`ecx-social-${l.service}`} title={l.label || socialName(l.service)} onClick={(e) => e.preventDefault()}>{l.label || socialName(l.service)}</a></li>)}
     </ul>
+  );
+}
+
+/** Danh sách liên kết mạng xã hội trong bảng cài đặt: chọn mạng, dán địa chỉ, đổi thứ tự, xoá. */
+function SocialInspector({ attrs, setAttrs, labels }: BlockEditProps) {
+  const links = linksOf(attrs);
+  const vi = labels.lang === "vi";
+  const save = (next: SocialLink[]) => setAttrs({ links: next });
+  const patch = (i: number, p: Partial<SocialLink>) => save(links.map((l, k) => (k === i ? { ...l, ...p } : l)));
+  const move = (i: number, d: -1 | 1) => { const n = [...links]; [n[i], n[i + d]] = [n[i + d], n[i]]; save(n); };
+  return (
+    <div className="ecx-social-editor" role="group" aria-label={vi ? "Liên kết mạng xã hội" : "Social links"}>
+      <span className="ecx-field-label">{vi ? "Liên kết" : "Links"}</span>
+      {links.map((l, i) => (
+        <div key={i} className="ecx-social-row" data-social-row={i}>
+          <select className="ecx-input" aria-label={vi ? `Mạng ${i + 1}` : `Network ${i + 1}`} value={l.service} onChange={(e) => patch(i, { service: e.target.value })}>
+            {SOCIAL.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+          </select>
+          <input className="ecx-input" type="url" aria-label={vi ? `Địa chỉ ${i + 1}` : `URL ${i + 1}`} placeholder={l.service === "email" ? "mailto:ban@congty.vn" : "https://…"} value={l.url}
+            aria-invalid={!!l.url && !isSafeUrl(l.url) || undefined} onChange={(e) => patch(i, { url: e.target.value.trim() })} />
+          <span className="ecx-social-row-tools">
+            <button type="button" className="ecx-tool" aria-label={vi ? "Lên" : "Up"} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="ecx-icon ecx-icon-sm" /></button>
+            <button type="button" className="ecx-tool" aria-label={vi ? "Xuống" : "Down"} disabled={i === links.length - 1} onClick={() => move(i, 1)}><ArrowDown className="ecx-icon ecx-icon-sm" /></button>
+            <button type="button" className="ecx-tool" aria-label={vi ? "Xoá liên kết" : "Remove link"} onClick={() => save(links.filter((_, k) => k !== i))}><X className="ecx-icon ecx-icon-sm" /></button>
+          </span>
+        </div>
+      ))}
+      <button type="button" className="ecx-btn" onClick={() => save([...links, { service: SOCIAL.find(([v]) => !links.some((l) => l.service === v))?.[0] ?? "website", url: "" }])}>
+        <Plus className="ecx-icon ecx-icon-sm" /> {vi ? "Thêm liên kết" : "Add link"}
+      </button>
+    </div>
   );
 }
 
@@ -180,7 +229,7 @@ export function mediaBlocks(): BlockType[] {
     { name: "youtube", title: "YouTube", icon: Play, category: "embed", keywords: "video youtube", kind: "atom", edit: YoutubeEdit, attributes: { src: { type: "url" }, start: { type: "integer" } }, supports: { style: true, anchor: true } },
     { name: "embed", title: "Nhúng", icon: Globe, category: "embed", keywords: "nhung embed youtube vimeo tiktok facebook twitter x instagram spotify google map", kind: "atom", edit: EmbedEdit, attributes: { url: { type: "url" }, caption: { type: "string" } }, supports: { style: true, anchor: true }, summary: (a) => a.url },
     { name: "customHtml", title: "HTML tuỳ chỉnh", icon: Code2, category: "widgets", keywords: "html tuy chinh custom code", kind: "atom", edit: HtmlEdit, attributes: { html: { type: "string", control: "textarea" } } },
-    { name: "socialLinks", title: "Mạng xã hội", icon: Share2, category: "widgets", keywords: "mang xa hoi social facebook zalo youtube tiktok", kind: "atom", edit: SocialEdit, attributes: { links: { type: "json", default: [] }, size: { type: "string", enum: ["small", "medium", "large"], default: "medium" }, align: { type: "string", enum: ["left", "center", "right"] }, showLabels: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
+    { name: "socialLinks", title: "Mạng xã hội", icon: Share2, category: "widgets", keywords: "mang xa hoi social facebook zalo youtube tiktok", kind: "atom", edit: SocialEdit, inspector: SocialInspector, attributes: { links: { type: "json", default: [] }, size: { type: "string", enum: ["small", "medium", "large"], default: "medium" }, align: { type: "string", enum: ["left", "center", "right"] }, showLabels: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
     { name: "tableOfContents", title: "Mục lục", icon: ListTree, category: "widgets", keywords: "muc luc table of contents toc", kind: "atom", edit: TocEdit, attributes: { title: { type: "string" }, maxLevel: { type: "integer", default: 3, min: 2, max: 4 } }, supports: { style: true, anchor: true } },
   ];
 }

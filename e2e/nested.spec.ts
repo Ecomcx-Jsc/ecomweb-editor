@@ -6,7 +6,7 @@ test.describe("tài liệu lồng (header / footer)", () => {
   test("header, footer tải qua host và hiện dữ liệu thật của khối động", async ({ page }) => {
     const c = await open(page);
     await expect(c.locator(".ecx-template-part-header .ecx-site-title")).toHaveText("ECOMCX Demo");
-    await expect(c.locator(".ecx-template-part-header .ecx-navigation-menu li")).toHaveText(["Trang chủ", "Giới thiệu", "Liên hệ"]);
+    await expect(c.locator(".ecx-template-part-header .ecx-navigation-items .ecx-navigation-menu li")).toHaveText(["Trang chủ", "Giới thiệu", "Liên hệ"]);
     await expect(c.locator(".ecx-template-part-footer")).toContainText("Chân trang © ECOMCX");
     await expect(c.locator("header.ecx-template-part")).toHaveCount(1);
     await expect(c.locator("footer.ecx-template-part")).toHaveCount(1);

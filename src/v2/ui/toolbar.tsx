@@ -2,6 +2,7 @@ import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, Che
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { serializeBlocks } from "../core/clipboard";
 
 /** Khối → nội dung lưu (ContentDoc). */
@@ -28,16 +29,39 @@ export function ToolButton({ label, onClick, active, disabled, children, classNa
 export function Dropdown({ label, trigger, children, className }: { label: string; trigger: ReactNode; children: (close: () => void) => ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   useEffect(() => {
     if (!open) return;
-    const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node) && !menuRef.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    const away = (e: Event) => { if (!menuRef.current?.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    document.addEventListener("keydown", esc);
+    window.addEventListener("resize", away);
+    document.addEventListener("scroll", away, true);
+    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); window.removeEventListener("resize", away); document.removeEventListener("scroll", away, true); };
+  }, [open]);
+  // Menu nằm ở body (vị trí fixed): không bị cắt bởi thanh cuộn ngang của thanh công cụ cố định / khung có overflow;
+  // sát mép phải / dưới thì lật sang trái / lên trên
+  useLayoutEffect(() => {
+    if (!open) { setPos(null); return; }
+    const t = ref.current?.getBoundingClientRect(), m = menuRef.current;
+    if (!t || !m) return;
+    const w = m.offsetWidth, h = m.offsetHeight;
+    // Gốc toạ độ của "fixed": khung nhìn, hoặc khối cha có transform (trang admin có hiệu ứng chuyển trang) → đo rồi trừ ra
+    const origin = m.getBoundingClientRect();
+    const left = t.left + w > window.innerWidth - 8 ? Math.max(8, t.right - w) : t.left;
+    const top = t.bottom + 6 + h > window.innerHeight - 8 && t.top - 6 - h > 8 ? t.top - 6 - h : t.bottom + 6;
+    setPos({ top: Math.round(top - origin.top), left: Math.round(left - origin.left) });
   }, [open]);
   return (
     <div className={cx("ecx-dropdown", className)} ref={ref}>
       <ToolButton label={label} onClick={() => setOpen((o) => !o)} active={open} aria-haspopup="menu" aria-expanded={open}>{trigger}</ToolButton>
-      {open && <div className="ecx-menu" role="menu">{children(() => setOpen(false))}</div>}
+      {open && createPortal(
+        <div ref={menuRef} className="ecx-menu is-floating" role="menu" style={pos ? { top: pos.top, left: pos.left } : { visibility: "hidden", top: 0, left: 0 }}>{children(() => setOpen(false))}</div>,
+        (ref.current?.closest(".ecx-editor") as HTMLElement | null) ?? document.body,
+      )}
     </div>
   );
 }

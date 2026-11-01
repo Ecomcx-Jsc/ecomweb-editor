@@ -32,7 +32,7 @@ test.describe("giao diện (ảnh chụp)", () => {
   test("menu tuỳ chọn + hộp tuỳ chọn", async ({ page }) => {
     await open(page, "?doc=post");
     await page.getByRole("button", { name: "Tuỳ chọn", exact: true }).click();
-    await expect(page.locator(".ecx-more-menu .ecx-menu")).toHaveScreenshot("options-menu.png", shot);
+    await expect(page.locator(".ecx-menu.is-floating")).toHaveScreenshot("options-menu.png", shot);
     await page.getByRole("menu").getByText("Tuỳ chọn trình soạn…").click();
     await page.getByRole("dialog").getByRole("tab", { name: "Khối" }).click();
     await expect(page.locator(".ecx-modal")).toHaveScreenshot("preferences-blocks.png", shot);

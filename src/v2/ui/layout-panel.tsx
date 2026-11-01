@@ -1,45 +1,14 @@
 import { normalizeGradient, normalizeStyle, type BlockLayout, type BlockStyle, type Device } from "@ecomcx/ecomweb-content";
 import { AlignCenterVertical, AlignEndVertical, AlignStartVertical, ArrowDown, ArrowRight, Columns3, LayoutGrid, Rows3, Square, StretchVertical, AlignHorizontalSpaceBetween, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyStart } from "lucide-react";
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useState } from "react";
 import { useEditor } from "../context";
-import { ColorSwatchInput } from "../../shared/color-swatch";
+import { ColorInput } from "./color-field";
+import { Row, Section, Seg, cx } from "./style-controls";
 
 /**
  * Bố cục, nền chuyển màu, bóng, tỉ lệ, ghim và hover (@ecomcx/ecomweb-content 1.15) — phần thêm của tab Kiểu dáng.
  * Giá trị theo khổ (hướng, căn, số cột) sửa theo khổ đang chọn ở bảng Kiểu dáng (`device`).
  */
-const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
-type Icon = ComponentType<{ className?: string }>;
-
-function Seg<T extends string>({ value, options, onChange, label }: { value: T | undefined; options: Array<[T, Icon | string, string]>; onChange(v: T | undefined): void; label: string }) {
-  return (
-    <div role="radiogroup" aria-label={label} className="ecx-seg">
-      {options.map(([v, I, title]) => (
-        <button key={v} type="button" role="radio" aria-checked={value === v} title={title} aria-label={title} className={cx("ecx-seg-btn", value === v && "is-active")}
-          onClick={() => onChange(value === v ? undefined : v)}>{typeof I === "string" ? I : <I className="ecx-icon" />}</button>
-      ))}
-    </div>
-  );
-}
-function Row({ label, children, device }: { label: string; children: ReactNode; device?: Device }) {
-  const { labels } = useEditor();
-  return (
-    <div className="ecx-style-row">
-      <span className="ecx-field-label">{label}{device && device !== "base" && <em className="ecx-device-tag">{device === "tablet" ? labels.lang === "vi" ? "Máy tính bảng" : "Tablet" : labels.lang === "vi" ? "Điện thoại" : "Mobile"}</em>}</span>
-      {children}
-    </div>
-  );
-}
-function Section({ title, children, defaultOpen = true }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <section className="ecx-style-section">
-      <button type="button" className="ecx-style-section-head" aria-expanded={open} onClick={() => setOpen(!open)}>{title}<span aria-hidden>{open ? "−" : "+"}</span></button>
-      {open && <div className="ecx-style-section-body">{children}</div>}
-    </section>
-  );
-}
-
 const V = { vi: {
   layout: "Bố cục", type: "Kiểu", flow: "Nhóm", row: "Hàng ngang", stack: "Xếp dọc", grid: "Lưới", direction: "Hướng", justify: "Căn ngang", align: "Căn dọc",
   wrap: "Cho xuống dòng", columns: "Số cột", auto: "Tự chia", minWidth: "Rộng tối thiểu mỗi cột", effects: "Nền & hiệu ứng", gradient: "Nền chuyển màu",
@@ -188,15 +157,3 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device }: { typ
   );
 }
 
-/** Ô màu: preset của theme + bảng chọn màu + bỏ màu. */
-function ColorInput({ value, onChange, label }: { value?: string; onChange(v: string | undefined): void; label: string }) {
-  const { host } = useEditor();
-  const presets = Object.entries(host.presets?.colors ?? {});
-  return (
-    <div className="ecx-chip-row">
-      {presets.map(([name, c]) => <button key={name} type="button" className={cx("ecx-chip ecx-chip-swatch", value === name && "is-active")} title={name} aria-label={`${label}: ${name}`} style={{ background: c }} onClick={() => onChange(value === name ? undefined : name)} />)}
-      <ColorSwatchInput value={value} onChange={onChange} label={label} />
-      {value && <button type="button" className="ecx-chip" onClick={() => onChange(undefined)}>×</button>}
-    </div>
-  );
-}

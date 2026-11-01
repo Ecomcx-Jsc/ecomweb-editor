@@ -2,18 +2,16 @@ import type { Device } from "@ecomcx/ecomweb-content";
 import { CORE_BLOCK_STYLES } from "@ecomcx/ecomweb-content";
 import { Blocks } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
-import { enLabels, viLabels } from "../../shared/labels";
 import { blockPanelsFor, onBlockPanelsChange } from "../../shared/panel-store";
-import { StylePanel } from "../../shared/style-panel";
 import { useEditor, useEditorState } from "../context";
 import type { BNode } from "../core/model";
 import { ATTR_LABELS, AttrForm, Field, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
-import { LayoutEffectsPanel } from "./layout-panel";
+import { StyleTab } from "./style-tab";
 
 /** Bảng cài đặt của khối đang chọn: thẻ khối, tab Cài đặt (form + phần riêng của khối), tab Kiểu dáng. */
 export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<{ name: string; label: string }>> }) {
-  const { store, registry, host, labels } = useEditor();
+  const { store, registry, labels } = useEditor();
   const sel = useEditorState((s) => s.selection);
   useEditorState((s) => s.revision);
   const [tab, setTab] = useState<"settings" | "style">("settings");
@@ -28,7 +26,6 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const disabled = store.modeOf(first.id) === "disabled";
   const setAttrs = (a: Record<string, unknown>) => store.setAttrs(ids, a);
   const Custom = same && nodes.length === 1 ? type?.inspector : undefined;
-  const v1 = labels.lang === "vi" ? viLabels : enLabels;
   const bindable = type?.bindable ?? CORE_BINDABLE[first.type];
   const variants = [...(CORE_BLOCK_STYLES[first.type] ?? []).map((name) => ({ name, label: name })), ...(blockStyles?.[first.type] ?? [])];
   return (
@@ -59,9 +56,8 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             </div>
           ) : (
             <div className="ecx-panel">
-              <StylePanel style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} t={v1} device={device} onDeviceChange={setDevice} presets={host.presets}
+              <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice}
                 variants={variants.length ? variants : undefined} variant={(first.attrs.blockStyle as string) ?? null} onVariantChange={(v) => setAttrs({ blockStyle: v ?? undefined })} />
-              <LayoutEffectsPanel type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} />
             </div>
           )}
         </>

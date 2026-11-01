@@ -74,6 +74,16 @@ const host: EditorHost = {
     menus: { primary: [{ title: "Trang chủ" }, { title: "Giới thiệu" }, { title: "Liên hệ" }] },
     post: { title: "Bài viết mẫu", date: "01/11/2026", author: "Admin", excerpt: "Tóm tắt bài viết mẫu." },
   },
+  choices(kind, args) {
+    switch (kind) {
+      case "menuLocation": return [{ value: "primary", label: "Menu chính" }, { value: "footer", label: "Chân trang — chưa gán menu" }];
+      case "postType": return [{ value: "post", label: "Bài viết" }, { value: "page", label: "Trang" }];
+      case "taxonomy": return [{ value: "category", label: "Chuyên mục" }, { value: "post_tag", label: "Thẻ" }];
+      case "term": return args?.taxonomy === "category" ? [{ value: "tin-tuc", label: "Tin tức" }, { value: "san-pham", label: "Sản phẩm" }, { value: "huong-dan", label: "Hướng dẫn" }] : [{ value: "noi-bat", label: "Nổi bật" }];
+      case "templatePart": return [{ value: "header", label: "Đầu trang (header)" }, { value: "footer", label: "Chân trang (footer)" }];
+      default: return [];
+    }
+  },
   async queryPosts(q) {
     await new Promise((r) => setTimeout(r, 20));
     queries.push(q);

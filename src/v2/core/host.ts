@@ -26,6 +26,11 @@ export interface EditorHost {
    * "Tạo mẫu" từ các khối đang chọn: ứng dụng hỏi tên / nhóm / đồng bộ rồi lưu. Trả về mẫu đã tạo (đồng bộ → các khối được
    * thay bằng tham chiếu tới mẫu), null = huỷ. Không có → ẩn lệnh.
    */
+  /**
+   * Lựa chọn cho ô cài đặt của khối (vị trí menu, loại bài, phân loại, chuyên mục / thẻ, phần dùng chung, cỡ ảnh) — dữ liệu
+   * thật của website. Không có → ô gõ tay.
+   */
+  choices?(kind: ChoiceKind, args?: Record<string, string>): Promise<Choice[]> | Choice[];
   /** Bài thật cho "Danh sách bài" theo thiết lập của khối (soạn thấy đúng bài sẽ hiện). Không có → dynamic.posts. */
   queryPosts?(query: QueryArgs): Promise<DynamicPost[]>;
   createPattern?(content: SavedContent): Promise<{ ref: number; synced: boolean } | null>;
@@ -57,6 +62,9 @@ export type DynamicPost = { title?: string; date?: string; author?: string; exce
 
 /** Thiết lập của khối "Danh sách bài" (attrs của query). */
 export interface QueryArgs { inherit: boolean; postType: string; perPage: number; category?: string; tag?: string; orderBy: string; order: "asc" | "desc" }
+
+export type ChoiceKind = "menuLocation" | "postType" | "taxonomy" | "term" | "templatePart" | "imageSize";
+export interface Choice { value: string; label: string }
 
 export interface DynamicData {
   site?: { title?: string; tagline?: string; logo?: string | null };
