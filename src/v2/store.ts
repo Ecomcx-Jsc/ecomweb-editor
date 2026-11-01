@@ -597,7 +597,8 @@ export class EditorStore {
     const list = this.locate(loc.parent.id)!;
     const outerItem = list.parent && (list.parent.type === "listItem" || list.parent.type === "taskItem") ? this.locate(list.parent.id) : null;
     const docId = loc.docId;
-    const caret = this.lastCaret?.id === loc.block.content?.[0]?.id ? this.lastCaret : { id: loc.block.content![0].id, offset: 0 };
+    const firstId = loc.block.content![0].id;
+    const caret: Caret = this.lastCaret && this.lastCaret.id === firstId ? this.lastCaret : { id: firstId, offset: 0 };
     let blocks = this.state.docs[docId].blocks;
     // Các mục sau mục này trong cùng danh sách đi theo (thành danh sách con của nó / danh sách mới)
     const siblingsAfter = list.block.content!.slice(loc.index + 1);

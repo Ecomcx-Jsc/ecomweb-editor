@@ -68,3 +68,5 @@ node_modules/@tiptap/*
 !node_modules/@types/
 node_modules/@types/*
 !node_modules/@types/use-sync-external-store/
+test-results/
+playwright-report/
