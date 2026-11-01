@@ -25,7 +25,7 @@ export class EditorUi {
   /** Popover chèn khối (slash "/" hoặc nút "+") đang mở. */
   inserter: InserterRequest | null = null;
   drag: DragState | null = null;
-  /** Đang gõ chữ: ẩn thanh công cụ cho khỏi che chữ (rê chuột thì hiện lại) — như WordPress. */
+  /** Đang gõ chữ: ẩn thanh công cụ cho khỏi che chữ (rê chuột thì hiện lại). */
   typing = false;
   setTyping(v: boolean) { if (this.typing !== v) { this.typing = v; this.bump(); } }
   /** Bàn phím của popover chèn khối khi đang gõ "/" (khối chữ chuyển phím lên/xuống/Enter/Esc sang). */
@@ -53,7 +53,7 @@ export class EditorUi {
     return new DOMRect(f.left + r.left * scale, f.top + r.top * scale, r.width * scale, r.height * scale);
   }
   openInserter(req: InserterRequest | null) { this.inserter = req; this.bump(); }
-  /** Alt+F10: đưa bàn phím lên thanh công cụ của khối (như WordPress). */
+  /** Alt+F10: đưa bàn phím lên thanh công cụ của khối. */
   focusToolbar() { document.querySelector<HTMLElement>(".ecx-toolbar button:not(:disabled)")?.focus(); }
   setDrag(d: DragState | null) { this.drag = d; this.bump(); }
 }

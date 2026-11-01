@@ -111,7 +111,7 @@ function PostContentEdit({ blockProps }: BlockEditProps) {
 function QueryEdit({ block, blockProps }: BlockEditProps) {
   return <div {...merge(blockProps, "ecx-query")}><InnerBlocks parent={block} /></div>;
 }
-/** Khuôn mỗi bài: sửa bài đầu, các bài sau là bản xem trước (giống WordPress). */
+/** Khuôn mỗi bài: sửa bài đầu, các bài sau là bản xem trước. */
 function PostTemplateEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
   const grid = block.attrs.layout === "grid";
@@ -138,7 +138,7 @@ function NestedShell({ blockProps, className, tag = "div", label, docRef, onFocu
     <NestedDoc docRef={docRef} render={(content, state) => (
       <Tag {...(blockProps as object)} className={cx(blockProps.className, "ecx-nested", className, state.status !== "ready" && "is-pending")} data-ecx-nested={state.docId}
         onDoubleClick={(e) => { e.stopPropagation(); onFocusEdit(state.docId); }}>
-        <span className="ecx-nested-label" contentEditable={false}>{label}{state.title ? ` · ${state.title}` : ""}</span>
+        <span className="ecx-nested-label" contentEditable={false}>{label}{state.title && state.title !== String(docRef.ref) ? ` · ${state.title}` : ""}</span>
         {content}
         {children}
       </Tag>

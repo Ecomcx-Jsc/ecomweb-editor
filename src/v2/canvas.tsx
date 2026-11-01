@@ -118,6 +118,19 @@ function useCanvasStyles(doc: Document) {
         add(st);
       }
     }
+    // Màu viền chọn / phần dùng chung theo màu của giao diện bên ngoài (thương hiệu, sáng/tối)
+    const outer = doc.defaultView?.frameElement as HTMLElement | null;
+    if (outer) {
+      const cs = getComputedStyle(outer);
+      const vars = [["--ecx-ui", "--ecx-ed-accent"], ["--ecx-ui-nested", "--ecx-ed-brand"], ["--ecx-ui-font", "--ecx-ed-font"]]
+        .map(([inner, from]) => [inner, cs.getPropertyValue(from).trim()]).filter(([, v]) => v);
+      if (vars.length) {
+        const st = doc.createElement("style");
+        st.dataset.ecx = "chrome";
+        st.textContent = `:root{${vars.map(([k, v]) => `${k}:${v}`).join(";")}}`;
+        add(st);
+      }
+    }
     if (host.presets) {
       const p = doc.createElement("style");
       p.dataset.ecx = "presets";

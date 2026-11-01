@@ -24,6 +24,9 @@ export interface EditorHost {
   translate?(text: string): string;
 }
 
+/** Nội dung lưu (ContentDoc của @ecomcx/ecomweb-content). */
+export interface SavedContent { version: number; blocks: Array<{ type: string; data: unknown; id?: string }> }
+
 export interface NestedDocRef {
   kind: string;
   ref: unknown;
@@ -39,8 +42,8 @@ export interface DocumentHost {
   /** Định danh tài liệu trong store (mặc định `${kind}:${ref}`). */
   idOf?(ref: NestedDocRef): string;
   load(ref: NestedDocRef): Promise<LoadedDoc | null>;
-  /** Lưu một tài liệu lồng (trình soạn gọi cho từng tài liệu có thay đổi khi bấm Lưu). */
-  save?(ref: NestedDocRef, blocks: BNode[], content: unknown): Promise<void>;
+  /** Lưu một tài liệu lồng (trình soạn gọi cho từng tài liệu có thay đổi khi bấm Lưu). `content` là ContentDoc chuẩn. */
+  save?(ref: NestedDocRef, blocks: BNode[], content: SavedContent): Promise<void>;
 }
 
 export interface DynamicData {

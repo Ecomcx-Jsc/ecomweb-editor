@@ -20,14 +20,21 @@ const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "strin
 
 /** Nội dung lưu (ContentDoc, cây doc RichNode, HTML cũ) → khối cấp cao nhất. */
 export function blocksFromContent(value: unknown): BNode[] {
-  if (value == null) return [];
+  return splitContent(value).blocks;
+}
+/**
+ * Tách nội dung lưu: khối soạn được (richtext) + các khối khác giữ nguyên (HTML nhập từ hệ thống cũ, khối của plugin cấp ContentDoc)
+ * — truyền lại `extra` cho contentFromBlocks để lưu không mất dữ liệu.
+ */
+export function splitContent(value: unknown): { blocks: BNode[]; extra: Array<{ type: string; data: unknown; id?: string }> } {
+  if (value == null) return { blocks: [], extra: [] };
   const { doc } = normalizeContent(value);
   const rich = doc.blocks.find((b) => b.type === "richtext")?.data as RichNode | undefined;
-  return blocksFromDoc(rich);
+  return { blocks: blocksFromDoc(rich), extra: doc.blocks.filter((b) => b.type !== "richtext") };
 }
 /** Khối → nội dung lưu (ContentDoc chuẩn của CMS). */
-export function contentFromBlocks(blocks: BNode[]) {
-  return { version: 1, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }] };
+export function contentFromBlocks(blocks: BNode[], extra: Array<{ type: string; data: unknown; id?: string }> = []) {
+  return { version: 1, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }, ...extra] };
 }
 
 export interface EditorProviderProps {
@@ -44,7 +51,7 @@ export interface EditorProviderProps {
   /** Cho chèn khối giao diện (tên website, menu, danh sách bài, phần dùng chung). */
   dynamicBlocks?: boolean;
   /**
-   * Template bao quanh khi sửa trang (giống WordPress "template-locked"): template hiện nhưng khoá, khối "Nội dung bài"
+   * Template bao quanh khi sửa trang (template khoá): template hiện nhưng khoá, khối "Nội dung bài"
    * là chỗ sửa trang. Có nút bật/tắt hiện template.
    */
   frame?: { content: unknown; title?: string };
@@ -117,6 +124,8 @@ export interface BlockEditorProps extends Omit<EditorProviderProps, "children"> 
   onSave?(content: ReturnType<typeof contentFromBlocks>): Promise<void>;
   /** Phần đầu thanh trên cùng (tên trang, nút quay lại…). */
   header?: ReactNode;
+  /** Nút thêm của ứng dụng ở cuối thanh trên cùng, trước nút Lưu (lịch sử, đặt lại…). */
+  actions?: ReactNode;
   /** Vẽ thêm trên nội dung trong khung soạn (ô tiêu đề bài). */
   canvasBefore?: ReactNode;
   defaultDevice?: Device;
@@ -125,15 +134,15 @@ export interface BlockEditorProps extends Omit<EditorProviderProps, "children"> 
 }
 
 /** Trình soạn đầy đủ: thanh trên cùng, thư viện khối / cây khối, khung soạn, bảng cài đặt. */
-export function BlockEditor({ className, onSave, header, canvasBefore, defaultDevice = "desktop", blockStyles, ...provider }: BlockEditorProps) {
+export function BlockEditor({ className, onSave, header, actions, canvasBefore, defaultDevice = "desktop", blockStyles, ...provider }: BlockEditorProps) {
   return (
     <EditorProvider {...provider}>
-      <EditorShell className={className} onSave={onSave} header={header} canvasBefore={canvasBefore} defaultDevice={defaultDevice} blockStyles={blockStyles} />
+      <EditorShell className={className} onSave={onSave} header={header} actions={actions} canvasBefore={canvasBefore} defaultDevice={defaultDevice} blockStyles={blockStyles} />
     </EditorProvider>
   );
 }
 
-function EditorShell({ className, onSave, header, canvasBefore, defaultDevice, blockStyles }: Pick<BlockEditorProps, "className" | "onSave" | "header" | "canvasBefore" | "defaultDevice" | "blockStyles">) {
+function EditorShell({ className, onSave, header, actions, canvasBefore, defaultDevice, blockStyles }: Pick<BlockEditorProps, "className" | "onSave" | "header" | "actions" | "canvasBefore" | "defaultDevice" | "blockStyles">) {
   const ctx = useEditor();
   const { store, labels } = ctx;
   const [left, setLeft] = useState<"inserter" | "list" | null>(null);
@@ -184,6 +193,7 @@ function EditorShell({ className, onSave, header, canvasBefore, defaultDevice, b
             {([["desktop", Monitor], ["tablet", Tablet], ["mobile", Smartphone]] as const).map(([d, I]) => <ToolButton key={d} label={d} active={device === d} onClick={() => setDevice(d)}><I className="ecx-icon" /></ToolButton>)}
           </div>
           <ToolButton label={labels.settings} active={right} onClick={() => setRight(!right)}><PanelRight className="ecx-icon" /></ToolButton>
+          {actions}
           {(onSave || ctx.host.documents?.save) && (
             <button type="button" className="ecx-btn ecx-btn-primary ecx-save" disabled={!dirty || saving === "saving"} onClick={() => void save()} title={dirtyDocs.map((d) => d.title ?? d.id).join(", ")}>
               {saving === "saving" ? labels.saving : dirty ? `${labels.save}${dirtyDocs.length > 1 ? ` (${dirtyDocs.length})` : ""}` : labels.saved}

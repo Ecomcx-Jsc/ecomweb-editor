@@ -51,7 +51,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   return <label className="ecx-field"><span className="ecx-field-label">{label}</span>{children}</label>;
 }
 
-/** Form thuộc tính tự sinh từ mô tả (giống block.json của WordPress, nhưng không phải viết giao diện). */
+/** Form thuộc tính tự sinh từ mô tả (không phải viết giao diện cho từng khối). */
 export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Record<string, any>; onChange(a: Record<string, unknown>): void }) {
   const { host, labels } = useEditor();
   const entries = Object.entries(type.attributes ?? {}).filter(([k, s]) => !HIDDEN_ATTRS.has(k) && controlOf(s) !== "hidden");

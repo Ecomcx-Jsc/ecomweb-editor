@@ -3,7 +3,7 @@
  * khung soạn là iframe mang CSS của website, sửa header/footer ngay trong template, một lịch sử hoàn tác xuyên tài liệu,
  * mỗi khối chữ là một ProseMirror nhỏ (gõ tiếng Việt ổn định). Đọc/ghi đúng định dạng của @ecomcx/ecomweb-content.
  */
-export { BlockEditor, EditorProvider, EditorOverlays, saveAll, blocksFromContent, contentFromBlocks, type BlockEditorProps, type EditorProviderProps } from "./editor";
+export { BlockEditor, EditorProvider, EditorOverlays, saveAll, blocksFromContent, contentFromBlocks, splitContent, type BlockEditorProps, type EditorProviderProps } from "./editor";
 export { Canvas, DEVICE_WIDTH, type CanvasProps, type Device } from "./canvas";
 export { BlockToolbar, DropIndicator, ToolButton } from "./toolbar";
 export { InserterPanel, InserterPopover, rankOptions, useInsertOptions, type InsertOption } from "./inserter";
@@ -19,4 +19,4 @@ export { findBlock, flatten, mapBlock, insertBlocks, removeBlocks, moveBlocks } 
 export { canContain, fixTree, setStructureRule, type StructureRule } from "./structure";
 export { htmlToRich, textToRich, richToHtml, BLOCKS_MIME } from "./clipboard";
 export { viV2, enV2, type V2Labels } from "./labels";
-export type { EditorHost, DocumentHost, DynamicData, NestedDocRef, LoadedDoc } from "./host";
+export type { EditorHost, DocumentHost, DynamicData, NestedDocRef, LoadedDoc, SavedContent } from "./host";
