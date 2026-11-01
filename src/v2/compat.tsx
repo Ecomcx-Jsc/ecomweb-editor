@@ -24,8 +24,12 @@ function wrapV1Edit(Edit: ComponentType<V1EditProps>): ComponentType<BlockEditPr
  * Plugin cài sau khi mở trình soạn vẫn hiện (theo dõi thay đổi). Trả về hàm huỷ theo dõi.
  */
 export function syncPluginBlocks(registry: BlockTypeRegistry): () => void {
+  // Chỉ thêm / cập nhật khối do chính đồng bộ này tạo: khối lõi của v2 (cùng tên với khối 1.x như templatePart, cover) giữ nguyên
+  const synced = new Set<string>();
   const sync = () => {
     for (const def of registeredBlocks()) {
+      if (registry.get(def.name) && !synced.has(def.name)) continue;
+      synced.add(def.name);
       const o = blockOptions(def.name);
       const t = o.translate ?? ((s: string) => s);
       registry.registerDefinition(def, {

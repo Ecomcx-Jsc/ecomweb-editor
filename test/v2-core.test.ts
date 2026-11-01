@@ -300,3 +300,21 @@ test("kéo thả sang tài liệu khác (template → header) là một bước 
   assert.deepEqual(texts(root(s)), ["a", "b"]);
   assert.deepEqual(texts(s.getState().docs["part:header"].blocks), ["h"]);
 });
+
+test("đồng bộ khối plugin không đè khối lõi cùng tên (khối 1.x đăng ký qua registerBlock)", async () => {
+  const { BlockTypeRegistry } = await import("../src/v2/registry");
+  const { syncPluginBlocks } = await import("../src/v2/compat");
+  const { storeBlockDefinition } = await import("../src/blockdefs");
+  const { defineBlock } = await import("@ecomcx/ecomweb-content");
+  const r = new BlockTypeRegistry();
+  const coreEdit = () => null;
+  r.register({ name: "templatePart", title: "Lõi", kind: "atom", edit: coreEdit });
+  storeBlockDefinition(defineBlock({ name: "templatePart", title: "1.x" }), {});
+  storeBlockDefinition(defineBlock({ name: "acme/x", title: "Acme" }), {});
+  const stop = syncPluginBlocks(r);
+  assert.equal(r.get("templatePart")!.edit, coreEdit);
+  assert.equal(r.get("acme/x")!.title, "Acme");
+  storeBlockDefinition(defineBlock({ name: "acme/x", title: "Acme 2" }), {});
+  assert.equal(r.get("acme/x")!.title, "Acme 2");
+  stop();
+});
