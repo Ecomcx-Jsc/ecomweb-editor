@@ -70,3 +70,4 @@ node_modules/@types/*
 !node_modules/@types/use-sync-external-store/
 test-results/
 playwright-report/
+.DS_Store
