@@ -145,6 +145,7 @@ select.ecx-input { padding-right: 6px; }
 .ecx-advanced summary { cursor: pointer; font-weight: 500; list-style: none; display: flex; align-items: center; gap: 6px; }
 .ecx-advanced summary::before { content: "›"; display: inline-block; transition: transform .15s ease; color: var(--ecx-ed-muted); }
 .ecx-advanced[open] summary::before { transform: rotate(90deg); }
+.ecx-binding-row { display: flex; flex-direction: column; gap: 6px; }
 .ecx-notice { padding: 8px 16px; font-size: 13px; }
 .ecx-notice.is-error { background: color-mix(in srgb, var(--ecx-ed-danger) 8%, var(--ecx-ed-panel)); color: var(--ecx-ed-danger); border-bottom: 1px solid color-mix(in srgb, var(--ecx-ed-danger) 25%, transparent); white-space: pre-wrap; }
 .ecx-frame-toggle { margin-left: 6px; padding: 0 8px; height: 32px; border-radius: 6px; color: var(--ecx-ed-muted); font-weight: 500; }

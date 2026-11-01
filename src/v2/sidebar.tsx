@@ -5,6 +5,7 @@ import { useCallback, useState, useSyncExternalStore, type ReactNode } from "rea
 import { enLabels, viLabels } from "../labels";
 import { StylePanel } from "../stylepanel";
 import { LayoutEffectsPanel } from "./layoutpanel";
+import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { blockPanelsFor, onBlockPanelsChange } from "../panelstore";
 import { useEditor, useEditorState } from "./context";
 import { startDrag } from "./dnd";
@@ -123,6 +124,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const setAttrs = (a: Record<string, unknown>) => store.setAttrs(ids, a);
   const Custom = same && nodes.length === 1 ? type?.inspector : undefined;
   const v1 = labels.lang === "vi" ? viLabels : enLabels;
+  const bindable = type?.bindable ?? CORE_BINDABLE[first.type];
   const variants = [...(CORE_BLOCK_STYLES[first.type] ?? []).map((name) => ({ name, label: name })), ...(blockStyles?.[first.type] ?? [])];
   return (
     <div className="ecx-inspector">
@@ -141,6 +143,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
               {Custom && <Custom block={first} attrs={first.attrs} setAttrs={setAttrs} blockProps={null as never} selected editable labels={labels} />}
               {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} />}
+              {nodes.length === 1 && bindable?.length && <BindingsPanel block={first} bindable={bindable} onChange={(b) => setAttrs({ bindings: b })} />}
               {nodes.length === 1 && (
                 <details className="ecx-advanced">
                   <summary>{labels.lang === "vi" ? "Nâng cao" : "Advanced"}</summary>

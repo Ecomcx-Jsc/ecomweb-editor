@@ -23,3 +23,4 @@ export type { EditorHost, DocumentHost, DynamicData, NestedDocRef, LoadedDoc, Sa
 export { MoreMenu, PreferencesModal, ShortcutsModal, CodeEditor, Breadcrumbs } from "./options";
 export { PrefsStore, localPrefsStorage, usePrefs, DEFAULT_PREFS, type EditorPrefs, type PrefsStorage } from "./prefs";
 export { DocTitle } from "./doctitle";
+export { registerBindingSource, unregisterBindingSource, bindingSources, BindingsPanel, BoundText, useBindingPreview, CORE_BINDABLE, type EditorBindingSource, type Binding } from "./bindings";

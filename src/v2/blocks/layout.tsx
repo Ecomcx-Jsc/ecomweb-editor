@@ -5,6 +5,7 @@ import { InnerBlocks } from "../blocklist";
 import { makeBlock } from "../model";
 import type { BlockEditProps, BlockType } from "../registry";
 import { RichText } from "../richtext";
+import { BoundText, useBindingPreview } from "../bindings";
 import { useEditor } from "../context";
 import { ButtonsTools, ColumnsTools, TableTools } from "./tools";
 import { ColumnHandles, useActiveWithin } from "./resize";
@@ -74,6 +75,7 @@ function ButtonsEdit({ block, blockProps }: BlockEditProps) {
 function ButtonEdit({ block, blockProps, setAttrs, editable, labels }: BlockEditProps) {
   const a = block.attrs;
   const variant = a.variant === "secondary" || a.variant === "outline" ? a.variant : "primary";
+  const bound = useBindingPreview(block, "text");
   const look: CSSProperties = variant === "outline"
     ? { border: "1px solid var(--ecx-button-bg, var(--cms-button-bg, var(--primary, currentColor)))", color: "var(--ecx-button-bg, var(--cms-button-bg, var(--primary, inherit)))" }
     : variant === "secondary"
@@ -81,7 +83,7 @@ function ButtonEdit({ block, blockProps, setAttrs, editable, labels }: BlockEdit
       : { background: "var(--ecx-button-bg, var(--cms-button-bg, var(--primary, #18181b)))", color: "var(--ecx-button-fg, var(--cms-button-fg, #fff))" };
   return (
     <span {...merge(blockProps, cx("ecx-button cms-button", `ecx-button-${variant} cms-button-${variant}`), { display: "inline-block", padding: "0.6em 1.2em", borderRadius: 8, fontWeight: 600, lineHeight: 1.2, ...look })}>
-      <RichText blockId={block.id} field="text" tagName="span" value={String(a.text ?? "")} onChange={(v) => setAttrs({ text: v })} placeholder={labels.buttonText} placeholderAlways editable={editable} />
+      {bound.bound ? <BoundText preview={bound} /> : <RichText blockId={block.id} field="text" tagName="span" value={String(a.text ?? "")} onChange={(v) => setAttrs({ text: v })} placeholder={labels.buttonText} placeholderAlways editable={editable} />}
     </span>
   );
 }

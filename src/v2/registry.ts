@@ -60,6 +60,8 @@ export interface BlockType {
   /** Từ khoá tìm (không dấu). */
   keywords?: string;
   kind: BlockKind;
+  /** Thuộc tính gắn dữ liệu được (attrs.bindings) — khối lõi: CORE_BINDABLE. */
+  bindable?: string[];
   attributes?: Record<string, BlockAttrSpec>;
   /** Luật cấu trúc (chứa gì, nằm trong gì). */
   structure?: StructureRule;

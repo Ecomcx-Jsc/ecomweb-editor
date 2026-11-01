@@ -5,16 +5,21 @@ import { inlineText, makeBlock, type BNode } from "../model";
 import { flatten } from "../ops";
 import type { BlockEditProps, BlockTransform, BlockType } from "../registry";
 import { RichText } from "../richtext";
+import { BoundText, useBindingPreview } from "../bindings";
 
 const align = (a: Record<string, unknown>): CSSProperties | undefined => (typeof a.textAlign === "string" ? { textAlign: a.textAlign as CSSProperties["textAlign"] } : undefined);
 const HEADING_ICONS = [Heading1, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6];
 
 function ParagraphEdit({ block, blockProps, editable, labels }: BlockEditProps) {
+  const bound = useBindingPreview(block, "content");
+  if (bound.bound) return <BoundText tagName="p" preview={bound} blockProps={blockProps} style={align(block.attrs)} />;
   return <RichText blockId={block.id} value={block.inline} tagName="p" blockProps={blockProps} style={align(block.attrs)} placeholder={labels.typeSlash} editable={editable} />;
 }
 
 function HeadingEdit({ block, blockProps, editable, labels }: BlockEditProps) {
   const level = Math.min(6, Math.max(1, Number(block.attrs.level) || 2));
+  const bound = useBindingPreview(block, "content");
+  if (bound.bound) return <BoundText tagName={`h${level}`} preview={bound} blockProps={blockProps} style={align(block.attrs)} />;
   return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={blockProps} style={align(block.attrs)} placeholder={labels.heading} placeholderAlways editable={editable} />;
 }
 

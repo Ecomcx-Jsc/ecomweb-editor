@@ -88,4 +88,10 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 
 .ecx-block.ecx-frame-content { outline: 1px dashed color-mix(in srgb, var(--ecx-ui) 50%, transparent); outline-offset: 4px; pointer-events: auto; }
 .ecx-block.is-locked:not(.ecx-frame-content) { cursor: default; }
+
+[data-ecx-bound] { cursor: default; }
+.ecx-bound { box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--ecx-ui) 55%, transparent); }
+.ecx-bound.is-empty { color: color-mix(in srgb, currentColor 55%, transparent); font-style: italic; }
+.ecx-bound-media { display: flex; align-items: center; justify-content: center; min-height: 160px; border: 1px dashed color-mix(in srgb, var(--ecx-ui) 60%, transparent); border-radius: 8px; box-shadow: none; }
+img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, transparent); outline-offset: -2px; }
 `;

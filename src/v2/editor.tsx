@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { coreBlockTypes, registerCoreBlocks } from "./blocks";
 import { registeredPatterns, syncPluginBlocks } from "./compat";
 import { registerCorePatterns } from "../patterns";
+import { registerCoreBindingSources } from "./bindings";
 import { Canvas, type Device } from "./canvas";
 import { EditorContext, EditorUi, useEditor, useEditorState, useUiTick, type EditorContextValue } from "./context";
 import type { EditorHost } from "./host";
@@ -99,6 +100,7 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
   }, []);
   // Khối của plugin (registerBlock) + mẫu có sẵn của lõi
   useEffect(() => syncPluginBlocks(registry), [registry]);
+  useEffect(() => { registerCoreBindingSources(allLabels.lang); }, [allLabels.lang]);
   useEffect(() => { if (!registeredPatterns().some((p) => p.name.startsWith("core/"))) registerCorePatterns(allLabels.lang); }, [allLabels.lang]);
   const ctx: EditorContextValue = useMemo(() => ({ store, registry, host, labels: allLabels, ui, prefs }), [store, registry, host, allLabels, ui, prefs]);
 

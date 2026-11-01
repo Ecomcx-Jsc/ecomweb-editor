@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useEditor } from "../context";
 import type { BlockEditProps, BlockType } from "../registry";
 import { RichText } from "../richtext";
+import { BoundText, useBindingPreview } from "../bindings";
 import { ImageHandle } from "./resize";
 import type { MediaKind } from "../../types";
 
@@ -42,14 +43,16 @@ function MediaPlaceholder({ blockId, kind, icon: Icon, title, blockProps }: { bl
 
 function ImageEdit({ block, blockProps, setAttrs, editable, labels, selected }: BlockEditProps) {
   const a = block.attrs;
-  const src = safe(a.src);
+  const bSrc = useBindingPreview(block, "src"), bAlt = useBindingPreview(block, "alt"), bCap = useBindingPreview(block, "caption");
+  const src = bSrc.bound ? safe(bSrc.value) : safe(a.src);
+  if (bSrc.bound && !src) return <figure {...blockProps} className={cx(blockProps.className, "ecx-image cms-image")}><BoundText tagName="div" className="ecx-bound-media" preview={bSrc} /></figure>;
   if (!src) return <MediaPlaceholder blockId={block.id} kind="image" icon={ImageIcon} title={labels.image} blockProps={blockProps} />;
   const cls = cx("ecx-image cms-image", a.align && `ecx-align-${a.align} align${a.align}`);
   return (
     <figure {...blockProps} className={cx(blockProps.className, cls)} style={{ ...(blockProps.style ?? {}), position: "relative" }}>
       {selected && editable && <ImageHandle blockId={block.id} />}
-      <img src={src} alt={String(a.alt ?? "")} width={Number(a.width) || undefined} height={Number(a.height) || undefined} draggable={false} style={Number(a.width) ? { width: Number(a.width), maxWidth: "100%", height: "auto" } : undefined} />
-      {(a.caption || editable) && (
+      <img src={src} alt={bAlt.bound ? bAlt.value ?? "" : String(a.alt ?? "")} data-ecx-bound={bSrc.bound ? "" : undefined} title={bSrc.bound ? bSrc.label : undefined} width={Number(a.width) || undefined} height={Number(a.height) || undefined} draggable={false} style={Number(a.width) ? { width: Number(a.width), maxWidth: "100%", height: "auto" } : undefined} />
+      {bCap.bound ? <BoundText tagName="figcaption" preview={bCap} /> : (a.caption || editable) && (
         <RichText blockId={block.id} field="caption" tagName="figcaption" value={String(a.caption ?? "")} onChange={(v) => setAttrs({ caption: v })} placeholder={labels.caption} editable={editable} />
       )}
     </figure>

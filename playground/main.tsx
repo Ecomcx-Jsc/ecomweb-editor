@@ -6,6 +6,7 @@ import { BlockEditor, EditorStore, blocksFromContent, fixTree, flatten, inlineTe
 import { defineBlock } from "@ecomcx/ecomweb-content";
 import { registerBlock } from "../src/blocks";
 import { registerBlockPanel } from "../src/panels";
+import { registerBindingSource } from "../src/v2/bindings";
 
 /**
  * Playground: trình soạn template "Trang chủ" có header/footer là phần dùng chung (tài liệu lồng), dữ liệu thật cho khối động.
@@ -53,6 +54,7 @@ if (params.get("plugin")) {
   registerBlock(defineBlock({ name: "acme/notice", title: "Thông báo Acme", keywords: "thong bao acme notice", content: "blocks", attributes: { level: { type: "string", enum: ["info", "warn"], default: "info", label: "Mức" } } }), {
     edit: ({ attrs, children }) => <div className={`acme-notice is-${attrs.level}`} style={{ border: "2px solid orange", padding: 8 }}><b>ACME {String(attrs.level)}</b>{children}</div>,
   });
+  registerBindingSource({ name: "acme/product", label: "Sản phẩm Acme", fields: [{ value: "price", label: "Giá" }, { value: "stock", label: "Tồn kho" }], preview: async (args) => { await new Promise((r) => setTimeout(r, 20)); return args.field === "price" ? "199.000 ₫" : "12 cái"; } });
   registerBlockPanel({ id: "acme/seo", title: "Acme SEO", blocks: ["heading"], component: ({ attrs, setAttrs }) => <label>noindex <input type="checkbox" checked={!!attrs.acmeNoindex} onChange={(e) => setAttrs({ acmeNoindex: e.target.checked || undefined })} /></label> });
 }
 

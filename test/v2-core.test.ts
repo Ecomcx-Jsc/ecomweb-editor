@@ -374,3 +374,16 @@ test("templateLock kế thừa xuống khối lồng; contentOnly: không đổi
   s.batch(() => s.setAttrs([inner.id], { templateLock: "none" }));
   assert.equal(s.templateLockOf(inner.id), undefined);
 });
+
+test("gắn dữ liệu: attrs.bindings qua lưu → đọc lại còn nguyên; đổi loại khối (đoạn → tiêu đề) giữ bindings", () => {
+  const bindings = { content: { source: "core/post", args: { field: "title" } } };
+  const blocks = [makeBlock("paragraph", { bindings })];
+  const { doc } = normalizeContent({ version: 1, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }] });
+  const back = blocksFromDoc(doc.blocks[0].data as never);
+  assert.deepEqual(back[0].attrs.bindings, bindings);
+  const st = store(...back);
+  st.setType([back[0].id], "heading", { level: 2 });
+  const h = st.getState().docs.root.blocks[0];
+  assert.equal(h.type, "heading");
+  assert.deepEqual(h.attrs.bindings, bindings);
+});
