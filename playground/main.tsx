@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import contentCss from "@ecomcx/ecomweb-content/style.css?url";
 import "../src/editor.css";
 import "../src/v2/editor.css";
-import { BlockEditor, EditorStore, blocksFromContent, type EditorHost } from "../src/v2";
+import { BlockEditor, EditorStore, blocksFromContent, fixTree, flatten, inlineText, type EditorHost } from "../src/v2";
 import { defineBlock } from "@ecomcx/ecomweb-content";
 import { registerBlock } from "../src/blocks";
 import { registerBlockPanel } from "../src/panels";
@@ -84,7 +84,26 @@ const initial = params.get("empty") ? null : doc === "post" || params.get("frame
 const store = new EditorStore({ kind: doc === "post" || doc === "rich" || params.get("frame") ? "post" : "template", title: "Trang chủ", blocks: blocksFromContent(initial) });
 const frame = params.get("frame") ? { content: frameTemplate, title: "Trang đơn" } : undefined;
 let changes = 0;
-(window as unknown as { __ecx: unknown }).__ecx = { store, saves, get changes() { return changes; } };
+/** Kiểm tra bất biến (test fuzz): cây hợp lệ, định danh không trùng, chữ trên màn hình khớp dữ liệu từng khối. */
+function check(): string[] {
+  const errors: string[] = [];
+  const frame = document.querySelector<HTMLIFrameElement>("iframe[data-ecx-canvas]")?.contentDocument;
+  for (const d of Object.values(store.getState().docs)) {
+    if (fixTree(d.blocks) !== d.blocks) errors.push(`${d.id}: cây không hợp lệ`);
+    const all = flatten(d.blocks);
+    if (new Set(all.map((b) => b.id)).size !== all.length) errors.push(`${d.id}: trùng định danh`);
+    for (const b of all) {
+      if (!b.inline || !frame) continue;
+      const el = frame.querySelector<HTMLElement>(`[data-ecx-block="${b.id}"][data-ecx-rich], [data-ecx-block="${b.id}"] > [data-ecx-rich]:not([data-ecx-field])`);
+      if (!el) continue;
+      const dom = (el.innerText ?? "").replace(/\u00a0/g, " ").replace(/\n$/, "");
+      const data = inlineText(b.inline);
+      if (dom !== data) errors.push(`${b.type} ${b.id}: màn hình "${dom}" ≠ dữ liệu "${data}"`);
+    }
+  }
+  return errors;
+}
+(window as unknown as { __ecx: unknown }).__ecx = { store, saves, check, get changes() { return changes; } };
 
 createRoot(document.getElementById("root")!).render(
   <BlockEditor store={store} host={host} lang={params.get("lang") === "en" ? "en" : "vi"} dynamicBlocks frame={frame}

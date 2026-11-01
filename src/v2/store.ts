@@ -212,7 +212,8 @@ export class EditorStore {
         else this.mergeInto(this.pending, entry);
       } else this.pushHistory(entry);
     }
-    this.set({ docs: { ...this.state.docs, [docId]: { ...d, blocks: fixed } }, selection, caret, revision: this.state.revision + 1 });
+    const docs = { ...this.state.docs, [docId]: { ...d, blocks: fixed } };
+    this.set({ docs, selection: pruneSelection(docs, selection), caret, revision: this.state.revision + 1 });
   }
 
   private caretFor(sel: Selection): Caret | null {
@@ -256,7 +257,7 @@ export class EditorStore {
     for (const c of e.changes) if (docs[c.docId]) docs[c.docId] = { ...docs[c.docId], blocks: side === "before" ? c.before : c.after };
     this.state = {
       ...this.state, docs,
-      selection: side === "before" ? e.selBefore : e.selAfter,
+      selection: pruneSelection(docs, side === "before" ? e.selBefore : e.selAfter),
       caret: side === "before" ? e.caretBefore : e.caretAfter,
       revision: this.state.revision + 1,
     };
@@ -651,5 +652,13 @@ function keepCommon(attrs: Record<string, unknown>) {
 function keepOnSplit(attrs: Record<string, unknown>) {
   const { id: _id, anchor: _a, ...rest } = attrs;
   return rest;
+}
+/** Bỏ khỏi vùng chọn những khối không còn (vừa bị xoá / gộp) — thanh công cụ, bảng cài đặt không trỏ vào khối ma. */
+function pruneSelection(docs: Record<string, DocRecord>, sel: Selection): Selection {
+  if (!sel.ids.length && !sel.editing) return sel;
+  const exists = (id: string) => Object.values(docs).some((d) => findBlock(d.blocks, id));
+  const ids = sel.ids.filter(exists);
+  const editing = sel.editing && exists(sel.editing) ? sel.editing : null;
+  return ids.length === sel.ids.length && editing === sel.editing ? sel : { ids, editing };
 }
 const sameSel = (a: Selection, b: Selection) => a.editing === b.editing && a.ids.length === b.ids.length && a.ids.every((x, i) => x === b.ids[i]);
