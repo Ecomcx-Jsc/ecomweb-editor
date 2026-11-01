@@ -86,6 +86,17 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
   const ui = useMemo(() => new EditorUi(), []);
   const ownPrefs = useMemo(() => (givenPrefs ? null : new PrefsStore(prefsStorage)), [givenPrefs, prefsStorage]);
   const prefs = givenPrefs ?? ownPrefs!;
+  // Đang mở trình soạn: focus không ở ô nhập nào (vd Tab ra khỏi khung soạn) thì Backspace / ⌘← / ⌘→ là lệnh quay lại /
+  // tới trang của trình duyệt (Safari) → chặn để không rời trang mất bài đang sửa
+  useEffect(() => {
+    const guard = (e: KeyboardEvent) => {
+      const a = document.activeElement as HTMLElement | null;
+      if (a && a !== document.body && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT|IFRAME)$/.test(a.tagName))) return;
+      if ((e.key === "Backspace" && !e.metaKey && !e.ctrlKey) || ((e.metaKey || e.altKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight"))) e.preventDefault();
+    };
+    document.addEventListener("keydown", guard);
+    return () => document.removeEventListener("keydown", guard);
+  }, []);
   // Khối của plugin (registerBlock) + mẫu có sẵn của lõi
   useEffect(() => syncPluginBlocks(registry), [registry]);
   useEffect(() => { if (!registeredPatterns().some((p) => p.name.startsWith("core/"))) registerCorePatterns(allLabels.lang); }, [allLabels.lang]);

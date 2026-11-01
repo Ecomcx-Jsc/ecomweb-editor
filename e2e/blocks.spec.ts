@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { canvas, clickEnd, mod, open, shape, state, texts } from "./helpers";
+import { canvas, clickEnd, mod, open, shape, state, texts, HOME, END } from "./helpers";
 
 const toolbar = (page: Page) => page.locator(".ecx-toolbar");
 const tool = (page: Page, label: string) => toolbar(page).getByRole("button", { name: label, exact: false });
@@ -66,7 +66,7 @@ test.describe("chọn khối + thanh công cụ", () => {
   test("đậm bằng thanh công cụ và ⌘B; liên kết bằng ⌘K", async ({ page }) => {
     const c = await open(page, "?doc=post");
     const el = await clickEnd(c, "Đoạn thứ hai.");
-    await el.press("Shift+Home");
+    await el.press(`Shift+${HOME}`);
     await tool(page, "Đậm").click();
     expect((await state(page)).docs.root.blocks[2].inline).toEqual([{ type: "text", text: "Đoạn thứ hai.", marks: [{ type: "bold" }] }]);
     await page.keyboard.press(`${mod}+b`);
@@ -247,7 +247,8 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     expect(columns.content[1].content.map((b: { inline: Array<{ text: string }> }) => b.inline[0].text)).toEqual(["Cột phải", "Đây là đoạn văn đầu tiên."]);
   });
 
-  test("chép rồi dán khối (⌘C / ⌘V khi đang chọn khối)", async ({ page }) => {
+  test("chép rồi dán khối (⌘C / ⌘V khi đang chọn khối)", async ({ page, browserName }) => {
+    test.skip(browserName !== "chromium", "clipboard hệ thống trong trình duyệt tự động chỉ cấp quyền được ở Chromium");
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Tiêu đề bài");
     await page.keyboard.press("Escape");
@@ -268,7 +269,8 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     expect(await texts(page)).toEqual(["heading:Tiêu đề bài", "paragraph:Đoạn thứ hai."]);
   });
 
-  test("dán HTML từ Word/Google Docs: tạo tiêu đề + danh sách + đoạn có định dạng", async ({ page }) => {
+  test("dán HTML từ Word/Google Docs: tạo tiêu đề + danh sách + đoạn có định dạng", async ({ page, browserName }) => {
+    test.skip(browserName === "firefox", "Firefox không cho đọc dữ liệu của sự kiện dán do script tạo (dán thật của người dùng thì đọc được)");
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");
     await page.keyboard.press("Enter");
@@ -284,10 +286,11 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     expect(st.docs.root.blocks[5].inline).toEqual([{ type: "text", text: "Đậm", marks: [{ type: "bold" }] }, { type: "text", text: " thường" }]);
   });
 
-  test("dán đường dẫn lên chữ đang bôi đen → liên kết; đường dẫn ảnh vào đoạn trống → khối ảnh", async ({ page }) => {
+  test("dán đường dẫn lên chữ đang bôi đen → liên kết; đường dẫn ảnh vào đoạn trống → khối ảnh", async ({ page, browserName }) => {
+    test.skip(browserName === "firefox", "Firefox không cho đọc dữ liệu của sự kiện dán do script tạo (dán thật của người dùng thì đọc được)");
     const c = await open(page, "?doc=post");
     const el = await clickEnd(c, "Đoạn thứ hai.");
-    await el.press("Shift+Home");
+    await el.press(`Shift+${HOME}`);
     const paste = (selector: string, text: string) => c.locator(selector).first().evaluate((node, t) => {
       const dt = new DataTransfer();
       dt.setData("text/plain", t);
@@ -295,7 +298,7 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     }, text);
     await paste("p:has-text('Đoạn thứ hai.')", "https://ecomcx.vn");
     expect((await state(page)).docs.root.blocks[2].inline[0].marks).toEqual([{ type: "link", attrs: { href: "https://ecomcx.vn" } }]);
-    await page.keyboard.press("End");
+    await page.keyboard.press(END);
     await page.keyboard.press("Enter");
     await paste("[data-ecx-rich][data-empty]", "https://example.com/a.png");
     expect((await state(page)).docs.root.blocks[3]).toMatchObject({ type: "image", attrs: { src: "https://example.com/a.png" } });
@@ -333,4 +336,16 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     await page.getByRole("button", { name: "tablet" }).click();
     await expect(page.locator("iframe[data-ecx-canvas]")).toHaveCSS("width", "768px");
   });
+});
+
+test("đang chọn cả khối: ⌘← / ⌘→ / Backspace không làm trình duyệt rời trang (Safari: quay lại trang trước)", async ({ page }) => {
+  await page.goto("/?doc=empty-history");
+  const c = await open(page, "?doc=post");
+  await clickEnd(c, "Đoạn thứ hai.");
+  await page.keyboard.press("Escape");
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+ArrowLeft" : "Alt+ArrowLeft");
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+ArrowRight" : "Alt+ArrowRight");
+  await page.waitForTimeout(300);
+  expect(page.url()).toContain("doc=post");
+  expect(await page.evaluate(() => !!(window as any).__ecx)).toBe(true);
 });

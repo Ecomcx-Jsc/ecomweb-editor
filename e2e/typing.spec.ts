@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { canvas, clickEnd, imeType, mod, open, shape, state, texts } from "./helpers";
+import { canvas, clickEnd, imeType, mod, open, shape, state, texts, HOME, END } from "./helpers";
 
 test.describe("gõ chữ", () => {
   test("gõ tiếng Việt có dấu vào đoạn văn, store cập nhật", async ({ page }) => {
@@ -9,7 +9,8 @@ test.describe("gõ chữ", () => {
     expect(await texts(page)).toContain("paragraph:Đây là đoạn văn đầu tiên. Tiếng Việt có dấu: ắ ặ ồ ữ đ.");
   });
 
-  test("bộ gõ ghép chữ (IME/Telex) không mất dấu, không lặp chữ", async ({ page }) => {
+  test("bộ gõ ghép chữ (IME/Telex) không mất dấu, không lặp chữ", async ({ page, browserName }) => {
+    test.skip(browserName !== "chromium", "giả lập bộ gõ qua CDP chỉ có ở Chromium");
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
     await page.keyboard.type(" ");
@@ -23,7 +24,7 @@ test.describe("gõ chữ", () => {
     const c = await open(page, "?doc=post");
     const el = c.locator("[data-ecx-rich]", { hasText: "Nội dung bài viết." });
     await el.click();
-    await el.press("Home");
+    await el.press(HOME);
     for (let i = 0; i < 8; i++) await el.press("ArrowRight");
     await page.keyboard.press("Enter");
     await page.keyboard.type("XY");
@@ -45,7 +46,7 @@ test.describe("gõ chữ", () => {
     const c = await open(page, "?doc=post");
     const el = c.locator("[data-ecx-rich]", { hasText: "Đoạn thứ hai." });
     await el.click();
-    await el.press("Home");
+    await el.press(HOME);
     await page.keyboard.press("Backspace");
     await page.keyboard.type("|");
     expect(await texts(page)).toEqual(["heading:Tiêu đề bài", "paragraph:Nội dung bài viết.|Đoạn thứ hai."]);
@@ -62,11 +63,11 @@ test.describe("gõ chữ", () => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Tiêu đề bài");
     await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("Home");
+    await page.keyboard.press(HOME);
     await page.keyboard.type(">");
     await page.keyboard.press("ArrowRight");
     expect((await texts(page))[1]).toBe("paragraph:>Nội dung bài viết.");
-    await page.keyboard.press("End");
+    await page.keyboard.press(END);
     await page.keyboard.press("ArrowRight");
     await page.keyboard.type("<");
     expect((await texts(page))[2]).toBe("paragraph:<Đoạn thứ hai.");
@@ -185,7 +186,7 @@ test.describe("danh sách", () => {
     const c = await open(page);
     const el = c.locator("[data-ecx-rich]", { hasText: "Mục hai" });
     await el.click();
-    await el.press("Home");
+    await el.press(HOME);
     await page.keyboard.press("Backspace");
     expect(await texts(page)).toContain("paragraph:Mục mộtMục hai");
   });

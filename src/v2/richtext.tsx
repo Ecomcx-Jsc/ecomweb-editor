@@ -140,6 +140,9 @@ export function RichText(props: RichTextProps) {
     const from = charToPos(doc, caret.offset);
     const to = caret.to != null ? charToPos(doc, caret.to) : from;
     view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, from, to)).setMeta("external", true));
+    // Firefox: đưa focus vào ô trong iframe từ trang ngoài (thanh công cụ, cây khối) phải focus cửa sổ iframe trước
+    const win = view.dom.ownerDocument.defaultView;
+    if (win && win !== window && !view.dom.ownerDocument.hasFocus()) win.focus();
     view.focus();
   }, [caret, props.blockId, store]);
 

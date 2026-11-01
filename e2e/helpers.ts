@@ -45,7 +45,7 @@ export async function clickEnd(c: FrameLocator, text: string) {
   // Bấm mép phải dòng (thanh công cụ nổi của khối dưới có thể che phần giữa — như người dùng thật)
   const box = await el.boundingBox();
   await el.click({ position: { x: Math.max(2, box!.width - 4), y: box!.height / 2 } });
-  await el.press("End");
+  await el.press(END);
   return el;
 }
 
@@ -57,6 +57,9 @@ export async function showToolbar(page: Page) {
 }
 
 export const mod = process.platform === "darwin" ? "Meta" : "Control";
+/** Về đầu / cuối dòng: macOS dùng ⌘← / ⌘→ (Safari, Firefox không nhận Home/End trong ô soạn), nơi khác Home / End. */
+export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";
+export const END = process.platform === "darwin" ? "Meta+ArrowRight" : "End";
 
 /** Giả lập bộ gõ (IME) qua CDP: gõ ghép rồi xác nhận — như Telex/VNI/bàn phím điện thoại. */
 export async function imeType(page: Page, steps: string[], final: string) {

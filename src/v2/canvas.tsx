@@ -196,6 +196,10 @@ function useCanvasKeys(doc: Document) {
       if (mod && k === "z") { e.preventDefault(); if (e.shiftKey) store.redo(); else store.undo(); return; }
       if (mod && k === "y") { e.preventDefault(); store.redo(); return; }
       if (typing(doc.activeElement)) return;
+      // Phím điều hướng của trình duyệt khi không gõ chữ (Safari: ⌘← / ⌘→ = quay lại / tới trang; Backspace ở trình duyệt cũ)
+      // → chặn, không thì rời trình soạn và mất bài đang sửa
+      if ((e.metaKey || e.altKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight")) { e.preventDefault(); return; }
+      if (e.key === "Backspace" && !store.getState().selection.ids.length) { e.preventDefault(); return; }
       const ids = store.getState().selection.ids;
       if (mod && k === "a") {
         e.preventDefault();
