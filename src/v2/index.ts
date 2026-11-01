@@ -20,3 +20,5 @@ export { canContain, fixTree, setStructureRule, type StructureRule } from "./str
 export { htmlToRich, textToRich, richToHtml, BLOCKS_MIME } from "./clipboard";
 export { viV2, enV2, type V2Labels } from "./labels";
 export type { EditorHost, DocumentHost, DynamicData, NestedDocRef, LoadedDoc, SavedContent } from "./host";
+export { MoreMenu, PreferencesModal, ShortcutsModal, CodeEditor, Breadcrumbs } from "./options";
+export { PrefsStore, localPrefsStorage, usePrefs, DEFAULT_PREFS, type EditorPrefs, type PrefsStorage } from "./prefs";

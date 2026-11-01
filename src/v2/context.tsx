@@ -3,6 +3,7 @@ import type { EditorStore, EditorState, EditingMode } from "./store";
 import type { BlockTypeRegistry } from "./registry";
 import type { EditorHost } from "./host";
 import type { V2Labels } from "./labels";
+import type { PrefsStore } from "./prefs";
 
 /** Những thứ cả cây React của trình soạn dùng chung (khung soạn trong iframe là portal nên vẫn nhận được context). */
 export interface EditorContextValue {
@@ -12,6 +13,8 @@ export interface EditorContextValue {
   labels: V2Labels;
   /** Bộ phận giao diện đăng ký với nhau (khung soạn ↔ thanh công cụ ↔ kéo thả). */
   ui: EditorUi;
+  /** Tuỳ chọn trình soạn của người dùng. */
+  prefs: PrefsStore;
 }
 
 /** Cầu nối giữa khung soạn (iframe) và giao diện bên ngoài. */
@@ -53,6 +56,9 @@ export class EditorUi {
     return new DOMRect(f.left + r.left * scale, f.top + r.top * scale, r.width * scale, r.height * scale);
   }
   openInserter(req: InserterRequest | null) { this.inserter = req; this.bump(); }
+  /** Thông báo cho trình đọc màn hình (vùng aria-live). */
+  announcement = "";
+  announce(text: string) { this.announcement = ""; this.bump(); setTimeout(() => { this.announcement = text; this.bump(); }, 30); }
   /** Alt+F10: đưa bàn phím lên thanh công cụ của khối. */
   focusToolbar() { document.querySelector<HTMLElement>(".ecx-toolbar button:not(:disabled)")?.focus(); }
   setDrag(d: DragState | null) { this.drag = d; this.bump(); }

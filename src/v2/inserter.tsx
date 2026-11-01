@@ -6,6 +6,7 @@ import { cloneBlock, inlineLength, type BNode } from "./model";
 import type { BlockType } from "./registry";
 import { canContain } from "./structure";
 import { startDragNew } from "./dnd";
+import { usePrefs } from "./prefs";
 import { onPatternsChange, patternBlocks, registeredPatterns, type Pattern } from "./compat";
 import { useSyncExternalStore } from "react";
 import { enLabels, viLabels } from "../labels";
@@ -24,14 +25,16 @@ export interface InsertOption {
 
 /** Các lựa chọn chèn: khối + biến thể có hàm tạo riêng (cột 30/70…). */
 export function useInsertOptions(): InsertOption[] {
-  const { registry } = useEditor();
+  const { registry, prefs } = useEditor();
+  const hidden = usePrefs(prefs).hiddenBlockTypes;
   const [version, setVersion] = useState(registry.getVersion());
   useEffect(() => registry.subscribe(() => setVersion(registry.getVersion())), [registry]);
   return useMemo(() => {
     void version;
     const out: InsertOption[] = [];
+    const hide = new Set(hidden);
     for (const t of registry.all()) {
-      if (t.hidden) continue;
+      if (t.hidden || hide.has(t.name)) continue;
       out.push({ key: t.name, title: t.title, description: t.description, icon: t.icon, keywords: t.keywords ?? "", category: t.category ?? "other", type: t.name, create: () => registry.create(t.name) });
       for (const v of t.variations ?? []) {
         if (!v.create) continue;
@@ -39,7 +42,7 @@ export function useInsertOptions(): InsertOption[] {
       }
     }
     return out;
-  }, [registry, version]);
+  }, [registry, version, hidden]);
 }
 
 /** Lọc + xếp hạng: tên bắt đầu bằng chữ gõ > một từ trong tên > từ khoá; tiếng Việt không dấu. */
@@ -60,8 +63,9 @@ export function rankOptions(list: InsertOption[], query: string): InsertOption[]
 
 /** Chèn một lựa chọn theo yêu cầu (slash: thay đoạn "/…"; nút "+": vào vị trí). */
 export function applyInsert(ctx: ReturnType<typeof useEditor>, req: InserterRequest, opt: InsertOption) {
-  const { store, ui } = ctx;
+  const { store, ui, prefs } = ctx;
   const node = opt.create();
+  prefs.countInsert(opt.type);
   if (req.mode === "slash" && req.blockId) {
     const b = store.block(req.blockId);
     // Đoạn chỉ còn "/từ khoá" → thay cả đoạn bằng khối mới
@@ -167,9 +171,12 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
   const [tab, setTab] = useState<"blocks" | "patterns">("blocks");
   const results = rankOptions(options, query);
   const catLabel: Record<string, string> = { text: labels.catText, media: labels.catMedia, design: labels.catDesign, widgets: labels.catWidgets, theme: labels.catTheme, embed: labels.catEmbed };
+  const p = usePrefs(ctx.prefs);
+  const mostUsed = p.mostUsedBlocks && !query ? options.filter((o) => !o.key.includes("/") && (p.insertCounts[o.type] ?? 0) > 0).sort((a, b) => (p.insertCounts[b.type] ?? 0) - (p.insertCounts[a.type] ?? 0)).slice(0, 6) : [];
   const groups = query ? [["", results] as const] : [...CATEGORY_ORDER, ...new Set(results.map((r) => r.category).filter((c) => !CATEGORY_ORDER.includes(c)))].map((c) => [c, results.filter((r) => r.category === c)] as const).filter(([, l]) => l.length);
   const insert = (o: InsertOption) => {
     const node = o.create();
+    ctx.prefs.countInsert(o.type);
     const cur = store.currentIds[store.currentIds.length - 1];
     if (cur && store.locate(cur)) store.insertAfter(cur, [node]);
     else {
@@ -186,6 +193,18 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
       </div>
       <input className="ecx-search" placeholder={labels.search} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={labels.search} />
       {tab === "patterns" ? <PatternList query={query} onInserted={onInserted} /> : <>
+      {mostUsed.length > 0 && (
+        <section data-section="most-used">
+          <h3 className="ecx-panel-heading">{labels.mostUsedTitle}</h3>
+          <div className="ecx-block-grid">
+            {mostUsed.map((o) => (
+              <button key={o.key} type="button" className="ecx-block-tile" data-key={o.key} onPointerDown={(e) => startDragNew(ctx, e, o)} onClick={() => insert(o)}>
+                {o.icon ? <o.icon className="ecx-icon" /> : <Blocks className="ecx-icon" />}<span>{o.title}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       {groups.map(([cat, list]) => (
         <section key={cat || "all"}>
           {cat && <h3 className="ecx-panel-heading">{catLabel[cat] ?? cat}</h3>}

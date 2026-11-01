@@ -64,7 +64,7 @@ export function RichText(props: RichTextProps) {
 
   useLayoutEffect(() => {
     const el = elRef.current!;
-    const state = EditorState.create({ doc: inlineToDoc(lastValue.current, schemaKind(propsRef.current)), plugins: [richKeymap(store, ui, propsRef), selectionReporter(store, ui, propsRef)] });
+    const state = EditorState.create({ doc: inlineToDoc(lastValue.current, schemaKind(propsRef.current)), plugins: [richKeymap(store, ui, propsRef, () => ctx.prefs.get().keepCaretInsideBlock), selectionReporter(store, ui, propsRef)] });
     const view = new EditorView({ mount: el }, {
       state,
       editable: () => propsRef.current.editable !== false,
@@ -227,7 +227,9 @@ export function now<T>(fn: () => T): T {
   return out;
 }
 
-function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef): Plugin {
+function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef, keepCaret: () => boolean = () => false): Plugin {
+  // Tuỳ chọn "Giữ con trỏ trong khối": mũi tên ở đầu/cuối khối không nhảy sang khối khác
+  const nav = (view: EditorView, dir: -1 | 1) => !keepCaret() && focusNeighbor(store, ui, view, dir);
   const textMode = () => !pr.current.onChange;
   const mark = (name: string) => (state: EditorState, dispatch?: EditorView["dispatch"]) => (state.schema.marks[name] ? toggleMark(state.schema.marks[name])(state, dispatch) : false);
   const slashKey = (key: string) => () => (ui.inserter?.mode === "slash" && ui.inserter.blockId === pr.current.blockId && ui.inserterKey ? ui.inserterKey(key) : false);
@@ -238,10 +240,10 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef): Plugin {
       return cmd(s, view ? view.dispatch.bind(view) : dispatch, view);
     };
   return keymap({
-    ArrowDown: (_s, _d, view) => slashKey("ArrowDown")() || (!!view && view.endOfTextblock("down") && focusNeighbor(store, ui, view, 1)),
-    ArrowUp: (_s, _d, view) => slashKey("ArrowUp")() || (!!view && view.endOfTextblock("up") && focusNeighbor(store, ui, view, -1)),
-    ArrowLeft: fresh((_s, _d, view) => !!view && atStart(view) && focusNeighbor(store, ui, view, -1)),
-    ArrowRight: fresh((_s, _d, view) => !!view && atEnd(view) && focusNeighbor(store, ui, view, 1)),
+    ArrowDown: (_s, _d, view) => slashKey("ArrowDown")() || (!!view && view.endOfTextblock("down") && nav(view, 1)),
+    ArrowUp: (_s, _d, view) => slashKey("ArrowUp")() || (!!view && view.endOfTextblock("up") && nav(view, -1)),
+    ArrowLeft: fresh((_s, _d, view) => !!view && atStart(view) && nav(view, -1)),
+    ArrowRight: fresh((_s, _d, view) => !!view && atEnd(view) && nav(view, 1)),
     Escape: (_s, _d, view) => {
       if (slashKey("Escape")()) return true;
       store.select([pr.current.blockId]);

@@ -4,6 +4,7 @@ import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { serializeBlocks } from "./clipboard";
 import { useEditor, useEditorState, useUiTick } from "./context";
+import { usePrefs } from "./prefs";
 import { startDrag } from "./dnd";
 import type { BNode } from "./model";
 import { topLevelOrdered } from "./ops";
@@ -16,7 +17,7 @@ const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "strin
 export function ToolButton({ label, onClick, active, disabled, children, className, ...rest }: { label: string; onClick?(): void; active?: boolean; disabled?: boolean; children: ReactNode; className?: string } & Record<string, unknown>) {
   return (
     <button type="button" className={cx("ecx-tool", active && "is-active", className)} aria-label={label} title={label} aria-pressed={active} disabled={disabled}
-      onMouseDown={(e) => e.preventDefault()} onClick={onClick} {...rest}>{children}</button>
+      onMouseDown={(e) => e.preventDefault()} onClick={onClick} {...rest}>{children}<span className="ecx-tool-label">{label}</span></button>
   );
 }
 
@@ -49,9 +50,10 @@ const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigat
 const mod = isMac ? "⌘" : "Ctrl+";
 
 /** Thanh công cụ nổi phía trên khối đang chọn / đang gõ. */
-export function BlockToolbar() {
+export function BlockToolbar({ placement = "floating" }: { placement?: "floating" | "fixed" }) {
   const ctx = useEditor();
   const { store, ui, registry, labels } = ctx;
+  const fixedPref = usePrefs(ctx.prefs).fixedToolbar;
   useUiTick();
   const sel = useEditorState((s) => s.selection);
   useEditorState((s) => s.revision);
@@ -66,11 +68,13 @@ export function BlockToolbar() {
     setRect((prev) => (prev && r && prev.x === r.x && prev.y === r.y && prev.width === r.width && prev.height === r.height ? prev : r));
   });
   const nodes = ids.map((id) => store.block(id)).filter(Boolean) as BNode[];
-  if (!nodes.length || ui.drag || ui.inserter?.mode === "slash" || (ui.typing && !link)) return null;
+  const fixed = placement === "fixed";
+  if (fixed !== fixedPref) return null;
+  if (!nodes.length || ui.drag || ui.inserter?.mode === "slash" || (ui.typing && !link && !fixed)) return null;
   const loc = store.locate(nodes[0].id);
   if (!loc || store.getState().docs[loc.docId].mode === "disabled") return null;
   const frame = ui.canvasFrame?.getBoundingClientRect();
-  if (!rect || !frame || rect.bottom < frame.top || rect.top > frame.bottom) return null;
+  if (!fixed && (!rect || !frame || rect.bottom < frame.top || rect.top > frame.bottom)) return null;
 
   const first = nodes[0];
   const type = registry.get(first.type);
@@ -83,8 +87,8 @@ export function BlockToolbar() {
   const listItem = parent && (parent.type === "listItem" || parent.type === "taskItem") && loc.index === 0 ? parent : null;
   const transforms = sameType ? (type?.transforms ?? []).filter((t) => nodes.length === 1 || t.multiple) : [];
   const height = 44;
-  const top = Math.max(frame.top + 4, rect.top - height - 8);
-  const left = Math.max(frame.left + 4, Math.min(rect.left, frame.right - 420));
+  const top = fixed || !rect || !frame ? 0 : Math.max(frame.top + 4, rect.top - height - 8);
+  const left = fixed || !rect || !frame ? 0 : Math.max(frame.left + 4, Math.min(rect.left, frame.right - 420));
   const editProps = { block: first, attrs: first.attrs, setAttrs: (a: Record<string, unknown>) => store.setAttrs(ids, a), blockProps: null as never, selected: true, editable: true, labels };
   const Extra = sameType && nodes.length === 1 ? type?.toolbar : undefined;
   const hasAlign = sameType && !!type?.attributes?.textAlign;
@@ -121,7 +125,7 @@ export function BlockToolbar() {
 
   return (
     <>
-      <div className="ecx-toolbar" role="toolbar" aria-label={type?.title ?? first.type} style={{ top, left }} data-block={first.id}
+      <div className={fixed ? "ecx-toolbar is-fixed" : "ecx-toolbar"} role="toolbar" aria-label={type?.title ?? first.type} style={fixed ? undefined : { top, left }} data-block={first.id}
         onKeyDown={(e) => {
           // Bàn phím trên thanh công cụ: ←/→ đi giữa các nút, Esc quay về khối
           const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .ecx-tool-group button:not(:disabled), :scope > .ecx-tool-group .ecx-dropdown > button"));
@@ -192,7 +196,10 @@ export function BlockToolbar() {
           </Dropdown>
         </div>
       </div>
-      {link && view && <LinkPopover viewKey={link} top={top + height + 4} left={left} onClose={() => setLink(null)} />}
+      {link && view && (() => {
+        const anchor = fixed ? document.querySelector(".ecx-toolbar.is-fixed")?.getBoundingClientRect() : null;
+        return <LinkPopover viewKey={link} top={anchor ? anchor.bottom + 4 : top + height + 4} left={anchor ? anchor.left : left} onClose={() => setLink(null)} />;
+      })()}
     </>
   );
 }

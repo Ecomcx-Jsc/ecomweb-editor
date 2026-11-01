@@ -6,13 +6,15 @@ import { coreBlockTypes, registerCoreBlocks } from "./blocks";
 import { registeredPatterns, syncPluginBlocks } from "./compat";
 import { registerCorePatterns } from "../patterns";
 import { Canvas, type Device } from "./canvas";
-import { EditorContext, EditorUi, useEditor, useEditorState, type EditorContextValue } from "./context";
+import { EditorContext, EditorUi, useEditor, useEditorState, useUiTick, type EditorContextValue } from "./context";
 import type { EditorHost } from "./host";
 import { InserterPanel, InserterPopover } from "./inserter";
 import { enV2, viV2, type V2Labels } from "./labels";
 import { blocksFromDoc, docFromBlocks, type BNode } from "./model";
 import { BlockTypeRegistry } from "./registry";
 import { Inspector, ListView } from "./sidebar";
+import { PrefsStore, usePrefs, type PrefsStorage } from "./prefs";
+import { Breadcrumbs, CodeEditor, MoreMenu } from "./options";
 import { EditorStore, type DocRecord } from "./store";
 import { BlockToolbar, DropIndicator, ToolButton } from "./toolbar";
 
@@ -55,12 +57,14 @@ export interface EditorProviderProps {
    * là chỗ sửa trang. Có nút bật/tắt hiện template.
    */
   frame?: { content: unknown; title?: string };
+  /** Nơi lưu tuỳ chọn trình soạn của người dùng (mặc định localStorage). */
+  prefsStorage?: PrefsStorage;
   /** Nội dung tài liệu gốc đổi (định dạng lưu). */
   onChange?(content: ReturnType<typeof contentFromBlocks>, blocks: BNode[]): void;
   children: ReactNode;
 }
 
-export function EditorProvider({ store: given, value, kind, title, host = {}, labels, lang, registry: givenRegistry, dynamicBlocks, frame, onChange, children }: EditorProviderProps) {
+export function EditorProvider({ store: given, value, kind, title, host = {}, labels, lang, registry: givenRegistry, dynamicBlocks, frame, prefsStorage, onChange, children }: EditorProviderProps) {
   const base = lang === "en" ? enV2 : viV2;
   const allLabels = useMemo(() => ({ ...base, ...labels }), [base, labels]);
   const registry = useMemo(() => {
@@ -78,10 +82,11 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
     store.setFrame("frame");
   }, [frame, store]);
   const ui = useMemo(() => new EditorUi(), []);
+  const prefs = useMemo(() => new PrefsStore(prefsStorage), [prefsStorage]);
   // Khối của plugin (registerBlock) + mẫu có sẵn của lõi
   useEffect(() => syncPluginBlocks(registry), [registry]);
   useEffect(() => { if (!registeredPatterns().some((p) => p.name.startsWith("core/"))) registerCorePatterns(allLabels.lang); }, [allLabels.lang]);
-  const ctx: EditorContextValue = useMemo(() => ({ store, registry, host, labels: allLabels, ui }), [store, registry, host, allLabels, ui]);
+  const ctx: EditorContextValue = useMemo(() => ({ store, registry, host, labels: allLabels, ui, prefs }), [store, registry, host, allLabels, ui, prefs]);
 
   // Báo nội dung gốc đổi
   const onChangeRef = useRef(onChange);
@@ -126,6 +131,8 @@ export interface BlockEditorProps extends Omit<EditorProviderProps, "children"> 
   header?: ReactNode;
   /** Nút thêm của ứng dụng ở cuối thanh trên cùng, trước nút Lưu (lịch sử, đặt lại…). */
   actions?: ReactNode;
+  /** Mục riêng của ứng dụng trong menu ⋮ Tuỳ chọn. */
+  menuExtra?: (close: () => void) => ReactNode;
   /** Vẽ thêm trên nội dung trong khung soạn (ô tiêu đề bài). */
   canvasBefore?: ReactNode;
   defaultDevice?: Device;
@@ -134,18 +141,19 @@ export interface BlockEditorProps extends Omit<EditorProviderProps, "children"> 
 }
 
 /** Trình soạn đầy đủ: thanh trên cùng, thư viện khối / cây khối, khung soạn, bảng cài đặt. */
-export function BlockEditor({ className, onSave, header, actions, canvasBefore, defaultDevice = "desktop", blockStyles, ...provider }: BlockEditorProps) {
+export function BlockEditor({ className, onSave, header, actions, menuExtra, canvasBefore, defaultDevice = "desktop", blockStyles, ...provider }: BlockEditorProps) {
   return (
     <EditorProvider {...provider}>
-      <EditorShell className={className} onSave={onSave} header={header} actions={actions} canvasBefore={canvasBefore} defaultDevice={defaultDevice} blockStyles={blockStyles} />
+      <EditorShell className={className} onSave={onSave} header={header} actions={actions} menuExtra={menuExtra} canvasBefore={canvasBefore} defaultDevice={defaultDevice} blockStyles={blockStyles} />
     </EditorProvider>
   );
 }
 
-function EditorShell({ className, onSave, header, actions, canvasBefore, defaultDevice, blockStyles }: Pick<BlockEditorProps, "className" | "onSave" | "header" | "actions" | "canvasBefore" | "defaultDevice" | "blockStyles">) {
+function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefore, defaultDevice, blockStyles }: Pick<BlockEditorProps, "className" | "onSave" | "header" | "actions" | "menuExtra" | "canvasBefore" | "defaultDevice" | "blockStyles">) {
   const ctx = useEditor();
   const { store, labels } = ctx;
-  const [left, setLeft] = useState<"inserter" | "list" | null>(null);
+  const p = usePrefs(ctx.prefs);
+  const [left, setLeft] = useState<"inserter" | "list" | null>(() => (ctx.prefs.get().showListView ? "list" : null));
   const [right, setRight] = useState(true);
   const [device, setDevice] = useState<Device>(defaultDevice ?? "desktop");
   const [saving, setSaving] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -168,7 +176,12 @@ function EditorShell({ className, onSave, header, actions, canvasBefore, default
   const saveRef = useRef(save);
   saveRef.current = save;
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") { e.preventDefault(); void saveRef.current(); } };
+    const onKey = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); void saveRef.current(); }
+      // ⌘⇧⌥M: đổi soạn trực quan ↔ soạn mã
+      if (mod && e.shiftKey && e.altKey && e.code === "KeyM") { e.preventDefault(); ctx.prefs.set({ mode: ctx.prefs.get().mode === "code" ? "visual" : "code" }); }
+    };
     document.addEventListener("keydown", onKey);
     const frameDoc = ctx.ui.canvasDoc;
     frameDoc?.addEventListener("keydown", onKey);
@@ -178,22 +191,23 @@ function EditorShell({ className, onSave, header, actions, canvasBefore, default
 
   const dirtyDocs = store.dirtyDocs();
   return (
-    <div className={cx("ecx-editor", className)}>
+    <div className={cx("ecx-editor", className, p.fullscreen && "is-fullscreen", p.distractionFree && "is-distraction-free", p.showIconLabels && "show-labels")}>
       <div className="ecx-topbar" role="toolbar" aria-label={labels.editor}>
         <div className="ecx-topbar-start">
           {header}
-          <ToolButton label={labels.addBlock} active={left === "inserter"} className="ecx-tool-primary" onClick={() => setLeft(left === "inserter" ? null : "inserter")}>{left === "inserter" ? <X className="ecx-icon" /> : <Plus className="ecx-icon" />}</ToolButton>
+          {!p.distractionFree && <ToolButton label={labels.addBlock} active={left === "inserter"} className="ecx-tool-primary" onClick={() => setLeft(left === "inserter" ? null : "inserter")}>{left === "inserter" ? <X className="ecx-icon" /> : <Plus className="ecx-icon" />}</ToolButton>}
           <ToolButton label={labels.undo} disabled={!store.canUndo} onClick={() => store.undo()}><Undo2 className="ecx-icon" /></ToolButton>
           <ToolButton label={labels.redo} disabled={!store.canRedo} onClick={() => store.redo()}><Redo2 className="ecx-icon" /></ToolButton>
-          <ToolButton label={labels.listView} active={left === "list"} onClick={() => setLeft(left === "list" ? null : "list")}><ListTree className="ecx-icon" /></ToolButton>
+          {!p.distractionFree && <ToolButton label={labels.listView} active={left === "list"} onClick={() => setLeft(left === "list" ? null : "list")}><ListTree className="ecx-icon" /></ToolButton>}
           <FrameToggle />
         </div>
         <div className="ecx-topbar-end">
           <div className="ecx-tool-group" role="group" aria-label="Device">
             {([["desktop", Monitor], ["tablet", Tablet], ["mobile", Smartphone]] as const).map(([d, I]) => <ToolButton key={d} label={d} active={device === d} onClick={() => setDevice(d)}><I className="ecx-icon" /></ToolButton>)}
           </div>
-          <ToolButton label={labels.settings} active={right} onClick={() => setRight(!right)}><PanelRight className="ecx-icon" /></ToolButton>
+          {!p.distractionFree && <ToolButton label={labels.settings} active={right} onClick={() => setRight(!right)}><PanelRight className="ecx-icon" /></ToolButton>}
           {actions}
+          <MoreMenu extra={menuExtra} />
           {(onSave || ctx.host.documents?.save) && (
             <button type="button" className="ecx-btn ecx-btn-primary ecx-save" disabled={!dirty || saving === "saving"} onClick={() => void save()} title={dirtyDocs.map((d) => d.title ?? d.id).join(", ")}>
               {saving === "saving" ? labels.saving : dirty ? `${labels.save}${dirtyDocs.length > 1 ? ` (${dirtyDocs.length})` : ""}` : labels.saved}
@@ -202,11 +216,13 @@ function EditorShell({ className, onSave, header, actions, canvasBefore, default
         </div>
       </div>
       {error && <div className="ecx-notice is-error" role="alert">{error}</div>}
+      {p.fixedToolbar && p.mode === "visual" && <div className="ecx-fixed-toolbar"><BlockToolbar placement="fixed" /></div>}
       <div className="ecx-body">
-        {left && <aside className="ecx-left">{left === "inserter" ? <InserterPanel /> : <ListView />}</aside>}
-        <main className="ecx-main"><Canvas device={device} before={canvasBefore} /></main>
-        {right && <aside className="ecx-right"><Inspector blockStyles={blockStyles} /></aside>}
+        {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel /> : <ListView />}</aside>}
+        <main className="ecx-main">{p.mode === "code" ? <CodeEditor /> : <Canvas device={device} before={canvasBefore} />}</main>
+        {right && !p.distractionFree && <aside className="ecx-right"><Inspector blockStyles={blockStyles} /></aside>}
       </div>
+      {p.showBreadcrumbs && !p.distractionFree && p.mode === "visual" && <Breadcrumbs />}
       <EditorOverlays />
     </div>
   );
@@ -225,6 +241,13 @@ function FrameToggle() {
   );
 }
 
+/** Vùng thông báo cho trình đọc màn hình (đã chép, đã chèn…). */
+function LiveRegion() {
+  const { ui } = useEditor();
+  useUiTick();
+  return <div className="ecx-sr-only" aria-live="polite" role="status">{ui.announcement}</div>;
+}
+
 /** Lớp nổi phía trên khung soạn: thanh công cụ khối, popover chèn, đường thả. Dùng khi tự dựng bố cục riêng. */
 export function EditorOverlays() {
   return (
@@ -232,6 +255,7 @@ export function EditorOverlays() {
       <BlockToolbar />
       <InserterPopover />
       <DropIndicator />
+      <LiveRegion />
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { canvas, clickEnd, mod, open, state, texts } from "./helpers";
 
-/** Header/footer (phần dùng chung) sửa ngay trong template — như Site Editor của WordPress. */
+/** Header/footer (phần dùng chung) sửa ngay trong template. */
 test.describe("tài liệu lồng (header / footer)", () => {
   test("header, footer tải qua host và hiện dữ liệu thật của khối động", async ({ page }) => {
     const c = await open(page);

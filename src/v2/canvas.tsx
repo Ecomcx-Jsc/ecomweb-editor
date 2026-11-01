@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { DocBlocks } from "./blocklist";
 import { BLOCKS_MIME, blocksFromClipboard, serializeBlocks } from "./clipboard";
 import { DocScopeProvider, useEditor, useEditorState } from "./context";
+import { usePrefs } from "./prefs";
 import { CANVAS_CSS } from "./canvas-css";
 import { makeBlock, type BNode } from "./model";
 import { flatten, topLevelOrdered } from "./ops";
@@ -59,7 +60,8 @@ export function Canvas({ device = "desktop", className, contentClassName = "ecx-
 }
 
 function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; contentClassName: string; before?: ReactNode; after?: ReactNode }) {
-  const { store, labels } = useEditor();
+  const { store, labels, prefs } = useEditor();
+  const spotlight = usePrefs(prefs).spotlight;
   const focus = useEditorState((s) => s.focus[s.focus.length - 1] ?? null);
   const rootId = useEditorState((s) => s.rootId);
   const frameId = useEditorState((s) => s.frameId);
@@ -72,7 +74,7 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   useCanvasKeys(doc);
   useCanvasEvents(doc);
   return (
-    <div className={["ecx-canvas-root", contentClassName, focus && "is-focus-mode"].filter(Boolean).join(" ")} data-ecx-doc={activeId} tabIndex={-1}
+    <div className={["ecx-canvas-root", contentClassName, focus && "is-focus-mode", spotlight && "is-spotlight"].filter(Boolean).join(" ")} data-ecx-doc={activeId} tabIndex={-1}
       onMouseDown={(e) => {
         // Bấm vào chỗ trống: bỏ chọn; bấm dưới khối cuối: thêm / đưa con trỏ vào đoạn trống cuối
         if (e.target !== e.currentTarget) return;

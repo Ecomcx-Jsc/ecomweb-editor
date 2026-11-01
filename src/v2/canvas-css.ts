@@ -73,6 +73,8 @@ pre [data-ecx-rich], pre[data-ecx-rich] { white-space: pre-wrap; }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
 .ecx-block.is-dragging-source { opacity: .35; }
 
+/* Làm nổi khối đang sửa: các khối cấp cao nhất khác mờ đi */
+.is-spotlight > .ecx-block:not(.is-selected):not(.is-editing):not(:has(.is-selected, .is-editing)) { opacity: .3; transition: opacity .2s ease; }
 .ecx-col-handles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
 .ecx-col-handle { position: absolute; width: 12px; margin-left: -6px; cursor: col-resize; pointer-events: auto; touch-action: none; }
 .ecx-col-handle::after { content: ""; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--ecx-ui); opacity: .35; border-radius: 1px; }
