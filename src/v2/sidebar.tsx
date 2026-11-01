@@ -230,7 +230,7 @@ function ListRow({ node, depth }: { node: BNode; depth: number }) {
         <span className="ecx-list-title">{blockLabel(node, type)}</span>
         <span className="ecx-list-drag" onPointerDown={(e) => { e.stopPropagation(); startDrag(ctx, e, [node.id]); }} title={ctx.labels.drag}><GripVertical className="ecx-icon" /></span>
       </div>
-      {hasKids && open && kids.map((k) => <ListRow key={k.id} node={k} depth={depth + 1} />)}
+      {hasKids && open && <div role="group">{kids.map((k) => <ListRow key={k.id} node={k} depth={depth + 1} />)}</div>}
     </div>
   );
 }

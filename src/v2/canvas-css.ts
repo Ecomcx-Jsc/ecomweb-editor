@@ -30,7 +30,7 @@ pre [data-ecx-rich], pre[data-ecx-rich] { white-space: pre-wrap; }
 .ecx-block.is-locked { pointer-events: none; }
 .ecx-block.is-locked .ecx-nested:not(.is-locked), .ecx-block.is-locked [data-ecx-editable-doc] { pointer-events: auto; }
 
-.ecx-default-appender { cursor: text; opacity: .5; margin: 0; padding: .25em 0; }
+.ecx-default-appender { cursor: text; color: #5d6a75; margin: 0; padding: .25em 0; }
 .ecx-default-appender:focus { outline: none; }
 .ecx-appender { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; margin: 0; border: 1px dashed color-mix(in srgb, currentColor 30%, transparent); border-radius: 4px; background: transparent; color: inherit; font: 600 20px/1 var(--ecx-ui-font); cursor: pointer; opacity: .6; }
 .ecx-appender:hover { opacity: 1; border-color: var(--ecx-ui); color: var(--ecx-ui); }

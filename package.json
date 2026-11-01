@@ -1,6 +1,6 @@
 {
   "name": "@ecomcx/ecomweb-editor",
-  "version": "1.18.0",
+  "version": "1.19.0",
   "description": "Trình soạn thảo nội dung dạng khối (TipTap) của CMS — dùng độc lập trong mọi dự án React: ảnh responsive kéo đổi kích thước, gallery, video, bảng, slash menu, mở rộng bằng plugin.",
   "license": "MIT",
   "repository": {
@@ -64,6 +64,7 @@
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-react": "4.5.2",
+    "axe-core": "4.10.3",
     "esbuild": "0.25.12",
     "react": "19.2.0",
     "react-dom": "19.2.0",
