@@ -89,13 +89,15 @@ export function useEditor(): EditorContextValue {
 /** Đọc một phần trạng thái; chỉ vẽ lại khi phần đó đổi (so sánh ===, hoặc hàm so sánh riêng). */
 export function useEditorState<T>(select: (s: EditorState) => T, equal: (a: T, b: T) => boolean = Object.is): T {
   const { store } = useEditor();
-  const last = useRef<{ s: EditorState; v: T } | null>(null);
+  // Bộ đệm theo cả trạng thái LẪN hàm chọn: useSyncExternalStore gọi hàm chọn cũ với trạng thái mới trước khi vẽ lại
+  // (vd đổi tài liệu đang xem) — chỉ so trạng thái sẽ trả về giá trị của hàm chọn cũ.
+  const last = useRef<{ s: EditorState; select: (s: EditorState) => T; v: T } | null>(null);
   const get = useCallback(() => {
     const s = store.getState();
-    if (last.current && last.current.s === s) return last.current.v;
+    if (last.current && last.current.s === s && last.current.select === select) return last.current.v;
     const v = select(s);
-    if (last.current && equal(last.current.v, v)) { last.current = { s, v: last.current.v }; return last.current.v; }
-    last.current = { s, v };
+    if (last.current && equal(last.current.v, v)) { last.current = { s, select, v: last.current.v }; return last.current.v; }
+    last.current = { s, select, v };
     return v;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store, select]);
