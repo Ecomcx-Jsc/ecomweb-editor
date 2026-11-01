@@ -7,6 +7,8 @@ import type { ChoiceKind } from "../core/host";
  */
 export type Opt = [value: string | number, vi: string, en: string];
 export interface AttrHint {
+  /** Nhãn riêng cho thuộc tính ở khối này (vi, en). */
+  label?: [string, string];
   control?: "select" | "segmented" | "range" | "choice" | "newTab" | "suggest" | "code" | "hidden";
   options?: Opt[];
   /** Ô chọn lấy dữ liệu từ ứng dụng (host.choices); tham số tính từ thuộc tính hiện tại. */
@@ -35,9 +37,21 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "*.textAlign": { control: "segmented", options: [...ALIGN, ["justify", "Đều hai bên", "Justify"]] },
   "*.mime": { control: "hidden" },
   "video.name": { control: "hidden" },
+  "file.size": { control: "hidden" },
+  "file.name": { label: ["Tên hiển thị", "Display name"] },
+  "file.src": { label: ["Tệp", "File"] },
+  "video.src": { label: ["Địa chỉ video", "Video URL"] },
+  "audio.src": { label: ["Địa chỉ âm thanh", "Audio URL"] },
+  "youtube.src": { label: ["Đường dẫn YouTube", "YouTube link"] },
+  "youtube.start": { label: ["Bắt đầu từ giây", "Start at second"] },
+  "image.src": { label: ["Địa chỉ ảnh", "Image URL"] },
+  "cover.src": { label: ["Ảnh nền", "Background image"] },
+  "pullquote.citation": { label: ["Nguồn trích dẫn", "Citation"] },
   "audio.name": { control: "hidden" },
-  "heading.level": { control: "select", options: levels(1, 6) },
+  "heading.level": { control: "select", options: levels(1, 6), help: ["Tiêu đề trang / bài đã là H1 — trong nội dung nên bắt đầu từ H2 và không nhảy cấp (SEO).", "The page / post title is already the H1 — start content headings at H2 and don't skip levels (SEO)."] },
   "postTitle.level": { control: "select", options: levels(1, 6) },
+  "queryTitle.level": { control: "select", options: levels(1, 6), help: ["Trang lưu trữ / tìm kiếm chỉ nên có đúng một H1 — chính là khối này.", "Archive / search pages should have exactly one H1 — this block."] },
+  "breadcrumbs.separator": { control: "segmented", options: [["›", "›", "›"], ["/", "/", "/"], ["»", "»", "»"], ["→", "→", "→"]] },
   "siteTitle.level": { control: "select", options: levels(1, 6, ["Đoạn văn (không phải tiêu đề)", "Paragraph (not a heading)"]) },
   "tableOfContents.maxLevel": { control: "select", options: levels(2, 6) },
   "codeBlock.language": { control: "suggest", suggestions: ["plaintext", "html", "css", "javascript", "typescript", "jsx", "tsx", "json", "php", "python", "bash", "sql", "csharp", "java", "go", "rust", "yaml", "markdown", "xml"] },

@@ -60,6 +60,7 @@ if (params.get("plugin")) {
 
 const saves: Array<{ kind: string; ref: unknown; content: unknown }> = [];
 const queries: unknown[] = [];
+const uploads: string[] = [];
 const POSTS = [
   { title: "Khai trương cửa hàng", date: "30/10/2026", terms: ["tin-tuc"] },
   { title: "Bộ sưu tập mùa đông", date: "28/10/2026", terms: ["san-pham"] },
@@ -74,6 +75,11 @@ const host: EditorHost = {
     menus: { primary: [{ title: "Trang chủ" }, { title: "Giới thiệu" }, { title: "Liên hệ" }] },
     post: { title: "Bài viết mẫu", date: "01/11/2026", author: "Admin", excerpt: "Tóm tắt bài viết mẫu." },
   },
+  // ?media=1: thư viện media giả lập (chọn / tải lên trả về ảnh mẫu)
+  ...(params.get("media") ? { media: {
+    async pick() { return [{ id: 7, url: `${location.origin}/sample.svg`, alt: "Ảnh thư viện", fileName: "sample.svg", mimeType: "image/svg+xml", width: 400, height: 200 }]; },
+    async upload(files: File[]) { uploads.push(...files.map((f) => f.name)); return files.map((f, i) => ({ id: 100 + i, url: `${location.origin}/sample.svg`, alt: f.name.replace(/\.[^.]+$/, ""), fileName: f.name, mimeType: f.type, width: 400, height: 200 })); },
+  } } : {}),
   choices(kind, args) {
     switch (kind) {
       case "menuLocation": return [{ value: "primary", label: "Menu chính" }, { value: "footer", label: "Chân trang — chưa gán menu" }];
@@ -138,7 +144,7 @@ function check(): string[] {
   }
   return errors;
 }
-(window as unknown as { __ecx: unknown }).__ecx = { store, saves, queries, check, get changes() { return changes; } };
+(window as unknown as { __ecx: unknown }).__ecx = { store, saves, queries, uploads, check, get changes() { return changes; } };
 
 createRoot(document.getElementById("root")!).render(
   <BlockEditor store={store} host={host} lang={params.get("lang") === "en" ? "en" : "vi"} dynamicBlocks frame={frame}

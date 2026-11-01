@@ -1,6 +1,6 @@
 import { DYNAMIC_NODES, defineBlock, type BlockAttrSpec, type BlockDefinition } from "@ecomcx/ecomweb-content";
 import {
-  AlignLeft, Calendar, Copyright, FileText, Globe, Heading1, Image, Languages, LayoutTemplate, List, ListX, Menu, MessageSquare, MoreHorizontal,
+  AlignLeft, ArrowLeftRight, Calendar, ChevronsRight, Copyright, FileText, Globe, Heading1, Image, Languages, LayoutTemplate, List, ListX, Menu, MessageSquare, MoreHorizontal,
   PanelTop, Repeat, Search, Tags, Text, Type, User, type LucideIcon,
 } from "lucide-react";
 import { useSyncExternalStore, type ReactNode } from "react";
@@ -14,7 +14,7 @@ type Dict = Record<string, string>;
 const vi: Dict = {
   siteTitle: "Tên website", siteLogo: "Logo", siteTagline: "Khẩu hiệu", navigation: "Menu", search: "Tìm kiếm", languageSwitcher: "Chọn ngôn ngữ",
   copyright: "Bản quyền", postTitle: "Tiêu đề bài/trang", postContent: "Nội dung bài/trang", postExcerpt: "Sapo", featuredImage: "Ảnh đại diện",
-  postDate: "Ngày đăng", postAuthor: "Tác giả", postTerms: "Chuyên mục / thẻ", comments: "Bình luận", query: "Danh sách bài",
+  postDate: "Ngày đăng", postAuthor: "Tác giả", postTerms: "Chuyên mục / thẻ", comments: "Bình luận", queryTitle: "Tiêu đề trang lưu trữ", termDescription: "Mô tả chuyên mục", breadcrumbs: "Breadcrumb", postNavigation: "Bài trước / bài sau", query: "Danh sách bài",
   postTemplate: "Khuôn mỗi bài", pagination: "Phân trang", queryEmpty: "Khi không có bài", templatePart: "Phần dùng chung",
   level: "Cấp tiêu đề (0 = chữ thường)", link: "Có liên kết", textAlign: "Căn chữ", width: "Rộng (px)", location: "Vị trí menu",
   orientation: "Hướng", horizontal: "Ngang", vertical: "Dọc", mobile: "Nút menu trên điện thoại", placeholder: "Chữ gợi ý", buttonText: "Chữ trên nút",
@@ -29,7 +29,7 @@ const vi: Dict = {
 const en: Dict = {
   siteTitle: "Site title", siteLogo: "Logo", siteTagline: "Tagline", navigation: "Navigation", search: "Search", languageSwitcher: "Language switcher",
   copyright: "Copyright", postTitle: "Post/page title", postContent: "Post/page content", postExcerpt: "Excerpt", featuredImage: "Featured image",
-  postDate: "Date", postAuthor: "Author", postTerms: "Categories / tags", comments: "Comments", query: "Post list",
+  postDate: "Date", postAuthor: "Author", postTerms: "Categories / tags", comments: "Comments", queryTitle: "Archive title", termDescription: "Term description", breadcrumbs: "Breadcrumbs", postNavigation: "Previous / next post", query: "Post list",
   postTemplate: "Post template", pagination: "Pagination", queryEmpty: "No results", templatePart: "Template part",
   level: "Heading level (0 = text)", link: "Link", textAlign: "Text align", width: "Width (px)", location: "Menu location",
   orientation: "Orientation", horizontal: "Horizontal", vertical: "Vertical", mobile: "Menu button on mobile", placeholder: "Placeholder", buttonText: "Button text",
@@ -63,6 +63,10 @@ const SPECS: Array<[string, LucideIcon, "none" | "blocks", Record<string, BlockA
   ["postAuthor", User, "none", { avatar: b("avatar", { default: false }) }],
   ["postTerms", Tags, "none", { taxonomy: s("taxonomy", { default: "category" }), separator: s("separator", { default: ", " }) }],
   ["comments", MessageSquare, "none", {}],
+  ["queryTitle", Heading1, "none", { level: i("level", { min: 1, max: 6, default: 1 }), prefix: b("prefix", { default: false }), textAlign: align }],
+  ["termDescription", AlignLeft, "none", { textAlign: align }],
+  ["breadcrumbs", ChevronsRight, "none", { separator: s("separator", { default: "›" }), showHome: b("showHome", { default: true }), showCurrent: b("showCurrent", { default: true }) }],
+  ["postNavigation", ArrowLeftRight, "none", { showTitle: b("showTitle", { default: true }) }],
   ["query", List, "blocks", {
     inherit: b("inherit", { default: true }), postType: s("postType", { default: "post" }), perPage: i("perPage", { min: 1, max: 50, default: 10 }),
     category: s("category"), tag: s("tag"),

@@ -1,4 +1,4 @@
-import { CalendarDays, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
+import { AlignLeft, ArrowLeftRight, CalendarDays, ChevronsRight, Heading1, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
 import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
@@ -97,12 +97,46 @@ function PostAuthorEdit({ blockProps }: BlockEditProps) {
 }
 function PostTermsEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
-  return <p {...merge(blockProps, "ecx-post-terms")}>{(d.post?.terms?.length ? d.post.terms : [String(block.attrs.taxonomy ?? "category")]).join(String(block.attrs.separator ?? ", "))}</p>;
+  return <p {...merge(blockProps, "ecx-post-terms")}>{(d.post?.terms?.length ? d.post.terms : block.attrs.taxonomy === "post_tag" ? ["Thẻ A", "Thẻ B"] : ["Chuyên mục A", "Chuyên mục B"]).join(String(block.attrs.separator ?? ", "))}</p>;
 }
 function CommentsEdit({ blockProps }: BlockEditProps) {
   const d = useDynamic();
   return <div {...merge(blockProps, "ecx-comments")}><MessageSquare className="ecx-icon" /> {d.post?.comments ?? 0}</div>;
 }
+/** Tiêu đề trang lưu trữ / tìm kiếm (H1 của trang chuyên mục, thẻ, tác giả…). */
+function QueryTitleEdit({ block, blockProps, labels }: BlockEditProps) {
+  const d = useDynamic();
+  const vi = labels.lang === "vi";
+  const Tag = `h${Math.min(6, Math.max(1, Number(block.attrs.level) || 1))}` as "h1";
+  const name = d.archive?.title ?? (vi ? "Tên chuyên mục" : "Category name");
+  return <Tag {...merge(blockProps, "ecx-query-title", align(block.attrs))}>{block.attrs.prefix ? (vi ? "Chuyên mục: " : "Category: ") : ""}{name}</Tag>;
+}
+function TermDescriptionEdit({ block, blockProps, labels }: BlockEditProps) {
+  const d = useDynamic();
+  return <div {...merge(blockProps, "ecx-term-description", align(block.attrs))}>{d.archive?.description || (labels.lang === "vi" ? "Mô tả của chuyên mục / thẻ đang xem." : "The description of the category / tag being viewed.")}</div>;
+}
+function BreadcrumbsEdit({ block, blockProps, labels }: BlockEditProps) {
+  const d = useDynamic();
+  const vi = labels.lang === "vi";
+  const sep = String(block.attrs.separator ?? "›");
+  const items = [...(block.attrs.showHome !== false ? [vi ? "Trang chủ" : "Home"] : []), vi ? "Chuyên mục" : "Category", ...(block.attrs.showCurrent !== false ? [d.post?.title || (vi ? "Trang hiện tại" : "Current page")] : [])];
+  return (
+    <nav {...(merge(blockProps, "ecx-breadcrumbs") as object)}>
+      <ol>{items.map((t, i) => <li key={i}>{i > 0 && <span className="ecx-breadcrumbs-sep" aria-hidden="true">{sep}</span>}{i < items.length - 1 ? <a>{t}</a> : <span>{t}</span>}</li>)}</ol>
+    </nav>
+  );
+}
+function PostNavigationEdit({ block, blockProps, labels }: BlockEditProps) {
+  const vi = labels.lang === "vi";
+  const titles = block.attrs.showTitle !== false;
+  return (
+    <nav {...(merge(blockProps, "ecx-post-navigation") as object)}>
+      <a className="ecx-post-navigation-prev"><span>{vi ? "Bài trước" : "Previous"}</span>{titles && <strong>{vi ? "Tiêu đề bài trước" : "Previous post title"}</strong>}</a>
+      <a className="ecx-post-navigation-next"><span>{vi ? "Bài sau" : "Next"}</span>{titles && <strong>{vi ? "Tiêu đề bài sau" : "Next post title"}</strong>}</a>
+    </nav>
+  );
+}
+
 function PostContentEdit({ blockProps }: BlockEditProps) {
   const { labels } = useEditor();
   const scope = useDocScope();
@@ -240,6 +274,10 @@ export function themeBlocks(): BlockType[] {
     { name: "postAuthor", title: "Tác giả", icon: User, category: theme, keywords: "tac gia author", kind: "atom", edit: PostAuthorEdit, attributes: { avatar: { type: "boolean", default: false } }, supports: { style: true, className: true } },
     { name: "postTerms", title: "Chuyên mục / thẻ", icon: Tag, category: theme, keywords: "chuyen muc the category tag terms", kind: "atom", edit: PostTermsEdit, attributes: { taxonomy: { type: "string", default: "category" }, separator: { type: "string", default: ", " } }, supports: { style: true, className: true } },
     { name: "comments", title: "Bình luận", icon: MessageSquare, category: theme, keywords: "binh luan comments", kind: "atom", edit: CommentsEdit },
+    { name: "queryTitle", title: "Tiêu đề trang lưu trữ", icon: Heading1, category: theme, keywords: "tieu de luu tru chuyen muc archive query title h1", kind: "atom", edit: QueryTitleEdit, attributes: { level: { type: "integer", default: 1, min: 1, max: 6 }, prefix: { type: "boolean", default: false }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
+    { name: "termDescription", title: "Mô tả chuyên mục", icon: AlignLeft, category: theme, keywords: "mo ta chuyen muc term description", kind: "atom", edit: TermDescriptionEdit, attributes: { textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
+    { name: "breadcrumbs", title: "Breadcrumb", icon: ChevronsRight, category: theme, keywords: "breadcrumb duong dan dieu huong", kind: "atom", edit: BreadcrumbsEdit, attributes: { separator: { type: "string", default: "›" }, showHome: { type: "boolean", default: true }, showCurrent: { type: "boolean", default: true } }, supports: { style: true, className: true } },
+    { name: "postNavigation", title: "Bài trước / bài sau", icon: ArrowLeftRight, category: theme, keywords: "bai truoc bai sau dieu huong post navigation", kind: "atom", edit: PostNavigationEdit, attributes: { showTitle: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     {
       name: "query", title: "Danh sách bài", icon: Rows3, category: theme, keywords: "danh sach bai query loop tin tuc", kind: "container", edit: QueryEdit,
       attributes: { inherit: { type: "boolean", default: true }, postType: { type: "string", default: "post" }, perPage: { type: "integer", default: 10, min: 1, max: 100 }, category: { type: "string" }, tag: { type: "string" }, orderBy: { type: "string", enum: ["date", "title", "menu_order"], default: "date" }, order: { type: "string", enum: ["desc", "asc"], default: "desc" } },

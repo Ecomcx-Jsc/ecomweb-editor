@@ -31,6 +31,8 @@ export interface MediaProvider {
   pick(options: { kind: MediaKind; multiple: boolean }): Promise<MediaItem[]>;
   /** Lấy lại thông tin một file (để đổi cỡ ảnh đã chèn). */
   get?(id: MediaItem["id"]): Promise<MediaItem | null>;
+  /** Tải tệp lên thư viện media (nút "Tải lên", kéo thả tệp vào khối). Không có → chỉ chọn từ thư viện / URL. */
+  upload?(files: File[]): Promise<MediaItem[]>;
 }
 
 /** Một lệnh chèn trong slash menu ("/"). */

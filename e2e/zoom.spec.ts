@@ -72,7 +72,7 @@ test.describe("thu nhỏ", () => {
     await showToolbar(page);
     const handle = page.locator(".ecx-toolbar .ecx-drag-handle");
     const hb = (await handle.boundingBox())!;
-    const target = (await c.locator("[data-ecx-rich]", { hasText: "Cột phải" }).boundingBox())!;
+    const target = (await c.locator(".ecx-columns").first().boundingBox())!;
     await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
     await page.mouse.down();
     await page.mouse.move(target.x + 10, target.y + target.height - 2, { steps: 12 });

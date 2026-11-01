@@ -70,6 +70,8 @@ export interface DynamicData {
   site?: { title?: string; tagline?: string; logo?: string | null };
   menus?: Record<string, Array<{ title: string; url?: string }>>;
   post?: DynamicPost;
+  /** Trang lưu trữ mẫu (tiêu đề, mô tả chuyên mục) cho khối Tiêu đề trang lưu trữ / Mô tả chuyên mục. */
+  archive?: { title?: string; description?: string };
   /** Bài mẫu cho "Danh sách bài" khi không có queryPosts. */
   posts?: DynamicPost[];
   languages?: string[];

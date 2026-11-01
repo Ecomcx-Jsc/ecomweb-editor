@@ -32,6 +32,8 @@ export class EditorUi {
   typing = false;
   /** Thu nhỏ: cả trang trong tầm nhìn, chỉ chọn / sắp xếp các phần (khối cấp cao nhất). */
   zoomOut = false;
+  /** Mở thư viện khối đầy đủ (cột trái) — nút "Xem tất cả" của chèn nhanh; ứng dụng / BlockEditor gán. */
+  browseAll: (() => void) | null = null;
   setZoomOut(v: boolean) { if (this.zoomOut !== v) { this.zoomOut = v; this.bump(); } }
   setTyping(v: boolean) { if (this.typing !== v) { this.typing = v; this.bump(); } }
   /** Bàn phím của popover chèn khối khi đang gõ "/" (khối chữ chuyển phím lên/xuống/Enter/Esc sang). */

@@ -29,17 +29,22 @@ export function TableTools({ ancestor, currentId }: { ancestor: BNode; currentId
   );
 }
 
+/** Thêm một cột cuối (tối đa 6), chia lại độ rộng đều nếu đang đặt độ rộng. */
+export function addColumnTo(store: ReturnType<typeof useEditor>["store"], columns: BNode) {
+  const cols = columns.content ?? [];
+  if (cols.length >= 6) return;
+  const n = cols.length + 1;
+  const even = cols.some((c) => Number(c.attrs.width) > 0) ? Math.round(100 / n) : undefined;
+  const col = makeBlock("column", even ? { width: even } : {}, [makeBlock("paragraph")]);
+  store.replace(columns.id, [{ ...columns, content: [...cols.map((c) => ({ ...c, attrs: { ...c.attrs, width: even } })), col] }], { select: { ids: [], editing: col.content![0].id }, caret: { id: col.content![0].id, offset: 0 } });
+}
+
 /** Thêm / bớt cột (chia lại độ rộng đều). */
 export function ColumnsTools({ ancestor }: { ancestor: BNode; currentId: string }) {
   const { store, labels } = useEditor();
   const cols = ancestor.content ?? [];
   const even = (n: number) => (cols.some((c) => Number(c.attrs.width) > 0) ? Math.round(100 / n) : undefined);
-  const add = () => {
-    if (cols.length >= 6) return;
-    const n = cols.length + 1;
-    const next: BNode = { ...ancestor, content: [...cols.map((c) => ({ ...c, attrs: { ...c.attrs, width: even(n) } })), makeBlock("column", even(n) ? { width: even(n) } : {}, [makeBlock("paragraph")])] };
-    store.replace(ancestor.id, [next]);
-  };
+  const add = () => addColumnTo(store, ancestor);
   const remove = () => {
     if (cols.length <= 1) return;
     const n = cols.length - 1;

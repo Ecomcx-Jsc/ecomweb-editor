@@ -7,11 +7,13 @@ import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useEditor } from "../context";
-import { ButtonsTools, ColumnsTools, TableTools } from "./tools";
+import { ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
 import { ColumnHandles, useActiveWithin } from "./resize";
 import { layoutFor, layoutKind } from "../ui/layout-panel";
 import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
 import { ToolButton } from "../ui/toolbar";
+import { MediaActions, useFileDrop } from "./media-actions";
+import type { MediaItem } from "../../shared/types";
 import { LayoutGrid, Rows3, Columns3 as RowIcon } from "lucide-react";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
@@ -46,7 +48,8 @@ function GroupLayoutTools({ attrs, setAttrs, labels }: BlockEditProps) {
 }
 const groupWith = (layout?: BlockStyle["layout"], kids = 1) => makeBlock("group", layout ? { style: { layout } } : {}, Array.from({ length: kids }, () => makeBlock("paragraph")));
 
-function ColumnsEdit({ block, blockProps, editable }: BlockEditProps) {
+function ColumnsEdit({ block, blockProps, editable, labels }: BlockEditProps) {
+  const { store } = useEditor();
   const a = block.attrs;
   const stack = a.stack !== false;
   const active = useActiveWithin(block.id);
@@ -55,6 +58,10 @@ function ColumnsEdit({ block, blockProps, editable }: BlockEditProps) {
     <div {...merge(blockProps, cx("ecx-columns cms-columns", a.verticalAlign && `ecx-columns-${a.verticalAlign}`, stack && "is-stack"), { display: "flex", flexWrap: stack ? "wrap" : "nowrap", gap: "1.5rem", alignItems, position: "relative" })}>
       <InnerBlocks parent={block} appender="none" />
       {active && editable && block.content!.length > 1 && <ColumnHandles block={block} />}
+      {active && editable && block.content!.length < 6 && store.canInsertInto(block.id) && (
+        <button type="button" className="ecx-add-column" contentEditable={false} title={labels.lang === "vi" ? "Thêm cột" : "Add column"} aria-label={labels.lang === "vi" ? "Thêm cột" : "Add column"}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }} onClick={() => addColumnTo(store, block)}>+</button>
+      )}
     </div>
   );
 }
@@ -117,9 +124,28 @@ function DetailsEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) 
   );
 }
 
-function CoverEdit({ block, blockProps }: BlockEditProps) {
+function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const a = block.attrs;
   const src = typeof a.src === "string" ? a.src : "";
+  const { host } = useEditor();
+  const select = (items: MediaItem[]) => setAttrs({ src: items[0].url, alt: items[0].alt || undefined, mediaId: items[0].id });
+  const drop = useFileDrop("image", select);
+  // Chưa có ảnh lẫn màu: chỗ chọn ảnh nền hoặc màu nền (không để khối trắng trơn vô hình)
+  if (!src && !a.overlay) {
+    const vi = labels.lang === "vi";
+    return (
+      <div {...merge(blockProps, cx("ecx-media-placeholder ecx-cover-placeholder", drop.over && "is-drop-target"))} {...drop.props}>
+        <span className="ecx-placeholder-title"><ImageIcon className="ecx-icon" />{vi ? "Ảnh bìa" : "Cover"}</span>
+        <p className="ecx-placeholder-hint">{vi ? "Chọn ảnh nền (kéo thả, tải lên, thư viện) hoặc một màu nền:" : "Pick a background image (drop, upload, library) or a colour:"}</p>
+        <MediaActions kind="image" onSelect={select} onUrl={(url) => setAttrs({ src: url })} />
+        <div className="ecx-chip-row" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+          {Object.entries(host.presets?.colors ?? { primary: "#1a597b", black: "#111", muted: "#757575" }).map(([name, c]) => (
+            <button key={name} type="button" className="ecx-chip ecx-chip-swatch" title={name} aria-label={`${vi ? "Màu nền" : "Background"}: ${name}`} style={{ background: c }} onClick={() => setAttrs({ overlay: name, opacity: 100 })} />
+          ))}
+        </div>
+      </div>
+    );
+  }
   const overlay = colorCss(a.overlay) ?? (src ? "#000" : undefined);
   return (
     <div {...merge(blockProps, cx("ecx-cover", a.contentAlign && a.contentAlign !== "center" && `is-${a.contentAlign}`, a.fixed && src && "is-fixed"), { minHeight: spacingValue(a.minHeight ?? "400px") })}>
@@ -142,18 +168,17 @@ function MediaTextEdit({ block, blockProps }: BlockEditProps) {
 }
 
 /** Ô chọn ảnh dùng chung (ảnh bìa, ảnh + chữ). */
+/** Chỗ chọn ảnh trong khối (ảnh + chữ…): tải lên / thư viện / URL, kéo thả tệp. */
 export function MediaPick({ blockId }: { blockId: string }) {
-  const { host, store, labels } = useEditor();
-  const pick = async () => {
-    if (host.media) {
-      const [m] = await host.media.pick({ kind: "image", multiple: false });
-      if (m) store.setAttrs([blockId], { src: m.url, alt: m.alt || undefined, mediaId: m.id });
-      return;
-    }
-    const url = window.prompt(labels.imageUrl);
-    if (url) store.setAttrs([blockId], { src: url });
-  };
-  return <button type="button" className="ecx-media-pick" contentEditable={false} onMouseDown={(e) => e.stopPropagation()} onClick={pick}><ImageIcon className="ecx-icon" /> {labels.chooseImage}</button>;
+  const { store, labels } = useEditor();
+  const select = (items: MediaItem[]) => store.setAttrs([blockId], { src: items[0].url, alt: items[0].alt || undefined, mediaId: items[0].id });
+  const drop = useFileDrop("image", select);
+  return (
+    <div className={cx("ecx-media-placeholder ecx-media-pick", drop.over && "is-drop-target")} {...drop.props}>
+      <span className="ecx-placeholder-title"><ImageIcon className="ecx-icon" />{labels.image}</span>
+      <MediaActions kind="image" compact onSelect={select} onUrl={(url) => store.setAttrs([blockId], { src: url })} />
+    </div>
+  );
 }
 
 function TableEdit({ block, blockProps }: BlockEditProps) {

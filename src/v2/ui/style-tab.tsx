@@ -1,11 +1,12 @@
 import { normalizeStyle, type BlockStyle, type Device } from "@ecomcx/ecomweb-content";
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Link2, Link2Off, Monitor, Smartphone, Tablet } from "lucide-react";
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { enLabels, viLabels, type EditorLabels } from "../../shared/labels";
 import { useEditor } from "../context";
 import { ColorInput } from "./color-field";
 import { LayoutEffectsPanel } from "./layout-panel";
 import { Section, Seg, cx } from "./style-controls";
+import { SpacingControl, UnitInput } from "./unit-controls";
 
 /**
  * Tab Kiểu dáng của khối (attrs.style, @ecomcx/ecomweb-content): một giao diện thống nhất cho chữ, màu, khoảng cách,
@@ -34,36 +35,6 @@ function ValueInput({ value, onCommit, check, placeholder, label, inherited }: {
   };
   return <input type="text" className="ecx-input" value={text} placeholder={inherited ?? placeholder} aria-label={label} aria-invalid={bad || undefined}
     onChange={(e) => setText(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } }} />;
-}
-
-/** Bốn cạnh: một giá trị cho cả bốn (preset nhanh) hoặc từng cạnh. */
-function BoxField({ value, onChange, label, t, spaces, inherited }: { value: string | Record<string, string> | undefined; onChange(v: string | Record<string, string> | undefined): void; label: string; t: EditorLabels; spaces: string[]; inherited?: string }) {
-  const [linked, setLinked] = useState(typeof value !== "object" || value === null);
-  const ok = (v: string) => !!normalizeStyle({ padding: v });
-  const sides = typeof value === "object" && value ? value : value ? { top: value, right: value, bottom: value, left: value } : {};
-  const setSide = (s: string, v: string | null) => {
-    const next: Record<string, string> = { ...sides };
-    if (v == null) delete next[s]; else next[s] = v;
-    onChange(Object.keys(next).length ? next : undefined);
-  };
-  return (
-    <div className="ecx-box-field">
-      <div className="ecx-box-head">
-        <Seg label={label} value={linked && typeof value === "string" ? value : undefined} onChange={(v) => { setLinked(true); onChange(v); }}
-          options={spaces.map((v) => [v, v === "0" ? "0" : v.toUpperCase(), v] as [string, string, string])} />
-        <button type="button" className="ecx-tool" title={linked ? t.unlinkSides : t.linkSides} aria-label={linked ? t.unlinkSides : t.linkSides} aria-pressed={linked}
-          onClick={() => setLinked(!linked)}>{linked ? <Link2 className="ecx-icon ecx-icon-sm" /> : <Link2Off className="ecx-icon ecx-icon-sm" />}</button>
-      </div>
-      {linked
-        ? <ValueInput label={label} value={typeof value === "string" ? value : undefined} check={ok} placeholder="16px, 1.5rem, lg…" inherited={inherited} onCommit={(v) => onChange(v ?? undefined)} />
-        : <div className="ecx-box-sides">
-            {(["top", "right", "bottom", "left"] as const).map((s) => (
-              <label key={s}><span>{t[`side_${s}` as keyof EditorLabels]}</span>
-                <ValueInput label={`${label} ${t[`side_${s}` as keyof EditorLabels]}`} value={sides[s]} check={ok} onCommit={(v) => setSide(s, v)} /></label>
-            ))}
-          </div>}
-    </div>
-  );
 }
 
 export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange }: {
@@ -162,16 +133,16 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
       <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
         more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>
           row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}</>}>
-        {row("padding", t.style_padding, <BoxField spaces={spaces} label={t.style_padding} t={t} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} />)}
-        {row("margin", t.style_margin, <BoxField spaces={spaces} label={t.style_margin} t={t} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} />)}
+        <SpacingControl label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: labels.lang === "vi" ? "dọc" : "vertical", horizontal: labels.lang === "vi" ? "ngang" : "horizontal", link: t.linkSides, unlink: t.unlinkSides }} />
+        <SpacingControl label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: labels.lang === "vi" ? "dọc" : "vertical", horizontal: labels.lang === "vi" ? "ngang" : "horizontal", link: t.linkSides, unlink: t.unlinkSides }} />
       </Section>
 
       <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>
-        {row("borderWidth", t.style_borderWidth, <ValueInput label={t.style_borderWidth} value={style.border?.width} check={ok("radius")} placeholder="1px" onCommit={(v) => setGroup("border", "width", v ?? undefined)} />)}
+        {row("borderWidth", t.style_borderWidth, <UnitInput label={t.style_borderWidth} value={style.border?.width} max={20} units={["px", "em", "rem"]} onChange={(v) => setGroup("border", "width", v)} />)}
         {row("borderStyle", t.style_borderStyle, <Seg label={t.style_borderStyle} value={style.border?.style} onChange={(v) => setGroup("border", "style", v)}
           options={[["solid", "—", t.border_solid], ["dashed", "- -", t.border_dashed], ["dotted", "···", t.border_dotted]]} />)}
         {row("borderColor", t.style_borderColor, <ColorInput label={t.style_borderColor} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />)}
-        {row("radius", t.style_radius, <ValueInput label={t.style_radius} value={style.radius} check={ok("radius")} placeholder="8px" onCommit={(v) => set("radius", v ?? undefined)} />)}
+        {row("radius", t.style_radius, <UnitInput label={t.style_radius} value={typeof style.radius === "string" ? style.radius : undefined} max={60} units={["px", "%", "em", "rem"]} onChange={(v) => set("radius", v)} />)}
       </Section>
 
       <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device} />

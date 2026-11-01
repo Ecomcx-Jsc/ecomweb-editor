@@ -6,37 +6,22 @@ import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { ImageHandle } from "./resize";
-import type { MediaKind } from "../../shared/types";
+import { MediaActions, mediaAttrs, useFileDrop } from "./media-actions";
+import type { MediaItem, MediaKind } from "../../shared/types";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const safe = (u: unknown) => (typeof u === "string" && isSafeUrl(u) ? u : "");
 
 /** Ô trống của khối media: chọn từ thư viện hoặc dán đường dẫn. */
 function MediaPlaceholder({ blockId, kind, icon: Icon, title, blockProps }: { blockId: string; kind: MediaKind; icon: typeof ImageIcon; title: string; blockProps: BlockEditProps["blockProps"] }) {
-  const { host, store, labels } = useEditor();
-  const [url, setUrl] = useState("");
-  const pick = async () => {
-    if (!host.media) return;
-    const items = await host.media.pick({ kind, multiple: kind === "gallery" });
-    if (!items.length) return;
-    if (kind === "gallery") store.setAttrs([blockId], { images: items.map((m) => ({ src: m.url, alt: m.alt, width: m.width ?? undefined, height: m.height ?? undefined, id: m.id })) });
-    else {
-      const m = items[0];
-      store.setAttrs([blockId], { src: m.url, alt: kind === "image" ? m.alt || undefined : undefined, name: kind !== "image" ? m.fileName : undefined, mime: m.mimeType, mediaId: m.id, width: kind === "image" ? m.width ?? undefined : undefined, height: kind === "image" ? m.height ?? undefined : undefined });
-    }
-  };
+  const { store, labels } = useEditor();
+  const select = (items: MediaItem[]) => store.setAttrs([blockId], mediaAttrs(kind, items));
+  const drop = useFileDrop(kind, select);
   return (
-    <div {...blockProps} className={cx(blockProps.className, "ecx-media-placeholder")}>
+    <div {...blockProps} {...drop.props} className={cx(blockProps.className, "ecx-media-placeholder", drop.over && "is-drop-target")}>
       <span className="ecx-placeholder-title"><Icon className="ecx-icon" />{title}</span>
-      <div className="ecx-media-actions" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
-        {host.media && <button type="button" className="ecx-btn ecx-btn-primary" onClick={pick}>{labels.chooseImage}</button>}
-        {kind !== "gallery" && (
-          <form onSubmit={(e) => { e.preventDefault(); if (isSafeUrl(url)) store.setAttrs([blockId], { src: url.trim() }); }}>
-            <input className="ecx-input" type="url" placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} aria-label={labels.imageUrl} />
-            <button type="submit" className="ecx-btn">{labels.apply}</button>
-          </form>
-        )}
-      </div>
+      <p className="ecx-placeholder-hint">{labels.dropHint[kind] ?? labels.dropHint.file}</p>
+      <MediaActions kind={kind} onSelect={select} onUrl={kind === "gallery" ? undefined : (url) => store.setAttrs([blockId], { src: url })} />
     </div>
   );
 }
@@ -90,8 +75,22 @@ function FileEdit({ block, blockProps }: BlockEditProps) {
   return <div {...blockProps} className={cx(blockProps.className, "ecx-file cms-file")}><span className="ecx-file-link cms-file-link">{String(block.attrs.name || src)}</span></div>;
 }
 
-function YoutubeEdit({ block, blockProps }: BlockEditProps) {
+function YoutubeEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const m = String(block.attrs.src ?? "").match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+  const [draft, setDraft] = useState("");
+  if (!m) {
+    const vi = labels.lang === "vi";
+    return (
+      <div {...blockProps} className={cx(blockProps.className, "ecx-media-placeholder")}>
+        <span className="ecx-placeholder-title"><Play className="ecx-icon" />YouTube</span>
+        <p className="ecx-placeholder-hint">{vi ? "Dán đường dẫn video YouTube (youtube.com/watch?v=… hoặc youtu.be/…)." : "Paste a YouTube link (youtube.com/watch?v=… or youtu.be/…)."}</p>
+        <form className="ecx-media-actions" contentEditable={false} onMouseDown={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (/(?:v=|youtu\.be\/|embed\/)[\w-]{11}/.test(draft)) setAttrs({ src: draft.trim() }); }}>
+          <input className="ecx-input" type="url" placeholder="https://youtu.be/…" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="YouTube URL" />
+          <button type="submit" className="ecx-btn ecx-btn-primary">{vi ? "Nhúng" : "Embed"}</button>
+        </form>
+      </div>
+    );
+  }
   return (
     <div {...blockProps} className={cx(blockProps.className, "ecx-youtube embed")}>
       {m ? <img src={`https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`} alt="YouTube" draggable={false} style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover" }} /> : "YouTube"}

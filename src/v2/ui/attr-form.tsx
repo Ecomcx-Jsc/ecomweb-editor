@@ -23,7 +23,8 @@ export const ATTR_LABELS: Record<string, [string, string]> = {
   separator: ["Dấu ngăn", "Separator"], inherit: ["Theo trang đang xem", "Inherit query"], postType: ["Loại bài", "Post type"], perPage: ["Số bài", "Per page"],
   category: ["Chuyên mục", "Category"], tag: ["Thẻ", "Tag"], orderBy: ["Sắp xếp theo", "Order by"], order: ["Thứ tự", "Order"], layout: ["Bố cục", "Layout"],
   slug: ["Phần (slug)", "Part (slug)"], tagName: ["Thẻ HTML", "HTML tag"], checked: ["Đã xong", "Done"], poster: ["Ảnh xem trước", "Poster"], download: ["Cho tải về", "Download"],
-  embed: ["Xem ngay trên trang", "Embed"], anchor: ["Neo (id)", "Anchor"], className: ["Class CSS", "CSS class"],
+  embed: ["Xem ngay trên trang", "Embed"], prefix: ["Hiện “Chuyên mục:” / “Thẻ:” phía trước", "Show “Category:” / “Tag:” prefix"],
+  showHome: ["Có “Trang chủ”", "Show home"], showCurrent: ["Có trang hiện tại", "Show current page"], showTitle: ["Hiện tiêu đề bài", "Show post titles"], anchor: ["Neo (id)", "Anchor"], className: ["Class CSS", "CSS class"],
 };
 /** Thuộc tính sửa ở chỗ khác (thanh công cụ, trên khung soạn) hoặc dữ liệu kỹ thuật. */
 const HIDDEN_ATTRS = new Set(["style", "blockStyle", "anchor", "className", "mediaId", "srcset", "webpSrcset", "images", "links", "colwidth", "colspan", "rowspan", "_v", "id"]); // gộp ô: dùng lệnh Gộp / Tách của công cụ bảng (sửa số tay làm lệch bảng)
@@ -103,7 +104,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
   return (
     <div className="ecx-form">
       {entries.map(([k, spec, hint]) => {
-        const label = attrLabel(k, spec, lang, host.translate);
+        const label = hint.label ? hint.label[lang === "vi" ? 0 : 1] : attrLabel(k, spec, lang, host.translate);
         const value = attrs[k] ?? spec.default;
         const set = (v: unknown) => onChange({ [k]: v === "" || v === spec.default ? undefined : v });
         const help = hint.help && <span className="ecx-field-help">{hint.help[lang === "vi" ? 0 : 1]}</span>;

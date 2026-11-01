@@ -171,6 +171,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
   const { store, labels } = ctx;
   const p = usePrefs(ctx.prefs);
   const [left, setLeft] = useState<"inserter" | "list" | null>(() => (ctx.prefs.get().showListView ? "list" : null));
+  useEffect(() => { ctx.ui.browseAll = () => setLeft("inserter"); return () => { ctx.ui.browseAll = null; }; }, [ctx.ui]);
   const [right, setRight] = useState(true);
   const [device, setDevice] = useState<Device>(defaultDevice ?? "desktop");
   const [saving, setSaving] = useState<"idle" | "saving" | "saved" | "error">("idle");

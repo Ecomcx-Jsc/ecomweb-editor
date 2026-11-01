@@ -72,7 +72,7 @@ test.describe("bố cục + hiệu ứng", () => {
     expect(g.attrs.style.gradient).toBe("brand");
     const el = c.locator(`[data-ecx-block="${g.id}"]`);
     await expect.poll(() => el.evaluate((n) => getComputedStyle(n).backgroundImage)).toContain("linear-gradient");
-    await insp.getByRole("button", { name: "Tuỳ chỉnh" }).click();
+    await insp.getByRole("button", { name: "Tuỳ chỉnh", exact: true }).click();
     g = await groupOf(page);
     expect(g.attrs.style.gradient).toMatch(/^linear-gradient\(135deg, #1a597b 0%, #f26251 100%\)$/);
     await insp.getByLabel("Đổ bóng").first().selectOption("md");

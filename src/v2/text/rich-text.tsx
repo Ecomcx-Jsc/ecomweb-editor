@@ -176,8 +176,11 @@ export function RichText(props: RichTextProps) {
 
 function syncEmpty(view: EditorView) {
   const empty = view.state.doc.content.size === 0;
-  if (empty) view.dom.setAttribute("data-empty", "");
-  else view.dom.removeAttribute("data-empty");
+  if (empty) {
+    view.dom.setAttribute("data-empty", "");
+    // Ô trống trong khung co theo nội dung (nút, hàng ngang, ô bảng…): giữ đủ rộng cho chữ gợi ý, không bị cắt / xuống dòng từng chữ
+    (view.dom as HTMLElement).style.setProperty("--ecx-ph", String(view.dom.getAttribute("data-placeholder")?.length ?? 0));
+  } else view.dom.removeAttribute("data-empty");
 }
 
 // ---------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import { blockDescription } from "./block-descriptions";
 import { Blocks } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { norm } from "../../shared/util";
@@ -136,6 +137,8 @@ export function InserterPopover() {
 
   if (!req) return null;
   if (req.mode === "slash" && !results.length) return null;
+  // Bấm "+": chưa gõ tìm → 6 khối gợi ý (hay dùng nhất, không thì khối cơ bản) + "Xem tất cả"
+  const quick = req.mode !== "slash" && !query ? suggestions(options, ctx.prefs.get().insertCounts) : null;
   // Toạ độ nguyên: đặt ở nửa điểm ảnh thì chữ bị nhoè
   const top = Math.round(Math.min(req.rect.bottom + 6, window.innerHeight - 320));
   const left = Math.round(Math.min(req.rect.left, window.innerWidth - 320));
@@ -150,6 +153,19 @@ export function InserterPopover() {
             else if (e.key === "Escape") { e.preventDefault(); ui.openInserter(null); }
           }} />
       )}
+      {quick ? (
+        <>
+          <div className="ecx-quick-grid" role="listbox" aria-label={labels.blocks}>
+            {quick.map((o, i) => (
+              <button key={o.key} type="button" role="option" aria-selected={false} className="ecx-block-tile" data-key={o.key} data-index={i}
+                onMouseDown={(e) => e.preventDefault()} onClick={() => applyInsert(ctx, req, o)}>
+                {o.icon ? <o.icon className="ecx-icon" /> : <Blocks className="ecx-icon" />}<span>{o.title}</span>
+              </button>
+            ))}
+          </div>
+          {ui.browseAll && <button type="button" className="ecx-quick-all" onClick={() => { ui.openInserter(null); ui.browseAll?.(); }}>{labels.browseAll}</button>}
+        </>
+      ) : (
       <div ref={listRef} className="ecx-inserter-list" role="listbox" aria-label={labels.blocks}>
         {results.length ? results.map((o, i) => (
           <button key={o.key} type="button" role="option" aria-selected={i === active} data-index={i} data-key={o.key} className={i === active ? "is-active" : undefined}
@@ -158,8 +174,19 @@ export function InserterPopover() {
           </button>
         )) : <p className="ecx-muted">{labels.noResults}</p>}
       </div>
+      )}
     </div>
   );
+}
+
+const SUGGESTED = ["paragraph", "heading", "image", "columns", "buttons", "group"];
+/** 6 khối gợi ý của chèn nhanh: hay dùng nhất trước, đủ 6 bằng khối cơ bản. */
+function suggestions(options: InsertOption[], counts: Record<string, number>): InsertOption[] {
+  const base = options.filter((o) => !o.key.includes("/"));
+  const used = base.filter((o) => (counts[o.type] ?? 0) > 0).sort((a, b) => (counts[b.type] ?? 0) - (counts[a.type] ?? 0));
+  const out: InsertOption[] = [];
+  for (const o of [...used, ...SUGGESTED.map((t) => base.find((x) => x.type === t)).filter(Boolean) as InsertOption[]]) if (!out.some((x) => x.type === o.type) && out.length < 6) out.push(o);
+  return out;
 }
 
 const CATEGORY_ORDER = ["text", "media", "design", "widgets", "theme", "embed"];
@@ -170,6 +197,7 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
   const options = useInsertOptions();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"blocks" | "patterns">("blocks");
+  const [hover, setHover] = useState<{ o: InsertOption; rect: DOMRect; y: number } | null>(null);
   const results = rankOptions(options, query);
   const catLabel: Record<string, string> = { text: labels.catText, media: labels.catMedia, design: labels.catDesign, widgets: labels.catWidgets, theme: labels.catTheme, embed: labels.catEmbed };
   const p = usePrefs(ctx.prefs);
@@ -187,7 +215,15 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
     onInserted?.();
   };
   return (
-    <div className="ecx-inserter-panel">
+    <div className="ecx-inserter-panel" onMouseLeave={() => setHover(null)}>
+      {hover && (
+        // Thẻ xem trước khi rê chuột: biểu tượng, tên, mô tả của khối
+        <div className="ecx-block-preview" role="tooltip" style={{ left: Math.round(hover.rect.right + 8), top: Math.round(Math.min(hover.y, window.innerHeight - 160)) }}>
+          {hover.o.icon ? <hover.o.icon className="ecx-icon" /> : <Blocks className="ecx-icon" />}
+          <strong>{hover.o.title}</strong>
+          <p>{hover.o.description ?? blockDescription(hover.o.type, labels.lang) ?? ""}</p>
+        </div>
+      )}
       <div className="ecx-tabs" role="tablist">
         <button type="button" role="tab" aria-selected={tab === "blocks"} className={tab === "blocks" ? "is-active" : undefined} onClick={() => setTab("blocks")}>{labels.blocks}</button>
         <button type="button" role="tab" aria-selected={tab === "patterns"} className={tab === "patterns" ? "is-active" : undefined} onClick={() => setTab("patterns")}>{labels.patterns}</button>
@@ -211,7 +247,8 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
           {cat && <h3 className="ecx-panel-heading">{catLabel[cat] ?? cat}</h3>}
           <div className="ecx-block-grid">
             {list.map((o) => (
-              <button key={o.key} type="button" className="ecx-block-tile" data-key={o.key} title={o.description ?? o.title}
+              <button key={o.key} type="button" className="ecx-block-tile" data-key={o.key}
+                onMouseEnter={(e) => setHover({ o, rect: (e.currentTarget.closest(".ecx-inserter-panel") as HTMLElement).getBoundingClientRect(), y: e.currentTarget.getBoundingClientRect().top })} onMouseLeave={() => setHover(null)}
                 onPointerDown={(e) => startDragNew(ctx, e, o)} onClick={() => insert(o)}>
                 {o.icon ? <o.icon className="ecx-icon" /> : <Blocks className="ecx-icon" />}<span>{o.title}</span>
               </button>
