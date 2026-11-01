@@ -47,15 +47,26 @@
     "@tiptap/react": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
     "@tiptap/suggestion": "3.32.0",
-    "lucide-react": "1.56.0"
+    "lucide-react": "1.56.0",
+    "prosemirror-commands": "1.7.2",
+    "prosemirror-history": "1.5.1",
+    "prosemirror-inputrules": "1.5.1",
+    "prosemirror-keymap": "1.2.3",
+    "prosemirror-model": "1.25.12",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-transform": "1.12.3",
+    "prosemirror-view": "1.42.7"
   },
   "devDependencies": {
+    "@playwright/test": "1.53.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "4.5.2",
     "esbuild": "0.25.12",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vite": "6.3.5"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
