@@ -4,6 +4,7 @@ import { Blocks, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
 import { useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
 import { enLabels, viLabels } from "../labels";
 import { StylePanel } from "../stylepanel";
+import { LayoutEffectsPanel } from "./layoutpanel";
 import { blockPanelsFor, onBlockPanelsChange } from "../panelstore";
 import { useEditor, useEditorState } from "./context";
 import { startDrag } from "./dnd";
@@ -152,6 +153,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             <div className="ecx-panel">
               <StylePanel style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} t={v1} device={device} onDeviceChange={setDevice} presets={host.presets}
                 variants={variants.length ? variants : undefined} variant={(first.attrs.blockStyle as string) ?? null} onVariantChange={(v) => setAttrs({ blockStyle: v ?? undefined })} />
+              <LayoutEffectsPanel type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} />
             </div>
           )}
         </>

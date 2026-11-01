@@ -226,3 +226,22 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-flex { flex: 1; }
 .ecx-code-editor .ecx-code-input { flex: 1; width: 100%; resize: none; border: 0; padding: 16px 20px; font: 12.5px/1.6 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ecx-ed-fg); background: var(--ecx-ed-panel); outline: none; }
 .ecx-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* Bố cục, nền & hiệu ứng, hover (tab Kiểu dáng) */
+.ecx-layout-panel { display: flex; flex-direction: column; border-top: 1px solid var(--ecx-ed-line); margin-top: 4px; }
+.ecx-style-section { border-bottom: 1px solid var(--ecx-ed-line); }
+.ecx-style-section-head { display: flex; align-items: center; justify-content: space-between; width: 100%; height: 40px; padding: 0; border: 0; background: none; color: var(--ecx-ed-fg); font: inherit; font-weight: 600; cursor: pointer; }
+.ecx-style-section-body { display: flex; flex-direction: column; gap: 12px; padding-bottom: 14px; }
+.ecx-style-row { display: flex; flex-direction: column; gap: 6px; }
+.ecx-device-tag { margin-left: 6px; padding: 0 5px; border-radius: 4px; background: var(--ecx-ed-accent-soft); color: var(--ecx-ed-accent); font-style: normal; font-size: 10px; }
+.ecx-seg { display: inline-flex; gap: 2px; padding: 2px; border-radius: 8px; background: var(--ecx-ed-subtle); }
+.ecx-seg-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 28px; padding: 0 6px; border: 0; border-radius: 6px; background: none; color: var(--ecx-ed-muted); cursor: pointer; }
+.ecx-seg-btn:hover { color: var(--ecx-ed-fg); }
+.ecx-seg-btn.is-active { background: var(--ecx-ed-panel); color: var(--ecx-ed-accent); box-shadow: 0 1px 2px rgb(14 40 58 / .12); }
+.ecx-chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ecx-chip { height: 28px; min-width: 28px; padding: 0 8px; border: 1px solid var(--ecx-ed-line); border-radius: 6px; background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); font: inherit; font-size: 12px; cursor: pointer; }
+.ecx-chip.is-active { border-color: var(--ecx-ed-accent); box-shadow: 0 0 0 1px var(--ecx-ed-accent); }
+.ecx-chip-swatch { padding: 0; width: 28px; }
+.ecx-chip-row input[type="color"] { width: 28px; height: 28px; padding: 2px; border: 1px solid var(--ecx-ed-line); border-radius: 6px; background: var(--ecx-ed-panel); }
+.ecx-gradient-edit { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 12px; color: var(--ecx-ed-muted); }
+.ecx-gradient-edit label { display: inline-flex; align-items: center; gap: 6px; }

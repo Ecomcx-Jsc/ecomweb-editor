@@ -38,7 +38,7 @@ export function useInsertOptions(): InsertOption[] {
       out.push({ key: t.name, title: t.title, description: t.description, icon: t.icon, keywords: t.keywords ?? "", category: t.category ?? "other", type: t.name, create: () => registry.create(t.name) });
       for (const v of t.variations ?? []) {
         if (!v.create) continue;
-        out.push({ key: `${t.name}/${v.name}`, title: `${t.title} ${v.title}`, description: v.description, icon: v.icon ?? t.icon, keywords: `${t.keywords ?? ""} ${v.keywords ?? ""}`, category: t.category ?? "other", type: t.name, create: v.create });
+        out.push({ key: `${t.name}/${v.name}`, title: v.standalone ? v.title : `${t.title} ${v.title}`, description: v.description, icon: v.icon ?? t.icon, keywords: `${t.keywords ?? ""} ${v.keywords ?? ""}`, category: t.category ?? "other", type: t.name, create: v.create });
       }
     }
     return out;

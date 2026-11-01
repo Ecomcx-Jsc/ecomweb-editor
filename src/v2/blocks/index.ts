@@ -25,7 +25,10 @@ export function coreBlockTypes(labels: V2Labels): BlockType[] {
   return [...textBlocks(), ...layoutBlocks(), ...mediaBlocks(), ...themeBlocks()].map((t) => {
     const key = TITLE_KEYS[t.name];
     const title = key ? String(labels[key]) : labels.lang === "en" ? EN_TITLES[t.name] ?? t.title : t.title;
-    return { ...t, title };
+    // Biến thể đứng riêng (Hàng ngang / Xếp dọc / Lưới) theo ngôn ngữ
+    const VAR_EN: Record<string, string> = { "group/row": "Row", "group/stack": "Stack", "group/grid": "Grid" };
+    const variations = labels.lang === "en" && t.variations ? t.variations.map((v) => (VAR_EN[`${t.name}/${v.name}`] ? { ...v, title: VAR_EN[`${t.name}/${v.name}`] } : v)) : t.variations;
+    return { ...t, title, variations };
   });
 }
 

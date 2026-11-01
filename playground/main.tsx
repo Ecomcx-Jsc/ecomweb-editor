@@ -59,7 +59,7 @@ if (params.get("plugin")) {
 const saves: Array<{ kind: string; ref: unknown; content: unknown }> = [];
 const host: EditorHost = {
   canvasStyles: [contentCss, { css: "body { font-family: Georgia, serif; color: #222; } .ecx-site-title { font-weight: 700; } .ecx-navigation-menu { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0; } .ecx-group { display: flex; justify-content: space-between; align-items: center; }" }],
-  presets: { colors: { primary: "#3858e9", muted: "#757575" } },
+  presets: { colors: { primary: "#1a597b", accent: "#f26251", muted: "#757575" }, gradients: { brand: "linear-gradient(135deg, #1a597b, #f26251)" }, shadows: { soft: "0 2px 8px rgb(0 0 0 / .12)" } },
   dynamic: {
     site: { title: "ECOMCX Demo", tagline: "Website mẫu" },
     menus: { primary: [{ title: "Trang chủ" }, { title: "Giới thiệu" }, { title: "Liên hệ" }] },

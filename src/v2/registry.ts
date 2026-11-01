@@ -35,6 +35,8 @@ export interface BlockVariation {
   attrs?: Record<string, unknown>;
   /** Tạo khối của biến thể (mặc định create của khối với attrs). */
   create?(): BNode;
+  /** Hiện trong thư viện khối bằng tên riêng (vd "Hàng ngang") thay vì "tên khối + tên biến thể". */
+  standalone?: boolean;
   /** Biến thể đang áp dụng cho khối này (hiện tên/biểu tượng đúng biến thể). */
   isActive?(attrs: Record<string, any>): boolean;
 }

@@ -8,6 +8,10 @@ import { RichText } from "../richtext";
 import { useEditor } from "../context";
 import { ButtonsTools, ColumnsTools, TableTools } from "./tools";
 import { ColumnHandles, useActiveWithin } from "./resize";
+import { layoutFor, layoutKind } from "../layoutpanel";
+import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
+import { ToolButton } from "../toolbar";
+import { LayoutGrid, Rows3, Columns3 as RowIcon } from "lucide-react";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const PADDING: Record<string, string> = { none: "0", small: "0.75rem", medium: "1.5rem", large: "3rem" };
@@ -24,6 +28,22 @@ function GroupEdit({ block, blockProps }: BlockEditProps) {
     </div>
   );
 }
+
+/** Thanh công cụ của nhóm: đổi nhanh Nhóm / Hàng ngang / Xếp dọc / Lưới (giữ các kiểu dáng khác). */
+function GroupLayoutTools({ attrs, setAttrs, labels }: BlockEditProps) {
+  const style: BlockStyle = normalizeStyle(attrs.style) ?? {};
+  const kind = layoutKind(style.layout);
+  const vi = labels.lang === "vi";
+  const items: Array<["flow" | "row" | "stack" | "grid", typeof Square, string]> = [["flow", Square, vi ? "Nhóm" : "Group"], ["row", RowIcon, vi ? "Hàng ngang" : "Row"], ["stack", Rows3, vi ? "Xếp dọc" : "Stack"], ["grid", LayoutGrid, vi ? "Lưới" : "Grid"]];
+  return (
+    <>
+      {items.map(([k, I, label]) => (
+        <ToolButton key={k} label={label} active={kind === k} onClick={() => setAttrs({ style: normalizeStyle({ ...style, layout: layoutFor(k, style.layout) }) })}><I className="ecx-icon" /></ToolButton>
+      ))}
+    </>
+  );
+}
+const groupWith = (layout?: BlockStyle["layout"], kids = 1) => makeBlock("group", layout ? { style: { layout } } : {}, Array.from({ length: kids }, () => makeBlock("paragraph")));
 
 function ColumnsEdit({ block, blockProps, editable }: BlockEditProps) {
   const a = block.attrs;
@@ -160,6 +180,12 @@ export function layoutBlocks(): BlockType[] {
       name: "group", title: "Nhóm", icon: Square, category: "design", keywords: "nhom group khung section container", kind: "container", edit: GroupEdit,
       attributes: { background: { type: "string", control: "color" }, textColor: { type: "string", control: "color" }, padding: { type: "string", enum: ["none", "small", "medium", "large"], default: "medium" } },
       create: (attrs) => makeBlock("group", attrs ?? {}, [makeBlock("paragraph")]),
+      toolbar: GroupLayoutTools,
+      variations: [
+        { name: "row", title: "Hàng ngang", standalone: true, icon: RowIcon, keywords: "hang ngang row flex xep ngang", create: () => groupWith(layoutFor("row"), 2) },
+        { name: "stack", title: "Xếp dọc", standalone: true, icon: Rows3, keywords: "xep doc stack flex cot", create: () => groupWith(layoutFor("stack"), 2) },
+        { name: "grid", title: "Lưới", standalone: true, icon: LayoutGrid, keywords: "luoi grid o cot", create: () => groupWith(layoutFor("grid"), 3) },
+      ],
       supports: { style: true, anchor: true, className: true, blockStyle: true },
       transforms: [{ to: "columns", convert: (b) => [makeBlock("columns", {}, b.flatMap((g) => g.content ?? []).map((c) => makeBlock("column", {}, [c])))] }],
     },
