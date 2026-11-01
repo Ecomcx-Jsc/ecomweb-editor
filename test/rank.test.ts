@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { Pilcrow } from "lucide-react";
-import { rankItems } from "../src/rank";
+import { rankItems } from "../src/legacy/rank";
 
 const item = (key: string, title: string, keywords = "") => ({ key, title, hint: "", icon: Pilcrow, keywords, run() {} });
 const list = [item("p", "Đoạn văn", "doan van"), item("ul", "Danh sách", "danh sach list"), item("image", "Ảnh"), item("preformatted", "Văn bản định dạng sẵn", "pre")];

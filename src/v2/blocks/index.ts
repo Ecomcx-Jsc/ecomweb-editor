@@ -1,5 +1,5 @@
 import type { V2Labels } from "../labels";
-import type { BlockType, BlockTypeRegistry } from "../registry";
+import type { BlockType, BlockTypeRegistry } from "../core/registry";
 import { layoutBlocks } from "./layout";
 import { mediaBlocks } from "./media";
 import { textBlocks } from "./text";

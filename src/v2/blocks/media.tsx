@@ -2,11 +2,11 @@ import { embedInfo, isSafeUrl } from "@ecomcx/ecomweb-content";
 import { Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Share2, Video, Play, Globe } from "lucide-react";
 import { useState } from "react";
 import { useEditor } from "../context";
-import type { BlockEditProps, BlockType } from "../registry";
-import { RichText } from "../richtext";
-import { BoundText, useBindingPreview } from "../bindings";
+import type { BlockEditProps, BlockType } from "../core/registry";
+import { RichText } from "../text/rich-text";
+import { BoundText, useBindingPreview } from "../ui/bindings";
 import { ImageHandle } from "./resize";
-import type { MediaKind } from "../../types";
+import type { MediaKind } from "../../shared/types";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const safe = (u: unknown) => (typeof u === "string" && isSafeUrl(u) ? u : "");

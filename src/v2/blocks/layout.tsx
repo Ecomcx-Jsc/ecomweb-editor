@@ -1,17 +1,17 @@
 import { colorCss, spacingValue } from "@ecomcx/ecomweb-content";
 import { ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import type { CSSProperties } from "react";
-import { InnerBlocks } from "../blocklist";
-import { makeBlock } from "../model";
-import type { BlockEditProps, BlockType } from "../registry";
-import { RichText } from "../richtext";
-import { BoundText, useBindingPreview } from "../bindings";
+import { InnerBlocks } from "../canvas/block-list";
+import { makeBlock } from "../core/model";
+import type { BlockEditProps, BlockType } from "../core/registry";
+import { RichText } from "../text/rich-text";
+import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useEditor } from "../context";
 import { ButtonsTools, ColumnsTools, TableTools } from "./tools";
 import { ColumnHandles, useActiveWithin } from "./resize";
-import { layoutFor, layoutKind } from "../layoutpanel";
+import { layoutFor, layoutKind } from "../ui/layout-panel";
 import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
-import { ToolButton } from "../toolbar";
+import { ToolButton } from "../ui/toolbar";
 import { LayoutGrid, Rows3, Columns3 as RowIcon } from "lucide-react";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");

@@ -1,12 +1,12 @@
 import { createRoot } from "react-dom/client";
 import contentCss from "@ecomcx/ecomweb-content/style.css?url";
-import "../src/editor.css";
+import "../src/legacy/editor.css";
 import "../src/v2/editor.css";
 import { BlockEditor, EditorStore, blocksFromContent, fixTree, flatten, inlineText, type EditorHost } from "../src/v2";
 import { defineBlock } from "@ecomcx/ecomweb-content";
-import { registerBlock } from "../src/blocks";
-import { registerBlockPanel } from "../src/panels";
-import { registerBindingSource } from "../src/v2/bindings";
+import { registerBlock } from "../src/legacy/blocks";
+import { registerBlockPanel } from "../src/legacy/panels";
+import { registerBindingSource } from "../src/v2/ui/bindings";
 
 /**
  * Playground: trình soạn template "Trang chủ" có header/footer là phần dùng chung (tài liệu lồng), dữ liệu thật cho khối động.

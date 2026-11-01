@@ -1,11 +1,11 @@
 import { Code, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, List, ListChecks, ListOrdered, Pilcrow, Quote, SquareCode, TextQuote, Type } from "lucide-react";
 import type { CSSProperties } from "react";
-import { InnerBlocks } from "../blocklist";
-import { inlineText, makeBlock, type BNode } from "../model";
-import { flatten } from "../ops";
-import type { BlockEditProps, BlockTransform, BlockType } from "../registry";
-import { RichText } from "../richtext";
-import { BoundText, useBindingPreview } from "../bindings";
+import { InnerBlocks } from "../canvas/block-list";
+import { inlineText, makeBlock, type BNode } from "../core/model";
+import { flatten } from "../core/ops";
+import type { BlockEditProps, BlockTransform, BlockType } from "../core/registry";
+import { RichText } from "../text/rich-text";
+import { BoundText, useBindingPreview } from "../ui/bindings";
 
 const align = (a: Record<string, unknown>): CSSProperties | undefined => (typeof a.textAlign === "string" ? { textAlign: a.textAlign as CSSProperties["textAlign"] } : undefined);
 const HEADING_ICONS = [Heading1, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6];

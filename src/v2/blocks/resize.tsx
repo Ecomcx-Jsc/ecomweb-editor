@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useEditor, useEditorState } from "../context";
-import type { BNode } from "../model";
+import type { BNode } from "../core/model";
 
 /** Khối hoặc khối con của nó đang được chọn / gõ (hiện tay nắm đổi cỡ). */
 export function useActiveWithin(id: string) {

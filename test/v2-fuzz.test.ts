@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { normalizeContent } from "@ecomcx/ecomweb-content";
-import { blocksFromDoc, docFromBlocks, inlineLength, makeBlock, type BNode } from "../src/v2/model";
-import { flatten } from "../src/v2/ops";
-import { fixTree } from "../src/v2/structure";
-import { EditorStore } from "../src/v2/store";
+import { blocksFromDoc, docFromBlocks, inlineLength, makeBlock, type BNode } from "../src/v2/core/model";
+import { flatten } from "../src/v2/core/ops";
+import { fixTree } from "../src/v2/core/structure";
+import { EditorStore } from "../src/v2/core/store";
 
 /**
  * Fuzz tầng lõi: chuỗi thao tác ngẫu nhiên (có hạt giống — lỗi nào cũng tái hiện được bằng FUZZ_SEED) trên store, sau mỗi bước:

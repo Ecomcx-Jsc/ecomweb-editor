@@ -1,11 +1,11 @@
 import { CalendarDays, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../blocklist";
+import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
 import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
-import type { DynamicPost, QueryArgs } from "../host";
-import type { BNode } from "../model";
-import { makeBlock } from "../model";
-import type { BlockEditProps, BlockType } from "../registry";
+import type { DynamicPost, QueryArgs } from "../core/host";
+import type { BNode } from "../core/model";
+import { makeBlock } from "../core/model";
+import type { BlockEditProps, BlockType } from "../core/registry";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const align = (a: Record<string, unknown>): CSSProperties | undefined => (typeof a.textAlign === "string" ? { textAlign: a.textAlign as CSSProperties["textAlign"] } : undefined);

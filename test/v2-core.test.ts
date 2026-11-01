@@ -3,10 +3,10 @@ import { test } from "node:test";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { normalizeContent } from "@ecomcx/ecomweb-content";
-import { blocksFromDoc, docFromBlocks, inlineText, joinInline, makeBlock, splitInline, type BNode } from "../src/v2/model";
-import { findBlock, flatten, moveBlocks } from "../src/v2/ops";
-import { fixTree } from "../src/v2/structure";
-import { EditorStore } from "../src/v2/store";
+import { blocksFromDoc, docFromBlocks, inlineText, joinInline, makeBlock, splitInline, type BNode } from "../src/v2/core/model";
+import { findBlock, flatten, moveBlocks } from "../src/v2/core/ops";
+import { fixTree } from "../src/v2/core/structure";
+import { EditorStore } from "../src/v2/core/store";
 
 const P = (text: string, attrs = {}) => makeBlock("paragraph", attrs, text);
 const H = (text: string, level = 2) => makeBlock("heading", { level }, text);
@@ -302,9 +302,9 @@ test("kéo thả sang tài liệu khác (template → header) là một bước 
 });
 
 test("đồng bộ khối plugin không đè khối lõi cùng tên (khối 1.x đăng ký qua registerBlock)", async () => {
-  const { BlockTypeRegistry } = await import("../src/v2/registry");
-  const { syncPluginBlocks } = await import("../src/v2/compat");
-  const { storeBlockDefinition } = await import("../src/blockdefs");
+  const { BlockTypeRegistry } = await import("../src/v2/core/registry");
+  const { syncPluginBlocks } = await import("../src/v2/blocks/compat");
+  const { storeBlockDefinition } = await import("../src/shared/block-defs");
   const { defineBlock } = await import("@ecomcx/ecomweb-content");
   const r = new BlockTypeRegistry();
   const coreEdit = () => null;
@@ -440,7 +440,7 @@ test("chọn chữ qua nhiều khối: vào trong danh sách — mục cuối tr
 });
 
 test("bảng: gộp phải / dưới, tách ô, thêm / xoá hàng cột đi qua ô gộp — bảng luôn vuông vức", async () => {
-  const { tableContext, mergeCells, splitCell, addRow, deleteColumn, normalizeTable } = await import("../src/v2/tables");
+  const { tableContext, mergeCells, splitCell, addRow, deleteColumn, normalizeTable } = await import("../src/v2/core/tables");
   const c = (s: string) => makeBlock("tableCell", {}, [makeBlock("paragraph", {}, [{ type: "text", text: s }])]);
   const table = makeBlock("table", {}, [0, 1, 2].map((r) => makeBlock("tableRow", {}, [0, 1, 2].map((k) => c(`${r}${k}`)))));
   const st = store(table);

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
-import type { EditorStore, EditorState, EditingMode } from "./store";
-import type { BlockTypeRegistry } from "./registry";
-import type { DynamicData, DynamicPost, EditorHost } from "./host";
+import type { EditorStore, EditorState, EditingMode } from "./core/store";
+import type { BlockTypeRegistry } from "./core/registry";
+import type { DynamicData, DynamicPost, EditorHost } from "./core/host";
 import type { V2Labels } from "./labels";
 import type { PrefsStore } from "./prefs";
 

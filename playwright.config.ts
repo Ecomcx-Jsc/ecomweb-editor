@@ -9,9 +9,11 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: { baseURL: "http://localhost:5199", trace: "retain-on-failure", viewport: { width: 1440, height: 900 } },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } } },
-    { name: "webkit", use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } } },
+    { name: "chromium", testIgnore: /perf\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] } },
+    { name: "firefox", testIgnore: /perf\.spec/, use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } } },
+    { name: "webkit", testIgnore: /perf\.spec/, use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } } },
+    // Đo hiệu năng: chạy một mình sau khi các test khác xong (chạy chung thì tranh CPU, số đo sai)
+    { name: "perf", testMatch: /perf\.spec/, dependencies: ["chromium", "firefox", "webkit"], use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],
   webServer: { command: "npx vite --config playground/vite.config.ts", url: "http://localhost:5199", reuseExistingServer: true, timeout: 60_000 },
 });

@@ -1,8 +1,8 @@
 import { Columns2, Minus, Plus, Table2, ArrowUpToLine, ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, Trash2, Heading, TableCellsMerge, TableCellsSplit } from "lucide-react";
 import { useEditor } from "../context";
-import { makeBlock, type BNode } from "../model";
-import { addColumn, addRow, canMerge, canSplit, deleteColumn, deleteRow, hasHeaderRow, mergeCells, splitCell, tableContext, toggleHeaderRow } from "../tables";
-import { Dropdown, MenuItem, ToolButton } from "../toolbar";
+import { makeBlock, type BNode } from "../core/model";
+import { addColumn, addRow, canMerge, canSplit, deleteColumn, deleteRow, hasHeaderRow, mergeCells, splitCell, tableContext, toggleHeaderRow } from "../core/tables";
+import { Dropdown, MenuItem, ToolButton } from "../ui/toolbar";
 
 /** Công cụ bảng khi đang gõ trong ô (hoặc chọn cả bảng). */
 export function TableTools({ ancestor, currentId }: { ancestor: BNode; currentId: string }) {

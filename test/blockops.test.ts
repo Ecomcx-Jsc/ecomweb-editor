@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { getSchema } from "@tiptap/core";
 import { EditorState, NodeSelection, TextSelection } from "@tiptap/pm/state";
-import { coreExtensions } from "../src/extensions";
-import { blockFromPos, currentBlock, deleteBlock, duplicateBlock, insertParagraphAfter, moveBlock, parentBlock } from "../src/blockops";
+import { coreExtensions } from "../src/legacy/extensions";
+import { blockFromPos, currentBlock, deleteBlock, duplicateBlock, insertParagraphAfter, moveBlock, parentBlock } from "../src/legacy/block-ops";
 
 const schema = getSchema(coreExtensions());
 const p = (text: string) => ({ type: "paragraph", content: [{ type: "text", text }] });
@@ -76,7 +76,7 @@ test("blockFromPos ngoài phạm vi → null; khối cấp cao nhất không có
 });
 
 test("moveBlockTo: kéo khối tới vị trí bất kỳ (cây khối), kể cả vào / ra khỏi nhóm; chỗ không hợp lệ → null", async () => {
-  const { moveBlockTo, blockTree } = await import("../src/blockops");
+  const { moveBlockTo, blockTree } = await import("../src/legacy/block-ops");
   const d = doc(p("a"), { type: "group", content: [p("g1"), p("g2")] }, p("b"));
   const s = EditorState.create({ schema, doc: d });
   const tree = blockTree(s.doc);
@@ -99,7 +99,7 @@ test("moveBlockTo: kéo khối tới vị trí bất kỳ (cây khối), kể c�
 });
 
 test("moveBlockTo: cột chỉ đổi chỗ trong bộ cột của nó", async () => {
-  const { moveBlockTo, blockTree } = await import("../src/blockops");
+  const { moveBlockTo, blockTree } = await import("../src/legacy/block-ops");
   const col = (t: string) => ({ type: "column", content: [p(t)] });
   const s = EditorState.create({ schema, doc: doc(p("a"), { type: "columns", content: [col("c1"), col("c2")] }) });
   const tree = blockTree(s.doc);

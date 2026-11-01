@@ -5,18 +5,18 @@ import path from "node:path";
 import { test } from "node:test";
 import { getSchema } from "@tiptap/core";
 import { defineBlock, normalizeContent } from "@ecomcx/ecomweb-content";
-import { coreExtensions, knownTypes } from "../src/extensions";
-import { unwrapUnknown, wrapUnknown } from "../src/unknown";
-import { contentToEditor, editorToContent } from "../src/content";
-import { blockNode, registerBlock, registeredBlocks, unregisterBlock } from "../src/blocks";
-import { registeredExtensions } from "../src/registry";
+import { coreExtensions, knownTypes } from "../src/legacy/extensions";
+import { unwrapUnknown, wrapUnknown } from "../src/legacy/unknown";
+import { contentToEditor, editorToContent } from "../src/legacy/content";
+import { blockNode, registerBlock, registeredBlocks, unregisterBlock } from "../src/legacy/blocks";
+import { registeredExtensions } from "../src/legacy/registry";
 
 // Hợp đồng phía trình soạn: mở mỗi bài mẫu của @ecomcx/ecomweb-content trong trình soạn rồi lưu lại → nội dung giữ nguyên
 // (sai khác duy nhất được chấp nhận: trình soạn ghi thêm thuộc tính bằng đúng giá trị mặc định — cùng ý nghĩa).
 const fixturesDir = path.join(path.dirname(createRequire(import.meta.url).resolve("@ecomcx/ecomweb-content/package.json")), "fixtures");
 const fixtures = readdirSync(fixturesDir).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(path.join(fixturesDir, f), "utf8")));
 
-import { registerBasicBlocks } from "../src/basic";
+import { registerBasicBlocks } from "../src/legacy/basic";
 registerBasicBlocks();
 
 function roundTrip(content: unknown) {
@@ -85,7 +85,7 @@ test("blockNode: content none → atom, blocks → chứa khối", () => {
 });
 
 test("registerBlockPanel: thuộc tính plugin thêm vào khối lõi được trình soạn giữ khi mở + lưu", async () => {
-  const { registerBlockPanel, unregisterBlockPanel } = await import("../src/panels");
+  const { registerBlockPanel, unregisterBlockPanel } = await import("../src/legacy/panels");
   const content = { type: "doc", content: [{ type: "image", attrs: { src: "/a.png", lazy: false } }] };
   // Chưa khai báo: TipTap bỏ thuộc tính lạ
   assert.equal(roundTrip(content).saved.blocks[0].data.content[0].attrs.lazy, undefined);
@@ -96,7 +96,7 @@ test("registerBlockPanel: thuộc tính plugin thêm vào khối lõi được t
 });
 
 test("khối động: đăng ký xong thì fixture dynamic-blocks mở + lưu lại bằng node thật (không qua khối lạ)", async () => {
-  const { registerDynamicBlocks, DYNAMIC_BLOCKS } = await import("../src/dynamic");
+  const { registerDynamicBlocks, DYNAMIC_BLOCKS } = await import("../src/legacy/dynamic");
   registerDynamicBlocks("vi");
   try {
     const f = fixtures.find((x) => x.name === "dynamic-blocks")!;
@@ -108,7 +108,7 @@ test("khối động: đăng ký xong thì fixture dynamic-blocks mở + lưu l�
 });
 
 test("mẫu lõi: mọi mẫu chuẩn hoá được và hợp lệ với schema trình soạn (chèn không lỗi)", async () => {
-  const { registerCorePatterns, registeredPatterns, patternNodes } = await import("../src/patterns");
+  const { registerCorePatterns, registeredPatterns, patternNodes } = await import("../src/shared/patterns");
   registerCorePatterns("vi");
   const extra = registeredExtensions().flatMap((p) => p.extensions ?? []);
   const schema = getSchema([...coreExtensions(), ...extra]);

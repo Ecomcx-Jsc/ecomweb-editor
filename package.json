@@ -17,7 +17,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./style.css": "./src/editor.css",
+    "./style.css": "./src/legacy/editor.css",
     "./v2": "./src/v2/index.ts",
     "./v2/style.css": "./src/v2/editor.css"
   },
@@ -74,7 +74,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p .",
-    "test": "node scripts/test.mjs",
+    "test": "node scripts/check-layers.mjs && node scripts/test.mjs",
     "playground": "vite --config playground/vite.config.ts",
     "e2e": "playwright test",
     "prepublishOnly": "node scripts/check-publish.mjs"
