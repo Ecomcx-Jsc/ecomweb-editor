@@ -59,12 +59,14 @@ export interface EditorProviderProps {
   frame?: { content: unknown; title?: string };
   /** Nơi lưu tuỳ chọn trình soạn của người dùng (mặc định localStorage). */
   prefsStorage?: PrefsStorage;
+  /** Tuỳ chọn tạo sẵn (ứng dụng cần đọc tuỳ chọn ở ngoài trình soạn, vd bố cục trang theo "không phân tâm"). */
+  prefs?: PrefsStore;
   /** Nội dung tài liệu gốc đổi (định dạng lưu). */
   onChange?(content: ReturnType<typeof contentFromBlocks>, blocks: BNode[]): void;
   children: ReactNode;
 }
 
-export function EditorProvider({ store: given, value, kind, title, host = {}, labels, lang, registry: givenRegistry, dynamicBlocks, frame, prefsStorage, onChange, children }: EditorProviderProps) {
+export function EditorProvider({ store: given, value, kind, title, host = {}, labels, lang, registry: givenRegistry, dynamicBlocks, frame, prefsStorage, prefs: givenPrefs, onChange, children }: EditorProviderProps) {
   const base = lang === "en" ? enV2 : viV2;
   const allLabels = useMemo(() => ({ ...base, ...labels }), [base, labels]);
   const registry = useMemo(() => {
@@ -82,7 +84,8 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
     store.setFrame("frame");
   }, [frame, store]);
   const ui = useMemo(() => new EditorUi(), []);
-  const prefs = useMemo(() => new PrefsStore(prefsStorage), [prefsStorage]);
+  const ownPrefs = useMemo(() => (givenPrefs ? null : new PrefsStore(prefsStorage)), [givenPrefs, prefsStorage]);
+  const prefs = givenPrefs ?? ownPrefs!;
   // Khối của plugin (registerBlock) + mẫu có sẵn của lõi
   useEffect(() => syncPluginBlocks(registry), [registry]);
   useEffect(() => { if (!registeredPatterns().some((p) => p.name.startsWith("core/"))) registerCorePatterns(allLabels.lang); }, [allLabels.lang]);
