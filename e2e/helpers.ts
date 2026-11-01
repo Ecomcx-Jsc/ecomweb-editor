@@ -8,7 +8,8 @@ export async function open(page: Page, query = "") {
   await page.goto(`/${query}`);
   const c = canvas(page);
   await expect(c.locator(".ecx-canvas-root")).toBeVisible();
-  if (!query.includes("doc=post") && !query.includes("empty")) await expect(c.locator(".ecx-template-part-header .ecx-site-title")).toBeVisible();
+  // Template mặc định có header/footer lồng: chờ tải xong
+  if (!/doc=|empty|frame/.test(query)) await expect(c.locator(".ecx-template-part-header .ecx-site-title")).toBeVisible();
   return c;
 }
 
@@ -46,6 +47,13 @@ export async function clickEnd(c: FrameLocator, text: string) {
   await el.click({ position: { x: Math.max(2, box!.width - 4), y: box!.height / 2 } });
   await el.press("End");
   return el;
+}
+
+/** Rê chuột (thôi chế độ đang gõ → thanh công cụ hiện lại), như người dùng đưa chuột lên thanh công cụ. */
+export async function showToolbar(page: Page) {
+  await page.mouse.move(5, 300);
+  await page.mouse.move(8, 305);
+  await expect(page.locator(".ecx-toolbar")).toBeVisible();
 }
 
 export const mod = process.platform === "darwin" ? "Meta" : "Control";

@@ -6,6 +6,8 @@ import { makeBlock } from "../model";
 import type { BlockEditProps, BlockType } from "../registry";
 import { RichText } from "../richtext";
 import { useEditor } from "../context";
+import { ButtonsTools, ColumnsTools, TableTools } from "./tools";
+import { ColumnHandles, useActiveWithin } from "./resize";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const PADDING: Record<string, string> = { none: "0", small: "0.75rem", medium: "1.5rem", large: "3rem" };
@@ -23,13 +25,15 @@ function GroupEdit({ block, blockProps }: BlockEditProps) {
   );
 }
 
-function ColumnsEdit({ block, blockProps }: BlockEditProps) {
+function ColumnsEdit({ block, blockProps, editable }: BlockEditProps) {
   const a = block.attrs;
   const stack = a.stack !== false;
+  const active = useActiveWithin(block.id);
   const alignItems = a.verticalAlign === "center" ? "center" : a.verticalAlign === "bottom" ? "flex-end" : "flex-start";
   return (
-    <div {...merge(blockProps, cx("ecx-columns cms-columns", a.verticalAlign && `ecx-columns-${a.verticalAlign}`, stack && "is-stack"), { display: "flex", flexWrap: stack ? "wrap" : "nowrap", gap: "1.5rem", alignItems })}>
+    <div {...merge(blockProps, cx("ecx-columns cms-columns", a.verticalAlign && `ecx-columns-${a.verticalAlign}`, stack && "is-stack"), { display: "flex", flexWrap: stack ? "wrap" : "nowrap", gap: "1.5rem", alignItems, position: "relative" })}>
       <InnerBlocks parent={block} appender="none" />
+      {active && editable && block.content!.length > 1 && <ColumnHandles block={block} />}
     </div>
   );
 }
@@ -162,7 +166,7 @@ export function layoutBlocks(): BlockType[] {
     {
       name: "columns", title: "Cột", icon: Columns2, category: "design", keywords: "cot columns bo cuc layout", kind: "container", edit: ColumnsEdit,
       attributes: { verticalAlign: { type: "string", enum: ["top", "center", "bottom"] }, stack: { type: "boolean", default: true } },
-      create: () => columns(1, 1),
+      create: () => columns(1, 1), contextToolbar: ColumnsTools,
       variations: [
         { name: "50-50", title: "50 / 50", icon: Columns2, create: () => columns(1, 1) },
         { name: "33-33-33", title: "33 / 33 / 33", icon: Columns3, create: () => columns(1, 1, 1) },
@@ -176,7 +180,7 @@ export function layoutBlocks(): BlockType[] {
     {
       name: "buttons", title: "Nút", icon: MousePointerClick, category: "design", keywords: "nut button cta lien ket", kind: "container", edit: ButtonsEdit,
       attributes: { align: { type: "string", enum: ["left", "center", "right", "space-between"] } },
-      create: () => makeBlock("buttons", {}, [makeBlock("button", { variant: "primary" })]),
+      create: () => makeBlock("buttons", {}, [makeBlock("button", { variant: "primary" })]), contextToolbar: ButtonsTools,
       supports: { style: true, anchor: true, className: true },
     },
     {
@@ -214,7 +218,7 @@ export function layoutBlocks(): BlockType[] {
     {
       name: "table", title: "Bảng", icon: Table2, category: "text", keywords: "bang table", kind: "container", edit: TableEdit,
       attributes: { footer: { type: "boolean", default: false }, fixed: { type: "boolean", default: false } },
-      create: () => makeBlock("table", {}, [0, 1, 2].map((r) => makeBlock("tableRow", {}, [cell(r === 0), cell(r === 0), cell(r === 0)]))),
+      create: () => makeBlock("table", {}, [0, 1, 2].map((r) => makeBlock("tableRow", {}, [cell(r === 0), cell(r === 0), cell(r === 0)]))), contextToolbar: TableTools,
       supports: { style: true, anchor: true, className: true, blockStyle: true },
     },
     { name: "tableRow", title: "Hàng", icon: Table2, kind: "container", edit: RowEdit, hidden: true },

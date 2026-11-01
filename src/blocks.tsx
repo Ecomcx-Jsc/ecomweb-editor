@@ -8,44 +8,22 @@ import { cx } from "./util";
 import { markContainer } from "./blockops";
 import { insertBlock } from "./insert";
 
-/** Props của phần xem trước tuỳ chỉnh trong trình soạn (tuỳ chọn — mặc định trình soạn tự hiển thị). */
-export interface BlockEditProps {
-  attrs: Record<string, any>;
-  setAttrs(attrs: Record<string, unknown>): void;
-  selected: boolean;
-  /** Nội dung bên trong (khối có content "inline"/"blocks") — đặt vào chỗ muốn người dùng gõ. */
-  children?: ReactNode;
-}
-
-export interface RegisterBlockOptions {
-  /** Biểu tượng trong slash menu và khung khối. */
-  icon?: LucideIcon;
-  /** Xem trước tuỳ chỉnh trong trình soạn; không có → khung chung + form cài đặt sinh từ attributes. */
-  edit?: ComponentType<BlockEditProps>;
-  /** Dịch nhãn ("%khoá%" → chữ theo ngôn ngữ admin) — admin truyền vào. */
-  translate?(text: string): string;
-  /** Khối chứa khối khác: nội dung có sẵn khi chèn (mặc định một đoạn văn trống). */
-  initialContent?(): Array<Record<string, unknown>>;
-}
+import { blockDefinition, blockOptions, dropBlockDefinition, storeBlockDefinition, type BlockEditProps, type RegisterBlockOptions } from "./blockdefs";
+export { registeredBlocks, type BlockEditProps, type RegisterBlockOptions } from "./blockdefs";
 
 /** Chọn một ảnh (điều khiển "media" trong form cài đặt) — Editor đặt bằng nguồn media của ứng dụng. */
 let imagePicker: (() => Promise<{ url: string; id?: unknown; alt?: string } | null>) | null = null;
 export function setImagePicker(fn: typeof imagePicker) { imagePicker = fn; }
 
-const blocks = new Map<string, BlockDefinition>();
-const options = new Map<string, RegisterBlockOptions>();
-
 /** Tên (đã dịch) + biểu tượng của khối plugin — cho trình chèn, cây khối, tab "Khối". */
 export function pluginBlockInfo(name: string): { title: string; description?: string; icon: LucideIcon; def: BlockDefinition; translate(s: string): string } | null {
-  const def = blocks.get(name);
+  const def = blockDefinition(name);
   if (!def) return null;
-  const o = options.get(name) ?? {};
+  const o = blockOptions(name);
   const t = o.translate ?? ((x: string) => x);
   return { title: t(def.title), description: def.description ? t(def.description) : undefined, icon: o.icon ?? Blocks, def, translate: t };
 }
 
-/** Khối đang đăng ký (để chuẩn hoá + nâng phiên bản khi mở bài: contentToEditor). */
-export const registeredBlocks = (): BlockDefinition[] => [...blocks.values()];
 
 function controlOf(spec: BlockAttrSpec): NonNullable<BlockAttrSpec["control"]> {
   if (spec.control) return spec.control;
@@ -164,8 +142,7 @@ export function blockNode(def: BlockDefinition, opts: RegisterBlockOptions = {})
  */
 export function registerBlock(def: BlockDefinition, opts: RegisterBlockOptions = {}) {
   const t = opts.translate ?? ((s: string) => s);
-  blocks.set(def.name, def);
-  options.set(def.name, opts);
+  storeBlockDefinition(def, opts);
   registerEditorExtension({
     name: `block:${def.name}`,
     extensions: [blockNode(def, opts)],
@@ -183,7 +160,6 @@ export function registerBlock(def: BlockDefinition, opts: RegisterBlockOptions =
 }
 
 export function unregisterBlock(name: string) {
-  blocks.delete(name);
-  options.delete(name);
+  dropBlockDefinition(name);
   unregisterEditorExtension(`block:${name}`);
 }

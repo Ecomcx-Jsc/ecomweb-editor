@@ -69,6 +69,11 @@ export interface BlockType {
   edit?: ComponentType<BlockEditProps>;
   /** Thanh công cụ riêng của khối (chèn vào thanh công cụ nổi). */
   toolbar?: ComponentType<BlockEditProps>;
+  /**
+   * Công cụ hiện trên thanh công cụ khi đang thao tác BÊN TRONG khối này (gõ trong ô bảng → công cụ bảng,
+   * trong cột → thêm cột). `ancestor` là khối này, `currentId` là khối đang thao tác.
+   */
+  contextToolbar?: ComponentType<{ ancestor: BNode; currentId: string }>;
   /** Bảng cài đặt riêng (ngoài form tự sinh). */
   inspector?: ComponentType<BlockEditProps>;
   variations?: BlockVariation[];

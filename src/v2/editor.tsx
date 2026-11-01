@@ -3,6 +3,8 @@ import { normalizeContent } from "@ecomcx/ecomweb-content";
 import { ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { coreBlockTypes, registerCoreBlocks } from "./blocks";
+import { registeredPatterns, syncPluginBlocks } from "./compat";
+import { registerCorePatterns } from "../patterns";
 import { Canvas, type Device } from "./canvas";
 import { EditorContext, EditorUi, useEditor, useEditorState, type EditorContextValue } from "./context";
 import type { EditorHost } from "./host";
@@ -41,12 +43,17 @@ export interface EditorProviderProps {
   registry?: BlockTypeRegistry;
   /** Cho chèn khối giao diện (tên website, menu, danh sách bài, phần dùng chung). */
   dynamicBlocks?: boolean;
+  /**
+   * Template bao quanh khi sửa trang (giống WordPress "template-locked"): template hiện nhưng khoá, khối "Nội dung bài"
+   * là chỗ sửa trang. Có nút bật/tắt hiện template.
+   */
+  frame?: { content: unknown; title?: string };
   /** Nội dung tài liệu gốc đổi (định dạng lưu). */
   onChange?(content: ReturnType<typeof contentFromBlocks>, blocks: BNode[]): void;
   children: ReactNode;
 }
 
-export function EditorProvider({ store: given, value, kind, title, host = {}, labels, lang, registry: givenRegistry, dynamicBlocks, onChange, children }: EditorProviderProps) {
+export function EditorProvider({ store: given, value, kind, title, host = {}, labels, lang, registry: givenRegistry, dynamicBlocks, frame, onChange, children }: EditorProviderProps) {
   const base = lang === "en" ? enV2 : viV2;
   const allLabels = useMemo(() => ({ ...base, ...labels }), [base, labels]);
   const registry = useMemo(() => {
@@ -58,7 +65,15 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
   const storeRef = useRef<EditorStore | null>(given ?? null);
   if (!storeRef.current) storeRef.current = new EditorStore({ kind, title, blocks: blocksFromContent(value) });
   const store = given ?? storeRef.current;
+  useEffect(() => {
+    if (!frame) { store.setFrame(null); return; }
+    store.putDoc({ id: "frame", kind: "template", title: frame.title, blocks: blocksFromContent(frame.content), mode: "disabled" });
+    store.setFrame("frame");
+  }, [frame, store]);
   const ui = useMemo(() => new EditorUi(), []);
+  // Khối của plugin (registerBlock) + mẫu có sẵn của lõi
+  useEffect(() => syncPluginBlocks(registry), [registry]);
+  useEffect(() => { if (!registeredPatterns().some((p) => p.name.startsWith("core/"))) registerCorePatterns(allLabels.lang); }, [allLabels.lang]);
   const ctx: EditorContextValue = useMemo(() => ({ store, registry, host, labels: allLabels, ui }), [store, registry, host, allLabels, ui]);
 
   // Báo nội dung gốc đổi
@@ -162,6 +177,7 @@ function EditorShell({ className, onSave, header, canvasBefore, defaultDevice, b
           <ToolButton label={labels.undo} disabled={!store.canUndo} onClick={() => store.undo()}><Undo2 className="ecx-icon" /></ToolButton>
           <ToolButton label={labels.redo} disabled={!store.canRedo} onClick={() => store.redo()}><Redo2 className="ecx-icon" /></ToolButton>
           <ToolButton label={labels.listView} active={left === "list"} onClick={() => setLeft(left === "list" ? null : "list")}><ListTree className="ecx-icon" /></ToolButton>
+          <FrameToggle />
         </div>
         <div className="ecx-topbar-end">
           <div className="ecx-tool-group" role="group" aria-label="Device">
@@ -183,6 +199,19 @@ function EditorShell({ className, onSave, header, canvasBefore, defaultDevice, b
       </div>
       <EditorOverlays />
     </div>
+  );
+}
+
+/** Bật / tắt hiện template quanh trang (khi có template bao quanh). */
+function FrameToggle() {
+  const { store, labels } = useEditor();
+  const hasFrame = useEditorState((s) => !!s.docs.frame);
+  const on = useEditorState((s) => s.frameId === "frame");
+  if (!hasFrame) return null;
+  return (
+    <label className="ecx-check ecx-frame-toggle">
+      <input type="checkbox" checked={on} onChange={(e) => store.setFrame(e.target.checked ? "frame" : null)} /> {labels.showTemplate}
+    </label>
   );
 }
 

@@ -62,7 +62,10 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   const { store, labels } = useEditor();
   const focus = useEditorState((s) => s.focus[s.focus.length - 1] ?? null);
   const rootId = useEditorState((s) => s.rootId);
+  const frameId = useEditorState((s) => s.frameId);
   const activeId = focus ?? rootId;
+  // Sửa trang trong template: vẽ template (khoá), khối "Nội dung bài" bên trong vẽ tài liệu gốc
+  const viewId = !focus && frameId ? frameId : activeId;
   const mode = useEditorState(useCallback((s) => s.docs[activeId]?.mode ?? "default", [activeId]));
   const title = useEditorState(useCallback((s) => s.docs[activeId]?.title, [activeId]));
   useCanvasStyles(doc);
@@ -84,7 +87,9 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
       }}>
       {focus && <div className="ecx-focus-bar" contentEditable={false}><button type="button" className="ecx-focus-back" onClick={() => store.exitFocus()}>← {labels.back}</button><span>{title}</span></div>}
       {!focus && before}
-      <DocScopeProvider value={{ docId: activeId, mode, depth: 0 }}><DocBlocks docId={activeId} /></DocScopeProvider>
+      {viewId !== activeId
+        ? <DocScopeProvider value={{ docId: viewId, mode: "disabled", depth: 0, chain: [viewId] }}><DocBlocks docId={viewId} /></DocScopeProvider>
+        : <DocScopeProvider value={{ docId: activeId, mode, depth: 0 }}><DocBlocks docId={activeId} /></DocScopeProvider>}
       {!focus && after}
     </div>
   );
@@ -183,6 +188,7 @@ function useCanvasKeys(doc: Document) {
         return;
       }
       if (!ids.length) return;
+      if (e.altKey && e.key === "F10") { e.preventDefault(); ui.focusToolbar(); return; }
       if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); store.remove(ids); return; }
       if (e.key === "Escape") { e.preventDefault(); store.clearSelection(); ui.openInserter(null); return; }
       if (e.key === "Enter" && ids.length === 1) {

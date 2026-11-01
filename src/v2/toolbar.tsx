@@ -21,7 +21,7 @@ export function ToolButton({ label, onClick, active, disabled, children, classNa
 }
 
 /** Menu thả xuống (không lấy focus khỏi ô gõ). */
-function Dropdown({ label, trigger, children, className }: { label: string; trigger: ReactNode; children: (close: () => void) => ReactNode; className?: string }) {
+export function Dropdown({ label, trigger, children, className }: { label: string; trigger: ReactNode; children: (close: () => void) => ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -37,7 +37,7 @@ function Dropdown({ label, trigger, children, className }: { label: string; trig
     </div>
   );
 }
-function MenuItem({ icon: Icon, label, onClick, danger, shortcut }: { icon?: ComponentType<{ className?: string }>; label: string; onClick(): void; danger?: boolean; shortcut?: string }) {
+export function MenuItem({ icon: Icon, label, onClick, danger, shortcut }: { icon?: ComponentType<{ className?: string }>; label: string; onClick(): void; danger?: boolean; shortcut?: string }) {
   return (
     <button type="button" role="menuitem" className={cx("ecx-menu-item", danger && "is-danger")} onMouseDown={(e) => e.preventDefault()} onClick={onClick}>
       {Icon ? <Icon className="ecx-icon" /> : <span className="ecx-icon" />}<span>{label}</span>{shortcut && <kbd>{shortcut}</kbd>}
@@ -105,12 +105,37 @@ export function BlockToolbar() {
       await navigator.clipboard.write([new ClipboardItem({ "text/plain": new Blob([s.text], { type: "text/plain" }), "text/html": new Blob([s.html], { type: "text/html" }) })]);
     } catch { /* trình duyệt chặn ghi clipboard: người dùng vẫn chép được bằng Ctrl+C */ }
   };
+ /** Công cụ của các khối bao ngoài (bảng, bộ cột, nhóm nút) — mỗi loại một lần, gần nhất trước. */
+  const contextTools = (ancestors: string[], currentId: string) => {
+    const seen = new Set<string>();
+    return [...ancestors, currentId].reverse().map((id) => {
+      const anc = store.block(id);
+      const T = anc ? registry.get(anc.type)?.contextToolbar : undefined;
+      if (!anc || !T || seen.has(anc.type)) return null;
+      seen.add(anc.type);
+      return <div className="ecx-tool-group" key={`ctx-${id}`}><T ancestor={anc} currentId={currentId} /></div>;
+    });
+  };
   const nested = first.type === "templatePart" || first.type === "syncedPattern" ? ui.blockEl(first.id)?.dataset.ecxNested : undefined;
   const canGroup = canContain(parent?.type ?? null, "group");
 
   return (
     <>
-      <div className="ecx-toolbar" role="toolbar" aria-label={type?.title ?? first.type} style={{ top, left }} data-block={first.id}>
+      <div className="ecx-toolbar" role="toolbar" aria-label={type?.title ?? first.type} style={{ top, left }} data-block={first.id}
+        onKeyDown={(e) => {
+          // Bàn phím trên thanh công cụ: ←/→ đi giữa các nút, Esc quay về khối
+          const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .ecx-tool-group button:not(:disabled), :scope > .ecx-tool-group .ecx-dropdown > button"));
+          const i = buttons.indexOf(document.activeElement as HTMLButtonElement);
+          if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            if (i < 0) return;
+            e.preventDefault();
+            buttons[(i + (e.key === "ArrowRight" ? 1 : -1) + buttons.length) % buttons.length]?.focus();
+          } else if (e.key === "Escape" && !(e.target as HTMLElement).closest(".ecx-menu")) {
+            e.preventDefault();
+            if (editingText && sel.editing) store.focusText(sel.editing, -1);
+            else ui.blockEl(first.id)?.focus();
+          }
+        }}>
         <div className="ecx-tool-group">
           {parent && <ToolButton label={labels.selectParent} onClick={() => store.select([parent.id], { editing: null })}><ArrowUpLeft className="ecx-icon" /></ToolButton>}
           {transforms.length ? (
@@ -149,6 +174,7 @@ export function BlockToolbar() {
           </div>
         )}
         {Extra && <div className="ecx-tool-group"><Extra {...editProps} /></div>}
+        {nodes.length === 1 && contextTools(loc.ancestors, first.id)}
         {nested && <div className="ecx-tool-group"><ToolButton label={labels.editOriginal} className="ecx-tool-wide" onClick={() => store.enterFocus(nested)}><PanelTop className="ecx-icon" /><span className="ecx-tool-text">{labels.editOriginal}</span></ToolButton></div>}
         <div className="ecx-tool-group">
           <Dropdown label={labels.more} trigger={<MoreVertical className="ecx-icon" />}>

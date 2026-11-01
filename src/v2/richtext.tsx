@@ -317,6 +317,7 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef): Plugin {
       store.select(store.getState().docs[loc.docId].blocks.map((b) => b.id), { editing: null });
       return true;
     }),
+    "Alt-F10": () => { ui.focusToolbar(); return true; },
     "Mod-z": () => { now(() => store.undo()); return true; },
     "Mod-Shift-z": () => { now(() => store.redo()); return true; },
     "Mod-y": () => { now(() => store.redo()); return true; },

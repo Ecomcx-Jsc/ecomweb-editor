@@ -49,6 +49,11 @@ export interface EditorState {
   caret: Caret | null;
   /** Tăng mỗi lần thay đổi nội dung (để UI biết cần đo lại vị trí). */
   revision: number;
+  /**
+   * Template bao quanh tài liệu gốc (chế độ "sửa trang trong template"): template hiện nhưng khoá,
+   * khối "Nội dung bài" trong template là chỗ sửa tài liệu gốc. null = chỉ hiện tài liệu gốc.
+   */
+  frameId: string | null;
 }
 
 interface Change { docId: string; before: BNode[]; after: BNode[] }
@@ -93,8 +98,12 @@ export class EditorStore {
       selection: emptySel,
       caret: null,
       revision: 0,
+      frameId: null,
     };
   }
+
+  /** Đặt / bỏ template bao quanh (tài liệu đã có trong store, thường ở chế độ disabled). */
+  setFrame(docId: string | null) { if (this.state.frameId !== docId) this.set({ frameId: docId, selection: emptySel, caret: null }); }
 
   // -------------------------------------------------------------------------
   // Đọc / theo dõi

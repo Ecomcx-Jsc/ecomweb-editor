@@ -1,7 +1,7 @@
 import { CalendarDays, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import type { CSSProperties, ReactNode } from "react";
-import { InnerBlocks, NestedDoc } from "../blocklist";
-import { useEditor } from "../context";
+import { DocBlocks, InnerBlocks, NestedDoc } from "../blocklist";
+import { DocScopeProvider, useDocScope, useEditor, useEditorState } from "../context";
 import { makeBlock } from "../model";
 import type { BlockEditProps, BlockType } from "../registry";
 
@@ -94,6 +94,17 @@ function CommentsEdit({ blockProps }: BlockEditProps) {
 }
 function PostContentEdit({ blockProps }: BlockEditProps) {
   const { labels } = useEditor();
+  const scope = useDocScope();
+  const frameId = useEditorState((s) => s.frameId);
+  const rootId = useEditorState((s) => s.rootId);
+  // Trong template đang bao quanh trang: đây là chỗ sửa nội dung trang (tài liệu gốc, sửa được)
+  if (frameId && scope.docId === frameId) {
+    return (
+      <div {...merge(blockProps, "ecx-post-content ecx-frame-content")} data-ecx-editable-doc="">
+        <DocScopeProvider value={{ docId: rootId, mode: "default", depth: scope.depth + 1, chain: [...(scope.chain ?? []), rootId] }}><DocBlocks docId={rootId} /></DocScopeProvider>
+      </div>
+    );
+  }
   return <div {...merge(blockProps, "ecx-post-content ecx-content-placeholder")}><FileText className="ecx-icon" /> {labels.lang === "vi" ? "Nội dung bài viết" : "Post content"}</div>;
 }
 

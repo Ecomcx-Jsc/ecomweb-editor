@@ -1,9 +1,10 @@
 import type { BlockAttrSpec, Device } from "@ecomcx/ecomweb-content";
 import { CORE_BLOCK_STYLES } from "@ecomcx/ecomweb-content";
 import { Blocks, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
 import { enLabels, viLabels } from "../labels";
 import { StylePanel } from "../stylepanel";
+import { blockPanelsFor, onBlockPanelsChange } from "../panelstore";
 import { useEditor, useEditorState } from "./context";
 import { startDrag } from "./dnd";
 import { inlineText, type BNode } from "./model";
@@ -138,6 +139,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             <div className="ecx-panel">
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
               {Custom && <Custom block={first} attrs={first.attrs} setAttrs={setAttrs} blockProps={null as never} selected editable labels={labels} />}
+              {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} />}
               {nodes.length === 1 && (
                 <details className="ecx-advanced">
                   <summary>{labels.lang === "vi" ? "Nâng cao" : "Advanced"}</summary>
@@ -155,6 +157,24 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
         </>
       )}
     </div>
+  );
+}
+
+/** Panel của plugin (registerBlockPanel) cho loại khối đang chọn. */
+function PluginPanels({ type, attrs, setAttrs }: { type: string; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void }) {
+  const { host } = useEditor();
+  useSyncExternalStore(onBlockPanelsChange, () => blockPanelsFor(type).length, () => 0);
+  const panels = blockPanelsFor(type);
+  if (!panels.length) return null;
+  return (
+    <>
+      {panels.map((p) => (
+        <details key={p.id} className="ecx-advanced" open>
+          <summary>{host.translate ? host.translate(p.title) : p.title}</summary>
+          <p.component type={type} attrs={attrs} setAttrs={setAttrs} />
+        </details>
+      ))}
+    </>
   );
 }
 

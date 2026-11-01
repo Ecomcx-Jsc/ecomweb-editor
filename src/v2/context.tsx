@@ -53,6 +53,8 @@ export class EditorUi {
     return new DOMRect(f.left + r.left * scale, f.top + r.top * scale, r.width * scale, r.height * scale);
   }
   openInserter(req: InserterRequest | null) { this.inserter = req; this.bump(); }
+  /** Alt+F10: đưa bàn phím lên thanh công cụ của khối (như WordPress). */
+  focusToolbar() { document.querySelector<HTMLElement>(".ecx-toolbar button:not(:disabled)")?.focus(); }
   setDrag(d: DragState | null) { this.drag = d; this.bump(); }
 }
 

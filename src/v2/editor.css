@@ -107,3 +107,6 @@
 .ecx-drop-line { position: fixed; z-index: 45; background: var(--ecx-ui, #3858e9); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 1px #fff; }
 .ecx-drag-chip { position: fixed; z-index: 46; padding: 4px 8px; background: #1e1e1e; color: #fff; border-radius: 2px; font: 600 12px system-ui, sans-serif; pointer-events: none; }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
+.ecx-inserter-panel .ecx-tabs { margin: -12px -12px 12px; }
+.ecx-pattern-card { display: flex; flex-direction: column; gap: 4px; width: 100%; margin-bottom: 8px; padding: 12px; border: 1px solid var(--ecx-border); border-radius: 4px; background: #fff; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ecx-pattern-card:hover { border-color: var(--ecx-ui); box-shadow: 0 0 0 1px var(--ecx-ui); }

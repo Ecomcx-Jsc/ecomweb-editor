@@ -6,6 +6,9 @@ import { cloneBlock, inlineLength, type BNode } from "./model";
 import type { BlockType } from "./registry";
 import { canContain } from "./structure";
 import { startDragNew } from "./dnd";
+import { onPatternsChange, patternBlocks, registeredPatterns, type Pattern } from "./compat";
+import { useSyncExternalStore } from "react";
+import { enLabels, viLabels } from "../labels";
 
 export interface InsertOption {
   key: string;
@@ -161,6 +164,7 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
   const { store, labels } = ctx;
   const options = useInsertOptions();
   const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<"blocks" | "patterns">("blocks");
   const results = rankOptions(options, query);
   const catLabel: Record<string, string> = { text: labels.catText, media: labels.catMedia, design: labels.catDesign, widgets: labels.catWidgets, theme: labels.catTheme, embed: labels.catEmbed };
   const groups = query ? [["", results] as const] : [...CATEGORY_ORDER, ...new Set(results.map((r) => r.category).filter((c) => !CATEGORY_ORDER.includes(c)))].map((c) => [c, results.filter((r) => r.category === c)] as const).filter(([, l]) => l.length);
@@ -176,7 +180,12 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
   };
   return (
     <div className="ecx-inserter-panel">
+      <div className="ecx-tabs" role="tablist">
+        <button type="button" role="tab" aria-selected={tab === "blocks"} className={tab === "blocks" ? "is-active" : undefined} onClick={() => setTab("blocks")}>{labels.blocks}</button>
+        <button type="button" role="tab" aria-selected={tab === "patterns"} className={tab === "patterns" ? "is-active" : undefined} onClick={() => setTab("patterns")}>{labels.patterns}</button>
+      </div>
       <input className="ecx-search" placeholder={labels.search} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={labels.search} />
+      {tab === "patterns" ? <PatternList query={query} onInserted={onInserted} /> : <>
       {groups.map(([cat, list]) => (
         <section key={cat || "all"}>
           {cat && <h3 className="ecx-panel-heading">{catLabel[cat] ?? cat}</h3>}
@@ -191,7 +200,42 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
         </section>
       ))}
       {!results.length && <p className="ecx-muted">{labels.noResults}</p>}
+      </>}
     </div>
+  );
+}
+
+/** Mẫu (lõi, theme, plugin, người dùng tạo): bấm chèn sau khối đang chọn; mẫu đồng bộ chèn thành tham chiếu. */
+function PatternList({ query, onInserted }: { query: string; onInserted?(): void }) {
+  const { store, labels } = useEditor();
+  const all = useSyncExternalStore(onPatternsChange, registeredPatterns, registeredPatterns);
+  const q = norm(query.trim());
+  const list = q ? all.filter((p) => norm(`${p.title} ${p.keywords ?? ""} ${p.category}`).includes(q)) : all;
+  const cats = [...new Set(list.map((p) => p.category))];
+  const v1 = labels.lang === "vi" ? viLabels : enLabels;
+  const catName = (c: string) => String((v1 as Record<string, unknown>)[`cat_${c}`] ?? c);
+  const insert = (p: Pattern) => {
+    const nodes = patternBlocks(p);
+    if (!nodes.length) return;
+    const cur = store.currentIds[store.currentIds.length - 1];
+    if (cur && store.locate(cur)) store.insertAfter(cur, nodes, { focus: false });
+    else { const docId = store.activeDocId; store.insert(docId, null, store.getState().docs[docId].blocks.length, nodes, { focus: false }); }
+    onInserted?.();
+  };
+  if (!list.length) return <p className="ecx-muted">{labels.noResults}</p>;
+  return (
+    <>
+      {cats.map((c) => (
+        <section key={c}>
+          <h3 className="ecx-panel-heading">{catName(c)}</h3>
+          {list.filter((p) => p.category === c).map((p) => (
+            <button key={p.name} type="button" className="ecx-pattern-card" data-pattern={p.name} onClick={() => insert(p)}>
+              <strong>{p.title}</strong>{p.description && <span className="ecx-muted">{p.description}</span>}
+            </button>
+          ))}
+        </section>
+      ))}
+    </>
   );
 }
 

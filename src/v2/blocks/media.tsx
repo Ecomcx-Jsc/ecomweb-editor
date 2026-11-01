@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useEditor } from "../context";
 import type { BlockEditProps, BlockType } from "../registry";
 import { RichText } from "../richtext";
+import { ImageHandle } from "./resize";
 import type { MediaKind } from "../../types";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
@@ -39,13 +40,14 @@ function MediaPlaceholder({ blockId, kind, icon: Icon, title, blockProps }: { bl
   );
 }
 
-function ImageEdit({ block, blockProps, setAttrs, editable, labels }: BlockEditProps) {
+function ImageEdit({ block, blockProps, setAttrs, editable, labels, selected }: BlockEditProps) {
   const a = block.attrs;
   const src = safe(a.src);
   if (!src) return <MediaPlaceholder blockId={block.id} kind="image" icon={ImageIcon} title={labels.image} blockProps={blockProps} />;
   const cls = cx("ecx-image cms-image", a.align && `ecx-align-${a.align} align${a.align}`);
   return (
-    <figure {...blockProps} className={cx(blockProps.className, cls)} style={{ ...(blockProps.style ?? {}), margin: blockProps.style?.margin }}>
+    <figure {...blockProps} className={cx(blockProps.className, cls)} style={{ ...(blockProps.style ?? {}), position: "relative" }}>
+      {selected && editable && <ImageHandle blockId={block.id} />}
       <img src={src} alt={String(a.alt ?? "")} width={Number(a.width) || undefined} height={Number(a.height) || undefined} draggable={false} style={Number(a.width) ? { width: Number(a.width), maxWidth: "100%", height: "auto" } : undefined} />
       {(a.caption || editable) && (
         <RichText blockId={block.id} field="caption" tagName="figcaption" value={String(a.caption ?? "")} onChange={(v) => setAttrs({ caption: v })} placeholder={labels.caption} editable={editable} />
