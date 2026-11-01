@@ -151,6 +151,39 @@ export class EditorStore {
   }
 
   // -------------------------------------------------------------------------
+  // Khoá khối: attrs.lock { move, remove } trên khối; attrs.templateLock trên khối chứa (all | insert | contentOnly),
+  // áp cho mọi khối bên trong tới khi gặp khối chứa khác có templateLock riêng.
+  // -------------------------------------------------------------------------
+  /** templateLock có hiệu lực với khối con của `parentId` (null = cấp cao nhất của tài liệu). */
+  templateLockOf(parentId: string | null): "all" | "insert" | "contentOnly" | undefined {
+    let id = parentId;
+    while (id) {
+      const loc = this.locate(id);
+      if (!loc) return undefined;
+      const tl = loc.block.attrs.templateLock;
+      if (tl === "all" || tl === "insert" || tl === "contentOnly") return tl;
+      if (tl === false || tl === "none") return undefined;
+      id = loc.parent?.id ?? null;
+    }
+    return undefined;
+  }
+  private parentOf(id: string): string | null | undefined { const loc = this.locate(id); return loc ? loc.parent?.id ?? null : undefined; }
+  canRemove(id: string): boolean {
+    const loc = this.locate(id);
+    if (!loc || (loc.block.attrs.lock as { remove?: boolean } | undefined)?.remove) return false;
+    return !this.templateLockOf(loc.parent?.id ?? null);
+  }
+  canMove(id: string): boolean {
+    const loc = this.locate(id);
+    if (!loc || (loc.block.attrs.lock as { move?: boolean } | undefined)?.move) return false;
+    const tl = this.templateLockOf(loc.parent?.id ?? null);
+    return tl !== "all" && tl !== "contentOnly";
+  }
+  canInsertInto(parentId: string | null): boolean { return !this.templateLockOf(parentId); }
+  /** Khối nằm trong vùng "chỉ sửa nội dung": sửa chữ được, không đổi cấu trúc / kiểu dáng. */
+  isContentOnly(id: string): boolean { return this.templateLockOf(this.parentOf(id) ?? null) === "contentOnly" || this.locate(id)?.block.attrs.templateLock === "contentOnly"; }
+
+  // -------------------------------------------------------------------------
   // Tài liệu lồng nhau
   // -------------------------------------------------------------------------
   /** Thêm / thay tài liệu (vd ứng dụng vừa tải xong header). Không ghi lịch sử. */
@@ -328,18 +361,20 @@ export class EditorStore {
 
   /** Đổi loại khối (đoạn ↔ tiêu đề…), giữ nội dung. */
   setType(ids: string[], type: string, attrs: Record<string, unknown> = {}) {
+    ids = ids.filter((id) => !this.isContentOnly(id));
     this.batch(() => {
       for (const id of ids) this.edit(id, (blocks) => mapBlock(blocks, id, (b) => ({ ...b, type, attrs: { ...keepCommon(b.attrs), ...attrs } })));
     });
   }
 
   replace(id: string, nodes: BNode[], opts: CommitOptions = {}) {
+    if (!this.canRemove(id)) return false;
     return this.edit(id, (blocks) => mapBlock(blocks, id, () => nodes), opts);
   }
 
   insert(docId: string, parentId: string | null, index: number, nodes: BNode[], opts: { select?: boolean; focus?: boolean } = {}) {
     const d = this.state.docs[docId];
-    if (!d || d.mode === "disabled" || !nodes.length) return;
+    if (!d || d.mode === "disabled" || !nodes.length || !this.canInsertInto(parentId)) return;
     const first = nodes[0];
     const focusId = opts.focus !== false ? firstText(first) : null;
     this.commit(docId, insertBlocks(d.blocks, parentId, index, nodes), {
@@ -353,7 +388,7 @@ export class EditorStore {
     const loc = this.locate(afterId);
     if (!loc) return;
     const target = loc.block;
-    if (opts.replaceEmpty !== false && target.type === "paragraph" && !inlineLength(target.inline) && canContain(loc.parent?.type ?? null, nodes[0].type)) {
+    if (opts.replaceEmpty !== false && target.type === "paragraph" && !inlineLength(target.inline) && canContain(loc.parent?.type ?? null, nodes[0].type) && this.canRemove(afterId)) {
       const focusId = opts.focus !== false ? firstText(nodes[0]) : null;
       this.commit(loc.docId, mapBlock(this.state.docs[loc.docId].blocks, afterId, () => nodes), {
         select: focusId ? { ids: [], editing: focusId } : { ids: nodes.map((n) => n.id), editing: null },
@@ -372,6 +407,7 @@ export class EditorStore {
   }
 
   remove(ids: string[], opts: { focusNeighbor?: boolean } = {}) {
+    ids = ids.filter((id) => this.canRemove(id));
     if (!ids.length) return;
     const loc = this.locate(ids[0]);
     if (!loc) return;
@@ -397,6 +433,7 @@ export class EditorStore {
     const doc = this.state.docs[loc.docId];
     const ordered = topLevelOrdered(doc.blocks, ids);
     const last = this.locate(ordered[ordered.length - 1])!;
+    if (!this.canInsertInto(last.parent?.id ?? null)) return;
     const copies = ordered.map((id) => cloneBlock(this.locate(id)!.block));
     this.commit(loc.docId, insertBlocks(doc.blocks, last.parent?.id ?? null, last.index + 1, copies), { select: { ids: copies.map((c) => c.id), editing: null }, caret: null });
   }
@@ -407,6 +444,7 @@ export class EditorStore {
     if (!loc) return false;
     const doc = this.state.docs[loc.docId];
     const ordered = topLevelOrdered(doc.blocks, ids);
+    if (!ordered.every((id) => this.canMove(id))) return false;
     const locs = ordered.map((id) => this.locate(id)!);
     const parentId = locs[0].parent?.id ?? null;
     if (locs.some((l) => (l.parent?.id ?? null) !== parentId)) return false;
@@ -424,6 +462,10 @@ export class EditorStore {
     if (!src) return;
     const target = this.state.docs[docId];
     if (!target || target.mode === "disabled") return;
+    if (!ids.every((id) => this.canMove(id))) return;
+    // Sang khối cha khác = bỏ khỏi cha cũ + thêm vào cha mới: cần cả hai bên cho phép
+    const leaving = ids.some((id) => (this.locate(id)?.parent?.id ?? null) !== parentId || this.locate(id)?.docId !== docId);
+    if (leaving && (!this.canInsertInto(parentId) || !ids.every((id) => this.canRemove(id)))) return;
     if (src.docId === docId) {
       this.commit(docId, moveBlocks(target.blocks, ids, parentId, index), { select: { ids: topLevelOrdered(target.blocks, ids), editing: null }, caret: null });
       return;
@@ -444,6 +486,7 @@ export class EditorStore {
     const doc = this.state.docs[loc.docId];
     const ordered = topLevelOrdered(doc.blocks, ids);
     const first = this.locate(ordered[0])!;
+    if (!ordered.every((id) => this.canRemove(id) && this.canMove(id)) || !this.canInsertInto(first.parent?.id ?? null)) return;
     const nodes = ordered.map((id) => this.locate(id)!.block);
     const wrapper = makeBlock(type, attrs, nodes);
     const next = insertBlocks(removeBlocks(doc.blocks, ordered), first.parent?.id ?? null, first.index, [wrapper]);
@@ -452,6 +495,7 @@ export class EditorStore {
 
   /** Bỏ vỏ: đưa con ra thay chỗ khối chứa. */
   unwrap(id: string) {
+    if (!this.canRemove(id)) return;
     this.edit(id, (blocks, loc) => (loc.block.content ? mapBlock(blocks, id, (b) => b.content ?? []) : null), {
       select: { ids: this.block(id)?.content?.map((c) => c.id) ?? [], editing: null }, caret: null,
     });
@@ -466,6 +510,9 @@ export class EditorStore {
     if (!loc || !loc.block.inline) return;
     const b = loc.block;
     const docId = loc.docId;
+    // Khối chứa bị khoá thêm khối: Enter không tạo khối mới
+    const newParent = loc.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0 ? this.locate(loc.parent.id)?.parent?.id ?? null : loc.parent?.id ?? null;
+    if (!this.canInsertInto(newParent)) return;
     let inline = b.inline!;
     if (selectionEnd > offset) inline = joinInline(splitInline(inline, offset)[0], splitInline(inline, selectionEnd)[1]);
     const len = inlineLength(inline);
@@ -510,6 +557,13 @@ export class EditorStore {
     const docId = loc.docId;
     const blocks = this.state.docs[docId].blocks;
     const b = loc.block;
+    // Khối không xoá được (khoá): Backspace ở đầu chỉ đưa con trỏ về khối chữ trước
+    if (!this.canRemove(id) || (loc.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0 && !this.canRemove(loc.parent.id))) {
+      const order = flatten(blocks).filter((x) => x.inline);
+      const prev = order[order.findIndex((x) => x.id === id) - 1];
+      if (prev) this.focusText(prev.id, -1);
+      return;
+    }
 
     // Đầu mục danh sách: nối vào mục trước, hoặc (mục đầu) thụt ra
     if (loc.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0) {
@@ -571,6 +625,7 @@ export class EditorStore {
     const next = order.slice(i + 1).find((x) => !this.locate(x.id)?.ancestors.includes(id));
     if (!next) return;
     const target = next.inline ? next : firstTextDeep(next);
+    if (target && !this.canRemove(target.id)) { this.focusText(target.id, 0); return; }
     if (target) {
       const at = inlineLength(b.inline);
       let res = mapBlock(blocks, id, (x) => ({ ...x, inline: joinInline(x.inline!, target.inline!) }));
@@ -585,7 +640,7 @@ export class EditorStore {
   /** Tab trong danh sách: lồng mục vào mục trước. */
   indentItem(itemId: string) {
     const loc = this.locate(itemId);
-    if (!loc || !loc.parent || loc.index === 0) return false;
+    if (!loc || !loc.parent || loc.index === 0 || !this.canMove(itemId) || !this.canRemove(itemId)) return false;
     const prev = loc.parent.content![loc.index - 1];
     const listType = loc.parent.type;
     const caret = this.lastCaret;
@@ -605,7 +660,7 @@ export class EditorStore {
   /** Shift+Tab (hoặc Enter ở mục trống): đưa mục ra một cấp; ở cấp ngoài cùng thì thành đoạn văn. */
   outdentItem(itemId: string, toParagraph = false) {
     const loc = this.locate(itemId);
-    if (!loc || !loc.parent) return false;
+    if (!loc || !loc.parent || !this.canMove(itemId) || !this.canRemove(itemId)) return false;
     const list = this.locate(loc.parent.id)!;
     const outerItem = list.parent && (list.parent.type === "listItem" || list.parent.type === "taskItem") ? this.locate(list.parent.id) : null;
     const docId = loc.docId;
@@ -647,7 +702,8 @@ function lastText(b: BNode): BNode | null {
 /** Thuộc tính chung giữ lại khi đổi loại khối. */
 function keepCommon(attrs: Record<string, unknown>) {
   const out: Record<string, unknown> = {};
-  for (const k of ["textAlign", "style", "className", "anchor"]) if (attrs[k] !== undefined) out[k] = attrs[k];
+  // Khoá, gắn dữ liệu đi theo khối khi đổi loại (đổi đoạn → tiêu đề không được làm mất khoá)
+  for (const k of ["textAlign", "style", "className", "anchor", "lock", "templateLock", "bindings", "blockStyle"]) if (attrs[k] !== undefined) out[k] = attrs[k];
   return out;
 }
 /** Tách khối: khối mới giữ kiểu dáng, không giữ neo (id phải duy nhất). */

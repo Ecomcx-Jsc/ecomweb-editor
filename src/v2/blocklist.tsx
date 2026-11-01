@@ -115,7 +115,8 @@ export function FallbackEdit({ block, blockProps, labels }: BlockEditProps) {
 export function InnerBlocks({ parent, appender = "auto" }: { parent: BNode; appender?: "auto" | "none" }) {
   const scope = useDocScope();
   const kids = parent.content ?? [];
-  const showAppender = appender === "auto" && scope.mode === "default" && !kids.length;
+  const { store } = useEditor();
+  const showAppender = appender === "auto" && scope.mode === "default" && !kids.length && store.canInsertInto(parent.id);
   const elements = useBlockElements(kids);
   return (
     <>

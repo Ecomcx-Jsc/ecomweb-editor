@@ -146,6 +146,14 @@ export const viV2 = {
   close: "Đóng",
   documentRoot: "Tài liệu",
   createPattern: "Tạo mẫu",
+  lock: "Khoá…",
+  locked: "Đang khoá",
+  lockTitle: "Khoá khối",
+  lockMove: "Không cho di chuyển",
+  lockRemove: "Không cho xoá",
+  lockInner: "Khoá bố cục bên trong (không thêm / xoá / di chuyển khối con)",
+  lockContentOnly: "Chỉ cho sửa nội dung bên trong (không đổi bố cục, kiểu dáng)",
+  apply2: "Xong",
 };
 export type V2Labels = typeof viV2;
 
@@ -296,4 +304,12 @@ export const enV2: V2Labels = {
   close: "Close",
   documentRoot: "Document",
   createPattern: "Create pattern",
+  lock: "Lock…",
+  locked: "Locked",
+  lockTitle: "Lock block",
+  lockMove: "Disable movement",
+  lockRemove: "Prevent removal",
+  lockInner: "Lock the layout inside (no adding / removing / moving inner blocks)",
+  lockContentOnly: "Allow editing content only inside (layout and styles fixed)",
+  apply2: "Done",
 };

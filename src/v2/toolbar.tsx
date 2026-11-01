@@ -1,4 +1,4 @@
-import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
@@ -61,6 +61,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const sel = useEditorState((s) => s.selection);
   useEditorState((s) => s.revision);
   const [link, setLink] = useState<string | null>(null);
+  const [lockOpen, setLockOpen] = useState(false);
   useEffect(() => { ui.openLink = (key) => setLink(key); return () => { ui.openLink = null; }; }, [ui]);
 
   const ids = sel.ids.length ? sel.ids : sel.editing ? [sel.editing] : [];
@@ -134,6 +135,11 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
       if (ordered.length > 1) store.remove(ordered.slice(1), { focusNeighbor: false });
     });
   };
+  // Khoá khối: ẩn thao tác không được phép
+  const movable = ordered.every((id) => store.canMove(id));
+  const removable = ordered.every((id) => store.canRemove(id));
+  const insertable = store.canInsertInto(parent?.id ?? null);
+  const isLocked = nodes.length === 1 && !!(first.attrs.lock || first.attrs.templateLock);
   const nested = first.type === "templatePart" || first.type === "syncedPattern" ? ui.blockEl(first.id)?.dataset.ecxNested : undefined;
   const canGroup = canContain(parent?.type ?? null, "group");
 
@@ -156,7 +162,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
         }}>
         <div className="ecx-tool-group">
           {parent && <ToolButton label={labels.selectParent} onClick={() => store.select([parent.id], { editing: null })}><ArrowUpLeft className="ecx-icon" /></ToolButton>}
-          {transforms.length ? (
+          {transforms.length && removable && !store.isContentOnly(first.id) ? (
             <Dropdown label={labels.transform} trigger={<><Icon className="ecx-icon" /><ChevronDown className="ecx-icon ecx-icon-sm" /></>}>
               {(close) => transforms.map((t, i) => {
                 const target = registry.get(t.to);
@@ -164,11 +170,14 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
               })}
             </Dropdown>
           ) : <span className="ecx-tool is-static" title={type?.title}><Icon className="ecx-icon" /></span>}
-          <ToolButton label={labels.drag} className="ecx-drag-handle" onPointerDown={(e: React.PointerEvent) => startDrag(ctx, e, ordered)}><GripVertical className="ecx-icon" /></ToolButton>
-          <div className="ecx-movers">
-            <ToolButton label={labels.moveUp} onClick={() => store.moveBy(ordered, -1)}><ChevronUp className="ecx-icon ecx-icon-sm" /></ToolButton>
-            <ToolButton label={labels.moveDown} onClick={() => store.moveBy(ordered, 1)}><ChevronDown className="ecx-icon ecx-icon-sm" /></ToolButton>
-          </div>
+          {movable && <>
+            <ToolButton label={labels.drag} className="ecx-drag-handle" onPointerDown={(e: React.PointerEvent) => startDrag(ctx, e, ordered)}><GripVertical className="ecx-icon" /></ToolButton>
+            <div className="ecx-movers">
+              <ToolButton label={labels.moveUp} onClick={() => store.moveBy(ordered, -1)}><ChevronUp className="ecx-icon ecx-icon-sm" /></ToolButton>
+              <ToolButton label={labels.moveDown} onClick={() => store.moveBy(ordered, 1)}><ChevronDown className="ecx-icon ecx-icon-sm" /></ToolButton>
+            </div>
+          </>}
+          {isLocked && <ToolButton label={labels.locked} onClick={() => setLockOpen(true)} className="ecx-lock-badge"><Lock className="ecx-icon" /></ToolButton>}
         </div>
         {sameType && type?.variations?.some((v) => v.attrs && v.isActive) && (
           <div className="ecx-tool-group">
@@ -198,19 +207,23 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
           <Dropdown label={labels.more} trigger={<MoreVertical className="ecx-icon" />}>
             {(close) => (
               <>
-                <MenuItem icon={CopyPlus} label={labels.duplicate} shortcut={`${mod}⇧D`} onClick={() => { close(); store.duplicate(ordered); }} />
-                <MenuItem icon={ArrowUpToLine} label={labels.insertBefore} shortcut={`${mod}⌥T`} onClick={() => { close(); insertSibling(store, ordered[0], 0); }} />
-                <MenuItem icon={ArrowDownToLine} label={labels.insertAfter} shortcut={`${mod}⌥Y`} onClick={() => { close(); insertSibling(store, ordered[ordered.length - 1], 1); }} />
+                {insertable && <>
+                  <MenuItem icon={CopyPlus} label={labels.duplicate} shortcut={`${mod}⇧D`} onClick={() => { close(); store.duplicate(ordered); }} />
+                  <MenuItem icon={ArrowUpToLine} label={labels.insertBefore} shortcut={`${mod}⌥T`} onClick={() => { close(); insertSibling(store, ordered[0], 0); }} />
+                  <MenuItem icon={ArrowDownToLine} label={labels.insertAfter} shortcut={`${mod}⌥Y`} onClick={() => { close(); insertSibling(store, ordered[ordered.length - 1], 1); }} />
+                </>}
                 <MenuItem icon={Copy} label={labels.copy} onClick={() => { close(); void copy(); }} />
                 {ctx.host.createPattern && <MenuItem icon={Shapes} label={labels.createPattern} onClick={() => { close(); void createPattern(); }} />}
-                {canGroup && <MenuItem icon={GroupIcon} label={labels.group} onClick={() => { close(); store.wrap(ordered, "group"); }} />}
-                {nodes.length === 1 && first.content && first.type === "group" && <MenuItem icon={Ungroup} label={labels.ungroup} onClick={() => { close(); store.unwrap(first.id); }} />}
-                <MenuItem icon={Trash2} label={labels.remove} shortcut="⇧⌥Z" danger onClick={() => { close(); store.remove(ordered); }} />
+                {canGroup && removable && movable && insertable && <MenuItem icon={GroupIcon} label={labels.group} onClick={() => { close(); store.wrap(ordered, "group"); }} />}
+                {nodes.length === 1 && first.content && first.type === "group" && removable && <MenuItem icon={Ungroup} label={labels.ungroup} onClick={() => { close(); store.unwrap(first.id); }} />}
+                {nodes.length === 1 && !store.isContentOnly(first.id) && <MenuItem icon={Lock} label={labels.lock} onClick={() => { close(); setLockOpen(true); }} />}
+                {removable && <MenuItem icon={Trash2} label={labels.remove} shortcut="⇧⌥Z" danger onClick={() => { close(); store.remove(ordered); }} />}
               </>
             )}
           </Dropdown>
         </div>
       </div>
+      {lockOpen && <LockDialog block={first} onClose={() => setLockOpen(false)} />}
       {link && view && (() => {
         const anchor = fixed ? document.querySelector(".ecx-toolbar.is-fixed")?.getBoundingClientRect() : null;
         return <LinkPopover viewKey={link} top={anchor ? anchor.bottom + 4 : top + height + 4} left={anchor ? anchor.left : left} onClose={() => setLink(null)} />;
@@ -323,5 +336,32 @@ export function DropIndicator() {
       {t && <div className="ecx-drop-line" style={{ left: t.rect.left, top: t.rect.top, width: t.rect.width, height: t.rect.height }} data-horizontal={t.horizontal || undefined} />}
       <div className="ecx-drag-chip" style={{ left: ui.drag.x + 12, top: ui.drag.y + 12 }}>{ui.drag.ids.length > 1 ? `${ui.drag.ids.length} ${labels.blocks}` : "⠿"}</div>
     </>
+  );
+}
+
+/** Hộp khoá khối: không cho di chuyển / xoá; khối chứa: khoá bố cục bên trong hoặc chỉ cho sửa nội dung. */
+function LockDialog({ block, onClose }: { block: BNode; onClose(): void }) {
+  const { store, labels } = useEditor();
+  const lock = (block.attrs.lock as { move?: boolean; remove?: boolean } | undefined) ?? {};
+  const tl = block.attrs.templateLock as string | undefined;
+  const setLock = (k: "move" | "remove", v: boolean) => {
+    const next = { ...lock, [k]: v || undefined };
+    store.setAttrs([block.id], { lock: next.move || next.remove ? next : undefined });
+  };
+  return (
+    <div className="ecx-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
+      <div className="ecx-modal" role="dialog" aria-modal="true" aria-label={labels.lockTitle}>
+        <header className="ecx-modal-header"><h2>{labels.lockTitle}</h2></header>
+        <div className="ecx-lock-body">
+          <label className="ecx-check"><input type="checkbox" checked={!!lock.move} onChange={(e) => setLock("move", e.target.checked)} autoFocus /> {labels.lockMove}</label>
+          <label className="ecx-check"><input type="checkbox" checked={!!lock.remove} onChange={(e) => setLock("remove", e.target.checked)} /> {labels.lockRemove}</label>
+          {block.content && <>
+            <label className="ecx-check"><input type="checkbox" checked={tl === "all"} onChange={(e) => store.setAttrs([block.id], { templateLock: e.target.checked ? "all" : undefined })} /> {labels.lockInner}</label>
+            <label className="ecx-check"><input type="checkbox" checked={tl === "contentOnly"} onChange={(e) => store.setAttrs([block.id], { templateLock: e.target.checked ? "contentOnly" : undefined })} /> {labels.lockContentOnly}</label>
+          </>}
+          <div className="ecx-popover-actions"><button type="button" className="ecx-btn ecx-btn-primary" onClick={onClose}>{labels.apply2}</button></div>
+        </div>
+      </div>
+    </div>
   );
 }

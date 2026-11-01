@@ -428,7 +428,7 @@ function detectSlash(view: EditorView, store: EditorStore, ui: EditorUi, p: Rich
   // "/" + từ khoá (cho phép nhiều từ: "/tieu de"), tối đa 40 ký tự
   const m = /^\/((?:[^\s/][^/]{0,39})?)$/.exec(text);
   const open = ui.inserter?.mode === "slash" && ui.inserter.blockId === p.blockId;
-  if (m && blk?.type === "paragraph" && view.state.selection.from === view.state.doc.content.size) {
+  if (m && blk?.type === "paragraph" && view.state.selection.from === view.state.doc.content.size && store.canRemove(p.blockId)) {
     const loc = store.locate(p.blockId)!;
     const r = caretRect(view, ui);
     ui.openInserter({ mode: "slash", docId: loc.docId, parentId: loc.parent?.id ?? null, index: loc.index, blockId: p.blockId, query: m[1], rect: r });

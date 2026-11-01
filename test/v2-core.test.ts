@@ -318,3 +318,59 @@ test("đồng bộ khối plugin không đè khối lõi cùng tên (khối 1.x 
   assert.equal(r.get("acme/x")!.title, "Acme 2");
   stop();
 });
+
+// ---------------------------------------------------------------------------
+// Khoá khối
+// ---------------------------------------------------------------------------
+test("khoá: lock.remove chặn xoá (cả Backspace gộp), lock.move chặn di chuyển / kéo thả", () => {
+  const s = store(P("a"), makeBlock("paragraph", { lock: { move: true, remove: true } }, "khoá"), P("c"));
+  const [a, locked, c] = root(s);
+  s.remove([locked.id]);
+  s.moveBy([locked.id], -1);
+  s.moveTo([locked.id], "root", null, 3);
+  s.mergeBackward(locked.id);
+  s.mergeForward(a.id);
+  s.wrap([locked.id], "group");
+  assert.deepEqual(texts(root(s)), ["a", "khoá", "c"]);
+  // Khối không khoá vẫn thao tác bình thường; xoá nhiều khối bỏ qua khối bị khoá
+  s.remove([a.id, locked.id]);
+  assert.deepEqual(texts(root(s)), ["khoá", "c"]);
+  assert.equal(s.canRemove(c.id), true);
+});
+
+test("templateLock all: không thêm / xoá / di chuyển khối con; insert: di chuyển được nhưng không thêm / xoá; Enter không tạo khối mới", () => {
+  const g = makeBlock("group", { templateLock: "all" }, [P("x"), P("y")]);
+  const s = store(g, P("ngoài"));
+  const [x, y] = g.content!;
+  s.remove([x.id]);
+  s.moveBy([y.id], -1);
+  s.insert("root", g.id, 0, [P("mới")]);
+  s.splitText(x.id, 1);
+  s.duplicate([x.id]);
+  assert.deepEqual(texts(root(s)), ["x", "y", "ngoài"]);
+  // Kéo khối ngoài vào nhóm bị khoá: không được
+  s.moveTo([root(s)[1].id], "root", g.id, 0);
+  assert.deepEqual(shape(root(s)), [{ group: ["paragraph:x", "paragraph:y"] }, "paragraph:ngoài"]);
+  // Gõ chữ vẫn được
+  s.setInline(x.id, [{ type: "text", text: "x2" }]);
+  assert.equal(texts(root(s))[0], "x2");
+  s.setAttrs([g.id], { templateLock: "insert" });
+  s.moveBy([y.id], -1);
+  assert.deepEqual(texts(root(s)).slice(0, 2), ["y", "x2"]);
+  s.remove([y.id]);
+  assert.equal(texts(root(s)).length, 3);
+});
+
+test("templateLock kế thừa xuống khối lồng; contentOnly: không đổi loại khối", () => {
+  const inner = makeBlock("group", {}, [P("sâu")]);
+  const s = store(makeBlock("group", { templateLock: "contentOnly" }, [inner]));
+  const deep = inner.content![0];
+  assert.equal(s.templateLockOf(inner.id), "contentOnly");
+  assert.equal(s.isContentOnly(deep.id), true);
+  s.setType([deep.id], "heading");
+  s.remove([deep.id]);
+  assert.deepEqual(shape(root(s)), [{ group: [{ group: ["paragraph:sâu"] }] }]);
+  // Khối con tự đặt templateLock "none" → thoát khoá
+  s.batch(() => s.setAttrs([inner.id], { templateLock: "none" }));
+  assert.equal(s.templateLockOf(inner.id), undefined);
+});

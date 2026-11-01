@@ -22,6 +22,7 @@ function seedDoc(): BNode[] {
     makeBlock("heading", { level: 2 }, "Tiêu đề"), P("Một hai ba"), makeBlock("bulletList", {}, [li("a"), li("bb"), li("ccc")]),
     makeBlock("group", {}, [P("trong nhóm"), P("x")]), makeBlock("columns", {}, [makeBlock("column", {}, [P("trái")]), makeBlock("column", {}, [P("phải")])]),
     makeBlock("blockquote", {}, [P("trích")]), makeBlock("image", { src: "https://x/a.png" }), P(""), makeBlock("codeBlock", {}, "a\nb"),
+    makeBlock("paragraph", { lock: { remove: true, move: true }, className: "locked" }, "KHOÁ"),
   ];
 }
 const shape = (blocks: BNode[]) => JSON.stringify(docFromBlocks(blocks));
@@ -35,6 +36,8 @@ function invariants(s: EditorStore, where: string) {
     assert.ok(!(b.inline && b.content), `${where}: khối vừa có chữ vừa có khối con`);
     for (const n of b.inline ?? []) assert.ok(n.type !== "text" || (n.text ?? "").length > 0, `${where}: text rỗng trong ${b.type}`);
   }
+  // Khối bị khoá (không xoá, không di chuyển) không bao giờ mất
+  assert.ok(flatten(blocks).some((b) => b.attrs.className === "locked" || (b.attrs.lock as { remove?: boolean } | undefined)?.remove), `${where}: khối bị khoá đã mất`);
   const sel = s.getState().selection;
   for (const id of sel.ids) assert.ok(s.locate(id), `${where}: vùng chọn trỏ tới khối không còn`);
 }

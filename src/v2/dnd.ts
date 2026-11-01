@@ -12,7 +12,7 @@ import { canContain } from "./structure";
 const THRESHOLD = 5;
 
 export function startDrag(ctx: EditorContextValue, e: ReactPointerEvent, ids: string[]) {
-  if (e.button !== 0 || !ids.length) return;
+  if (e.button !== 0 || !ids.length || !ids.every((id) => ctx.store.canMove(id))) return;
   const types = ids.map((id) => ctx.store.block(id)?.type).filter(Boolean) as string[];
   begin(ctx, e, { ids, types });
 }
@@ -42,7 +42,7 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
       ui.canvasDoc?.body.classList.add("is-dragging");
       for (const id of src.ids) ui.blockEl(id)?.classList.add("is-dragging-source");
     }
-    const target = findTarget(ctx, x, y, src);
+    const target = unlocked(store, findTarget(ctx, x, y, src));
     ui.setDrag({ ids: src.ids, newType: src.newType, x, y, target });
     autoScroll(ctx, y);
   };
@@ -60,7 +60,7 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
   };
   const up = (ev: PointerEvent) => {
     const wasStarted = started;
-    const target = started ? findTarget(ctx, toParent(ctx, ev).x, toParent(ctx, ev).y, src) : null;
+    const target = started ? unlocked(store, findTarget(ctx, toParent(ctx, ev).x, toParent(ctx, ev).y, src)) : null;
     cleanup();
     ui.setDrag(null);
     if (!wasStarted || !target) return;
@@ -167,6 +167,8 @@ function validate(store: EditorContextValue["store"], src: Source, t: DropTarget
   return canContainAll(parentType, src.types) ? t : null;
 }
 const canContainAll = (parentType: string | null, types: string[]) => types.every((t) => canContain(parentType, t));
+/** Chỗ thả bị khoá (templateLock) → không nhận. */
+function unlocked(store: EditorContextValue["store"], t: DropTarget | null): DropTarget | null { return t && store.canInsertInto(t.parentId) ? t : null; }
 const isInside = (store: EditorContextValue["store"], id: string, ancestor: string) => !!store.locate(id)?.ancestors.includes(ancestor);
 function isRow(el: HTMLElement) {
   const s = el.ownerDocument.defaultView!.getComputedStyle(el);

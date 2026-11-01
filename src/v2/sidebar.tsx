@@ -1,6 +1,6 @@
 import type { BlockAttrSpec, Device } from "@ecomcx/ecomweb-content";
 import { CORE_BLOCK_STYLES } from "@ecomcx/ecomweb-content";
-import { Blocks, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { Blocks, ChevronDown, ChevronRight, GripVertical, Lock } from "lucide-react";
 import { useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
 import { enLabels, viLabels } from "../labels";
 import { StylePanel } from "../stylepanel";
@@ -134,7 +134,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
         <>
           <div className="ecx-tabs" role="tablist">
             <button type="button" role="tab" aria-selected={tab === "settings"} className={cx(tab === "settings" && "is-active")} onClick={() => setTab("settings")}>{labels.settings}</button>
-            {type?.supports?.style !== false && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}>{labels.lang === "vi" ? "Kiểu dáng" : "Styles"}</button>}
+            {type?.supports?.style !== false && !store.isContentOnly(first.id) && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}>{labels.lang === "vi" ? "Kiểu dáng" : "Styles"}</button>}
           </div>
           {tab === "settings" ? (
             <div className="ecx-panel">
@@ -230,6 +230,7 @@ function ListRow({ node, depth }: { node: BNode; depth: number }) {
         {hasKids ? <button type="button" className="ecx-twisty" aria-label={open ? "Collapse" : "Expand"} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>{open ? <ChevronDown className="ecx-icon" /> : <ChevronRight className="ecx-icon" />}</button> : <span className="ecx-twisty" />}
         <Icon className="ecx-icon" />
         <span className="ecx-list-title">{blockLabel(node, type)}</span>
+        {!!(node.attrs.lock || node.attrs.templateLock) && <Lock className="ecx-icon ecx-icon-sm" aria-label={ctx.labels.locked} />}
         <span className="ecx-list-drag" onPointerDown={(e) => { e.stopPropagation(); startDrag(ctx, e, [node.id]); }} title={ctx.labels.drag}><GripVertical className="ecx-icon" /></span>
       </div>
       {hasKids && open && <div role="group">{kids.map((k) => <ListRow key={k.id} node={k} depth={depth + 1} />)}</div>}
