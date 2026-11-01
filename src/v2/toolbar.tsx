@@ -90,8 +90,8 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const listItem = parent && (parent.type === "listItem" || parent.type === "taskItem") && loc.index === 0 ? parent : null;
   const transforms = sameType ? (type?.transforms ?? []).filter((t) => nodes.length === 1 || t.multiple) : [];
   const height = 44;
-  const top = fixed || !rect || !frame ? 0 : Math.max(frame.top + 4, rect.top - height - 8);
-  const left = fixed || !rect || !frame ? 0 : Math.max(frame.left + 4, Math.min(rect.left, frame.right - 420));
+  const top = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.top + 4, rect.top - height - 8));
+  const left = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.left + 4, Math.min(rect.left, frame.right - 420)));
   const editProps = { block: first, attrs: first.attrs, setAttrs: (a: Record<string, unknown>) => store.setAttrs(ids, a), blockProps: null as never, selected: true, editable: true, labels };
   const Extra = sameType && nodes.length === 1 ? type?.toolbar : undefined;
   const hasAlign = sameType && !!type?.attributes?.textAlign;

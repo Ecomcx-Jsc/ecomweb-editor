@@ -136,8 +136,9 @@ export function InserterPopover() {
 
   if (!req) return null;
   if (req.mode === "slash" && !results.length) return null;
-  const top = Math.min(req.rect.bottom + 6, window.innerHeight - 320);
-  const left = Math.min(req.rect.left, window.innerWidth - 320);
+  // Toạ độ nguyên: đặt ở nửa điểm ảnh thì chữ bị nhoè
+  const top = Math.round(Math.min(req.rect.bottom + 6, window.innerHeight - 320));
+  const left = Math.round(Math.min(req.rect.left, window.innerWidth - 320));
   return (
     <div className="ecx-popover ecx-inserter-popover" style={{ top, left }} role="dialog" aria-label={labels.addBlock} onMouseDown={(e) => { if (req.mode === "slash") e.preventDefault(); }}>
       {req.mode !== "slash" && (
