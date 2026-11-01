@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useSyncExternalStore, type ReactNode } from "react";
 import type { EditorStore, EditorState, EditingMode } from "./store";
 import type { BlockTypeRegistry } from "./registry";
 import type { EditorHost } from "./host";
@@ -124,5 +124,9 @@ export const DocScopeContext = createContext<DocScope>({ docId: "root", mode: "d
 export const useDocScope = () => useContext(DocScopeContext);
 
 export function DocScopeProvider({ value, children }: { value: DocScope; children: ReactNode }) {
-  return <DocScopeContext.Provider value={value}>{children}</DocScopeContext.Provider>;
+  // Giữ nguyên object khi nội dung không đổi: mọi khối đọc context này — object mới mỗi lần vẽ = vẽ lại cả tài liệu mỗi phím gõ
+  const chain = (value.chain ?? []).join("|");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const stable = useMemo(() => value, [value.docId, value.mode, value.depth, chain]);
+  return <DocScopeContext.Provider value={stable}>{children}</DocScopeContext.Provider>;
 }

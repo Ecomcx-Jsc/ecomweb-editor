@@ -79,8 +79,15 @@ const host: EditorHost = {
   },
 };
 
+// Tài liệu lớn (đo hiệu năng): ?blocks=2000 → đoạn văn, tiêu đề, danh sách, nhóm xen kẽ
+const big = Number(params.get("blocks") ?? 0);
+const bigDoc = big ? { type: "doc", content: Array.from({ length: big }, (_, i) =>
+  i % 50 === 0 ? h(2, `Mục ${i / 50 + 1}`)
+  : i % 25 === 0 ? { type: "bulletList", content: [{ type: "listItem", content: [p(`Ý ${i}.1`)] }, { type: "listItem", content: [p(`Ý ${i}.2`)] }] }
+  : i % 30 === 0 ? { type: "group", content: [p(`Nhóm ${i}`), p("Chữ trong nhóm")] }
+  : p(`Đoạn ${i}: Tiếng Việt có dấu để đo tốc độ gõ và vẽ lại khi tài liệu rất dài.`)) } : null;
 const doc = params.get("doc");
-const initial = params.get("empty") ? null : doc === "post" || params.get("frame") ? post : doc === "rich" ? rich : template;
+const initial = bigDoc ?? (params.get("empty") ? null : doc === "post" || params.get("frame") ? post : doc === "rich" ? rich : template);
 const store = new EditorStore({ kind: doc === "post" || doc === "rich" || params.get("frame") ? "post" : "template", title: "Trang chủ", blocks: blocksFromContent(initial) });
 const frame = params.get("frame") ? { content: frameTemplate, title: "Trang đơn" } : undefined;
 let changes = 0;

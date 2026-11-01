@@ -144,10 +144,18 @@ function useCanvasStyles(doc: Document) {
 
   // Kiểu dáng khối (class ecx-s-…) gom từ mọi tài liệu đang mở — cùng hàm website dùng
   const docs = useEditorState((s) => s.docs);
+  // Kiểu dáng gom theo từng cây khối (cache theo tham chiếu): gõ chữ không đổi style → không duyệt lại cả tài liệu dài
+  const perTree = useRef(new WeakMap<BNode[], BlockStyle[]>());
   const css = useMemo(() => {
     const styles: BlockStyle[] = [];
-    for (const d of Object.values(docs)) for (const b of flatten(d.blocks)) {
-      if (b.attrs.style && typeof b.attrs.style === "object") { const st = normalizeStyle(b.attrs.style); if (st) styles.push(st); }
+    for (const d of Object.values(docs)) {
+      let list = perTree.current.get(d.blocks);
+      if (!list) {
+        list = [];
+        for (const b of flatten(d.blocks)) if (b.attrs.style && typeof b.attrs.style === "object") { const st = normalizeStyle(b.attrs.style); if (st) list.push(st); }
+        perTree.current.set(d.blocks, list);
+      }
+      styles.push(...list);
     }
     return collectStyles(styles);
   }, [docs]);

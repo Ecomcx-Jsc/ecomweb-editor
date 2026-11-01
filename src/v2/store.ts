@@ -72,6 +72,8 @@ export interface CommitOptions {
   merge?: string;
   /** Không ghi lịch sử (nạp tài liệu, đồng bộ từ ngoài). */
   history?: false;
+  /** Chỉ đổi chữ / thuộc tính, không đổi cấu trúc → bỏ qua kiểm tra cấu trúc cả cây (gõ phím trong tài liệu dài). */
+  structural?: false;
   select?: Partial<Selection>;
   caret?: Caret | null;
 }
@@ -195,7 +197,7 @@ export class EditorStore {
   commit(docId: string, blocks: BNode[], opts: CommitOptions = {}) {
     const d = this.state.docs[docId];
     if (!d || d.mode === "disabled") return;
-    const fixed = fixTree(blocks);
+    const fixed = opts.structural === false ? blocks : fixTree(blocks);
     const selection = opts.select ? { ...this.state.selection, ...opts.select } : this.state.selection;
     const caret = opts.caret !== undefined ? opts.caret : this.state.caret;
     if (fixed === d.blocks) {
@@ -317,11 +319,11 @@ export class EditorStore {
 
   setInline(id: string, inline: RichNode[], caret?: Caret) {
     if (caret) this.lastCaret = caret;
-    this.edit(id, (blocks) => mapBlock(blocks, id, (b) => ({ ...b, inline })), { merge: `text:${id}` });
+    this.edit(id, (blocks) => mapBlock(blocks, id, (b) => ({ ...b, inline })), { merge: `text:${id}`, structural: false });
   }
 
   setAttrs(ids: string[], attrs: Record<string, unknown>) {
-    this.batch(() => { for (const id of ids) this.edit(id, (blocks) => setAttrs(blocks, id, attrs), { merge: `attrs:${id}:${Object.keys(attrs).join(",")}` }); });
+    this.batch(() => { for (const id of ids) this.edit(id, (blocks) => setAttrs(blocks, id, attrs), { merge: `attrs:${id}:${Object.keys(attrs).join(",")}`, structural: false }); });
   }
 
   /** Đổi loại khối (đoạn ↔ tiêu đề…), giữ nội dung. */

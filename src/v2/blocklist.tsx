@@ -1,5 +1,5 @@
 import { normalizeStyle, styleClass } from "@ecomcx/ecomweb-content";
-import { Component, memo, useCallback, useEffect, useMemo, type ErrorInfo, type MouseEvent, type ReactNode } from "react";
+import { Component, memo, useCallback, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type ReactElement, type ReactNode } from "react";
 import { DocScopeProvider, useDocScope, useEditor, useEditorState } from "./context";
 import { docIdOf, type NestedDocRef } from "./host";
 import { blocksFromDoc, makeBlock, type BNode } from "./model";
@@ -79,6 +79,19 @@ export const Block = memo(function Block({ node }: { node: BNode }) {
   return <BlockBoundary id={node.id} type={node.type}><Edit {...props} /></BlockBoundary>;
 });
 
+/**
+ * Danh sách khối: phần tử JSX của khối không đổi (cùng tham chiếu) được dùng lại → React bỏ qua ngay, không so props —
+ * tài liệu dài gõ một phím chỉ vẽ lại khối đang gõ.
+ */
+function useBlockElements(list: readonly BNode[]): ReactElement[] {
+  const cache = useRef(new WeakMap<BNode, ReactElement>());
+  return list.map((b) => {
+    let el = cache.current.get(b);
+    if (!el) { el = <Block key={b.id} node={b} />; cache.current.set(b, el); }
+    return el;
+  });
+}
+
 /** Khối chưa có giao diện riêng: thẻ tên + tóm tắt (dữ liệu giữ nguyên). */
 export function FallbackEdit({ block, blockProps, labels }: BlockEditProps) {
   const { registry } = useEditor();
@@ -103,9 +116,10 @@ export function InnerBlocks({ parent, appender = "auto" }: { parent: BNode; appe
   const scope = useDocScope();
   const kids = parent.content ?? [];
   const showAppender = appender === "auto" && scope.mode === "default" && !kids.length;
+  const elements = useBlockElements(kids);
   return (
     <>
-      {kids.map((k) => <Block key={k.id} node={k} />)}
+      {elements}
       {showAppender && <Appender docId={scope.docId} parentId={parent.id} index={0} />}
     </>
   );
@@ -130,6 +144,7 @@ export function DocBlocks({ docId }: { docId: string }) {
   const { store, labels } = useEditor();
   const doc = useEditorState(useCallback((s) => s.docs[docId], [docId]));
   const scope = useDocScope();
+  const elements = useBlockElements(doc?.blocks ?? []);
   if (!doc) return null;
   if (!doc.blocks.length) {
     if (doc.mode !== "default") return null;
@@ -142,7 +157,7 @@ export function DocBlocks({ docId }: { docId: string }) {
     );
   }
   void scope;
-  return <>{doc.blocks.map((b) => <Block key={b.id} node={b} />)}</>;
+  return <>{elements}</>;
 }
 
 /**
