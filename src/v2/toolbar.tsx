@@ -1,12 +1,15 @@
-import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { serializeBlocks } from "./clipboard";
+
+/** Khối → nội dung lưu (ContentDoc). */
+const contentFromBlocks = (blocks: BNode[]) => ({ version: 1, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }] });
 import { useEditor, useEditorState, useUiTick } from "./context";
 import { usePrefs } from "./prefs";
 import { startDrag } from "./dnd";
-import type { BNode } from "./model";
+import { docFromBlocks, makeBlock, type BNode } from "./model";
 import { topLevelOrdered } from "./ops";
 import type { BlockTransform } from "./registry";
 import { insertSibling, richViews } from "./richtext";
@@ -120,6 +123,17 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
       return <div className="ecx-tool-group" key={`ctx-${id}`}><T ancestor={anc} currentId={currentId} /></div>;
     });
   };
+ /** Tạo mẫu từ các khối đang chọn; mẫu đồng bộ → thay khối bằng tham chiếu tới mẫu. */
+  const createPattern = async () => {
+    const picked = ordered.map((id) => store.block(id)!).filter(Boolean);
+    const res = await ctx.host.createPattern!(contentFromBlocks(picked));
+    if (!res?.synced) return;
+    const ref = makeBlock("syncedPattern", { ref: res.ref });
+    store.batch(() => {
+      store.replace(ordered[0], [ref], { select: { ids: [ref.id], editing: null }, caret: null });
+      if (ordered.length > 1) store.remove(ordered.slice(1), { focusNeighbor: false });
+    });
+  };
   const nested = first.type === "templatePart" || first.type === "syncedPattern" ? ui.blockEl(first.id)?.dataset.ecxNested : undefined;
   const canGroup = canContain(parent?.type ?? null, "group");
 
@@ -188,6 +202,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
                 <MenuItem icon={ArrowUpToLine} label={labels.insertBefore} shortcut={`${mod}⌥T`} onClick={() => { close(); insertSibling(store, ordered[0], 0); }} />
                 <MenuItem icon={ArrowDownToLine} label={labels.insertAfter} shortcut={`${mod}⌥Y`} onClick={() => { close(); insertSibling(store, ordered[ordered.length - 1], 1); }} />
                 <MenuItem icon={Copy} label={labels.copy} onClick={() => { close(); void copy(); }} />
+                {ctx.host.createPattern && <MenuItem icon={Shapes} label={labels.createPattern} onClick={() => { close(); void createPattern(); }} />}
                 {canGroup && <MenuItem icon={GroupIcon} label={labels.group} onClick={() => { close(); store.wrap(ordered, "group"); }} />}
                 {nodes.length === 1 && first.content && first.type === "group" && <MenuItem icon={Ungroup} label={labels.ungroup} onClick={() => { close(); store.unwrap(first.id); }} />}
                 <MenuItem icon={Trash2} label={labels.remove} shortcut="⇧⌥Z" danger onClick={() => { close(); store.remove(ordered); }} />

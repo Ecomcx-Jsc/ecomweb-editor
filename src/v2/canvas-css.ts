@@ -10,6 +10,7 @@ body.ecx-canvas-body { padding: 0; background: #fff; }
 .ecx-canvas-root > * { max-width: var(--ecx-content-width, 760px); margin-left: auto; margin-right: auto; }
 .ecx-canvas-root > .ecx-nested, .ecx-canvas-root > .ecx-cover, .ecx-canvas-root > [data-type="columns"], .ecx-canvas-root > .ecx-align-wide { max-width: var(--ecx-wide-width, 1200px); }
 .ecx-canvas-root > .ecx-align-full, .ecx-canvas-root > .ecx-template-part { max-width: none; }
+.ecx-canvas-root.is-wide > * { max-width: var(--ecx-wide-width, 1120px); }
 
 .ecx-block { position: relative; scroll-margin: 80px; }
 .ecx-block:focus { outline: none; }
@@ -75,6 +76,10 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 
 /* Làm nổi khối đang sửa: các khối cấp cao nhất khác mờ đi */
 .is-spotlight > .ecx-block:not(.is-selected):not(.is-editing):not(:has(.is-selected, .is-editing)) { opacity: .3; transition: opacity .2s ease; }
+/* Ô tiêu đề bài trong khung soạn: kiểu chữ của h1 theme */
+.ecx-doc-title { margin-top: 0; }
+.ecx-doc-title-input { display: block; width: 100%; margin: 0; padding: 0; border: 0; outline: none; resize: none; overflow: hidden; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; line-height: inherit; text-align: inherit; }
+.ecx-doc-title-input::placeholder { color: inherit; opacity: .35; }
 .ecx-col-handles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
 .ecx-col-handle { position: absolute; width: 12px; margin-left: -6px; cursor: col-resize; pointer-events: auto; touch-action: none; }
 .ecx-col-handle::after { content: ""; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--ecx-ui); opacity: .35; border-radius: 1px; }

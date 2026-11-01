@@ -5,7 +5,7 @@
  */
 export { BlockEditor, EditorProvider, EditorOverlays, saveAll, blocksFromContent, contentFromBlocks, splitContent, type BlockEditorProps, type EditorProviderProps } from "./editor";
 export { Canvas, DEVICE_WIDTH, type CanvasProps, type Device } from "./canvas";
-export { BlockToolbar, DropIndicator, ToolButton } from "./toolbar";
+export { BlockToolbar, DropIndicator, ToolButton, Dropdown, MenuItem } from "./toolbar";
 export { InserterPanel, InserterPopover, rankOptions, useInsertOptions, type InsertOption } from "./inserter";
 export { Inspector, ListView, AttrForm, blockLabel } from "./sidebar";
 export { Block, InnerBlocks, NestedDoc, DocBlocks, Appender, FallbackEdit, useBlockProps } from "./blocklist";
@@ -22,3 +22,4 @@ export { viV2, enV2, type V2Labels } from "./labels";
 export type { EditorHost, DocumentHost, DynamicData, NestedDocRef, LoadedDoc, SavedContent } from "./host";
 export { MoreMenu, PreferencesModal, ShortcutsModal, CodeEditor, Breadcrumbs } from "./options";
 export { PrefsStore, localPrefsStorage, usePrefs, DEFAULT_PREFS, type EditorPrefs, type PrefsStorage } from "./prefs";
+export { DocTitle } from "./doctitle";

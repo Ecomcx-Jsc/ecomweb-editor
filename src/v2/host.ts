@@ -22,6 +22,11 @@ export interface EditorHost {
   presets?: StylePresets;
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */
   translate?(text: string): string;
+  /**
+   * "Tạo mẫu" từ các khối đang chọn: ứng dụng hỏi tên / nhóm / đồng bộ rồi lưu. Trả về mẫu đã tạo (đồng bộ → các khối được
+   * thay bằng tham chiếu tới mẫu), null = huỷ. Không có → ẩn lệnh.
+   */
+  createPattern?(content: SavedContent): Promise<{ ref: number; synced: boolean } | null>;
 }
 
 /** Nội dung lưu (ContentDoc của @ecomcx/ecomweb-content). */

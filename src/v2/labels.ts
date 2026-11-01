@@ -145,6 +145,7 @@ export const viV2 = {
   mostUsedTitle: "Dùng nhiều",
   close: "Đóng",
   documentRoot: "Tài liệu",
+  createPattern: "Tạo mẫu",
 };
 export type V2Labels = typeof viV2;
 
@@ -294,4 +295,5 @@ export const enV2: V2Labels = {
   mostUsedTitle: "Most used",
   close: "Close",
   documentRoot: "Document",
+  createPattern: "Create pattern",
 };
