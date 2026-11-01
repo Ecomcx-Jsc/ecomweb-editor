@@ -2,6 +2,7 @@ import { normalizeGradient, normalizeStyle, type BlockLayout, type BlockStyle, t
 import { AlignCenterVertical, AlignEndVertical, AlignStartVertical, ArrowDown, ArrowRight, Columns3, LayoutGrid, Rows3, Square, StretchVertical, AlignHorizontalSpaceBetween, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyStart } from "lucide-react";
 import { useState, type ComponentType, type ReactNode } from "react";
 import { useEditor } from "./context";
+import { ColorSwatchInput } from "../colorswatch";
 
 /**
  * Bố cục, nền chuyển màu, bóng, tỉ lệ, ghim và hover (@ecomcx/ecomweb-content 1.15) — phần thêm của tab Kiểu dáng.
@@ -194,7 +195,7 @@ function ColorInput({ value, onChange, label }: { value?: string; onChange(v: st
   return (
     <div className="ecx-chip-row">
       {presets.map(([name, c]) => <button key={name} type="button" className={cx("ecx-chip ecx-chip-swatch", value === name && "is-active")} title={name} aria-label={`${label}: ${name}`} style={{ background: c }} onClick={() => onChange(value === name ? undefined : name)} />)}
-      <input type="color" aria-label={label} value={value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000"} onChange={(e) => onChange(e.target.value)} />
+      <ColorSwatchInput value={value} onChange={onChange} label={label} />
       {value && <button type="button" className="ecx-chip" onClick={() => onChange(undefined)}>×</button>}
     </div>
   );

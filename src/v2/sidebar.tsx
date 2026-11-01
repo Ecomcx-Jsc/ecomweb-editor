@@ -1,5 +1,6 @@
 import type { BlockAttrSpec, Device } from "@ecomcx/ecomweb-content";
 import { CORE_BLOCK_STYLES } from "@ecomcx/ecomweb-content";
+import { ColorSwatchInput } from "../colorswatch";
 import { Blocks, ChevronDown, ChevronRight, GripVertical, Lock } from "lucide-react";
 import { useCallback, useState, useSyncExternalStore, type ReactNode } from "react";
 import { enLabels, viLabels } from "../labels";
@@ -32,7 +33,7 @@ const ATTR_LABELS: Record<string, [string, string]> = {
   embed: ["Xem ngay trên trang", "Embed"], anchor: ["Neo (id)", "Anchor"], className: ["Class CSS", "CSS class"],
 };
 /** Thuộc tính sửa ở chỗ khác (thanh công cụ, trên khung soạn) hoặc dữ liệu kỹ thuật. */
-const HIDDEN_ATTRS = new Set(["style", "blockStyle", "anchor", "className", "mediaId", "srcset", "webpSrcset", "images", "links", "colwidth", "_v", "id"]);
+const HIDDEN_ATTRS = new Set(["style", "blockStyle", "anchor", "className", "mediaId", "srcset", "webpSrcset", "images", "links", "colwidth", "colspan", "rowspan", "_v", "id"]); // gộp ô: dùng lệnh Gộp / Tách của công cụ bảng (sửa số tay làm lệch bảng)
 
 const attrLabel = (name: string, spec: BlockAttrSpec, lang: "vi" | "en", translate?: (s: string) => string) =>
   spec.label ? (translate ? translate(spec.label) : spec.label) : ATTR_LABELS[name]?.[lang === "vi" ? 0 : 1] ?? name;
@@ -84,7 +85,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
             return (
               <Field key={k} label={label}>
                 <span className="ecx-color-row">
-                  <input type="color" value={/^#[0-9a-f]{6}$/i.test(String(value ?? "")) ? String(value) : "#000000"} onChange={(e) => set(e.target.value)} aria-label={label} />
+                  <ColorSwatchInput value={value == null ? undefined : String(value)} onChange={set} label={label} />
                   <input className="ecx-input" value={value == null ? "" : String(value)} onChange={(e) => set(e.target.value)} placeholder="#hex / primary" />
                 </span>
               </Field>
@@ -203,7 +204,7 @@ export function ListView() {
   return (
     <div className="ecx-listview" role="tree" aria-label={labels.listView}>
       {doc.blocks.map((b) => <ListRow key={b.id} node={b} depth={0} />)}
-      {!doc.blocks.length && <p className="ecx-muted">{labels.emptyDoc}</p>}
+      {!doc.blocks.length && <p className="ecx-muted ecx-list-empty">{labels.listEmpty}</p>}
       
     </div>
   );

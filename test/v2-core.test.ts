@@ -438,3 +438,30 @@ test("chọn chữ qua nhiều khối: vào trong danh sách — mục cuối tr
   st2.select([r.id]);
   assert.equal(st2.getState().range, null);
 });
+
+test("bảng: gộp phải / dưới, tách ô, thêm / xoá hàng cột đi qua ô gộp — bảng luôn vuông vức", async () => {
+  const { tableContext, mergeCells, splitCell, addRow, deleteColumn, normalizeTable } = await import("../src/v2/tables");
+  const c = (s: string) => makeBlock("tableCell", {}, [makeBlock("paragraph", {}, [{ type: "text", text: s }])]);
+  const table = makeBlock("table", {}, [0, 1, 2].map((r) => makeBlock("tableRow", {}, [0, 1, 2].map((k) => c(`${r}${k}`)))));
+  const st = store(table);
+  const t = () => st.getState().docs.root.blocks[0];
+  const cellText = (x: BNode) => (x.content ?? []).map((p) => inlineText(p.inline ?? [])).join("|");
+  const shapeOf = () => t().content!.map((r) => r.content!.map((x) => `${cellText(x)}${x.attrs.colspan ? `c${x.attrs.colspan}` : ""}${x.attrs.rowspan ? `r${x.attrs.rowspan}` : ""}`));
+  const ctxAt = (r: number, k: number) => tableContext(st, t().content![r].content![k].content![0].id)!;
+  mergeCells(st, ctxAt(0, 0), "right");
+  assert.deepEqual(shapeOf(), [["00|01c2", "02"], ["10", "11", "12"], ["20", "21", "22"]]);
+  mergeCells(st, ctxAt(0, 0), "down"); // 1 ô cao 1 rộng 2 không gộp được với ô dưới rộng 1
+  assert.deepEqual(shapeOf()[1].length, 3);
+  mergeCells(st, ctxAt(1, 0), "down");
+  assert.deepEqual(shapeOf(), [["00|01c2", "02"], ["10|20r2", "11", "12"], ["21", "22"]]);
+  addRow(st, ctxAt(1, 1), true); // chèn giữa ô gộp dọc → ô đó cao thêm
+  assert.deepEqual(shapeOf(), [["00|01c2", "02"], ["10|20r3", "11", "12"], ["", ""], ["21", "22"]]);
+  deleteColumn(st, ctxAt(0, 1)); // xoá cột 3
+  assert.deepEqual(shapeOf(), [["00|01c2"], ["10|20r3", "11"], [""], ["21"]]);
+  splitCell(st, ctxAt(1, 0));
+  assert.deepEqual(shapeOf(), [["00|01c2"], ["10|20", "11"], ["", ""], ["", "21"]]);
+  // Bảng lệch kiểu dữ liệu cũ (rowspan mà không bỏ ô bị che) → lấp đủ ô
+  const ragged = makeBlock("table", {}, [makeBlock("tableRow", {}, [makeBlock("tableCell", { rowspan: 2 }, [makeBlock("paragraph")]), c("a")]), makeBlock("tableRow", {}, [c("b"), c("x")])]);
+  assert.deepEqual(normalizeTable(ragged).content!.map((r) => r.content!.length), [3, 2]);
+  assert.equal(normalizeTable(t()), t(), "bảng đã vuông giữ nguyên tham chiếu");
+});

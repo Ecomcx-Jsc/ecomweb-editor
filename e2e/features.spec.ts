@@ -71,6 +71,22 @@ test.describe("bảng, cột, ảnh, nút", () => {
     await expect(c.locator("table tr")).toHaveCount(3);
   });
 
+  test("gộp ô bên dưới rồi tách lại: bảng luôn đủ ô, ô số rowspan / colspan không còn trong bảng cài đặt", async ({ page }) => {
+    const c = await open(page, "?doc=rich");
+    await clickEnd(c, "A");
+    const run = async (item: string) => { await showToolbar(page); await tool(page, "Bảng").click(); await page.getByRole("menuitem", { name: item }).click(); };
+    await run("Gộp với ô bên dưới");
+    let table = await blockOf(page, "table");
+    expect(table.content.map((r: { content: unknown[] }) => r.content.length)).toEqual([2, 1]);
+    expect(table.content[0].content[0].attrs.rowspan).toBe(2);
+    await expect(c.locator("table tr").nth(0).locator("th").first()).toHaveAttribute("rowspan", "2");
+    await expect(page.locator(".ecx-inspector").getByLabel(/rowspan|colspan/i)).toHaveCount(0);
+    await run("Tách ô");
+    table = await blockOf(page, "table");
+    expect(table.content.map((r: { content: unknown[] }) => r.content.length)).toEqual([2, 2]);
+    expect(table.content[0].content[0].attrs.rowspan).toBeUndefined();
+  });
+
   test("kéo tay nắm giữa hai cột đổi tỉ lệ; một lần ⌘Z trả về 50/50", async ({ page }) => {
     const c = await open(page, "?doc=rich");
     await clickEnd(c, "Trái");

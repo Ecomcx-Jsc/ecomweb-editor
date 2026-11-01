@@ -14,6 +14,7 @@ import type { EditorLabels } from "./labels";
 import { COLUMN_PRESETS, emptyColumn, safeColor, setColumnCount, setColumnWidths } from "./layout";
 import type { InsertItem } from "./types";
 import { cx } from "./util";
+import { ColorSwatchInput } from "./colorswatch";
 
 // ---------------------------------------------------------------------------
 // Lệnh chèn (slash menu)
@@ -109,7 +110,7 @@ function ColorField({ value, onChange, label, t }: { value: string | null; onCha
     <span className="cms-ed-color">
       <label className="cms-ed-color-label">
         <span>{label}</span>
-        <input type="color" aria-label={label} value={safeColor(value)?.startsWith("#") && value!.length === 7 ? value! : "#ffffff"} onChange={(e) => onChange(e.target.value)} />
+        <ColorSwatchInput value={value ?? undefined} onChange={onChange} label={label} size={22} />
       </label>
       {value && <button type="button" className="cms-ed-text-btn" onMouseDown={(e) => e.preventDefault()} onClick={() => onChange(null)}>{t.noColor}</button>}
     </span>

@@ -51,6 +51,8 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     document.removeEventListener("pointermove", move);
     document.removeEventListener("pointerup", up);
     document.removeEventListener("keydown", key, true);
+    document.removeEventListener("pointercancel", cancel);
+    window.removeEventListener("blur", cancel);
     ui.canvasDoc?.removeEventListener("pointermove", move);
     ui.canvasDoc?.removeEventListener("pointerup", up);
     document.body.classList.remove("is-dragging");
@@ -76,6 +78,10 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     cleanup();
     ui.setDrag(null);
   };
+  // Kéo bị huỷ (mất con trỏ, đổi cửa sổ) → bỏ kéo, không để nhãn kéo kẹt trên màn hình
+  const cancel = () => { cleanup(); ui.setDrag(null); };
+  document.addEventListener("pointercancel", cancel);
+  window.addEventListener("blur", cancel);
   document.addEventListener("pointermove", move);
   document.addEventListener("pointerup", up);
   document.addEventListener("keydown", key, true);

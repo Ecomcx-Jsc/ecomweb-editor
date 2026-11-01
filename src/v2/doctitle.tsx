@@ -9,12 +9,22 @@ import { makeBlock } from "./model";
 export function DocTitle({ value, onChange, placeholder, autoFocus }: { value: string; onChange(v: string): void; placeholder?: string; autoFocus?: boolean }) {
   const { store } = useEditor();
   const ref = useRef<HTMLTextAreaElement>(null);
-  // Cao theo nội dung (tiêu đề dài xuống dòng)
+  // Cao theo nội dung (tiêu đề dài xuống dòng). CSS / phông của website nạp sau → đo lại khi nạp xong và khi đổi bề rộng,
+  // không thì ô giữ chiều cao đo bằng phông mặc định và cắt mất nửa dòng chữ.
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
+    const fit = () => { el.style.height = "auto"; el.style.height = `${el.scrollHeight}px`; };
+    fit();
+    const doc = el.ownerDocument;
+    let width = el.clientWidth;
+    const ro = new ResizeObserver(() => { if (el.clientWidth !== width) { width = el.clientWidth; fit(); } });
+    ro.observe(el);
+    doc.addEventListener("load", fit, true); // <link rel=stylesheet> của website
+    doc.fonts?.addEventListener?.("loadingdone", fit);
+    const mo = new MutationObserver(fit); // <style> thêm / đổi trong head
+    mo.observe(doc.head, { childList: true, subtree: true, characterData: true });
+    return () => { ro.disconnect(); mo.disconnect(); doc.removeEventListener("load", fit, true); doc.fonts?.removeEventListener?.("loadingdone", fit); };
   }, [value]);
   useLayoutEffect(() => { if (autoFocus) ref.current?.focus(); }, [autoFocus]);
   return (

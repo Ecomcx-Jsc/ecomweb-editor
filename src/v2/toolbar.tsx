@@ -74,6 +74,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const nodes = ids.map((id) => store.block(id)).filter(Boolean) as BNode[];
   const fixed = placement === "fixed";
   if (fixed !== fixedPref) return null;
+  if (fixed && !nodes.length) return <span className="ecx-toolbar-hint">{labels.toolbarHint}</span>;
   if (!nodes.length || ui.drag || ui.inserter?.mode === "slash" || (ui.typing && !link && !fixed)) return null;
   const loc = store.locate(nodes[0].id);
   if (!loc || store.getState().docs[loc.docId].mode === "disabled") return null;
@@ -327,14 +328,19 @@ const firstText = (b: BNode): string | null => (b.inline ? b.id : (b.content ?? 
 
 /** Đường thả khi kéo khối. */
 export function DropIndicator() {
-  const { ui, labels } = useEditor();
+  const { ui, labels, store, registry } = useEditor();
   useUiTick();
   const t = ui.drag?.target;
   if (!ui.drag) return null;
   return (
     <>
       {t && <div className="ecx-drop-line" style={{ left: t.rect.left, top: t.rect.top, width: t.rect.width, height: t.rect.height }} data-horizontal={t.horizontal || undefined} />}
-      <div className="ecx-drag-chip" style={{ left: ui.drag.x + 12, top: ui.drag.y + 12 }}>{ui.drag.ids.length > 1 ? `${ui.drag.ids.length} ${labels.blocks}` : "⠿"}</div>
+      <div className={t ? "ecx-drag-chip" : "ecx-drag-chip is-blocked"} style={{ left: ui.drag.x + 12, top: ui.drag.y + 12 }}>{(() => {
+        // Tên khối đang kéo (nhiều khối: số lượng); không có chỗ thả hợp lệ → mờ đi
+        const type = registry.get(ui.drag.newType ?? store.block(ui.drag.ids[0] ?? "")?.type ?? "");
+        const Icon = type?.icon;
+        return <>{Icon && <Icon className="ecx-icon ecx-icon-sm" />}{ui.drag.ids.length > 1 ? `${ui.drag.ids.length} ${labels.blocks}` : type?.title ?? labels.drag}</>;
+      })()}</div>
     </>
   );
 }

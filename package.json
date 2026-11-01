@@ -1,7 +1,7 @@
 {
   "name": "@ecomcx/ecomweb-editor",
   "version": "1.19.0",
-  "description": "Trình soạn thảo nội dung dạng khối (TipTap) của CMS — dùng độc lập trong mọi dự án React: ảnh responsive kéo đổi kích thước, gallery, video, bảng, slash menu, mở rộng bằng plugin.",
+  "description": "Trình soạn nội dung dạng khối của CMS — dùng độc lập trong mọi dự án React (1.x: TipTap; ./v2: cây khối, khung soạn iframe, sửa header/footer tại chỗ).",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -29,11 +29,11 @@
     "*.css"
   ],
   "peerDependencies": {
+    "@ecomcx/ecomweb-content": "^1.15.0",
     "react": ">=18",
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@ecomcx/ecomweb-content": "file:../ecomweb-content",
     "@tiptap/core": "3.32.0",
     "@tiptap/extension-highlight": "3.32.0",
     "@tiptap/extension-image": "3.32.0",
@@ -60,6 +60,7 @@
     "prosemirror-view": "1.42.7"
   },
   "devDependencies": {
+    "@ecomcx/ecomweb-content": "file:../ecomweb-content",
     "@playwright/test": "1.53.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
@@ -75,7 +76,8 @@
     "typecheck": "tsc --noEmit -p .",
     "test": "node scripts/test.mjs",
     "playground": "vite --config playground/vite.config.ts",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "prepublishOnly": "node scripts/check-publish.mjs"
   },
   "bundleDependencies": [
     "@tiptap/core",

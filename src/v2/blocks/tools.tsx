@@ -1,7 +1,7 @@
-import { Columns2, Minus, Plus, Table2, ArrowUpToLine, ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, Trash2, Heading } from "lucide-react";
+import { Columns2, Minus, Plus, Table2, ArrowUpToLine, ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, Trash2, Heading, TableCellsMerge, TableCellsSplit } from "lucide-react";
 import { useEditor } from "../context";
 import { makeBlock, type BNode } from "../model";
-import { addColumn, addRow, deleteColumn, deleteRow, hasHeaderRow, tableContext, toggleHeaderRow } from "../tables";
+import { addColumn, addRow, canMerge, canSplit, deleteColumn, deleteRow, hasHeaderRow, mergeCells, splitCell, tableContext, toggleHeaderRow } from "../tables";
 import { Dropdown, MenuItem, ToolButton } from "../toolbar";
 
 /** Công cụ bảng khi đang gõ trong ô (hoặc chọn cả bảng). */
@@ -17,6 +17,9 @@ export function TableTools({ ancestor, currentId }: { ancestor: BNode; currentId
           <MenuItem icon={ArrowDownToLine} label={labels.rowAfter} onClick={() => { close(); addRow(store, ctx, true); }} />
           <MenuItem icon={ArrowLeftToLine} label={labels.colBefore} onClick={() => { close(); addColumn(store, ctx, false); }} />
           <MenuItem icon={ArrowRightToLine} label={labels.colAfter} onClick={() => { close(); addColumn(store, ctx, true); }} />
+          {ancestor.id !== currentId && canMerge(ctx, "right") && <MenuItem icon={TableCellsMerge} label={labels.mergeRight} onClick={() => { close(); mergeCells(store, ctx, "right"); }} />}
+          {ancestor.id !== currentId && canMerge(ctx, "down") && <MenuItem icon={TableCellsMerge} label={labels.mergeDown} onClick={() => { close(); mergeCells(store, ctx, "down"); }} />}
+          {ancestor.id !== currentId && canSplit(ctx) && <MenuItem icon={TableCellsSplit} label={labels.splitCell} onClick={() => { close(); splitCell(store, ctx); }} />}
           <MenuItem icon={Heading} label={`${labels.headerRow}${hasHeaderRow(ctx.table) ? " ✓" : ""}`} onClick={() => { close(); toggleHeaderRow(store, ctx); }} />
           <MenuItem icon={Trash2} label={labels.deleteRow} danger onClick={() => { close(); deleteRow(store, ctx); }} />
           <MenuItem icon={Trash2} label={labels.deleteColumn} danger onClick={() => { close(); deleteColumn(store, ctx); }} />

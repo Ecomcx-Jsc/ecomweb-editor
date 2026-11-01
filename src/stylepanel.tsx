@@ -3,6 +3,7 @@ import { Link2, Link2Off, Monitor, MoreVertical, Smartphone, Tablet } from "luci
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { EditorLabels } from "./labels";
 import { cx } from "./util";
+import { ColorSwatchInput } from "./colorswatch";
 
 type Style = BlockStyle & Record<string, any>;
 type Section = "typography" | "color" | "spacing" | "border" | "visibility";
@@ -56,14 +57,13 @@ function Seg<T extends string>({ value, options, onChange, label }: { value: T |
 
 /** Ô màu: preset của theme (ô vuông) + bảng chọn màu + bỏ màu. */
 function ColorField({ value, onChange, label, t, colors = COLORS }: { value?: string; onChange(v: string | undefined): void; label: string; t: EditorLabels; colors?: string[] }) {
-  const hex = value && /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000";
   return (
     <div className="cms-ed-color" role="group" aria-label={label}>
       {colors.map((c) => (
         <button key={c} type="button" title={c} aria-label={`${label}: ${c}`} aria-pressed={value === c} className={cx("cms-ed-swatch", value === c && "is-active")}
           style={{ background: `var(--ecx-color-${c})` }} onClick={() => onChange(value === c ? undefined : c)} />
       ))}
-      <input type="color" value={hex} aria-label={`${label}: ${t.customColor}`} onChange={(e) => onChange(e.target.value)} />
+      <ColorSwatchInput value={value} onChange={onChange} label={`${label}: ${t.customColor}`} size={22} />
       {value && <button type="button" className="cms-ed-text-btn" onClick={() => onChange(undefined)}>{t.noColor}</button>}
     </div>
   );
