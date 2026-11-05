@@ -6,6 +6,7 @@ import type { DynamicPost, QueryArgs } from "../core/host";
 import type { BNode } from "../core/model";
 import { makeBlock } from "../core/model";
 import type { BlockEditProps, BlockType } from "../core/registry";
+import { useMsgs } from "../i18n";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const align = (a: Record<string, unknown>): CSSProperties | undefined => (typeof a.textAlign === "string" ? { textAlign: a.textAlign as CSSProperties["textAlign"] } : undefined);
@@ -37,12 +38,12 @@ function NavigationEdit({ block, blockProps }: BlockEditProps) {
   const location = String(block.attrs.location ?? "primary");
   const items = d.menus?.[location];
   const mobile = block.attrs.mobile !== false;
-  const vi = labels.lang === "vi";
+  const t = useMsgs("blocks");
   if (!items?.length) {
     return (
       <div {...merge(blockProps, "ecx-navigation ecx-placeholder-block")}>
-        <span className="ecx-placeholder-title"><Menu className="ecx-icon" /> {vi ? "Menu" : "Menu"} · {location}</span>
-        <span className="ecx-placeholder-summary">{vi ? "Chưa có menu nào gán cho vị trí này — gán ở Giao diện › Menu, hoặc chọn vị trí khác trong bảng cài đặt." : "No menu is assigned to this location — assign one in Appearance › Menus, or pick another location."}</span>
+        <span className="ecx-placeholder-title"><Menu className="ecx-icon" /> {t.menu} · {location}</span>
+        <span className="ecx-placeholder-summary">{t.noMenuIsAssigned}</span>
       </div>
     );
   }
@@ -50,7 +51,7 @@ function NavigationEdit({ block, blockProps }: BlockEditProps) {
   return (
     <div {...merge(blockProps, cx("ecx-navigation", `ecx-navigation-${block.attrs.orientation ?? "horizontal"}`, mobile && "has-mobile"))}>
       <div className="ecx-navigation-items">{menu}</div>
-      {mobile && <details className="ecx-navigation-toggle"><summary aria-label={vi ? "Menu" : "Menu"}>☰</summary>{menu}</details>}
+      {mobile && <details className="ecx-navigation-toggle"><summary aria-label={t.menu}>☰</summary>{menu}</details>}
     </div>
   );
 }
@@ -106,20 +107,21 @@ function CommentsEdit({ blockProps }: BlockEditProps) {
 /** Tiêu đề trang lưu trữ / tìm kiếm (H1 của trang chuyên mục, thẻ, tác giả…). */
 function QueryTitleEdit({ block, blockProps, labels }: BlockEditProps) {
   const d = useDynamic();
-  const vi = labels.lang === "vi";
+  const t = useMsgs("blocks");
   const Tag = `h${Math.min(6, Math.max(1, Number(block.attrs.level) || 1))}` as "h1";
-  const name = d.archive?.title ?? (vi ? "Tên chuyên mục" : "Category name");
-  return <Tag {...merge(blockProps, "ecx-query-title", align(block.attrs))}>{block.attrs.prefix ? (vi ? "Chuyên mục: " : "Category: ") : ""}{name}</Tag>;
+  const name = d.archive?.title ?? (t.categoryName);
+  return <Tag {...merge(blockProps, "ecx-query-title", align(block.attrs))}>{block.attrs.prefix ? (t.category) : ""}{name}</Tag>;
 }
 function TermDescriptionEdit({ block, blockProps, labels }: BlockEditProps) {
+  const t = useMsgs("blocks");
   const d = useDynamic();
-  return <div {...merge(blockProps, "ecx-term-description", align(block.attrs))}>{d.archive?.description || (labels.lang === "vi" ? "Mô tả của chuyên mục / thẻ đang xem." : "The description of the category / tag being viewed.")}</div>;
+  return <div {...merge(blockProps, "ecx-term-description", align(block.attrs))}>{d.archive?.description || (t.theDescriptionOfThe)}</div>;
 }
 function BreadcrumbsEdit({ block, blockProps, labels }: BlockEditProps) {
   const d = useDynamic();
-  const vi = labels.lang === "vi";
+  const t = useMsgs("blocks");
   const sep = String(block.attrs.separator ?? "›");
-  const items = [...(block.attrs.showHome !== false ? [vi ? "Trang chủ" : "Home"] : []), vi ? "Chuyên mục" : "Category", ...(block.attrs.showCurrent !== false ? [d.post?.title || (vi ? "Trang hiện tại" : "Current page")] : [])];
+  const items = [...(block.attrs.showHome !== false ? [t.home] : []), t.category2, ...(block.attrs.showCurrent !== false ? [d.post?.title || (t.currentPage)] : [])];
   return (
     <nav {...(merge(blockProps, "ecx-breadcrumbs") as object)}>
       <ol>{items.map((t, i) => <li key={i}>{i > 0 && <span className="ecx-breadcrumbs-sep" aria-hidden="true">{sep}</span>}{i < items.length - 1 ? <a>{t}</a> : <span>{t}</span>}</li>)}</ol>
@@ -127,18 +129,19 @@ function BreadcrumbsEdit({ block, blockProps, labels }: BlockEditProps) {
   );
 }
 function PostNavigationEdit({ block, blockProps, labels }: BlockEditProps) {
-  const vi = labels.lang === "vi";
+  const t = useMsgs("blocks");
   const titles = block.attrs.showTitle !== false;
   return (
     <nav {...(merge(blockProps, "ecx-post-navigation") as object)}>
-      <a className="ecx-post-navigation-prev"><span>{vi ? "Bài trước" : "Previous"}</span>{titles && <strong>{vi ? "Tiêu đề bài trước" : "Previous post title"}</strong>}</a>
-      <a className="ecx-post-navigation-next"><span>{vi ? "Bài sau" : "Next"}</span>{titles && <strong>{vi ? "Tiêu đề bài sau" : "Next post title"}</strong>}</a>
+      <a className="ecx-post-navigation-prev"><span>{t.previous}</span>{titles && <strong>{t.previousPostTitle}</strong>}</a>
+      <a className="ecx-post-navigation-next"><span>{t.next}</span>{titles && <strong>{t.nextPostTitle}</strong>}</a>
     </nav>
   );
 }
 
 function PostContentEdit({ blockProps }: BlockEditProps) {
   const { labels } = useEditor();
+  const t = useMsgs("blocks");
   const scope = useDocScope();
   const frameId = useEditorState((s) => s.frameId);
   const rootId = useEditorState((s) => s.rootId);
@@ -150,7 +153,7 @@ function PostContentEdit({ blockProps }: BlockEditProps) {
       </div>
     );
   }
-  return <div {...merge(blockProps, "ecx-post-content ecx-content-placeholder")}><FileText className="ecx-icon" /> {labels.lang === "vi" ? "Nội dung bài viết" : "Post content"}</div>;
+  return <div {...merge(blockProps, "ecx-post-content ecx-content-placeholder")}><FileText className="ecx-icon" /> {t.postContent}</div>;
 }
 
 function QueryEdit({ block, blockProps }: BlockEditProps) {
@@ -202,15 +205,15 @@ function PostTemplateEdit({ block, blockProps, editable, labels }: BlockEditProp
   const cols = Math.min(6, Math.max(1, Number(block.attrs.columns) || 3));
   const count = posts ? Math.max(1, Math.min(posts.length, q.perPage, 6)) : 3;
   const current = Math.min(active, count - 1);
-  const vi = labels.lang === "vi";
+  const t = useMsgs("blocks");
   return (
     <ul {...(merge(blockProps, cx("ecx-post-template", grid && "is-grid"), grid ? { display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "1.5rem" } : undefined) as object)} data-ecx-posts={posts ? posts.length : ""}>
-      {posts && !posts.length && <li className="ecx-post ecx-post-none">{vi ? "Không có bài nào khớp thiết lập — khuôn vẫn sửa được:" : "No posts match these settings — the template is still editable:"}</li>}
+      {posts && !posts.length && <li className="ecx-post ecx-post-none">{t.noPostsMatchThese}</li>}
       {Array.from({ length: count }, (_, i) => {
         const post = posts?.[i] ?? null;
         if (i === current) return <li key="edit" className={cx("ecx-post", count > 1 && "is-active")}><LoopPostContext.Provider value={post}><InnerBlocks parent={block} /></LoopPostContext.Provider></li>;
         return (
-          <li key={i} className="ecx-post ecx-post-preview" data-ecx-post-index={i} title={vi ? "Bấm để sửa khuôn trên bài này" : "Click to edit the template on this post"}
+          <li key={i} className="ecx-post ecx-post-preview" data-ecx-post-index={i} title={t.clickToEditThe}
             onMouseDownCapture={(e) => { if (!editable || ui.zoomOut || e.button !== 0) return; e.preventDefault(); e.stopPropagation(); setActive(i); }}>
             <LoopPostContext.Provider value={post}><PreviewBlocks nodes={block.content ?? []} tag={`p${i}`} /></LoopPostContext.Provider>
           </li>

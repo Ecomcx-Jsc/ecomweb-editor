@@ -10,7 +10,7 @@ import { startDragNew } from "../canvas/dnd";
 import { usePrefs } from "../prefs";
 import { onPatternsChange, patternBlocks, registeredPatterns, type Pattern } from "../core/patterns";
 import { useSyncExternalStore } from "react";
-import { enLabels, viLabels } from "../../shared/labels";
+import { labelsLegacy } from "../../shared/labels";
 
 export interface InsertOption {
   key: string;
@@ -269,7 +269,7 @@ function PatternList({ query, onInserted }: { query: string; onInserted?(): void
   const q = norm(query.trim());
   const list = q ? all.filter((p) => norm(`${p.title} ${p.keywords ?? ""} ${p.category}`).includes(q)) : all;
   const cats = [...new Set(list.map((p) => p.category))];
-  const v1 = labels.lang === "vi" ? viLabels : enLabels;
+  const v1 = labelsLegacy(labels.lang);
   const catName = (c: string) => String((v1 as Record<string, unknown>)[`cat_${c}`] ?? c);
   const insert = (p: Pattern) => {
     const nodes = patternBlocks(p);

@@ -1,4 +1,7 @@
 import { normalizeContent } from "@ecomcx/ecomweb-content";
+import { btn, buttons, h, p, text } from "./patterns-kit";
+import { msgs } from "../i18n";
+import { libraryPatterns } from "./patterns-library";
 
 /**
  * Mẫu (pattern): đoạn nội dung dựng sẵn (giới thiệu, tính năng, bảng giá, kêu gọi hành động…) — chèn = chép khối vào bài,
@@ -42,35 +45,6 @@ export function patternNodes(p: Pattern): Array<Record<string, unknown>> {
 // Mẫu có sẵn của lõi (dựng bằng bộ khối cơ bản — mọi theme hiển thị được)
 // ---------------------------------------------------------------------------
 type L = Record<string, string>;
-const vi: L = {
-  hero: "Ảnh bìa giới thiệu", heroD: "Tiêu đề lớn trên ảnh nền + 2 nút", heroTitle: "Tiêu đề thật ấn tượng", heroText: "Một câu ngắn nói rõ bạn mang lại điều gì cho khách hàng.",
-  start: "Bắt đầu ngay", learn: "Tìm hiểu thêm",
-  features: "Ba tính năng", featuresD: "Tiêu đề + 3 cột tính năng", featuresTitle: "Vì sao chọn chúng tôi", f1: "Nhanh", f2: "An toàn", f3: "Dễ dùng", fText: "Mô tả ngắn về lợi ích này.",
-  cta: "Kêu gọi hành động", ctaD: "Khung nổi bật với nút", ctaTitle: "Sẵn sàng bắt đầu?", ctaText: "Đăng ký hôm nay để nhận ưu đãi.", ctaBtn: "Liên hệ ngay",
-  pricing: "Bảng giá 3 gói", pricingD: "3 gói dạng thẻ, có danh sách quyền lợi", basic: "Cơ bản", pro: "Chuyên nghiệp", biz: "Doanh nghiệp", perMonth: "/tháng", choose: "Chọn gói", item: "Quyền lợi",
-  faq: "Câu hỏi thường gặp", faqD: "Tiêu đề + các câu hỏi thu gọn", q: "Câu hỏi", a: "Câu trả lời ngắn gọn.",
-  testimonial: "Cảm nhận khách hàng", testimonialD: "Trích dẫn nổi bật kèm tên", quote: "Dịch vụ tuyệt vời, tôi sẽ giới thiệu cho bạn bè.", who: "Nguyễn Văn A, Giám đốc",
-  intro: "Ảnh + giới thiệu", introD: "Ảnh một bên, chữ và nút bên kia", introTitle: "Về chúng tôi", introText: "Giới thiệu ngắn về công ty, sứ mệnh và giá trị.",
-  contact: "Liên hệ", contactD: "Thông tin liên hệ + mạng xã hội", contactTitle: "Liên hệ với chúng tôi", contactText: "Địa chỉ · Số điện thoại · Email",
-};
-const en: L = {
-  hero: "Hero cover", heroD: "Big heading over a background image + 2 buttons", heroTitle: "A headline that stands out", heroText: "One short sentence about what you offer your customers.",
-  start: "Get started", learn: "Learn more",
-  features: "Three features", featuresD: "Heading + 3 feature columns", featuresTitle: "Why choose us", f1: "Fast", f2: "Secure", f3: "Easy", fText: "A short description of this benefit.",
-  cta: "Call to action", ctaD: "Highlighted box with a button", ctaTitle: "Ready to start?", ctaText: "Sign up today for a special offer.", ctaBtn: "Contact us",
-  pricing: "Pricing — 3 plans", pricingD: "3 plan cards with a feature list", basic: "Basic", pro: "Pro", biz: "Business", perMonth: "/month", choose: "Choose plan", item: "Feature",
-  faq: "FAQ", faqD: "Heading + collapsible questions", q: "Question", a: "A short answer.",
-  testimonial: "Testimonial", testimonialD: "Pullquote with a name", quote: "Great service, I will recommend it to my friends.", who: "Jane Doe, CEO",
-  intro: "Media + intro", introD: "Image on one side, text and button on the other", introTitle: "About us", introText: "A short introduction to the company, its mission and values.",
-  contact: "Contact", contactD: "Contact details + social links", contactTitle: "Get in touch", contactText: "Address · Phone · Email",
-};
-
-const text = (s: string, marks?: Array<{ type: string }>) => (marks ? { type: "text", text: s, marks } : { type: "text", text: s });
-const p = (s: string, attrs?: Record<string, unknown>) => ({ type: "paragraph", ...(attrs ? { attrs } : {}), content: [text(s)] });
-const h = (level: number, s: string, attrs: Record<string, unknown> = {}) => ({ type: "heading", attrs: { level, ...attrs }, content: [text(s)] });
-const btn = (s: string, variant = "primary") => ({ type: "button", attrs: { text: s, href: "#", variant } });
-const buttons = (align: string, ...list: object[]) => ({ type: "buttons", attrs: { align }, content: list });
-
 function corePatterns(t: L): Pattern[] {
   const plan = (name: string, price: string, variant: string) => ({ type: "group", attrs: { blockStyle: "card" }, content: [
     h(3, name), h(2, price, { style: { fontSize: { base: "2xl" } } }),
@@ -107,11 +81,11 @@ function corePatterns(t: L): Pattern[] {
 
 let coreLocale: string | null = null;
 /** Mẫu có sẵn của lõi (gọi lại với ngôn ngữ khác để đổi chữ trong mẫu). */
-export function registerCorePatterns(locale: "vi" | "en" = "vi") {
+export function registerCorePatterns(locale = "vi") {
   if (coreLocale === locale) return;
   coreLocale = locale;
-  for (const pattern of corePatterns(locale === "en" ? en : vi)) patterns.set(pattern.name, pattern);
+  for (const pattern of [...corePatterns(msgs("patterns", locale)), ...libraryPatterns(locale)]) patterns.set(pattern.name, pattern);
   changed();
 }
 
-export const PATTERN_CATEGORIES = ["hero", "features", "cta", "pricing", "testimonials", "faq", "team", "contact", "text", "gallery", "header", "footer"];
+export const PATTERN_CATEGORIES = ["hero", "features", "stats", "steps", "cta", "pricing", "testimonials", "faq", "team", "logos", "contact", "text", "gallery", "header", "footer"];

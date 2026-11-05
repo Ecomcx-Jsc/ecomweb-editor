@@ -5,34 +5,12 @@ import {
 } from "lucide-react";
 import type { ComponentType } from "react";
 import type { BlockEditProps } from "./blocks";
+import { messages } from "../i18n";
 import { registerBlock } from "./blocks";
 import { registerEditorExtension } from "./registry";
 
-type Dict = Record<string, string>;
-const vi: Dict = {
-  spacer: "Khoảng trống", buttons: "Nhóm nút", cover: "Ảnh bìa", mediaText: "Ảnh + chữ", pullquote: "Trích dẫn nổi bật", details: "Chi tiết (thu gọn)",
-  customHtml: "HTML tuỳ chỉnh", socialLinks: "Mạng xã hội", tableOfContents: "Mục lục", preformatted: "Văn bản định dạng sẵn",
-  height: "Chiều cao (preset hoặc 48px)", align: "Căn", left: "Trái", center: "Giữa", right: "Phải", "space-between": "Dàn đều", image: "Ảnh",
-  alt: "Mô tả ảnh (alt)", overlay: "Màu phủ", opacity: "Độ đậm lớp phủ (%)", minHeight: "Cao tối thiểu", contentAlign: "Vị trí nội dung",
-  top: "Trên", bottom: "Dưới", fixed: "Ảnh nền đứng yên khi cuộn", position: "Vị trí ảnh", width: "Độ rộng ảnh (%)", verticalAlign: "Căn dọc",
-  stack: "Xếp dọc trên điện thoại", citation: "Nguồn trích dẫn", summary: "Tiêu đề (bấm để mở)", open: "Mở sẵn", html: "Mã HTML",
-  size: "Cỡ", showLabels: "Hiện tên mạng cạnh biểu tượng", small: "Nhỏ", medium: "Vừa", large: "Lớn", title: "Tiêu đề", maxLevel: "Đến cấp tiêu đề",
-  pickImage: "Chọn ảnh", replaceImage: "Thay ảnh", removeImage: "Bỏ ảnh", addLink: "Thêm liên kết", service: "Mạng", url: "Đường dẫn",
-  htmlHint: "HTML chỉ chạy trên website; người không có quyền HTML không lọc sẽ bị lọc khi lưu.",
-  tocHint: "Tự tạo từ các tiêu đề trong bài", summaryPlaceholder: "Bấm để xem thêm",
-};
-const en: Dict = {
-  spacer: "Spacer", buttons: "Buttons", cover: "Cover", mediaText: "Media & text", pullquote: "Pullquote", details: "Details",
-  customHtml: "Custom HTML", socialLinks: "Social links", tableOfContents: "Table of contents", preformatted: "Preformatted",
-  height: "Height (preset or 48px)", align: "Alignment", left: "Left", center: "Center", right: "Right", "space-between": "Space between", image: "Image",
-  alt: "Alt text", overlay: "Overlay color", opacity: "Overlay opacity (%)", minHeight: "Min height", contentAlign: "Content position",
-  top: "Top", bottom: "Bottom", fixed: "Fixed background", position: "Media position", width: "Media width (%)", verticalAlign: "Vertical align",
-  stack: "Stack on mobile", citation: "Citation", summary: "Summary (click to open)", open: "Open by default", html: "HTML",
-  size: "Size", showLabels: "Show names next to icons", small: "Small", medium: "Medium", large: "Large", title: "Title", maxLevel: "Up to heading level",
-  pickImage: "Choose image", replaceImage: "Replace image", removeImage: "Remove image", addLink: "Add link", service: "Service", url: "URL",
-  htmlHint: "HTML runs only on the website; it is filtered on save for people without the unfiltered HTML permission.",
-  tocHint: "Built from the headings in the post", summaryPlaceholder: "Click to read more",
-};
+
+
 
 export const SOCIAL_SERVICES = ["facebook", "x", "instagram", "youtube", "tiktok", "linkedin", "zalo", "github", "threads", "pinterest", "telegram", "messenger", "email", "website"];
 
@@ -115,16 +93,16 @@ export const Preformatted = Node.create({
 let registered: string | null = null;
 
 /** Bộ khối cơ bản (@ecomcx/ecomweb-content 1.9) cho mọi trình soạn — gọi lại với ngôn ngữ khác để đổi nhãn. */
-export function registerBasicBlocks(locale: "vi" | "en" = "vi") {
+export function registerBasicBlocks(locale = "vi") {
   if (registered === locale) return;
   registered = locale;
-  const dict = locale === "en" ? en : vi;
-  const t = (k: string) => dict[k] ?? k;
+  const dict = messages("legacyBasic", locale);
+  const t = (k: string) => { const v = dict[k]; return typeof v === "string" ? v : k; };
   type Spec = [string, LucideIcon, "none" | "blocks" | "inline", Record<string, BlockAttrSpec>, ComponentType<BlockEditProps> | undefined, (() => Array<Record<string, unknown>>) | undefined];
   const specs: Spec[] = [
     ["spacer", MoveVertical, "none", { height: s("height", { default: "lg" }) }, SpacerEdit, undefined],
     ["buttons", RectangleHorizontal, "blocks", { align: enumOf("align", ["left", "center", "right", "space-between"]) }, undefined,
-      () => [{ type: "button", attrs: { text: locale === "en" ? "Button" : "Nút", variant: "primary" } }, { type: "button", attrs: { text: locale === "en" ? "Learn more" : "Tìm hiểu", variant: "outline" } }]],
+      () => [{ type: "button", attrs: { text: t("initialButton"), variant: "primary" } }, { type: "button", attrs: { text: t("initialButton2"), variant: "outline" } }]],
     ["cover", ImageIcon, "blocks", { ...image, overlay: s("overlay", { control: "color" }), opacity: i("opacity", { min: 0, max: 100, default: 50 }),
       minHeight: s("minHeight", { default: "400px" }), contentAlign: enumOf("contentAlign", ["top", "center", "bottom"], "center"), fixed: b("fixed", { default: false }) }, CoverEdit,
       () => [{ type: "heading", attrs: { level: 2, textAlign: "center" } }]],
@@ -137,7 +115,7 @@ export function registerBasicBlocks(locale: "vi" | "en" = "vi") {
     ["tableOfContents", ListTree, "none", { title: s("title"), maxLevel: i("maxLevel", { min: 2, max: 4, default: 3 }) }, tocEdit(t), undefined],
   ];
   for (const [name, icon, content, attributes, edit, initialContent] of specs) {
-    const def = defineBlock({ name, title: name, keywords: `${vi[name]} ${en[name]}`, content, attributes });
+    const def = defineBlock({ name, title: name, keywords: [...new Set(["vi", "en", locale].map((l) => String(messages("legacyBasic", l)[name] ?? "")))].join(" "), content, attributes });
     registerBlock(def, { icon, translate: t, edit, initialContent });
   }
   registerEditorExtension({

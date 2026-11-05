@@ -5,42 +5,14 @@ import {
 } from "lucide-react";
 import { useSyncExternalStore, type ReactNode } from "react";
 import type { BlockEditProps } from "./blocks";
+import { messages } from "../i18n";
 import { registerBlock } from "./blocks";
 
 /** Khối động (lấy dữ liệu lúc hiển thị) — dùng trong Trình dựng và trang dựng bằng khối. */
 export const DYNAMIC_BLOCKS = new Set<string>(DYNAMIC_NODES);
 
-type Dict = Record<string, string>;
-const vi: Dict = {
-  siteTitle: "Tên website", siteLogo: "Logo", siteTagline: "Khẩu hiệu", navigation: "Menu", search: "Tìm kiếm", languageSwitcher: "Chọn ngôn ngữ",
-  copyright: "Bản quyền", postTitle: "Tiêu đề bài/trang", postContent: "Nội dung bài/trang", postExcerpt: "Sapo", featuredImage: "Ảnh đại diện",
-  postDate: "Ngày đăng", postAuthor: "Tác giả", postTerms: "Chuyên mục / thẻ", comments: "Bình luận", queryTitle: "Tiêu đề trang lưu trữ", termDescription: "Mô tả chuyên mục", breadcrumbs: "Breadcrumb", postNavigation: "Bài trước / bài sau", query: "Danh sách bài",
-  postTemplate: "Khuôn mỗi bài", pagination: "Phân trang", queryEmpty: "Khi không có bài", templatePart: "Phần dùng chung",
-  level: "Cấp tiêu đề (0 = chữ thường)", link: "Có liên kết", textAlign: "Căn chữ", width: "Rộng (px)", location: "Vị trí menu",
-  orientation: "Hướng", horizontal: "Ngang", vertical: "Dọc", mobile: "Nút menu trên điện thoại", placeholder: "Chữ gợi ý", buttonText: "Chữ trên nút",
-  text: "Tên chủ sở hữu (trống = tên website)", moreText: "Chữ “đọc tiếp”", size: "Cỡ ảnh", aspect: "Tỉ lệ khung", avatar: "Hiện ảnh đại diện",
-  taxonomy: "Phân loại (category, post_tag…)", separator: "Dấu ngăn cách", inherit: "Dùng danh sách của trang đang xem", postType: "Loại bài",
-  perPage: "Số bài", category: "Chuyên mục (slug)", tag: "Thẻ (slug)", orderBy: "Sắp xếp theo", date: "Ngày", title: "Tiêu đề", menu_order: "Thứ tự",
-  order: "Thứ tự", desc: "Mới trước", asc: "Cũ trước", layout: "Bố cục", list: "Danh sách", grid: "Lưới", columns: "Số cột",
-  slug: "Phần (slug, vd header)", tagName: "Thẻ HTML", left: "Trái", center: "Giữa", right: "Phải", justify: "Đều",
-  inheritSummary: "danh sách của trang", partSummary: "phần “{v}”", menuSummary: "vị trí “{v}”",
-  searchPlaceholder: "Tìm kiếm…", commentsCount: "Bình luận ({v})", noMenu: "(chưa gán menu cho vị trí này)",
-};
-const en: Dict = {
-  siteTitle: "Site title", siteLogo: "Logo", siteTagline: "Tagline", navigation: "Navigation", search: "Search", languageSwitcher: "Language switcher",
-  copyright: "Copyright", postTitle: "Post/page title", postContent: "Post/page content", postExcerpt: "Excerpt", featuredImage: "Featured image",
-  postDate: "Date", postAuthor: "Author", postTerms: "Categories / tags", comments: "Comments", queryTitle: "Archive title", termDescription: "Term description", breadcrumbs: "Breadcrumbs", postNavigation: "Previous / next post", query: "Post list",
-  postTemplate: "Post template", pagination: "Pagination", queryEmpty: "No results", templatePart: "Template part",
-  level: "Heading level (0 = text)", link: "Link", textAlign: "Text align", width: "Width (px)", location: "Menu location",
-  orientation: "Orientation", horizontal: "Horizontal", vertical: "Vertical", mobile: "Menu button on mobile", placeholder: "Placeholder", buttonText: "Button text",
-  text: "Owner (empty = site title)", moreText: "“Read more” text", size: "Image size", aspect: "Aspect ratio", avatar: "Show avatar",
-  taxonomy: "Taxonomy (category, post_tag…)", separator: "Separator", inherit: "Use the list of the current page", postType: "Post type",
-  perPage: "Posts", category: "Category (slug)", tag: "Tag (slug)", orderBy: "Order by", date: "Date", title: "Title", menu_order: "Menu order",
-  order: "Order", desc: "Newest first", asc: "Oldest first", layout: "Layout", list: "List", grid: "Grid", columns: "Columns",
-  slug: "Part (slug, e.g. header)", tagName: "HTML tag", left: "Left", center: "Center", right: "Right", justify: "Justify",
-  inheritSummary: "list of the page", partSummary: "part “{v}”", menuSummary: "location “{v}”",
-  searchPlaceholder: "Search…", commentsCount: "Comments ({v})", noMenu: "(no menu assigned to this location)",
-};
+
+
 
 const s = (label: string, extra: Partial<BlockAttrSpec> = {}): BlockAttrSpec => ({ type: "string", label, ...extra });
 const i = (label: string, extra: Partial<BlockAttrSpec> = {}): BlockAttrSpec => ({ type: "integer", label, ...extra });
@@ -147,13 +119,13 @@ function summary(name: string, t: (k: string) => string) {
 let registered: string | null = null;
 
 /** Đăng ký khối động cho mọi trình soạn (gọi một lần; đổi ngôn ngữ → gọi lại). Mục chèn chỉ hiện khi Editor có `dynamicBlocks`. */
-export function registerDynamicBlocks(locale: "vi" | "en" = "vi") {
+export function registerDynamicBlocks(locale = "vi") {
   if (registered === locale) return;
   registered = locale;
-  const dict = locale === "en" ? en : vi;
-  const t = (k: string) => dict[k] ?? k;
+  const dict = messages("legacyDynamic", locale);
+  const t = (k: string) => { const v = dict[k]; return typeof v === "string" ? v : k; };
   for (const [name, icon, content, attributes] of SPECS) {
-    const def: BlockDefinition = defineBlock({ name, title: name, keywords: `${vi[name]} ${en[name]}`, content, attributes });
+    const def: BlockDefinition = defineBlock({ name, title: name, keywords: [...new Set(["vi", "en", locale].map((l) => String(messages("legacyDynamic", l)[name] ?? "")))].join(" "), content, attributes });
     const initialContent = name === "query"
       ? () => [{ type: "postTemplate", attrs: { layout: "list", columns: 3 }, content: [{ type: "postTitle", attrs: { level: 2, link: true } }, { type: "postExcerpt" }] }, { type: "pagination" }]
       : undefined;

@@ -1,6 +1,7 @@
 export { Editor, type EditorProps } from "./legacy/editor";
 export { contentToEditor, editorToContent } from "./legacy/content";
-export { viLabels, enLabels, type EditorLabels } from "./shared/labels";
+export { viLabels, enLabels, labelsLegacy, type EditorLabels } from "./shared/labels";
+export { registerLocale, availableLocales, type Messages } from "./i18n";
 export { imageAttrs, galleryImage } from "./legacy/media";
 export { CmsImage, Gallery, VideoNode, AudioNode, FileNode } from "./legacy/nodes";
 export { registerEditorExtension, unregisterEditorExtension, registeredExtensions } from "./legacy/registry";
@@ -27,4 +28,5 @@ export { registerPattern, unregisterPattern, registeredPatterns, registerCorePat
 export { insertPattern } from "./legacy/insert-pattern";
 export { SyncedPattern, refreshSyncedPatterns, type PatternHost } from "./legacy/synced";
 export { registerBlockPanel, unregisterBlockPanel, type BlockPanel, type BlockPanelProps } from "./legacy/panels";
+export { storeAnimation as registerAnimation, dropAnimation as unregisterAnimation, type MotionEffect } from "./shared/animation-store";
 export type { Editor as TiptapEditor } from "@tiptap/core";

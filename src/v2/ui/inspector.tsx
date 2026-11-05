@@ -5,13 +5,15 @@ import { useState, useSyncExternalStore } from "react";
 import { blockPanelsFor, onBlockPanelsChange } from "../../shared/panel-store";
 import { useEditor, useEditorState } from "../context";
 import type { BNode } from "../core/model";
-import { ATTR_LABELS, AttrForm, Field, cx } from "./attr-form";
+import { AttrForm, Field, attrName, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { StyleTab } from "./style-tab";
+import { useMsgs } from "../i18n";
 
 /** Bảng cài đặt của khối đang chọn: thẻ khối, tab Cài đặt (form + phần riêng của khối), tab Kiểu dáng. */
 export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<{ name: string; label: string }>> }) {
   const { store, registry, labels } = useEditor();
+  const t = useMsgs("controls");
   const sel = useEditorState((s) => s.selection);
   useEditorState((s) => s.revision);
   const [tab, setTab] = useState<"settings" | "style">("settings");
@@ -38,7 +40,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
         <>
           <div className="ecx-tabs" role="tablist">
             <button type="button" role="tab" aria-selected={tab === "settings"} className={cx(tab === "settings" && "is-active")} onClick={() => setTab("settings")}>{labels.settings}</button>
-            {type?.supports?.style !== false && !store.isContentOnly(first.id) && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}>{labels.lang === "vi" ? "Kiểu dáng" : "Styles"}</button>}
+            {type?.supports?.style !== false && !store.isContentOnly(first.id) && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}>{t.styles}</button>}
           </div>
           {tab === "settings" ? (
             <div className="ecx-panel">
@@ -48,9 +50,9 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
               {nodes.length === 1 && bindable?.length && <BindingsPanel block={first} bindable={bindable} onChange={(b) => setAttrs({ bindings: b })} />}
               {nodes.length === 1 && (
                 <details className="ecx-advanced">
-                  <summary>{labels.lang === "vi" ? "Nâng cao" : "Advanced"}</summary>
-                  <Field label={ATTR_LABELS.anchor[labels.lang === "vi" ? 0 : 1]}><input className="ecx-input" value={String(first.attrs.anchor ?? "")} onChange={(e) => setAttrs({ anchor: e.target.value.replace(/[^\w-]/g, "") || undefined })} /></Field>
-                  <Field label={ATTR_LABELS.className[labels.lang === "vi" ? 0 : 1]}><input className="ecx-input" value={String(first.attrs.className ?? "")} onChange={(e) => setAttrs({ className: e.target.value || undefined })} /></Field>
+                  <summary>{t.advanced}</summary>
+                  <Field label={attrName("anchor", labels.lang) ?? "anchor"}><input className="ecx-input" value={String(first.attrs.anchor ?? "")} onChange={(e) => setAttrs({ anchor: e.target.value.replace(/[^\w-]/g, "") || undefined })} /></Field>
+                  <Field label={attrName("className", labels.lang) ?? "className"}><input className="ecx-input" value={String(first.attrs.className ?? "")} onChange={(e) => setAttrs({ className: e.target.value || undefined })} /></Field>
                 </details>
               )}
             </div>

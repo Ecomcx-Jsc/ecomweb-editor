@@ -3,6 +3,7 @@ import { Check, ChevronRight, Code2, Copy, Keyboard, MoreVertical, SlidersHorizo
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { serializeBlocks } from "../core/clipboard";
 import { useEditor, useEditorState } from "../context";
+import { useMsgs } from "../i18n";
 import { blocksFromDoc, type BNode } from "../core/model";
 import { usePrefs, type EditorPrefs } from "../prefs";
 import { blockLabel } from "./list-view";
@@ -169,19 +170,11 @@ export function PreferencesModal({ onClose }: { onClose(): void }) {
 /** Bảng phím tắt. */
 export function ShortcutsModal({ onClose }: { onClose(): void }) {
   const { labels } = useEditor();
-  const vi = labels.lang === "vi";
-  const rows: Array<[string, string]> = vi ? [
-    [`${MOD}+Z / ${MOD}+⇧+Z`, "Hoàn tác / làm lại (xuyên header, footer)"], [`${MOD}+S`, "Lưu mọi phần đã đổi"], ["/", "Chèn khối (gõ ở đoạn trống)"],
-    ["Enter / ⇧+Enter", "Tách khối / xuống dòng trong khối"], ["Tab / ⇧+Tab", "Lồng / đưa mục danh sách ra"], ["Esc", "Chọn cả khối"],
-    [`${MOD}+A ×2`, "Chọn mọi khối"], [`${MOD}+⇧+D`, "Nhân bản khối"], ["⇧+⌥+Z", "Xoá khối"], [`${MOD}+⌥+T / Y`, "Thêm khối phía trên / dưới"],
-    [`${MOD}+⇧+⌥+T / Y`, "Đưa khối lên / xuống"], ["Alt+F10", "Lên thanh công cụ của khối"], [`${MOD}+B / I / U`, "Đậm / nghiêng / gạch chân"],
-    [`${MOD}+K`, "Liên kết"], [`${MOD}+E`, "Mã trong dòng"], ["## · - · 1. · > · ``` · ---", "Gõ tắt: tiêu đề, danh sách, trích dẫn, mã, đường kẻ"],
-  ] : [
-    [`${MOD}+Z / ${MOD}+⇧+Z`, "Undo / redo (across header and footer)"], [`${MOD}+S`, "Save every changed part"], ["/", "Insert a block (in an empty paragraph)"],
-    ["Enter / ⇧+Enter", "Split block / line break"], ["Tab / ⇧+Tab", "Indent / outdent list item"], ["Esc", "Select the whole block"],
-    [`${MOD}+A ×2`, "Select all blocks"], [`${MOD}+⇧+D`, "Duplicate"], ["⇧+⌥+Z", "Delete block"], [`${MOD}+⌥+T / Y`, "Insert before / after"],
-    [`${MOD}+⇧+⌥+T / Y`, "Move up / down"], ["Alt+F10", "Go to the block toolbar"], [`${MOD}+B / I / U`, "Bold / italic / underline"],
-    [`${MOD}+K`, "Link"], [`${MOD}+E`, "Inline code"], ["## · - · 1. · > · ``` · ---", "Shortcuts: heading, list, quote, code, separator"],
+  const t = useMsgs("shortcuts");
+  const rows: Array<[string, string]> = [
+    [`${MOD}+Z / ${MOD}+⇧+Z`, t.undo], [`${MOD}+S`, t.save], ["/", t.insert], ["Enter / ⇧+Enter", t.split], ["Tab / ⇧+Tab", t.indent], ["Esc", t.esc],
+    [`${MOD}+A ×2`, t.selectAll], [`${MOD}+⇧+D`, t.duplicate], ["⇧+⌥+Z", t.remove], [`${MOD}+⌥+T / Y`, t.around], [`${MOD}+⇧+⌥+T / Y`, t.move],
+    ["Alt+F10", t.toolbar], [`${MOD}+B / I / U`, t.marks], [`${MOD}+K`, t.link], [`${MOD}+E`, t.code], ["## · - · 1. · > · ``` · ---", t.markdown],
   ];
   return (
     <Modal title={labels.shortcuts} onClose={onClose}>

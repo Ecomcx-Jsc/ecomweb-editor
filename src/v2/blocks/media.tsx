@@ -8,6 +8,8 @@ import { BoundText, useBindingPreview } from "../ui/bindings";
 import { ImageHandle } from "./resize";
 import { MediaActions, mediaAttrs, useFileDrop } from "./media-actions";
 import type { MediaItem, MediaKind } from "../../shared/types";
+import { useMsgs } from "../i18n";
+import { format } from "../../i18n";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const safe = (u: unknown) => (typeof u === "string" && isSafeUrl(u) ? u : "");
@@ -79,14 +81,14 @@ function YoutubeEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const m = String(block.attrs.src ?? "").match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
   const [draft, setDraft] = useState("");
   if (!m) {
-    const vi = labels.lang === "vi";
+    const t = useMsgs("blocks");
     return (
       <div {...blockProps} className={cx(blockProps.className, "ecx-media-placeholder")}>
         <span className="ecx-placeholder-title"><Play className="ecx-icon" />YouTube</span>
-        <p className="ecx-placeholder-hint">{vi ? "Dán đường dẫn video YouTube (youtube.com/watch?v=… hoặc youtu.be/…)." : "Paste a YouTube link (youtube.com/watch?v=… or youtu.be/…)."}</p>
+        <p className="ecx-placeholder-hint">{t.pasteAYoutubeLink}</p>
         <form className="ecx-media-actions" contentEditable={false} onMouseDown={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (/(?:v=|youtu\.be\/|embed\/)[\w-]{11}/.test(draft)) setAttrs({ src: draft.trim() }); }}>
           <input className="ecx-input" type="url" placeholder="https://youtu.be/…" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="YouTube URL" />
-          <button type="submit" className="ecx-btn ecx-btn-primary">{vi ? "Nhúng" : "Embed"}</button>
+          <button type="submit" className="ecx-btn ecx-btn-primary">{t.embed}</button>
         </form>
       </div>
     );
@@ -143,13 +145,14 @@ type SocialLink = { service: string; url: string; label?: string };
 const linksOf = (a: Record<string, unknown>) => (Array.isArray(a.links) ? a.links : []) as SocialLink[];
 
 function SocialEdit({ block, blockProps, labels }: BlockEditProps) {
+  const t = useMsgs("blocks");
   const links = linksOf(block.attrs).filter((l) => l.url);
   const a = block.attrs;
   if (!links.length) {
     return (
       <div {...(blockProps as object)} className={cx(blockProps.className, "ecx-placeholder-block")}>
-        <span className="ecx-placeholder-title"><Share2 className="ecx-icon" /> {labels.lang === "vi" ? "Mạng xã hội" : "Social links"}</span>
-        <span className="ecx-placeholder-summary">{labels.lang === "vi" ? "Thêm liên kết ở bảng cài đặt bên phải." : "Add links in the settings panel."}</span>
+        <span className="ecx-placeholder-title"><Share2 className="ecx-icon" /> {t.socialLinks}</span>
+        <span className="ecx-placeholder-summary">{t.addLinksInThe}</span>
       </div>
     );
   }
@@ -163,38 +166,39 @@ function SocialEdit({ block, blockProps, labels }: BlockEditProps) {
 /** Danh sách liên kết mạng xã hội trong bảng cài đặt: chọn mạng, dán địa chỉ, đổi thứ tự, xoá. */
 function SocialInspector({ attrs, setAttrs, labels }: BlockEditProps) {
   const links = linksOf(attrs);
-  const vi = labels.lang === "vi";
+  const t = useMsgs("blocks");
   const save = (next: SocialLink[]) => setAttrs({ links: next });
   const patch = (i: number, p: Partial<SocialLink>) => save(links.map((l, k) => (k === i ? { ...l, ...p } : l)));
   const move = (i: number, d: -1 | 1) => { const n = [...links]; [n[i], n[i + d]] = [n[i + d], n[i]]; save(n); };
   return (
-    <div className="ecx-social-editor" role="group" aria-label={vi ? "Liên kết mạng xã hội" : "Social links"}>
-      <span className="ecx-field-label">{vi ? "Liên kết" : "Links"}</span>
+    <div className="ecx-social-editor" role="group" aria-label={t.socialLinks2}>
+      <span className="ecx-field-label">{t.links}</span>
       {links.map((l, i) => (
         <div key={i} className="ecx-social-row" data-social-row={i}>
-          <select className="ecx-input" aria-label={vi ? `Mạng ${i + 1}` : `Network ${i + 1}`} value={l.service} onChange={(e) => patch(i, { service: e.target.value })}>
+          <select className="ecx-input" aria-label={format(t.network, { n: i + 1 })} value={l.service} onChange={(e) => patch(i, { service: e.target.value })}>
             {SOCIAL.map(([v, n]) => <option key={v} value={v}>{n}</option>)}
           </select>
-          <input className="ecx-input" type="url" aria-label={vi ? `Địa chỉ ${i + 1}` : `URL ${i + 1}`} placeholder={l.service === "email" ? "mailto:ban@congty.vn" : "https://…"} value={l.url}
+          <input className="ecx-input" type="url" aria-label={format(t.urlN, { n: i + 1 })} placeholder={l.service === "email" ? "mailto:ban@congty.vn" : "https://…"} value={l.url}
             aria-invalid={!!l.url && !isSafeUrl(l.url) || undefined} onChange={(e) => patch(i, { url: e.target.value.trim() })} />
           <span className="ecx-social-row-tools">
-            <button type="button" className="ecx-tool" aria-label={vi ? "Lên" : "Up"} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="ecx-icon ecx-icon-sm" /></button>
-            <button type="button" className="ecx-tool" aria-label={vi ? "Xuống" : "Down"} disabled={i === links.length - 1} onClick={() => move(i, 1)}><ArrowDown className="ecx-icon ecx-icon-sm" /></button>
-            <button type="button" className="ecx-tool" aria-label={vi ? "Xoá liên kết" : "Remove link"} onClick={() => save(links.filter((_, k) => k !== i))}><X className="ecx-icon ecx-icon-sm" /></button>
+            <button type="button" className="ecx-tool" aria-label={t.up} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="ecx-icon ecx-icon-sm" /></button>
+            <button type="button" className="ecx-tool" aria-label={t.down} disabled={i === links.length - 1} onClick={() => move(i, 1)}><ArrowDown className="ecx-icon ecx-icon-sm" /></button>
+            <button type="button" className="ecx-tool" aria-label={t.removeLink} onClick={() => save(links.filter((_, k) => k !== i))}><X className="ecx-icon ecx-icon-sm" /></button>
           </span>
         </div>
       ))}
       <button type="button" className="ecx-btn" onClick={() => save([...links, { service: SOCIAL.find(([v]) => !links.some((l) => l.service === v))?.[0] ?? "website", url: "" }])}>
-        <Plus className="ecx-icon ecx-icon-sm" /> {vi ? "Thêm liên kết" : "Add link"}
+        <Plus className="ecx-icon ecx-icon-sm" /> {t.addLink}
       </button>
     </div>
   );
 }
 
 function TocEdit({ block, blockProps, labels }: BlockEditProps) {
+  const t = useMsgs("blocks");
   return (
     <nav {...(blockProps as object)} className={cx(blockProps.className, "ecx-toc")}>
-      <p className="ecx-toc-title">{String(block.attrs.title || (labels.lang === "vi" ? "Mục lục" : "Contents"))}</p>
+      <p className="ecx-toc-title">{String(block.attrs.title || (t.contents))}</p>
       <TocItems maxLevel={Math.min(4, Math.max(2, Number(block.attrs.maxLevel) || 3))} />
     </nav>
   );

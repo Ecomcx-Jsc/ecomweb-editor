@@ -1,12 +1,14 @@
 import { normalizeStyle, type BlockStyle, type Device } from "@ecomcx/ecomweb-content";
 import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Monitor, Smartphone, Tablet } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { enLabels, viLabels, type EditorLabels } from "../../shared/labels";
+import { labelsLegacy, type EditorLabels } from "../../shared/labels";
 import { useEditor } from "../context";
 import { ColorInput } from "./color-field";
 import { LayoutEffectsPanel } from "./layout-panel";
+import { MotionPanel } from "./motion-panel";
 import { Section, Seg, cx } from "./style-controls";
 import { SpacingControl, UnitInput } from "./unit-controls";
+import { useMsgs } from "../i18n";
 
 /**
  * Tab Kiểu dáng của khối (attrs.style, @ecomcx/ecomweb-content): một giao diện thống nhất cho chữ, màu, khoảng cách,
@@ -42,7 +44,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   variants?: Array<{ name: string; label: string }>; variant?: string | null; onVariantChange?(v: string | null): void;
 }) {
   const { host, labels } = useEditor();
-  const t = labels.lang === "vi" ? viLabels : enLabels;
+  const t = labelsLegacy(labels.lang);
+  const ct = useMsgs("controls");
   const presets = host.presets;
   const sizes = presets?.fontSizes ? Object.keys(presets.fontSizes) : SIZES;
   const spaces = presets?.spacing ? ["0", ...Object.keys(presets.spacing)] : SPACES;
@@ -133,8 +136,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
       <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
         more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>
           row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}</>}>
-        <SpacingControl label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: labels.lang === "vi" ? "dọc" : "vertical", horizontal: labels.lang === "vi" ? "ngang" : "horizontal", link: t.linkSides, unlink: t.unlinkSides }} />
-        <SpacingControl label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: labels.lang === "vi" ? "dọc" : "vertical", horizontal: labels.lang === "vi" ? "ngang" : "horizontal", link: t.linkSides, unlink: t.unlinkSides }} />
+        <SpacingControl label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, link: t.linkSides, unlink: t.unlinkSides }} />
+        <SpacingControl label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, link: t.linkSides, unlink: t.unlinkSides }} />
       </Section>
 
       <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>
@@ -146,6 +149,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
       </Section>
 
       <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device} />
+
+      <MotionPanel type={type} style={raw} onChange={onChange} />
 
       <Section title={t.style_visibility} modified={has(["hide"])} onReset={() => reset(["hide"])} defaultOpen={has(["hide"])}>
         {(["desktop", "tablet", "mobile"] as const).map((d) => (

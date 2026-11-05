@@ -6,6 +6,8 @@
 src/
   index.ts        Điểm vào 1.x (`@ecomcx/ecomweb-editor`)
   legacy/         Trình soạn 1.x dựa trên TipTap (chỉ sửa lỗi, không thêm tính năng)
+  i18n/           Đa ngôn ngữ: registerLocale, messages, msgs, format (không phụ thuộc React)
+  locales/        Chữ giao diện theo ngôn ngữ: vi/, en/ — mỗi nhóm chữ một file
   shared/         Dùng chung 1.x + v2, không phụ thuộc TipTap hay v2: đăng ký khối/panel/mẫu của plugin, bảng kiểu dáng, nhãn
   v2/             Trình soạn cây khối (`@ecomcx/ecomweb-editor/v2`)
     core/         Dữ liệu + thao tác thuần: model, ops, structure, store, tables, clipboard, bindings, patterns, host (kiểu)
@@ -13,7 +15,7 @@ src/
     canvas/       Khung soạn iframe: canvas, block-list, dnd, canvas-css
     ui/           Giao diện quanh khung soạn: toolbar, inserter, inspector, attr-form, list-view, options, các panel
     blocks/       Giao diện từng loại khối lõi + khối plugin 1.x (compat)
-    context.tsx   prefs.ts   labels.ts      Nền chung cho mọi tầng
+    context.tsx   prefs.ts   labels.ts   i18n.ts      Nền chung cho mọi tầng (i18n.ts: hook useMsgs)
     editor.tsx    index.ts                  Ghép mọi thứ (EditorProvider, BlockEditor)
 ```
 
@@ -26,7 +28,7 @@ src/
 3. **Định dạng lưu là của `@ecomcx/ecomweb-content`.** Trình soạn không tự đặt định dạng; thuộc tính mới phải có trong content (TS + C#) trước.
 4. **Ứng dụng nói chuyện với trình soạn qua `EditorHost`** (media, tài liệu lồng, dữ liệu động, truy vấn bài, CSS website…). Trình soạn không gọi API của CMS.
 5. **Plugin mở rộng qua registry** (khối, panel, mẫu, nguồn gắn dữ liệu), không sửa mã lõi.
-6. **Chữ hiển thị đi qua `labels`** (vi/en). Thông báo cho lập trình viên (lỗi console, script) bằng tiếng Anh.
+6. **Chữ hiển thị nằm trong `src/locales/<mã>/`, không trong mã** — đọc qua `labels` (v2 / legacy), `useMsgs("nhóm")` (React) hoặc `msgs("nhóm", lang)` (ngoài React); không so sánh `lang === "vi"`. Thêm chữ = thêm vào cả `vi/` và `en/`. Thông báo cho lập trình viên (lỗi console, script) bằng tiếng Anh.
 
 ## Quy ước
 

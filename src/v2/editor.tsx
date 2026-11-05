@@ -1,7 +1,7 @@
 import type { RichNode } from "@ecomcx/ecomweb-content";
 import { normalizeContent } from "@ecomcx/ecomweb-content";
 import { ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight, ZoomOut } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { coreBlockTypes, registerCoreBlocks } from "./blocks";
 import { registeredPatterns, syncPluginBlocks } from "./blocks/compat";
 import { registerCorePatterns } from "../shared/patterns";
@@ -10,7 +10,8 @@ import { Canvas, type Device } from "./canvas/canvas";
 import { EditorContext, EditorUi, useEditor, useEditorState, useUiTick, type EditorContextValue } from "./context";
 import type { EditorHost } from "./core/host";
 import { InserterPanel, InserterPopover } from "./ui/inserter";
-import { enV2, viV2, type V2Labels } from "./labels";
+import { labelsV2, type V2Labels } from "./labels";
+import { localesVersion, onLocalesChange } from "../i18n";
 import { blocksFromDoc, docFromBlocks, type BNode } from "./core/model";
 import { BlockTypeRegistry } from "./core/registry";
 import { Inspector } from "./ui/inspector";
@@ -50,7 +51,8 @@ export interface EditorProviderProps {
   title?: string;
   host?: EditorHost;
   labels?: Partial<V2Labels>;
-  lang?: "vi" | "en";
+  /** Mã ngôn ngữ giao diện: "vi", "en" hoặc ngôn ngữ đã đăng ký bằng registerLocale. Mặc định "vi". */
+  lang?: string;
   registry?: BlockTypeRegistry;
   /** Cho chèn khối giao diện (tên website, menu, danh sách bài, phần dùng chung). */
   dynamicBlocks?: boolean;
@@ -69,7 +71,8 @@ export interface EditorProviderProps {
 }
 
 export function EditorProvider({ store: given, value, kind, title, host = {}, labels, lang, registry: givenRegistry, dynamicBlocks, frame, prefsStorage, prefs: givenPrefs, onChange, children }: EditorProviderProps) {
-  const base = lang === "en" ? enV2 : viV2;
+  const localeTick = useSyncExternalStore(onLocalesChange, localesVersion, localesVersion);
+  const base = useMemo(() => labelsV2(lang), [lang, localeTick]);
   const allLabels = useMemo(() => ({ ...base, ...labels }), [base, labels]);
   const registry = useMemo(() => {
     if (givenRegistry) return givenRegistry;

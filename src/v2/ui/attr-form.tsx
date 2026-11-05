@@ -3,34 +3,19 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useEditor } from "../context";
 import type { Choice, ChoiceKind } from "../core/host";
 import type { BlockType } from "../core/registry";
-import { DEFAULT_IMAGE_SIZES, hintOf, optionLabel, type AttrHint } from "./attr-hints";
+import { messages } from "../../i18n";
+import { DEFAULT_IMAGE_SIZES, hintOf, hintText, imageSizeLabel, optionLabel, type AttrHint } from "./attr-hints";
 import { ColorInput } from "./color-field";
 
 export const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 
-export const ATTR_LABELS: Record<string, [string, string]> = {
-  level: ["Cấp tiêu đề", "Level"], textAlign: ["Căn chữ", "Text align"], start: ["Bắt đầu từ", "Start at"], language: ["Ngôn ngữ", "Language"],
-  src: ["Ảnh / tệp", "Media"], alt: ["Mô tả ảnh (alt)", "Alt text"], title: ["Tiêu đề", "Title"], caption: ["Chú thích", "Caption"], width: ["Rộng", "Width"],
-  height: ["Cao", "Height"], align: ["Căn", "Align"], size: ["Cỡ", "Size"], href: ["Liên kết", "Link"], target: ["Mở ở", "Open in"], rel: ["rel", "rel"],
-  variant: ["Kiểu", "Variant"], text: ["Chữ", "Text"], background: ["Màu nền", "Background"], textColor: ["Màu chữ", "Text color"], padding: ["Đệm", "Padding"],
-  verticalAlign: ["Căn dọc", "Vertical align"], stack: ["Xếp chồng trên điện thoại", "Stack on mobile"], tone: ["Loại", "Tone"], summary: ["Tóm tắt", "Summary"],
-  open: ["Mở sẵn", "Open by default"], overlay: ["Màu phủ", "Overlay"], opacity: ["Độ mờ phủ", "Overlay opacity"], minHeight: ["Cao tối thiểu", "Min height"],
-  contentAlign: ["Vị trí chữ", "Content position"], fixed: ["Cố định khi cuộn", "Fixed background"], position: ["Vị trí ảnh", "Media position"],
-  columns: ["Số cột", "Columns"], footer: ["Hàng cuối là chân bảng", "Footer row"], html: ["HTML", "HTML"], url: ["Địa chỉ", "URL"], links: ["Liên kết", "Links"],
-  showLabels: ["Hiện tên", "Show labels"], maxLevel: ["Cấp tối đa", "Max level"], location: ["Vị trí menu", "Menu location"], orientation: ["Hướng", "Orientation"],
-  mobile: ["Nút menu điện thoại", "Mobile toggle"], placeholder: ["Chữ gợi ý", "Placeholder"], buttonText: ["Chữ trên nút", "Button text"], link: ["Có liên kết", "Link"],
-  moreText: ["Chữ “đọc tiếp”", "Read more text"], aspect: ["Tỉ lệ khung", "Aspect ratio"], avatar: ["Ảnh đại diện", "Avatar"], taxonomy: ["Phân loại", "Taxonomy"],
-  separator: ["Dấu ngăn", "Separator"], inherit: ["Theo trang đang xem", "Inherit query"], postType: ["Loại bài", "Post type"], perPage: ["Số bài", "Per page"],
-  category: ["Chuyên mục", "Category"], tag: ["Thẻ", "Tag"], orderBy: ["Sắp xếp theo", "Order by"], order: ["Thứ tự", "Order"], layout: ["Bố cục", "Layout"],
-  slug: ["Phần (slug)", "Part (slug)"], tagName: ["Thẻ HTML", "HTML tag"], checked: ["Đã xong", "Done"], poster: ["Ảnh xem trước", "Poster"], download: ["Cho tải về", "Download"],
-  embed: ["Xem ngay trên trang", "Embed"], prefix: ["Hiện “Chuyên mục:” / “Thẻ:” phía trước", "Show “Category:” / “Tag:” prefix"],
-  showHome: ["Có “Trang chủ”", "Show home"], showCurrent: ["Có trang hiện tại", "Show current page"], showTitle: ["Hiện tiêu đề bài", "Show post titles"], anchor: ["Neo (id)", "Anchor"], className: ["Class CSS", "CSS class"],
-};
+/** Tên thuộc tính theo ngôn ngữ (chữ: src/locales/<ngôn ngữ>/attrs.ts, khoá = tên thuộc tính). */
+export const attrName = (name: string, lang: string): string | undefined => { const v = messages("attrs", lang)[name]; return typeof v === "string" ? v : undefined; };
 /** Thuộc tính sửa ở chỗ khác (thanh công cụ, trên khung soạn) hoặc dữ liệu kỹ thuật. */
 const HIDDEN_ATTRS = new Set(["style", "blockStyle", "anchor", "className", "mediaId", "srcset", "webpSrcset", "images", "links", "colwidth", "colspan", "rowspan", "_v", "id"]); // gộp ô: dùng lệnh Gộp / Tách của công cụ bảng (sửa số tay làm lệch bảng)
 
-const attrLabel = (name: string, spec: BlockAttrSpec, lang: "vi" | "en", translate?: (s: string) => string) =>
-  spec.label ? (translate ? translate(spec.label) : spec.label) : ATTR_LABELS[name]?.[lang === "vi" ? 0 : 1] ?? name;
+const attrLabel = (name: string, spec: BlockAttrSpec, lang: string, translate?: (s: string) => string) =>
+  spec.label ? (translate ? translate(spec.label) : spec.label) : attrName(name, lang) ?? name;
 
 function controlOf(spec: BlockAttrSpec): NonNullable<BlockAttrSpec["control"]> {
   if (spec.control) return spec.control;
@@ -58,7 +43,7 @@ function useChoices(kind: ChoiceKind | undefined, args: Record<string, string> |
   useEffect(() => {
     if (!kind) return;
     let alive = true;
-    const fallback = kind === "imageSize" ? DEFAULT_IMAGE_SIZES.map(([v, vi, en]) => ({ value: String(v), label: labels.lang === "vi" ? vi : en })) : null;
+    const fallback = kind === "imageSize" ? DEFAULT_IMAGE_SIZES.map((v) => ({ value: String(v), label: imageSizeLabel(String(v), labels.lang) })) : null;
     if (!host.choices) { setState({ key, list: fallback }); return; }
     Promise.resolve(host.choices(kind, args)).then((list) => { if (alive) setState({ key, list: list?.length || !fallback ? list : fallback }); }, () => { if (alive) setState({ key, list: fallback }); });
     return () => { alive = false; };
@@ -83,12 +68,11 @@ function ChoiceField({ hint, attrs, value, set, label }: { hint: AttrHint; attrs
   const list = useChoices(hint.choice?.kind, hint.choice?.args?.(attrs));
   const v = value == null ? "" : String(value);
   if (list === null) return <input className="ecx-input" aria-label={label} value={v} onChange={(e) => set(e.target.value)} />;
-  const vi = labels.lang === "vi";
   return (
     <select className="ecx-input" aria-label={label} value={v} disabled={list === undefined} onChange={(e) => set(e.target.value || undefined)}>
-      <option value="">{list === undefined ? (vi ? "Đang tải…" : "Loading…") : vi ? "— Chọn —" : "— Select —"}</option>
+      <option value="">{list === undefined ? labels.choiceLoading : labels.choiceSelect}</option>
       {list?.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-      {v && list && !list.some((c) => c.value === v) && <option value={v}>{v} {vi ? "(không còn)" : "(missing)"}</option>}
+      {v && list && !list.some((c) => c.value === v) && <option value={v}>{v} {labels.choiceMissing}</option>}
     </select>
   );
 }
@@ -104,20 +88,21 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
   return (
     <div className="ecx-form">
       {entries.map(([k, spec, hint]) => {
-        const label = hint.label ? hint.label[lang === "vi" ? 0 : 1] : attrLabel(k, spec, lang, host.translate);
+        const label = hintText(hint, "label", lang) ?? attrLabel(k, spec, lang, host.translate);
         const value = attrs[k] ?? spec.default;
         const set = (v: unknown) => onChange({ [k]: v === "" || v === spec.default ? undefined : v });
-        const help = hint.help && <span className="ecx-field-help">{hint.help[lang === "vi" ? 0 : 1]}</span>;
+        const helpText = hintText(hint, "help", lang);
+        const help = helpText && <span className="ecx-field-help">{helpText}</span>;
         const num = spec.type === "integer" || spec.type === "number";
         const opts = (): Array<[string, string]> => hint.options
-          ? hint.options.map(([v, vi, en]) => [String(v), lang === "vi" ? vi : en])
+          ? hint.options.map((v) => [String(v), optionLabel(hint, v, lang)])
           : (spec.enum ?? []).map((v, i) => [String(v), spec.enumLabels?.[i] ? (host.translate?.(spec.enumLabels[i]) ?? spec.enumLabels[i]) : optionLabel(hint, v, lang)]);
         const parse = (v: string) => (v === "" ? undefined : num ? Number(v) : v);
         switch (hint.control ?? controlOf(spec)) {
           case "checkbox":
             return <div key={k}><label className="ecx-check"><input type="checkbox" checked={!!value} onChange={(e) => set(e.target.checked)} /> {label}</label>{help}</div>;
           case "newTab":
-            return <label key={k} className="ecx-check"><input type="checkbox" checked={value === "_blank"} onChange={(e) => set(e.target.checked ? "_blank" : undefined)} /> {lang === "vi" ? "Mở trong tab mới" : "Open in new tab"}</label>;
+            return <label key={k} className="ecx-check"><input type="checkbox" checked={value === "_blank"} onChange={(e) => set(e.target.checked ? "_blank" : undefined)} /> {labels.openInNewTab}</label>;
           case "segmented":
             return <Field key={k} label={label} group><SegText label={label} value={value == null ? undefined : String(value)} options={opts()} onChange={(v) => set(v === undefined ? undefined : parse(v))} />{help}</Field>;
           case "select":

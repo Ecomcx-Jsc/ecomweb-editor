@@ -1,5 +1,6 @@
 import { collectStyles, normalizeStyle, presetCss, type BlockStyle } from "@ecomcx/ecomweb-content";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { onAnimationsChange, pluginAnimations } from "../../shared/animation-store";
 import { createPortal } from "react-dom";
 import { DocBlocks } from "./block-list";
 import { BLOCKS_MIME, blocksFromClipboard, serializeBlocks } from "../core/clipboard";
@@ -177,6 +178,13 @@ function useCanvasStyles(doc: Document) {
     if (!el) { el = doc.createElement("style"); el.dataset.ecx = "blocks"; head.appendChild(el); }
     el.textContent = css;
   }, [css, doc, head]);
+  // Keyframes của hiệu ứng plugin (registerAnimation) để xem thử trong khung soạn
+  const animations = useSyncExternalStore(onAnimationsChange, pluginAnimations, pluginAnimations);
+  useLayoutEffect(() => {
+    let el = head.querySelector<HTMLStyleElement>("style[data-ecx=motion]");
+    if (!el) { el = doc.createElement("style"); el.dataset.ecx = "motion"; head.appendChild(el); }
+    el.textContent = animations.map((a) => a.css ?? "").join("\n");
+  }, [animations, doc, head]);
 }
 
 /** Cuộn / đổi cỡ trong iframe → thanh công cụ đo lại vị trí. */

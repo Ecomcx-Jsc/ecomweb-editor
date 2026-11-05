@@ -3,6 +3,7 @@ import { Link2, Link2Off, SlidersHorizontal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useEditor } from "../context";
 import { cx } from "./style-controls";
+import { useMsgs } from "../i18n";
 
 /**
  * Điều khiển giá trị có đơn vị (cỡ viền, bo góc, khoảng cách…): ô số + chọn đơn vị + thanh kéo.
@@ -16,7 +17,7 @@ const parse = (v: unknown): { n: string; unit: string } | null => {
 };
 
 export function UnitInput({ value, onChange, label, max = 100, units = UNITS, slider = true }: { value?: string; onChange(v: string | undefined): void; label: string; max?: number; units?: string[]; slider?: boolean }) {
-  const vi = useEditor().labels.lang === "vi";
+  const t = useMsgs("controls");
   const p = parse(value);
   const [n, setN] = useState(p?.n ?? "");
   const [unit, setUnit] = useState(p?.unit ?? units[0]);
@@ -28,11 +29,11 @@ export function UnitInput({ value, onChange, label, max = 100, units = UNITS, sl
       <div className="ecx-unit-input">
         <input type="number" inputMode="decimal" aria-label={label} value={n} placeholder={p ? undefined : value ?? ""} step={unit === "px" || unit === "%" ? 1 : 0.1}
           onChange={(e) => { setN(e.target.value); emit(e.target.value, unit); }} />
-        <select aria-label={`${label}: ${vi ? "đơn vị" : "unit"}`} value={unit} onChange={(e) => { setUnit(e.target.value); if (n !== "") emit(n, e.target.value); }}>
+        <select aria-label={`${label}: ${t.unit}`} value={unit} onChange={(e) => { setUnit(e.target.value); if (n !== "") emit(n, e.target.value); }}>
           {units.map((u) => <option key={u} value={u}>{u}</option>)}
         </select>
       </div>
-      {slider && <input type="range" className="ecx-unit-slider" aria-label={`${label}: ${vi ? "thanh kéo" : "slider"}`} min={0} max={sliderMax} step={unit === "px" || unit === "%" ? 1 : 0.1} value={n === "" ? 0 : Math.min(sliderMax, Number(n))}
+      {slider && <input type="range" className="ecx-unit-slider" aria-label={`${label}: ${t.slider}`} min={0} max={sliderMax} step={unit === "px" || unit === "%" ? 1 : 0.1} value={n === "" ? 0 : Math.min(sliderMax, Number(n))}
         onChange={(e) => { setN(e.target.value); emit(e.target.value, unit); }} />}
     </div>
   );
@@ -40,7 +41,7 @@ export function UnitInput({ value, onChange, label, max = 100, units = UNITS, sl
 
 /** Thanh kéo theo bậc preset + nút sang giá trị tuỳ chỉnh. */
 function StepSlider({ value, steps, onChange, label, sideIcon }: { value?: string; steps: string[]; onChange(v: string | undefined): void; label: string; sideIcon?: string }) {
-  const vi = useEditor().labels.lang === "vi";
+  const t = useMsgs("controls");
   const isPreset = value === undefined || steps.includes(value);
   const [custom, setCustom] = useState(!isPreset);
   useEffect(() => { if (!isPreset) setCustom(true); }, [isPreset]);
@@ -57,7 +58,7 @@ function StepSlider({ value, steps, onChange, label, sideIcon }: { value?: strin
             <span className="ecx-step-value">{idx < 0 ? "—" : steps[idx].toUpperCase()}</span>
           </div>
         )}
-      <button type="button" className={cx("ecx-tool", custom && "is-active")} aria-pressed={custom} title={custom ? (vi ? "Dùng cỡ có sẵn" : "Use presets") : (vi ? "Giá trị tuỳ chỉnh" : "Custom value")} aria-label={`${label}: ${custom ? (vi ? "dùng cỡ có sẵn" : "use presets") : (vi ? "giá trị tuỳ chỉnh" : "custom value")}`}
+      <button type="button" className={cx("ecx-tool", custom && "is-active")} aria-pressed={custom} title={custom ? (t.usePresets) : (t.customValue)} aria-label={`${label}: ${custom ? (t.usePresets2) : (t.customValue2)}`}
         onClick={() => { setCustom(!custom); if (custom && !isPreset) onChange(undefined); }}><SlidersHorizontal className="ecx-icon ecx-icon-sm" /></button>
     </div>
   );

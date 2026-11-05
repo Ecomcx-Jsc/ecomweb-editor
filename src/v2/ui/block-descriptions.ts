@@ -1,34 +1,7 @@
-/** Mô tả ngắn của khối lõi (thẻ xem trước khi rê chuột trong thư viện khối). */
-const D: Record<string, [string, string]> = {
-  paragraph: ["Đoạn chữ thường — nền tảng của mọi nội dung.", "Start with the basic building block of all narrative."],
-  heading: ["Tiêu đề mục (H2–H6), giúp người đọc và Google hiểu cấu trúc trang.", "Introduce sections and organise content for readers and search engines."],
-  bulletList: ["Danh sách gạch đầu dòng.", "A bulleted list."], orderedList: ["Danh sách đánh số theo thứ tự.", "A numbered list."],
-  taskList: ["Danh sách việc có ô đánh dấu.", "A checklist."], blockquote: ["Trích dẫn lời của ai đó.", "Give quoted text visual emphasis."],
-  codeBlock: ["Hiện mã nguồn, giữ nguyên khoảng trắng.", "Display code snippets that respect spacing."], preformatted: ["Chữ giữ nguyên khoảng trắng và xuống dòng.", "Text that respects spacing and tabs."],
-  pullquote: ["Trích dẫn nổi bật, chữ lớn ở giữa trang.", "A large, eye-catching quote."], details: ["Nội dung ẩn, bấm để mở (câu hỏi thường gặp…).", "Hide content until the visitor opens it (FAQ…)."],
-  table: ["Bảng dữ liệu hàng / cột, gộp ô được.", "Rows and columns of data; cells can be merged."],
-  image: ["Ảnh có chú thích, alt cho SEO, đổi cỡ bằng tay kéo.", "An image with caption and alt text; drag to resize."],
-  gallery: ["Nhiều ảnh xếp lưới.", "Several images in a grid."], cover: ["Ảnh hoặc màu nền lớn với chữ đè lên — phần mở đầu trang.", "A large image or colour with text on top — a page hero."],
-  mediaText: ["Ảnh và chữ đặt cạnh nhau để bố cục hấp dẫn hơn.", "Media and text side by side for a richer layout."],
-  video: ["Video tải lên hoặc từ địa chỉ.", "An uploaded or linked video."], audio: ["Tệp âm thanh có trình phát.", "An audio player."],
-  file: ["Liên kết tải tệp (PDF…), có thể xem ngay trên trang.", "A downloadable file (PDF…), optionally embedded."],
-  youtube: ["Nhúng video YouTube.", "Embed a YouTube video."], embed: ["Nhúng nội dung từ địa chỉ (Facebook, TikTok, bản đồ…).", "Embed content from a URL."],
-  group: ["Gom nhiều khối vào một khung để tô nền, căn lề, bố cục chung.", "Gather blocks in a container to style them together."],
-  columns: ["Chia nội dung thành nhiều cột, kéo để đổi độ rộng.", "Display content in columns; drag to resize."],
-  buttons: ["Một hoặc nhiều nút kêu gọi hành động.", "Prompt visitors to take action with buttons."], spacer: ["Khoảng trống giữa các khối.", "Add white space between blocks."],
-  horizontalRule: ["Đường kẻ ngăn cách các phần.", "Separate sections with a line."], callout: ["Hộp lưu ý / cảnh báo nổi bật.", "Highlight a tip or warning."],
-  customHtml: ["Chèn HTML tự viết (đã được làm sạch).", "Add custom (sanitised) HTML."], socialLinks: ["Biểu tượng liên kết mạng xã hội.", "Icons linking to social profiles."],
-  tableOfContents: ["Mục lục tự sinh từ các tiêu đề trong bài.", "An automatic table of contents from headings."],
-  siteTitle: ["Tên website (lấy từ Cài đặt).", "The site title from Settings."], siteLogo: ["Logo của website.", "The site logo."], siteTagline: ["Khẩu hiệu của website.", "The site tagline."],
-  navigation: ["Menu điều hướng theo vị trí của theme.", "A navigation menu for a theme location."], search: ["Ô tìm kiếm.", "A search form."],
-  languageSwitcher: ["Chuyển ngôn ngữ của website.", "Switch the site language."], copyright: ["Dòng bản quyền với năm hiện tại.", "A copyright line with the current year."],
-  postTitle: ["Tiêu đề của bài đang xem.", "The current post's title."], postContent: ["Nội dung của bài đang xem.", "The current post's content."],
-  postExcerpt: ["Tóm tắt của bài.", "The post excerpt."], featuredImage: ["Ảnh đại diện của bài.", "The post's featured image."], postDate: ["Ngày đăng bài.", "The publish date."],
-  postAuthor: ["Tác giả bài viết.", "The post author."], postTerms: ["Chuyên mục / thẻ của bài.", "The post's categories or tags."], comments: ["Bình luận của bài.", "The post comments."],
-  queryTitle: ["Tiêu đề (H1) của trang chuyên mục, thẻ, tác giả, kết quả tìm kiếm.", "The H1 of category, tag, author and search pages."],
-  termDescription: ["Mô tả của chuyên mục / thẻ đang xem.", "The current category / tag description."],
-  breadcrumbs: ["Đường dẫn Trang chủ › Chuyên mục › Bài, kèm dữ liệu cấu trúc cho Google.", "Home › Category › Post trail with structured data for Google."],
-  postNavigation: ["Liên kết tới bài trước và bài sau.", "Links to the previous and next posts."],
-  query: ["Danh sách bài theo điều kiện (chuyên mục, số bài, sắp xếp).", "A list of posts by criteria."], templatePart: ["Phần dùng chung (header, footer…) — sửa một nơi, đổi mọi trang.", "A shared part (header, footer…) — edit once, update everywhere."],
+import { messages } from "../../i18n";
+
+/** Mô tả ngắn của khối lõi (thẻ xem trước khi rê chuột trong thư viện khối). Chữ nằm ở src/locales/<ngôn ngữ>/blockDesc.ts, khoá = tên khối. */
+export const blockDescription = (type: string, lang: string): string | undefined => {
+  const d = messages("blockDesc", lang)[type];
+  return typeof d === "string" ? d : undefined;
 };
-export const blockDescription = (type: string, lang: "vi" | "en") => D[type]?.[lang === "vi" ? 0 : 1];

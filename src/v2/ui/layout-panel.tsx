@@ -2,6 +2,7 @@ import { normalizeGradient, normalizeStyle, type BlockLayout, type BlockStyle, t
 import { AlignCenterVertical, AlignEndVertical, AlignStartVertical, ArrowDown, ArrowRight, Columns3, LayoutGrid, Rows3, Square, StretchVertical, AlignHorizontalSpaceBetween, AlignHorizontalJustifyCenter, AlignHorizontalJustifyEnd, AlignHorizontalJustifyStart } from "lucide-react";
 import { useState } from "react";
 import { useEditor } from "../context";
+import { useMsgs } from "../i18n";
 import { ColorInput } from "./color-field";
 import { Row, Section, Seg, cx } from "./style-controls";
 
@@ -9,18 +10,6 @@ import { Row, Section, Seg, cx } from "./style-controls";
  * Bố cục, nền chuyển màu, bóng, tỉ lệ, ghim và hover (@ecomcx/ecomweb-content 1.15) — phần thêm của tab Kiểu dáng.
  * Giá trị theo khổ (hướng, căn, số cột) sửa theo khổ đang chọn ở bảng Kiểu dáng (`device`).
  */
-const V = { vi: {
-  layout: "Bố cục", type: "Kiểu", flow: "Nhóm", row: "Hàng ngang", stack: "Xếp dọc", grid: "Lưới", direction: "Hướng", justify: "Căn ngang", align: "Căn dọc",
-  wrap: "Cho xuống dòng", columns: "Số cột", auto: "Tự chia", minWidth: "Rộng tối thiểu mỗi cột", effects: "Nền & hiệu ứng", gradient: "Nền chuyển màu",
-  angle: "Góc", from: "Từ", to: "Đến", none: "Không", shadow: "Đổ bóng", ratio: "Tỉ lệ khung", sticky: "Ghim khi cuộn", top: "Cách mép trên",
-  hover: "Khi rê chuột", text: "Màu chữ", background: "Màu nền", border: "Màu viền", lift: "Nhấc lên", start: "Đầu", center: "Giữa", end: "Cuối", between: "Dàn đều", stretch: "Kéo giãn",
-}, en: {
-  layout: "Layout", type: "Type", flow: "Group", row: "Row", stack: "Stack", grid: "Grid", direction: "Direction", justify: "Justify", align: "Align",
-  wrap: "Allow wrapping", columns: "Columns", auto: "Auto", minWidth: "Minimum column width", effects: "Background & effects", gradient: "Gradient",
-  angle: "Angle", from: "From", to: "To", none: "None", shadow: "Shadow", ratio: "Aspect ratio", sticky: "Sticky", top: "Top offset",
-  hover: "Hover", text: "Text color", background: "Background", border: "Border color", lift: "Lift", start: "Start", center: "Center", end: "End", between: "Space between", stretch: "Stretch",
-} };
-
 /** Khối chứa (có khối con) mới có mục Bố cục. */
 const CONTAINERS = new Set(["group", "column", "cover", "blockquote", "callout", "details", "query", "postTemplate", "mediaText"]);
 
@@ -34,7 +23,7 @@ export function layoutFor(kind: Kind, prev?: BlockLayout): BlockLayout | undefin
 
 export function LayoutEffectsPanel({ type, style: raw, onChange, device }: { type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device }) {
   const { labels, host } = useEditor();
-  const t = V[labels.lang];
+  const t = useMsgs("layout");
   const style: BlockStyle = normalizeStyle(raw) ?? {};
   const set = (patch: Partial<BlockStyle>) => {
     const next = { ...style, ...patch } as Record<string, unknown>;
@@ -111,7 +100,7 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device }: { typ
               <button key={name} type="button" className={cx("ecx-chip ecx-chip-swatch", style.gradient === name && "is-active")} title={name} aria-label={name}
                 style={{ background: host.presets!.gradients![name] }} onClick={() => set({ gradient: name })} />
             ))}
-            <button type="button" className={cx("ecx-chip ecx-chip-swatch", g && "is-active")} title={labels.lang === "vi" ? "Tuỳ chỉnh" : "Custom"}
+            <button type="button" className={cx("ecx-chip ecx-chip-swatch", g && "is-active")} title={t.custom}
               style={{ background: `linear-gradient(${angle}deg, ${c1}, ${c2})` }} onClick={() => applyCustom()} />
           </div>
           {g && (

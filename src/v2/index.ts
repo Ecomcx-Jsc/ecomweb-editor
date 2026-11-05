@@ -20,9 +20,11 @@ export { blocksFromDoc, docFromBlocks, fromRich, toRich, makeBlock, cloneBlock, 
 export { findBlock, flatten, mapBlock, insertBlocks, removeBlocks, moveBlocks } from "./core/ops";
 export { canContain, fixTree, setStructureRule, type StructureRule } from "./core/structure";
 export { htmlToRich, textToRich, richToHtml, BLOCKS_MIME } from "./core/clipboard";
-export { viV2, enV2, type V2Labels } from "./labels";
+export { viV2, enV2, labelsV2, type V2Labels } from "./labels";
+export { registerLocale, availableLocales, type Messages } from "../i18n";
 export type { EditorHost, DocumentHost, DynamicData, DynamicPost, QueryArgs, Choice, ChoiceKind, NestedDocRef, LoadedDoc, SavedContent } from "./core/host";
 export { MoreMenu, PreferencesModal, ShortcutsModal, CodeEditor, Breadcrumbs } from "./ui/options";
 export { PrefsStore, localPrefsStorage, usePrefs, DEFAULT_PREFS, type EditorPrefs, type PrefsStorage } from "./prefs";
 export { DocTitle } from "./ui/doc-title";
 export { registerBindingSource, unregisterBindingSource, bindingSources, BindingsPanel, BoundText, useBindingPreview, CORE_BINDABLE, type EditorBindingSource, type Binding } from "./ui/bindings";
+export { storeAnimation as registerAnimation, dropAnimation as unregisterAnimation, pluginAnimations, type MotionEffect } from "../shared/animation-store";

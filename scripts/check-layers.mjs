@@ -9,7 +9,7 @@ import { join, relative, dirname, resolve } from "node:path";
 const root = resolve(dirname(new URL(import.meta.url).pathname), "..");
 const src = join(root, "src");
 const ORDER = ["core", "text", "canvas", "ui", "blocks"];
-const FOUNDATION = new Set(["v2/context.tsx", "v2/prefs.ts", "v2/labels.ts"]);
+const FOUNDATION = new Set(["v2/context.tsx", "v2/prefs.ts", "v2/labels.ts", "v2/i18n.ts"]);
 const CORE_BANNED = /^(react|react-dom|prosemirror-[a-z]+|lucide-react|@tiptap\/.*)$/;
 const NAME = /^[a-z0-9]+(-[a-z0-9]+)*\.(ts|tsx|css)$/;
 

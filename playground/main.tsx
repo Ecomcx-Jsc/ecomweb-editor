@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import contentCss from "@ecomcx/ecomweb-content/style.css?url";
 import "../src/legacy/editor.css";
 import "../src/v2/editor.css";
-import { BlockEditor, EditorStore, blocksFromContent, fixTree, flatten, inlineText, type EditorHost } from "../src/v2";
+import { BlockEditor, EditorStore, blocksFromContent, fixTree, flatten, inlineText, registerAnimation, type EditorHost } from "../src/v2";
 import { defineBlock } from "@ecomcx/ecomweb-content";
 import { registerBlock } from "../src/legacy/blocks";
 import { registerBlockPanel } from "../src/legacy/panels";
@@ -144,7 +144,7 @@ function check(): string[] {
   }
   return errors;
 }
-(window as unknown as { __ecx: unknown }).__ecx = { store, saves, queries, uploads, check, get changes() { return changes; } };
+(window as unknown as { __ecx: unknown }).__ecx = { store, saves, queries, uploads, registerAnimation, check, get changes() { return changes; } };
 
 createRoot(document.getElementById("root")!).render(
   <BlockEditor store={store} host={host} lang={params.get("lang") === "en" ? "en" : "vi"} dynamicBlocks frame={frame}

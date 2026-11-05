@@ -1,6 +1,7 @@
 import { Database, Unlink } from "lucide-react";
 import { createElement, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
-import { useDynamicData, useEditor } from "../context";
+import { useDynamicData } from "../context";
+import { useMsgs } from "../i18n";
 import { bindingSource, bindingSources, bindingsOf, subscribeBindingSources, type Binding } from "../core/bindings";
 import type { BNode } from "../core/model";
 import type { BlockProps } from "../core/registry";
@@ -29,13 +30,10 @@ export function useBindingPreview(block: BNode, attr: string): { bound: boolean;
 
 /** Mục "Gắn dữ liệu" của bảng cài đặt: mỗi thuộc tính gắn được một dòng chọn nguồn + trường. */
 export function BindingsPanel({ block, bindable, onChange }: { block: BNode; bindable: string[]; onChange(bindings: Record<string, Binding> | undefined): void }) {
-  const { labels } = useEditor();
   const all = useSyncExternalStore(subscribeBindingSources, bindingSources, bindingSources);
   const current = bindingsOf(block) ?? {};
-  const vi = labels.lang === "vi";
-  const ATTR: Record<string, string> = vi
-    ? { content: "Nội dung", src: "Ảnh", alt: "Mô tả ảnh", caption: "Chú thích", text: "Chữ trên nút", href: "Liên kết" }
-    : { content: "Content", src: "Image", alt: "Alt text", caption: "Caption", text: "Button text", href: "Link" };
+  const t = useMsgs("bindings");
+  const ATTR: Record<string, string> = { content: t.attrContent, src: t.attrSrc, alt: t.attrAlt, caption: t.attrCaption, text: t.attrText, href: t.attrHref };
   const set = (attr: string, b: Binding | undefined) => {
     const next = { ...current };
     if (b) next[attr] = b; else delete next[attr];
@@ -43,8 +41,8 @@ export function BindingsPanel({ block, bindable, onChange }: { block: BNode; bin
   };
   return (
     <details className="ecx-advanced ecx-bindings" open={Object.keys(current).length > 0}>
-      <summary><Database className="ecx-icon ecx-icon-sm" /> {vi ? "Gắn dữ liệu" : "Bind data"}</summary>
-      <p className="ecx-muted">{vi ? "Lấy giá trị từ dữ liệu của website khi hiển thị (tiêu đề bài, trường meta, dữ liệu của plugin…) thay cho chữ gõ tay." : "Show a value from site data at render time (post title, meta field, plugin data…) instead of typed text."}</p>
+      <summary><Database className="ecx-icon ecx-icon-sm" /> {t.panelTitle}</summary>
+      <p className="ecx-muted">{t.panelHelp}</p>
       {bindable.map((attr) => {
         const b = current[attr];
         const src = b ? all.find((s) => s.name === b.source) : undefined;
@@ -54,16 +52,16 @@ export function BindingsPanel({ block, bindable, onChange }: { block: BNode; bin
           <div key={attr} className="ecx-binding-row" data-binding={attr}>
             <span className="ecx-field-label">{ATTR[attr] ?? attr}</span>
             <div className="ecx-color-row">
-              <select className="ecx-input" aria-label={`${ATTR[attr] ?? attr}: ${vi ? "nguồn" : "source"}`} value={b?.source ?? ""}
+              <select className="ecx-input" aria-label={`${ATTR[attr] ?? attr}: ${t.source}`} value={b?.source ?? ""}
                 onChange={(e) => { const s = all.find((x) => x.name === e.target.value); set(attr, s ? { source: s.name, args: s.fields?.length ? { [s.argKey ?? "field"]: s.fields[0].value } : {} } : undefined); }}>
-                <option value="">{vi ? "— Không gắn —" : "— Not bound —"}</option>
+                <option value="">{t.notBound}</option>
                 {options.map((s) => <option key={s.name} value={s.name}>{s.label}</option>)}
                 {b && !src && <option value={b.source}>{b.source}</option>}
               </select>
-              {b && <button type="button" className="ecx-tool" aria-label={vi ? "Bỏ gắn" : "Unbind"} title={vi ? "Bỏ gắn" : "Unbind"} onClick={() => set(attr, undefined)}><Unlink className="ecx-icon" /></button>}
+              {b && <button type="button" className="ecx-tool" aria-label={t.unbind} title={t.unbind} onClick={() => set(attr, undefined)}><Unlink className="ecx-icon" /></button>}
             </div>
             {b && (src?.fields?.length
-              ? <select className="ecx-input" aria-label={`${ATTR[attr] ?? attr}: ${vi ? "trường" : "field"}`} value={String(b.args?.[argKey] ?? "")} onChange={(e) => set(attr, { ...b, args: { ...b.args, [argKey]: e.target.value } })}>
+              ? <select className="ecx-input" aria-label={`${ATTR[attr] ?? attr}: ${t.field}`} value={String(b.args?.[argKey] ?? "")} onChange={(e) => set(attr, { ...b, args: { ...b.args, [argKey]: e.target.value } })}>
                   {src.fields.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                 </select>
               : <input className="ecx-input" aria-label={`${ATTR[attr] ?? attr}: ${argKey}`} placeholder={argKey} value={String(b.args?.[argKey] ?? "")}

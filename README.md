@@ -82,6 +82,21 @@ registerDynamicBlocks("vi");                // một lần; node của khối đ
 
 Mỗi khối hiện thành khung có tên + dòng tóm tắt (vị trí menu, phần dùng chung, nguồn danh sách bài); cài đặt sinh từ thuộc tính. `query` chèn vào có sẵn `postTemplate` (tiêu đề + sapo) và `pagination`. `registerBlock` có thêm `initialContent` cho khối chứa khối khác.
 
+## Ngôn ngữ giao diện
+
+Có sẵn `vi` và `en`. Chữ không nằm trong mã mà trong `src/locales/<mã>/` — mỗi nhóm một file (`v2`, `legacy`, `controls`, `blocks`, `hints`, `patterns`…). Thêm ngôn ngữ **không cần sửa trình soạn**:
+
+```ts
+import { registerLocale } from "@ecomcx/ecomweb-editor/v2";     // hoặc từ "@ecomcx/ecomweb-editor"
+registerLocale("ja", { v2: { editor: "コンテンツエディター", addBlock: "ブロックを追加" }, motion: { title: "モーション" } });
+// <EditorProvider lang="ja" …>  /  <Editor …> dùng nhãn: labelsLegacy("ja")
+```
+
+- Chỉ cần dịch phần muốn dịch: khoá thiếu rơi về ngôn ngữ gốc (`pt-BR` → `pt`) rồi tiếng Anh. Gọi `registerLocale` nhiều lần để bổ sung.
+- Muốn có sẵn trong gói: sao chép thư mục `src/locales/vi/` thành `src/locales/xx/`, dịch, rồi đăng ký ở `src/i18n/index.ts`. `en/` bị kiểm đủ khoá lúc biên dịch; `test/i18n.test.ts` kiểm `vi` khớp `en` (cùng khoá, cùng chỗ thay `{n}`).
+- Nhóm `blockTitles`, `blockDesc`, `hints`, `attrs` dùng khoá theo tên khối / thuộc tính; `patterns`, `patternLib` là chữ giữ chỗ của mẫu có sẵn.
+- `viLabels`, `enLabels`, `viV2`, `enV2` vẫn dùng được; thêm `labelsLegacy(lang)`, `labelsV2(lang)` cho ngôn ngữ bất kỳ.
+
 ## Đổi màu
 
 ```css

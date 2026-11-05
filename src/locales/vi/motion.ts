@@ -1,0 +1,33 @@
+/** Mục Chuyển động trong tab Kiểu dáng (khi cuộn tới, tốc độ, độ trễ, hover). */
+export const motion = {
+  title: "Chuyển động",
+  scroll: "Khi cuộn tới",
+  none: "Không",
+  more: "Hiệu ứng khác",
+  preview: "Xem thử",
+  speed: "Tốc độ",
+  delay: "Độ trễ",
+  fast: "Nhanh",
+  normal: "Vừa",
+  slow: "Chậm",
+  repeat: "Chạy lại mỗi lần cuộn tới",
+  stagger: "Hiện lần lượt từng khối con",
+  hover: "Hiệu ứng rê chuột",
+  plugin: "Plugin",
+  in: {
+    fade: "Mờ dần",
+    "slide-up": "Trượt lên",
+    "slide-down": "Trượt xuống",
+    "slide-left": "Trượt sang trái",
+    "slide-right": "Trượt sang phải",
+    "zoom-in": "Phóng to dần",
+    "zoom-out": "Thu nhỏ dần",
+    "blur-in": "Rõ dần",
+  },
+  hv: {
+    lift: "Nhấc lên",
+    grow: "Phóng to",
+    brighten: "Sáng lên",
+    glow: "Phát sáng",
+  },
+};

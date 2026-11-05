@@ -1,3 +1,4 @@
+import { msgs } from "../../i18n";
 import type { DynamicData } from "./host";
 import type { BNode } from "./model";
 
@@ -36,13 +37,13 @@ export const bindingSource = (name: string) => sources.get(name);
 export const subscribeBindingSources = (l: () => void) => { listeners.add(l); return () => { listeners.delete(l); }; };
 
 /** Nguồn lõi (trùng tên với CORE_BINDING_SOURCES của theme-sdk). Nhãn theo ngôn ngữ. */
-export function registerCoreBindingSources(lang: "vi" | "en") {
-  const vi = lang === "vi";
+export function registerCoreBindingSources(lang: string) {
+  const t = msgs("bindings", lang);
   registerBindingSource({
-    name: "core/post", label: vi ? "Bài đang xem" : "Current post",
+    name: "core/post", label: t.srcPost,
     fields: [
-      { value: "title", label: vi ? "Tiêu đề" : "Title" }, { value: "excerpt", label: vi ? "Tóm tắt" : "Excerpt" }, { value: "date", label: vi ? "Ngày đăng" : "Date" },
-      { value: "author", label: vi ? "Tác giả" : "Author" }, { value: "link", label: vi ? "Đường dẫn" : "Link" }, { value: "featuredImage", label: vi ? "Ảnh đại diện" : "Featured image" },
+      { value: "title", label: t.fTitle }, { value: "excerpt", label: t.fExcerpt }, { value: "date", label: t.fDate },
+      { value: "author", label: t.fAuthor }, { value: "link", label: t.fLink }, { value: "featuredImage", label: t.fFeaturedImage },
     ],
     preview: (args, { dynamic }) => {
       const p = dynamic?.post;
@@ -53,10 +54,10 @@ export function registerCoreBindingSources(lang: "vi" | "en") {
       }
     },
   });
-  registerBindingSource({ name: "core/post-meta", label: vi ? "Trường meta của bài" : "Post meta field", argKey: "key", preview: (args) => (args.key ? `{${args.key}}` : undefined) });
+  registerBindingSource({ name: "core/post-meta", label: t.srcPostMeta, argKey: "key", preview: (args) => (args.key ? `{${args.key}}` : undefined) });
   registerBindingSource({
-    name: "core/site", label: vi ? "Website" : "Site",
-    fields: [{ value: "title", label: vi ? "Tên website" : "Site title" }, { value: "tagline", label: vi ? "Khẩu hiệu" : "Tagline" }, { value: "url", label: "URL" }, { value: "logo", label: "Logo" }],
+    name: "core/site", label: t.srcSite,
+    fields: [{ value: "title", label: t.fSiteTitle }, { value: "tagline", label: t.fTagline }, { value: "url", label: "URL" }, { value: "logo", label: "Logo" }],
     preview: (args, { dynamic }) => (args.field === "title" ? dynamic?.site?.title : args.field === "tagline" ? dynamic?.site?.tagline : args.field === "logo" ? dynamic?.site?.logo ?? undefined : undefined),
   });
 }

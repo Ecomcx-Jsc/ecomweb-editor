@@ -1,0 +1,33 @@
+/** Motion section of the Style tab (on scroll, speed, delay, hover). */
+export const motion = {
+  title: "Motion",
+  scroll: "On scroll",
+  none: "None",
+  more: "More effects",
+  preview: "Preview",
+  speed: "Speed",
+  delay: "Delay",
+  fast: "Fast",
+  normal: "Normal",
+  slow: "Slow",
+  repeat: "Replay every time it scrolls in",
+  stagger: "Reveal children one by one",
+  hover: "Hover effect",
+  plugin: "Plugin",
+  in: {
+    fade: "Fade",
+    "slide-up": "Slide up",
+    "slide-down": "Slide down",
+    "slide-left": "Slide left",
+    "slide-right": "Slide right",
+    "zoom-in": "Zoom in",
+    "zoom-out": "Zoom out",
+    "blur-in": "Blur in",
+  },
+  hv: {
+    lift: "Lift",
+    grow: "Grow",
+    brighten: "Brighten",
+    glow: "Glow",
+  },
+};

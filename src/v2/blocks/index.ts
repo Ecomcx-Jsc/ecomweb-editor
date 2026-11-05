@@ -1,3 +1,4 @@
+import { messages } from "../../i18n";
 import type { V2Labels } from "../labels";
 import type { BlockType, BlockTypeRegistry } from "../core/registry";
 import { layoutBlocks } from "./layout";
@@ -13,21 +14,14 @@ const TITLE_KEYS: Partial<Record<string, keyof V2Labels>> = {
   pullquote: "pullquote", cover: "cover", customHtml: "html", embed: "embed",
 };
 
-const EN_TITLES: Record<string, string> = {
-  taskList: "To-do list", taskItem: "To-do", listItem: "List item", mediaText: "Media & text", tableRow: "Row", tableCell: "Cell", tableHeader: "Header cell",
-  gallery: "Gallery", video: "Video", audio: "Audio", file: "File", youtube: "YouTube", socialLinks: "Social links", tableOfContents: "Table of contents",
-  siteTitle: "Site title", siteLogo: "Site logo", siteTagline: "Tagline", navigation: "Navigation", search: "Search", languageSwitcher: "Language switcher",
-  copyright: "Copyright", postTitle: "Post title", postContent: "Post content", postExcerpt: "Excerpt", featuredImage: "Featured image", postDate: "Date",
-  postAuthor: "Author", postTerms: "Terms", comments: "Comments", query: "Query loop", postTemplate: "Post template", pagination: "Pagination", queryEmpty: "No results",
-};
-
 export function coreBlockTypes(labels: V2Labels): BlockType[] {
+  const names = messages("blockTitles", labels.lang);
   return [...textBlocks(), ...layoutBlocks(), ...mediaBlocks(), ...themeBlocks()].map((t) => {
     const key = TITLE_KEYS[t.name];
-    const title = key ? String(labels[key]) : labels.lang === "en" ? EN_TITLES[t.name] ?? t.title : t.title;
+    const str = (v: unknown) => (typeof v === "string" ? v : undefined);
+    const title = key ? String(labels[key]) : str(names[t.name]) ?? t.title;
     // Biến thể đứng riêng (Hàng ngang / Xếp dọc / Lưới) theo ngôn ngữ
-    const VAR_EN: Record<string, string> = { "group/row": "Row", "group/stack": "Stack", "group/grid": "Grid" };
-    const variations = labels.lang === "en" && t.variations ? t.variations.map((v) => (VAR_EN[`${t.name}/${v.name}`] ? { ...v, title: VAR_EN[`${t.name}/${v.name}`] } : v)) : t.variations;
+    const variations = t.variations?.map((v) => { const vt = str(names[`${t.name}/${v.name}`]); return vt ? { ...v, title: vt } : v; });
     return { ...t, title, variations };
   });
 }
