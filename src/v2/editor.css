@@ -74,7 +74,7 @@
 .ecx-save { min-width: 92px; margin-left: 6px; }
 
 /* Thanh công cụ nổi của khối */
-.ecx-toolbar { position: fixed; z-index: 30; display: flex; align-items: center; gap: 2px; height: 40px; padding: 3px; background: var(--ecx-ed-panel); border: 1px solid var(--ecx-ed-line);
+.ecx-toolbar { max-width: calc(100vw - 8px); overflow-x: auto; scrollbar-width: none; position: fixed; z-index: 30; display: flex; align-items: center; gap: 2px; height: 40px; padding: 3px; background: var(--ecx-ed-panel); border: 1px solid var(--ecx-ed-line);
   border-radius: 8px; box-shadow: var(--ecx-ed-shadow); color: var(--ecx-ed-fg); animation: ecx-pop .16s var(--ecx-ed-ease); }
 .ecx-toolbar .ecx-tool-group { position: relative; gap: 1px; padding: 0 2px; }
 .ecx-toolbar .ecx-tool-group + .ecx-tool-group::before { content: ""; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 1px; background: var(--ecx-ed-line); }
@@ -308,3 +308,17 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-block-preview { position: fixed; z-index: 70; width: 280px; padding: 14px 16px; border: 1px solid var(--ecx-ed-line); border-radius: 10px; background: var(--ecx-ed-panel); box-shadow: var(--ecx-ed-shadow); pointer-events: none; display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; }
 .ecx-block-preview strong { font-weight: 600; }
 .ecx-block-preview p { grid-column: 1 / -1; margin: 0; color: var(--ecx-ed-muted); font-size: 13px; line-height: 1.5; }
+
+/* Màn hẹp / cảm ứng */
+@media (max-width: 600px) {
+  .ecx-prefs { flex-direction: column; }
+  .ecx-prefs-tabs { width: auto; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--ecx-ed-line); }
+  .ecx-prefs-tabs button { flex: none; gap: 6px; }
+  .ecx-prefs-body { padding: 8px 12px 16px; }
+  .ecx-block-visibility { grid-template-columns: minmax(0, 1fr); }
+}
+@media (pointer: coarse) {
+  .ecx-toolbar { height: 48px; }
+  .ecx-toolbar .ecx-tool { height: 40px; min-width: 38px; }
+  .ecx-movers .ecx-tool { height: 20px; min-width: 30px; }
+}

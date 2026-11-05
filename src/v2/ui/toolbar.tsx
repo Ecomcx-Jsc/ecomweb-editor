@@ -1,4 +1,4 @@
-import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
@@ -97,9 +97,10 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   });
   const nodes = ids.map((id) => store.block(id)).filter(Boolean) as BNode[];
   const fixed = placement === "fixed";
+  const coarse = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
   if (fixed !== fixedPref) return null;
   if (fixed && !nodes.length) return <span className="ecx-toolbar-hint">{labels.toolbarHint}</span>;
-  if (!nodes.length || ui.drag || ui.inserter?.mode === "slash" || (ui.typing && !link && !fixed)) return null;
+  if (!nodes.length || ui.drag || ui.inserter?.mode === "slash" || (ui.typing && !link && !fixed && !coarse)) return null;
   const loc = store.locate(nodes[0].id);
   if (!loc || store.getState().docs[loc.docId].mode === "disabled") return null;
   const frame = ui.canvasFrame?.getBoundingClientRect();
@@ -117,7 +118,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const transforms = sameType ? (type?.transforms ?? []).filter((t) => nodes.length === 1 || t.multiple) : [];
   const height = 44;
   const top = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.top + 4, rect.top - height - 8));
-  const left = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.left + 4, Math.min(rect.left, frame.right - 420)));
+  const left = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.left + 4, Math.min(rect.left, frame.right - Math.min(420, window.innerWidth - 8))));
   const editProps = { block: first, attrs: first.attrs, setAttrs: (a: Record<string, unknown>) => store.setAttrs(ids, a), blockProps: null as never, selected: true, editable: true, labels };
   const Extra = sameType && nodes.length === 1 ? type?.toolbar : undefined;
   const hasAlign = sameType && !!type?.attributes?.textAlign;
@@ -281,11 +282,15 @@ function MarkTools({ view, onLink }: { view: EditorView; onLink(): void }) {
     view.dispatch(tr);
     view.focus();
   };
-  const tools: Array<[string, typeof Bold, string, string]> = [["bold", Bold, labels.bold, `${mod}B`], ["italic", Italic, labels.italic, `${mod}I`], ["underline", Underline, labels.underline, `${mod}U`], ["strike", Strikethrough, labels.strike, `${mod}⇧X`], ["code", Code, labels.code, `${mod}E`]];
+  const main: Array<[string, typeof Bold, string, string]> = [["bold", Bold, labels.bold, `${mod}B`], ["italic", Italic, labels.italic, `${mod}I`], ["underline", Underline, labels.underline, `${mod}U`]];
+  const more: Array<[string, typeof Bold, string]> = [["strike", Strikethrough, labels.strike], ["code", Code, labels.code], ["subscript", Subscript, labels.subscript], ["superscript", Superscript, labels.superscript], ["highlight", Highlighter, labels.highlight]];
   return (
     <div className="ecx-tool-group">
-      {tools.map(([name, I, l, k]) => <ToolButton key={name} label={`${l} (${k})`} active={isActive(name)} onClick={() => toggle(name)}><I className="ecx-icon" /></ToolButton>)}
+      {main.map(([name, I, l, k]) => <ToolButton key={name} label={`${l} (${k})`} active={isActive(name)} onClick={() => toggle(name)}><I className="ecx-icon" /></ToolButton>)}
       <ToolButton label={`${labels.link} (${mod}K)`} active={isActive("link")} onClick={onLink}><Link2 className="ecx-icon" /></ToolButton>
+      <Dropdown label={labels.moreFormats} trigger={<ChevronDown className="ecx-icon ecx-icon-sm" />}>
+        {(close) => more.map(([name, I, l]) => <MenuItem key={name} icon={I} label={isActive(name) ? `✓ ${l}` : l} onClick={() => { close(); toggle(name); }} />)}
+      </Dropdown>
     </div>
   );
 }

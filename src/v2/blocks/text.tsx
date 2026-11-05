@@ -114,7 +114,7 @@ export function textBlocks(): BlockType[] {
     },
     {
       name: "orderedList", title: "Danh sách số", icon: ListOrdered, category: "text", keywords: "danh sach so ordered number ol", kind: "container", edit: ListEdit,
-      attributes: { start: { type: "integer", default: 1, min: 1 } },
+      attributes: { start: { type: "integer", default: 1, min: 1 }, reversed: { type: "boolean", default: false } },
       create: () => makeBlock("orderedList", {}, [makeBlock("listItem", {}, [makeBlock("paragraph")])]),
       supports: { style: true, anchor: true, className: true }, transforms: textTransforms("orderedList"),
     },
@@ -126,6 +126,7 @@ export function textBlocks(): BlockType[] {
     { name: "taskItem", title: "Việc", icon: ListChecks, kind: "container", edit: TaskItemEdit, hidden: true, attributes: { checked: { type: "boolean", default: false } } },
     {
       name: "blockquote", title: "Trích dẫn", icon: Quote, category: "text", keywords: "trich dan quote blockquote", kind: "container", edit: QuoteEdit,
+      attributes: { citation: { type: "string" } },
       create: () => makeBlock("blockquote", {}, [makeBlock("paragraph")]),
       supports: { style: true, anchor: true, className: true, blockStyle: true },
       transforms: [{ to: "paragraph", convert: toTextBlocks("paragraph"), multiple: true }, { to: "pullquote", convert: (b) => [makeBlock("pullquote", {}, textsOf(b)[0] ?? [])] }],

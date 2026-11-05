@@ -1,6 +1,6 @@
 {
   "name": "@ecomcx/ecomweb-editor",
-  "version": "1.19.0",
+  "version": "1.20.0",
   "description": "Trình soạn nội dung dạng khối của CMS — dùng độc lập trong mọi dự án React (1.x: TipTap; ./v2: cây khối, khung soạn iframe, sửa header/footer tại chỗ).",
   "license": "MIT",
   "repository": {
