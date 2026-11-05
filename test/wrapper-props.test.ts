@@ -8,14 +8,14 @@ test("chuỗi bao: class → className, style → object (giữ biến CSS), id,
     { tag: "main", attrs: { id: "pNewsDetail", "data-x": "1" } },
   ]);
   assert.deepEqual(n, [
-    { tag: "div", props: { className: "site", style: { "--primary": "#0ea5e9", fontSize: "14px" } } },
-    { tag: "main", props: { id: "pNewsDetail", "data-x": "1" } },
+    { tag: "div", props: { className: "site", style: { "--primary": "#0ea5e9", fontSize: "14px" }, "data-ecx-wrapper": "" } },
+    { tag: "main", props: { id: "pNewsDetail", "data-x": "1", "data-ecx-wrapper": "" } },
   ]);
 });
 
 test("thẻ lạ → div; thuộc tính nguy hiểm bị bỏ", () => {
   const [n] = wrapperNodes([{ tag: "script", attrs: { class: "a", onclick: "x()", href: "/x", style: "background:url(http://x/y)" } }]);
-  assert.deepEqual(n, { tag: "div", props: { className: "a" } });
+  assert.deepEqual(n, { tag: "div", props: { className: "a", "data-ecx-wrapper": "" } });
 });
 
 test("giới hạn độ sâu; không có chuỗi → rỗng", () => {

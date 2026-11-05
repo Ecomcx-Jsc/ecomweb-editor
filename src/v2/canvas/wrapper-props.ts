@@ -34,6 +34,8 @@ export function wrapperNodes(chain: WrapperEl[] | undefined): WrapperNode[] {
       else if (name === "class" && SAFE_VALUE.test(value)) props.className = value;
       else if ((name === "id" || /^data-[a-z0-9-]+$/.test(name)) && SAFE_VALUE.test(value)) props[name] = value;
     }
+    // Dấu để CSS của khung soạn ép trạng thái cuối (theme ẩn khung bao tới khi JS chạy hiệu ứng: opacity 0, transform…)
+    props["data-ecx-wrapper"] = "";
     nodes.push({ tag: BOX.has(el.tag) ? el.tag : "div", props });
   }
   return nodes;

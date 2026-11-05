@@ -6,6 +6,8 @@ export const CANVAS_CSS = String.raw`
 :root { --ecx-ui-font: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif; --ecx-ui: #1a597b; --ecx-ui-nested: #f26251; --ecx-ui-soft: color-mix(in srgb, var(--ecx-ui) 8%, transparent); color-scheme: light; }
 html, body { margin: 0; min-height: 100%; }
 body.ecx-canvas-body { padding: 0; background: #fff; }
+/* Khung bao + vùng soạn luôn ở trạng thái cuối của hiệu ứng: theme ẩn chúng tới khi JS chạy (opacity 0, dịch chuyển…) mà khung soạn không có JS đó */
+[data-ecx-wrapper], .ecx-canvas-root { opacity: 1 !important; visibility: visible !important; transform: none !important; animation: none !important; transition: none !important; clip-path: none !important; filter: none !important; }
 .ecx-canvas-root { min-height: 100vh; padding: 2rem clamp(1rem, 4vw, 3rem) 40vh; box-sizing: border-box; outline: none; }
 .ecx-canvas-root > * { max-width: var(--ecx-content-width, 760px); margin-left: auto; margin-right: auto; }
 .ecx-canvas-root > .ecx-nested, .ecx-canvas-root > .ecx-cover, .ecx-canvas-root > [data-type="columns"], .ecx-canvas-root > .ecx-align-wide { max-width: var(--ecx-wide-width, 1200px); }
