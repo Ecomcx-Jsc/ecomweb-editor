@@ -224,8 +224,8 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
           {p.mode === "visual" && <ZoomToggle />}
         </div>
         <div className="ecx-topbar-end">
-          <div className="ecx-tool-group" role="group" aria-label="Device">
-            {([["desktop", Monitor], ["tablet", Tablet], ["mobile", Smartphone]] as const).map(([d, I]) => <ToolButton key={d} label={d} active={device === d} onClick={() => setDevice(d)}><I className="ecx-icon" /></ToolButton>)}
+          <div className="ecx-tool-group" role="group" aria-label={labels.devices}>
+            {([["desktop", Monitor, labels.deviceDesktop], ["tablet", Tablet, labels.deviceTablet], ["mobile", Smartphone, labels.deviceMobile]] as const).map(([d, I, text]) => <ToolButton key={d} label={text} active={device === d} onClick={() => setDevice(d)}><I className="ecx-icon" /></ToolButton>)}
           </div>
           {!p.distractionFree && <ToolButton label={labels.settings} active={right} onClick={() => setRight(!right)}><PanelRight className="ecx-icon" /></ToolButton>}
           {actions}
