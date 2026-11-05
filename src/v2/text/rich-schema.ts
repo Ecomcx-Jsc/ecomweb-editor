@@ -23,6 +23,8 @@ const marks: Record<string, MarkSpec> = {
   underline: simple("u"),
   strike: simple("s", ["del", "strike"]),
   code: { ...simple("code"), excludes: "_" },
+  footnote: { attrs: { note: { default: "" } }, inclusive: false, parseDOM: [{ tag: "span[data-ecx-footnote]", getAttrs: (d) => ({ note: (d as HTMLElement).getAttribute("data-ecx-footnote") ?? "" }) }], toDOM: (m) => ["span", { "data-ecx-footnote": String(m.attrs.note), class: "ecx-footnote-mark" }, 0] },
+  kbd: { ...simple("kbd"), excludes: "_" },
   subscript: { ...simple("sub"), excludes: "superscript" },
   superscript: { ...simple("sup"), excludes: "subscript" },
   highlight: { attrs: { color: { default: null } }, parseDOM: [{ tag: "mark" }], toDOM: (m) => ["mark", m.attrs.color ? { style: `background:${m.attrs.color}` } : {}, 0] },

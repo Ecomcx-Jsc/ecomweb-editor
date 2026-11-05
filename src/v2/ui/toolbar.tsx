@@ -1,4 +1,4 @@
-import { AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
+import { StickyNote, Keyboard, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
@@ -276,14 +276,19 @@ function MarkTools({ view, onLink }: { view: EditorView; onLink(): void }) {
     const type = view.state.schema.marks[name];
     const { from, to, empty } = view.state.selection;
     const tr = view.state.tr;
-    if (empty) tr.setStoredMarks(isActive(name) ? (view.state.storedMarks ?? view.state.selection.$from.marks()).filter((m) => m.type !== type) : [...(view.state.storedMarks ?? view.state.selection.$from.marks()), type.create()]);
+    if (name === "footnote") {
+      // shortcut: hỏi nội dung bằng prompt() của trình duyệt, nâng thành popover khi cần sửa chú thích có sẵn
+      if (empty) return;
+      if (isActive(name)) tr.removeMark(from, to, type);
+      else { const note = window.prompt(labels.footnote)?.trim(); if (!note) return; tr.addMark(from, to, type.create({ note })); }
+    } else if (empty) tr.setStoredMarks(isActive(name) ? (view.state.storedMarks ?? view.state.selection.$from.marks()).filter((m) => m.type !== type) : [...(view.state.storedMarks ?? view.state.selection.$from.marks()), type.create()]);
     else if (isActive(name)) tr.removeMark(from, to, type);
     else tr.addMark(from, to, type.create());
     view.dispatch(tr);
     view.focus();
   };
   const main: Array<[string, typeof Bold, string, string]> = [["bold", Bold, labels.bold, `${mod}B`], ["italic", Italic, labels.italic, `${mod}I`], ["underline", Underline, labels.underline, `${mod}U`]];
-  const more: Array<[string, typeof Bold, string]> = [["strike", Strikethrough, labels.strike], ["code", Code, labels.code], ["subscript", Subscript, labels.subscript], ["superscript", Superscript, labels.superscript], ["highlight", Highlighter, labels.highlight]];
+  const more: Array<[string, typeof Bold, string]> = [["strike", Strikethrough, labels.strike], ["code", Code, labels.code], ["kbd", Keyboard, labels.kbd], ["footnote", StickyNote, labels.footnote], ["subscript", Subscript, labels.subscript], ["superscript", Superscript, labels.superscript], ["highlight", Highlighter, labels.highlight]];
   return (
     <div className="ecx-tool-group">
       {main.map(([name, I, l, k]) => <ToolButton key={name} label={`${l} (${k})`} active={isActive(name)} onClick={() => toggle(name)}><I className="ecx-icon" /></ToolButton>)}

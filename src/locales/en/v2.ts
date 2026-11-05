@@ -31,6 +31,8 @@ export const v2 = {
   highlight: "Highlight",
   moreFormats: "More formatting",
   code: "Code",
+  kbd: "Keyboard key",
+  footnote: "Footnote",
   link: "Link",
   unlink: "Remove link",
   linkUrl: "Link URL",

@@ -10,7 +10,7 @@ export const BLOCKS_MIME = "application/x-ecx-blocks";
 // ---------------------------------------------------------------------------
 // HTML → khối
 // ---------------------------------------------------------------------------
-const MARK_TAGS: Record<string, string> = { STRONG: "bold", B: "bold", EM: "italic", I: "italic", U: "underline", S: "strike", DEL: "strike", STRIKE: "strike", CODE: "code", SUB: "subscript", SUP: "superscript", MARK: "highlight" };
+const MARK_TAGS: Record<string, string> = { STRONG: "bold", B: "bold", EM: "italic", I: "italic", U: "underline", S: "strike", DEL: "strike", STRIKE: "strike", CODE: "code", KBD: "kbd", SUB: "subscript", SUP: "superscript", MARK: "highlight" };
 const BLOCK_TAGS = new Set(["P", "DIV", "H1", "H2", "H3", "H4", "H5", "H6", "UL", "OL", "LI", "BLOCKQUOTE", "PRE", "HR", "TABLE", "FIGURE", "IMG", "SECTION", "ARTICLE", "HEADER", "FOOTER", "MAIN", "ASIDE", "NAV", "DL", "DT", "DD"]);
 
 function inlineOf(node: globalThis.Node, marks: RichMark[] = [], out: RichNode[] = []): RichNode[] {
@@ -187,7 +187,7 @@ export function serializeBlocks(nodes: BNode[]): { json: string; text: string; h
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
-const MARK_HTML: Record<string, string> = { bold: "strong", italic: "em", underline: "u", strike: "s", code: "code", subscript: "sub", superscript: "sup", highlight: "mark" };
+const MARK_HTML: Record<string, string> = { bold: "strong", italic: "em", underline: "u", strike: "s", code: "code", kbd: "kbd", subscript: "sub", superscript: "sup", highlight: "mark" };
 /** HTML đơn giản (dán sang Word, email…). */
 export function richToHtml(nodes: RichNode[]): string {
   const inl = (list: RichNode[] = []) => list.map((n) => {

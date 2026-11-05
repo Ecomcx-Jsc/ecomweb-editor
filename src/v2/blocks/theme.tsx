@@ -1,4 +1,4 @@
-import { AlignLeft, ArrowLeftRight, CalendarDays, ChevronsRight, Heading1, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
+import { Star, AlignLeft, ArrowLeftRight, CalendarDays, ChevronsRight, Heading1, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
 import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
@@ -113,6 +113,33 @@ function AvatarEdit({ block, blockProps }: BlockEditProps) {
 }
 function QueryTotalEdit({ blockProps, block }: BlockEditProps) {
   return <p {...merge(blockProps, "ecx-query-total", align(block.attrs))}>0</p>;
+}
+function TermListEdit({ block, blockProps }: BlockEditProps) {
+  const cloud = block.attrs.display === "cloud";
+  const sample = block.attrs.taxonomy === "post_tag" ? ["Thẻ A", "Thẻ B", "Thẻ C"] : ["Chuyên mục A", "Chuyên mục B", "Chuyên mục C"];
+  const n = (i: number) => (block.attrs.showCount ? ` (${3 - i})` : "");
+  return cloud
+    ? <p {...merge(blockProps, "ecx-term-list is-cloud")}>{sample.map((x, i) => <span key={x} style={{ marginRight: "0.5em", fontSize: `${1.3 - i * 0.2}em` }}>{x}{n(i)}</span>)}</p>
+    : <ul {...merge(blockProps, "ecx-term-list")}>{sample.map((x, i) => <li key={x}>{x}{n(i)}</li>)}</ul>;
+}
+function LoginOutEdit({ block, blockProps }: BlockEditProps) {
+  return <p {...merge(blockProps, "ecx-loginout", align(block.attrs))}><a href="#" onClick={(e) => e.preventDefault()}>{String(block.attrs.loginText || "Đăng nhập")}</a></p>;
+}
+function IconEdit({ block, blockProps }: BlockEditProps) {
+  const size = Math.min(128, Math.max(12, Number(block.attrs.size) || 24));
+  return <div {...merge(blockProps, "ecx-icon-block", align(block.attrs))}><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Star width={size} height={size} />{String(block.attrs.name ?? "star")}</span></div>;
+}
+function FootnotesEdit({ block, blockProps }: BlockEditProps) {
+  return <aside {...merge(blockProps, "ecx-footnotes")}>{block.attrs.title ? <p className="ecx-footnotes-title">{String(block.attrs.title)}</p> : null}<ol><li>Chú thích 1</li><li>Chú thích 2</li></ol></aside>;
+}
+function PageBreakEdit({ blockProps }: BlockEditProps) {
+  return <div {...merge(blockProps, "ecx-page-break")} style={{ ...(blockProps.style ?? {}), borderTop: "2px dashed currentColor", opacity: 0.5, textAlign: "center", fontSize: 12 }}>Ngắt trang</div>;
+}
+function PageListEdit({ blockProps }: BlockEditProps) {
+  return <nav {...merge(blockProps, "ecx-page-list")}><ul><li>Trang A<ul><li>Trang con</li></ul></li><li>Trang B</li></ul></nav>;
+}
+function ArchivesEdit({ block, blockProps }: BlockEditProps) {
+  return <ul {...merge(blockProps, "ecx-archives")}>{["11/2026", "10/2026"].map((m, i) => <li key={m}>{m}{block.attrs.showCount === false ? "" : ` (${4 - i})`}</li>)}</ul>;
 }
 function CommentsEdit({ blockProps }: BlockEditProps) {
   const d = useDynamic();
@@ -280,7 +307,7 @@ export function themeBlocks(): BlockType[] {
     { name: "siteLogo", title: "Logo", icon: ImageIcon, category: theme, keywords: "logo", kind: "atom", edit: SiteLogoEdit, attributes: { width: { type: "number", default: 120 }, link: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     { name: "siteTagline", title: "Khẩu hiệu", icon: Type, category: theme, keywords: "khau hieu tagline mo ta", kind: "atom", edit: SiteTaglineEdit, attributes: { textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "navigation", title: "Menu", icon: Menu, category: theme, keywords: "menu dieu huong navigation", kind: "atom", edit: NavigationEdit, attributes: { location: { type: "string", default: "primary" }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" }, mobile: { type: "boolean", default: true }, overlayMenu: { type: "string", enum: ["never", "mobile", "always"], default: "mobile" } }, supports: { style: true, className: true }, summary: (a) => a.location },
-    { name: "search", title: "Tìm kiếm", icon: Search, category: theme, keywords: "tim kiem search", kind: "atom", edit: SearchEdit, attributes: { placeholder: { type: "string" }, buttonText: { type: "string" } }, supports: { style: true, className: true } },
+    { name: "search", title: "Tìm kiếm", icon: Search, category: theme, keywords: "tim kiem search", kind: "atom", edit: SearchEdit, attributes: { placeholder: { type: "string" }, buttonText: { type: "string" }, postType: { type: "string" }, showLabel: { type: "boolean", default: false }, buttonPosition: { type: "string", enum: ["right", "left", "below"], default: "right" } }, supports: { style: true, className: true } },
     { name: "languageSwitcher", title: "Chọn ngôn ngữ", icon: Globe2, category: theme, keywords: "ngon ngu language", kind: "atom", edit: LanguageEdit, attributes: { display: { type: "string", enum: ["inline", "dropdown"], default: "inline" } }, supports: { style: true, className: true } },
     { name: "copyright", title: "Bản quyền", icon: Copyright, category: theme, keywords: "ban quyen copyright", kind: "atom", edit: CopyrightEdit, attributes: { text: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "postTitle", title: "Tiêu đề bài", icon: Type, category: theme, keywords: "tieu de bai post title", kind: "atom", edit: PostTitleEdit, attributes: { level: { type: "integer", default: 1, min: 1, max: 6 }, link: { type: "boolean", default: false }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
@@ -290,11 +317,18 @@ export function themeBlocks(): BlockType[] {
     { name: "postDate", title: "Ngày đăng", icon: CalendarDays, category: theme, keywords: "ngay dang date", kind: "atom", edit: PostDateEdit, attributes: { textAlign: TEXT_ALIGN, displayType: { type: "string", enum: ["published", "modified"], default: "published" } }, supports: { style: true, className: true } },
     { name: "postAuthor", title: "Tác giả", icon: User, category: theme, keywords: "tac gia author", kind: "atom", edit: PostAuthorEdit, attributes: { avatar: { type: "boolean", default: false }, showName: { type: "boolean", default: true }, showBio: { type: "boolean", default: false }, avatarSize: { type: "integer", default: 32, min: 16, max: 128 }, link: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     { name: "postTerms", title: "Chuyên mục / thẻ", icon: Tag, category: theme, keywords: "chuyen muc the category tag terms", kind: "atom", edit: PostTermsEdit, attributes: { taxonomy: { type: "string", default: "category" }, separator: { type: "string", default: ", " } }, supports: { style: true, className: true } },
-    { name: "comments", title: "Bình luận", icon: MessageSquare, category: theme, keywords: "binh luan comments", kind: "atom", edit: CommentsEdit, attributes: { title: { type: "string" } } },
+    { name: "comments", title: "Bình luận", icon: MessageSquare, category: theme, keywords: "binh luan comments", kind: "atom", edit: CommentsEdit, attributes: { title: { type: "string" }, perPage: { type: "integer", min: 1, max: 50 }, order: { type: "string", enum: ["asc", "desc"] }, avatarSize: { type: "integer", default: 40, min: 16, max: 128 }, showDate: { type: "boolean", default: true } } },
     { name: "readMore", title: "Đọc tiếp", icon: ChevronsRight, category: theme, keywords: "doc tiep read more", kind: "atom", edit: ReadMoreEdit, attributes: { text: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "commentsCount", title: "Số bình luận", icon: MessageSquare, category: theme, keywords: "so binh luan comments count", kind: "atom", edit: CommentsCountEdit, attributes: { textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "avatar", title: "Ảnh đại diện tác giả", icon: ImageIcon, category: theme, keywords: "avatar anh dai dien tac gia", kind: "atom", edit: AvatarEdit, attributes: { size: { type: "integer", default: 48, min: 16, max: 256 }, link: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     { name: "queryTotal", title: "Tổng số bài", icon: ListOrdered, category: theme, keywords: "tong so bai total", kind: "atom", edit: QueryTotalEdit, attributes: { textAlign: TEXT_ALIGN }, supports: { style: true, className: true }, structure: { parents: ["query"] } },
+    { name: "termList", title: "Danh sách chuyên mục / thẻ", icon: Tag, category: theme, keywords: "danh sach chuyen muc the category tag cloud term list", kind: "atom", edit: TermListEdit, attributes: { taxonomy: { type: "string", default: "category" }, display: { type: "string", enum: ["list", "cloud"], default: "list" }, showCount: { type: "boolean", default: false }, hierarchical: { type: "boolean", default: false }, hideEmpty: { type: "boolean", default: true } }, supports: { style: true, className: true }, summary: (a) => a.taxonomy },
+    { name: "loginout", title: "Đăng nhập / Đăng xuất", icon: User, category: theme, keywords: "dang nhap dang xuat login logout", kind: "atom", edit: LoginOutEdit, attributes: { loginText: { type: "string" }, logoutText: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
+    { name: "icon", title: "Icon", icon: Star, category: theme, keywords: "icon bieu tuong", kind: "atom", edit: IconEdit, attributes: { name: { type: "string", enum: ["check", "x", "star", "heart", "arrowRight", "phone", "mail", "mapPin", "clock", "info", "alert", "externalLink"], default: "star" }, size: { type: "integer", default: 24, min: 12, max: 128 }, label: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true }, summary: (a) => a.name },
+    { name: "footnotes", title: "Chú thích cuối bài", icon: ListOrdered, category: theme, keywords: "chu thich cuoi bai footnotes", kind: "atom", edit: FootnotesEdit, attributes: { title: { type: "string" } }, supports: { style: true, className: true } },
+    { name: "pageBreak", title: "Ngắt trang", icon: PanelTop, category: theme, keywords: "ngat trang page break nextpage", kind: "atom", edit: PageBreakEdit, supports: { className: true } },
+    { name: "pageList", title: "Danh sách trang", icon: ListOrdered, category: theme, keywords: "danh sach trang page list sitemap", kind: "atom", edit: PageListEdit, attributes: { parentId: { type: "integer", min: 1 }, depth: { type: "integer", default: 2, min: 1, max: 3 } }, supports: { style: true, className: true } },
+    { name: "archives", title: "Lưu trữ theo tháng", icon: CalendarDays, category: theme, keywords: "luu tru thang archives", kind: "atom", edit: ArchivesEdit, attributes: { showCount: { type: "boolean", default: true }, limit: { type: "integer", default: 12, min: 1, max: 60 } }, supports: { style: true, className: true } },
     { name: "queryTitle", title: "Tiêu đề trang lưu trữ", icon: Heading1, category: theme, keywords: "tieu de luu tru chuyen muc archive query title h1", kind: "atom", edit: QueryTitleEdit, attributes: { level: { type: "integer", default: 1, min: 1, max: 6 }, prefix: { type: "boolean", default: false }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "termDescription", title: "Mô tả chuyên mục", icon: AlignLeft, category: theme, keywords: "mo ta chuyen muc term description", kind: "atom", edit: TermDescriptionEdit, attributes: { textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "breadcrumbs", title: "Breadcrumb", icon: ChevronsRight, category: theme, keywords: "breadcrumb duong dan dieu huong", kind: "atom", edit: BreadcrumbsEdit, attributes: { separator: { type: "string", default: "›" }, showHome: { type: "boolean", default: true }, showCurrent: { type: "boolean", default: true } }, supports: { style: true, className: true } },

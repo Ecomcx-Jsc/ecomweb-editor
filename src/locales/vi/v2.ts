@@ -31,6 +31,8 @@ export const v2 = {
   highlight: "Làm nổi bật",
   moreFormats: "Định dạng khác",
   code: "Mã",
+  kbd: "Phím bấm",
+  footnote: "Chú thích",
   link: "Liên kết",
   unlink: "Bỏ liên kết",
   linkUrl: "Địa chỉ liên kết",
