@@ -129,6 +129,20 @@ function DetailsEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) 
   );
 }
 
+function AccordionEdit({ block, blockProps }: BlockEditProps) {
+  return <div {...(merge(blockProps, "ecx-accordion") as object)}><InnerBlocks parent={block} /></div>;
+}
+
+function CountdownEdit({ block, blockProps }: BlockEditProps) {
+  const a = block.attrs;
+  return <div {...(merge(blockProps, "ecx-countdown", { textAlign: "center" }) as object)}>{a.label ? <p style={{ margin: 0 }}>{String(a.label)}</p> : null}<strong>{a.target ? String(a.target) : "00 : 00 : 00 : 00"}</strong></div>;
+}
+
+function RatingEdit({ block, blockProps }: BlockEditProps) {
+  const max = Math.min(10, Math.max(1, Number(block.attrs.max) || 5)), v = Number(block.attrs.value) || 0;
+  return <div {...(merge(blockProps, "ecx-rating") as object)} aria-label={`${v}/${max}`}>{Array.from({ length: max }, (_, i) => <span key={i} style={{ color: i < Math.round(v) ? "#f59e0b" : "#d4d4d8" }}>★</span>)}</div>;
+}
+
 function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const a = block.attrs;
   const src = typeof a.src === "string" ? a.src : "";
@@ -261,6 +275,19 @@ export function layoutBlocks(): BlockType[] {
       name: "details", title: "Chi tiết", icon: PanelTop, category: "text", keywords: "chi tiet details accordion faq hoi dap an hien", kind: "container", edit: DetailsEdit,
       attributes: { summary: { type: "string" }, open: { type: "boolean", default: false } },
       create: () => makeBlock("details", {}, [makeBlock("paragraph")]), supports: { style: true, anchor: true, className: true },
+    },
+    {
+      name: "accordion", title: "Accordion", icon: PanelTop, category: "text", keywords: "accordion faq hoi dap nhieu muc", kind: "container", edit: AccordionEdit,
+      attributes: { multiple: { type: "boolean", default: false } },
+      create: () => makeBlock("accordion", {}, [makeBlock("details", { summary: "" }, [makeBlock("paragraph")]), makeBlock("details", { summary: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
+    },
+    {
+      name: "countdown", title: "Đếm ngược", icon: Square, category: "design", keywords: "dem nguoc countdown khuyen mai sale", kind: "atom", edit: CountdownEdit,
+      attributes: { target: { type: "string" }, label: { type: "string" }, expiredText: { type: "string" } }, supports: { style: true, anchor: true, className: true },
+    },
+    {
+      name: "rating", title: "Đánh giá sao", icon: Square, category: "design", keywords: "danh gia sao rating review", kind: "atom", edit: RatingEdit,
+      attributes: { value: { type: "number", default: 5, min: 0, max: 10 }, max: { type: "integer", default: 5, min: 1, max: 10 }, label: { type: "string" } }, supports: { style: true, anchor: true, className: true },
     },
     {
       name: "cover", title: "Ảnh bìa", icon: ImageIcon, category: "media", keywords: "anh bia cover banner hero", kind: "container", edit: CoverEdit,
