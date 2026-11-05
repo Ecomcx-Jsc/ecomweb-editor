@@ -20,6 +20,13 @@ export interface EditorHost {
   canvasStyles?: Array<string | { css: string }>;
   /** Khung soạn: thuộc tính của <html> / <body> trên website (data-theme, class, lang…) — CSS của theme scope theo chúng. */
   canvasDocument?: { html?: Record<string, string>; body?: Record<string, string> };
+  /**
+   * Khung soạn: chuỗi phần tử bao quanh nội dung như trên website (div.site > main#x > div.content…), từ ngoài vào trong — theme viết CSS
+   * theo cấu trúc trang (`#x .content p em`, biến CSS đặt trên div.site) nên canvas phải dựng đúng chuỗi đó.
+   */
+  canvasWrapper?: Array<{ tag: string; attrs?: Record<string, string> }>;
+  /** Class thêm cho vùng nội dung của khung soạn (vd "prose max-w-none") — như phần tử nội dung trên website. */
+  canvasContentClass?: string;
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */

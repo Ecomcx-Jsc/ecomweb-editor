@@ -1,5 +1,5 @@
 import { collectStyles, normalizeStyle, presetCss, type BlockStyle } from "@ecomcx/ecomweb-content";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { onAnimationsChange, pluginAnimations } from "../../shared/animation-store";
 import { createPortal } from "react-dom";
 import { DocBlocks } from "./block-list";
@@ -8,6 +8,7 @@ import { DocScopeProvider, useEditor, useEditorState, useUiTick } from "../conte
 import { usePrefs } from "../prefs";
 import { CANVAS_CSS } from "./canvas-css";
 import { applyDocumentAttrs } from "./document-attrs";
+import { wrapperNodes } from "./wrapper-props";
 import { makeBlock, type BNode } from "../core/model";
 import { flatten, topLevelOrdered } from "../core/ops";
 import { insertSibling, now, richViews } from "../text/rich-text";
@@ -64,13 +65,20 @@ export function Canvas({ device = "desktop", className, contentClassName = "ecx-
     <div className={["ecx-canvas-wrap", `is-${device}`, zoom !== 1 && "is-zoomed-out", className].filter(Boolean).join(" ")}>
       <iframe ref={frameRef} className="ecx-canvas-frame" title={labels.canvas} srcDoc={SRC_DOC} onLoad={onLoad}
         style={style} data-ecx-canvas="" />
-      {doc && createPortal(<CanvasRoot doc={doc} contentClassName={contentClassName} before={before} after={after} />, doc.body)}
+      {doc && createPortal(<CanvasWrapper><CanvasRoot doc={doc} contentClassName={contentClassName} before={before} after={after} /></CanvasWrapper>, doc.body)}
     </div>
   );
 }
 
+/** Khung bao của website (host.canvasWrapper) quanh vùng soạn; không có → vùng soạn đứng trực tiếp trong <body>. */
+function CanvasWrapper({ children }: { children: ReactNode }) {
+  const { host } = useEditor();
+  const nodes = useMemo(() => wrapperNodes(host.canvasWrapper), [host.canvasWrapper]);
+  return <>{nodes.reduceRight<ReactNode>((inner, n) => createElement(n.tag, n.props, inner), children)}</>;
+}
+
 function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; contentClassName: string; before?: ReactNode; after?: ReactNode }) {
-  const { store, labels, prefs, ui } = useEditor();
+  const { store, labels, prefs, ui, host } = useEditor();
   const spotlight = usePrefs(prefs).spotlight;
   useUiTick();
   const focus = useEditorState((s) => s.focus[s.focus.length - 1] ?? null);
@@ -87,7 +95,7 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   useCanvasEvents(doc);
   const hasRange = useRangeHighlight(doc);
   return (
-    <div className={["ecx-canvas-root", contentClassName, focus && "is-focus-mode", spotlight && "is-spotlight", ui.zoomOut && "is-zoomed-out", hasRange && "has-text-range"].filter(Boolean).join(" ")} data-ecx-doc={activeId} tabIndex={-1}
+    <div className={["ecx-canvas-root", contentClassName, host.canvasContentClass, focus && "is-focus-mode", spotlight && "is-spotlight", ui.zoomOut && "is-zoomed-out", hasRange && "has-text-range"].filter(Boolean).join(" ")} data-ecx-doc={activeId} tabIndex={-1}
       onDoubleClick={() => { if (ui.zoomOut) zoomIn(store, ui); }}
       onMouseDown={(e) => {
         if (ui.zoomOut) return store.clearSelection();
