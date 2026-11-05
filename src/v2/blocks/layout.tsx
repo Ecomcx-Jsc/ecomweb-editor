@@ -133,6 +133,27 @@ function AccordionEdit({ block, blockProps }: BlockEditProps) {
   return <div {...(merge(blockProps, "ecx-accordion") as object)}><InnerBlocks parent={block} /></div>;
 }
 
+function TabsEdit({ block, blockProps }: BlockEditProps) {
+  return <div {...(merge(blockProps, "ecx-tabs") as object)}><InnerBlocks parent={block} /></div>;
+}
+
+function TabEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
+  return (
+    <div {...(merge(blockProps, "ecx-tab", { borderLeft: "3px solid rgba(127,127,127,.4)", paddingLeft: 12, marginBlock: 8 }) as object)}>
+      <RichText blockId={block.id} field="title" tagName="strong" value={String(block.attrs.title ?? "")} onChange={(v) => setAttrs({ title: v })} placeholder="Tab…" placeholderAlways editable={editable} />
+      <InnerBlocks parent={block} />
+    </div>
+  );
+}
+
+function CarouselEdit({ block, blockProps }: BlockEditProps) {
+  return <div {...(merge(blockProps, "ecx-carousel") as object)}><InnerBlocks parent={block} /></div>;
+}
+
+function ShortcodeEdit({ block, blockProps }: BlockEditProps) {
+  return <div {...(merge(blockProps, "ecx-shortcode", { fontFamily: "monospace", opacity: 0.8 }) as object)}>[{String(block.attrs.name || "shortcode")}]</div>;
+}
+
 function CountdownEdit({ block, blockProps }: BlockEditProps) {
   const a = block.attrs;
   return <div {...(merge(blockProps, "ecx-countdown", { textAlign: "center" }) as object)}>{a.label ? <p style={{ margin: 0 }}>{String(a.label)}</p> : null}<strong>{a.target ? String(a.target) : "00 : 00 : 00 : 00"}</strong></div>;
@@ -280,6 +301,23 @@ export function layoutBlocks(): BlockType[] {
       name: "accordion", title: "Accordion", icon: PanelTop, category: "text", keywords: "accordion faq hoi dap nhieu muc", kind: "container", edit: AccordionEdit,
       attributes: { multiple: { type: "boolean", default: false } },
       create: () => makeBlock("accordion", {}, [makeBlock("details", { summary: "" }, [makeBlock("paragraph")]), makeBlock("details", { summary: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
+    },
+    {
+      name: "tabs", title: "Tabs", icon: PanelTop, category: "text", keywords: "tabs the tab chuyen doi noi dung", kind: "container", edit: TabsEdit,
+      create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
+    },
+    {
+      name: "tab", title: "Tab", icon: PanelTop, category: "text", keywords: "tab", kind: "container", edit: TabEdit, hidden: true, structure: { parents: ["tabs"] },
+      attributes: { title: { type: "string" } }, create: () => makeBlock("tab", { title: "" }, [makeBlock("paragraph")]),
+    },
+    {
+      name: "carousel", title: "Carousel", icon: Columns3, category: "design", keywords: "carousel slider slide truot anh", kind: "container", edit: CarouselEdit,
+      attributes: { slidesPerView: { type: "integer", default: 1, min: 1, max: 4 } },
+      create: () => makeBlock("carousel", { slidesPerView: 1 }, [makeBlock("group", {}, [makeBlock("paragraph")]), makeBlock("group", {}, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
+    },
+    {
+      name: "shortcode", title: "Shortcode", icon: Square, category: "design", keywords: "shortcode ma nhung plugin", kind: "atom", edit: ShortcodeEdit,
+      attributes: { name: { type: "string" }, args: { type: "json", default: {} } }, supports: { style: true, anchor: true, className: true },
     },
     {
       name: "countdown", title: "Đếm ngược", icon: Square, category: "design", keywords: "dem nguoc countdown khuyen mai sale", kind: "atom", edit: CountdownEdit,
