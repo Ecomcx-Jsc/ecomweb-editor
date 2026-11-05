@@ -7,6 +7,7 @@ import { BLOCKS_MIME, blocksFromClipboard, serializeBlocks } from "../core/clipb
 import { DocScopeProvider, useEditor, useEditorState, useUiTick } from "../context";
 import { usePrefs } from "../prefs";
 import { CANVAS_CSS } from "./canvas-css";
+import { applyDocumentAttrs } from "./document-attrs";
 import { makeBlock, type BNode } from "../core/model";
 import { flatten, topLevelOrdered } from "../core/ops";
 import { insertSibling, now, richViews } from "../text/rich-text";
@@ -80,6 +81,7 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   const viewId = !focus && frameId ? frameId : activeId;
   const mode = useEditorState(useCallback((s) => s.docs[activeId]?.mode ?? "default", [activeId]));
   const title = useEditorState(useCallback((s) => s.docs[activeId]?.title, [activeId]));
+  useCanvasDocument(doc);
   useCanvasStyles(doc);
   useCanvasKeys(doc);
   useCanvasEvents(doc);
@@ -108,6 +110,13 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
       {!focus && after}
     </div>
   );
+}
+
+/** Thuộc tính <html> / <body> của website (host.canvasDocument) để CSS đã scope của theme khớp. */
+function useCanvasDocument(doc: Document) {
+  const { host } = useEditor();
+  const spec = host.canvasDocument;
+  useLayoutEffect(() => applyDocumentAttrs(doc, spec), [doc, spec]);
 }
 
 /** CSS trong iframe: nền của trình soạn, CSS website (host), preset theme, kiểu dáng các khối. */

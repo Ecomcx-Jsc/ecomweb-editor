@@ -18,6 +18,8 @@ export interface EditorHost {
   dynamic?: DynamicData;
   /** Khung soạn: CSS của website (đường dẫn hoặc nội dung CSS) để soạn trông giống hệt trang thật. */
   canvasStyles?: Array<string | { css: string }>;
+  /** Khung soạn: thuộc tính của <html> / <body> trên website (data-theme, class, lang…) — CSS của theme scope theo chúng. */
+  canvasDocument?: { html?: Record<string, string>; body?: Record<string, string> };
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */
