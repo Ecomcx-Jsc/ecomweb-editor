@@ -61,7 +61,7 @@ export const v2 = {
   saving: "Saving…",
   saved: "Saved",
   unsaved: "Unsaved changes",
-  unknownBlock: "Unsupported block (data is preserved)",
+  unknownBlock: "Block from a plugin or theme that is no longer installed — content is kept, reinstall it to edit",
   paragraph: "Paragraph",
   heading: "Heading",
   list: "List",

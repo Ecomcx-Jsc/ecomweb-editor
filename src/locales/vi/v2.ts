@@ -61,7 +61,7 @@ export const v2 = {
   saving: "Đang lưu…",
   saved: "Đã lưu",
   unsaved: "Có thay đổi chưa lưu",
-  unknownBlock: "Khối chưa hỗ trợ (dữ liệu được giữ nguyên)",
+  unknownBlock: "Khối của plugin hoặc theme không còn được cài — nội dung được giữ nguyên, bật lại để sửa",
   paragraph: "Đoạn văn",
   heading: "Tiêu đề",
   list: "Danh sách",
