@@ -29,6 +29,11 @@ export interface EditorHost {
   canvasContentClass?: string;
   /** Mở nơi sửa menu của một vị trí (khối Menu đang chọn hiện nút "Sửa menu"). Không có → không hiện nút. */
   editMenu?(location: string): void;
+  /**
+   * Website vẽ giúp một khối (nút nội dung dạng JSON như khi lưu) bằng code + CSS của theme → HTML. null = không vẽ được
+   * (trình soạn dùng giao diện của mình). Dùng cho khối có `serverRender` (khối động, khối plugin/theme không có `edit`).
+   */
+  renderBlock?(node: { type: string; attrs?: Record<string, unknown>; content?: unknown[] }): Promise<string | null>;
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */

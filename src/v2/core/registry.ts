@@ -71,6 +71,12 @@ export interface BlockType {
   create?(attrs?: Record<string, unknown>): BNode;
   /** Vẽ trên khung soạn. Không có → khung chung (tên khối + tóm tắt thuộc tính). */
   edit?: ComponentType<BlockEditProps>;
+  /**
+   * Khối hiển thị (không gõ chữ bên trong) mà trình soạn không biết vẽ — khối của plugin/theme chỉ có renderer ở website: khung soạn nhờ
+   * website vẽ bằng chính code + CSS của theme khi ứng dụng nhúng có `host.renderBlock`. Khối lõi giữ cách vẽ của trình soạn (như WordPress:
+   * ServerSideRender chỉ cho khối động của plugin). `edit` chỉ dùng khi đang tải / website không vẽ được / khối nằm trong vòng lặp bài.
+   */
+  serverRender?: boolean;
   /** Thanh công cụ riêng của khối (chèn vào thanh công cụ nổi). */
   toolbar?: ComponentType<BlockEditProps>;
   /**
