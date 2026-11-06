@@ -20,7 +20,9 @@ function SiteTitleEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
   const level = Number(block.attrs.level) || 0;
   const Tag = (level ? `h${Math.min(6, level)}` : "p") as "p";
-  return <Tag {...merge(blockProps, "ecx-site-title", align(block.attrs))}>{d.site?.title || "Site Title"}</Tag>;
+  const title = d.site?.title || "Site Title";
+  // Website bọc tên trong liên kết về trang chủ (trừ khi tắt "link") → màu / gạch chân của theme cho <a> áp đúng
+  return <Tag {...merge(blockProps, "ecx-site-title", align(block.attrs))}>{block.attrs.link === false ? title : <a href="#" rel="home" onClick={(e) => e.preventDefault()}>{title}</a>}</Tag>;
 }
 function SiteTaglineEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
@@ -82,7 +84,9 @@ function LanguageEdit({ blockProps }: BlockEditProps) {
 function PostTitleEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
   const Tag = `h${Math.min(6, Math.max(1, Number(block.attrs.level) || 1))}` as "h1";
-  return <Tag {...merge(blockProps, "ecx-post-title", align(block.attrs))}>{d.post?.title || "Post Title"}</Tag>;
+  const title = d.post?.title || "Post Title";
+  // Website bọc tiêu đề trong liên kết tới bài khi bật "link" (danh sách bài) — màu / gạch chân của theme cho <a>
+  return <Tag {...merge(blockProps, "ecx-post-title", align(block.attrs))}>{block.attrs.link ? <a href="#" onClick={(e) => e.preventDefault()}>{title}</a> : title}</Tag>;
 }
 function PostExcerptEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
