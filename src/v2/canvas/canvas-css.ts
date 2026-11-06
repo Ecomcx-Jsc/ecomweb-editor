@@ -5,7 +5,9 @@
 export const CANVAS_CSS = String.raw`
 :root { --ecx-ui-font: "Be Vietnam Pro", ui-sans-serif, system-ui, sans-serif; --ecx-ui: #1a597b; --ecx-ui-nested: #f26251; --ecx-ui-soft: color-mix(in srgb, var(--ecx-ui) 8%, transparent); color-scheme: light; }
 html, body { margin: 0; min-height: 100%; }
-body.ecx-canvas-body { padding: 0; background: #fff; }
+body.ecx-canvas-body { padding: 0; }
+/* Nền trắng chỉ là mặc định (độ ưu tiên 0): theme nền tối / có màu nền riêng trên body thì canvas phải theo theme */
+:where(body.ecx-canvas-body) { background: #fff; }
 /* Khung bao + vùng soạn luôn ở trạng thái cuối của hiệu ứng: theme ẩn chúng tới khi JS chạy (opacity 0, dịch chuyển…) mà khung soạn không có JS đó */
 [data-ecx-wrapper], .ecx-canvas-root { opacity: 1 !important; visibility: visible !important; transform: none !important; animation: none !important; transition: none !important; clip-path: none !important; filter: none !important; }
 .ecx-edit-link { display: inline-block; margin: 6px 0 0; padding: 2px 8px; border: 1px solid var(--ecx-ui, #1a597b); border-radius: 4px; background: #fff; color: var(--ecx-ui, #1a597b); font: 12px/1.6 system-ui, sans-serif; cursor: pointer; }
@@ -17,11 +19,18 @@ body.ecx-canvas-body { padding: 0; background: #fff; }
 .ecx-canvas-root > .ecx-nested, .ecx-canvas-root > .ecx-cover, .ecx-canvas-root > [data-type="columns"], .ecx-canvas-root > .ecx-align-wide { max-width: var(--ecx-wide-width, 1200px); }
 .ecx-canvas-root > .ecx-align-full, .ecx-canvas-root > .ecx-template-part { max-width: none; }
 .ecx-canvas-root.is-wide > * { max-width: var(--ecx-wide-width, 1120px); }
+/* Template (theme dựng bằng khối): website không giới hạn bề rộng khối con và không có lề soạn — canvas làm y hệt, theme tự quyết bằng CSS của nó
+   (chỉ đổi giá trị mặc định của biến, nên CSS theme vẫn thắng nếu có đặt max-width cho .ecx-template > *). */
+.ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content { --ecx-content-width: none; --ecx-wide-width: none; padding-left: 0; padding-right: 0; padding-top: 0; }
+/* Soạn bài / trang trong khung của website (class entry-content do PostContent đặt): bề rộng cột do theme quyết định, không phải 760px của trình soạn */
 
 .ecx-block { position: relative; scroll-margin: 80px; }
 .ecx-block:focus { outline: none; }
-.ecx-block:not([data-ecx-rich]):hover:not(:has(.ecx-block:hover)) { outline: 1px solid color-mix(in srgb, var(--ecx-ui) 45%, transparent); outline-offset: 1px; }
-.ecx-block.is-selected { outline: 2px solid var(--ecx-ui) !important; outline-offset: 1px; }
+.ecx-block:not([data-ecx-rich]):hover:not(:has(.ecx-block:hover)) { outline: 1px solid color-mix(in srgb, var(--ecx-ui) 40%, transparent); outline-offset: 3px; }
+.ecx-block.is-selected { outline: 2px solid var(--ecx-ui) !important; outline-offset: 3px; }
+/* Nhãn loại khối (chỉ khi chọn, khối cấp thường; khối lồng đã có .ecx-nested-label). Không đổi bố cục: absolute, không nhận chuột */
+.ecx-block.is-selected:not(.ecx-nested):not(.ecx-column)[data-type]::after { content: attr(data-ecx-title); position: absolute; left: -2px; top: -3px; transform: translateY(-100%); padding: 1px 8px; border-radius: 4px 4px 0 0; background: var(--ecx-ui); color: #fff; font: 600 11px/1.7 var(--ecx-ui-font); letter-spacing: 0; text-transform: none; white-space: nowrap; pointer-events: none; z-index: 5; }
+.ecx-block.is-selected[data-ecx-title=""]::after { content: none; }
 .ecx-block.is-selected.ecx-nested { outline-color: var(--ecx-ui-nested) !important; }
 [data-ecx-rich] { outline: none; white-space: pre-wrap; word-wrap: break-word; caret-color: currentColor; min-height: 1em; }
 [data-ecx-rich]:focus { outline: none; }
@@ -131,6 +140,8 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-media-error { color: #b42318; font: 12px var(--ecx-ui-font); margin: 6px 0 0; }
 .ecx-cover-placeholder { min-height: 220px; }
 .ecx-btn-ghost { background: none; border-color: transparent; }
+/* tay nắm cột / nút thêm cột định vị theo khối cột (website không cần) */
+.ecx-canvas-root .ecx-columns { position: relative; }
 .ecx-add-column { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); z-index: 7; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: #0f1e29; color: #fff; font: 600 18px/1 var(--ecx-ui-font); cursor: pointer; box-shadow: 0 2px 6px rgb(0 0 0 / .2); }
 .ecx-add-column:hover { background: var(--ecx-ui); }
 .is-zoomed-out .ecx-add-column { display: none; }

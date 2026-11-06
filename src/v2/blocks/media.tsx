@@ -1,6 +1,6 @@
-import { embedInfo, isSafeUrl } from "@ecomcx/ecomweb-content";
+import { blockShell, embedInfo, isSafeUrl } from "@ecomcx/ecomweb-content";
 import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Play, Globe, X } from "lucide-react";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useEditor } from "../context";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
@@ -34,7 +34,7 @@ function ImageEdit({ block, blockProps, setAttrs, editable, labels, selected }: 
   const src = bSrc.bound ? safe(bSrc.value) : safe(a.src);
   if (bSrc.bound && !src) return <figure {...blockProps} className={cx(blockProps.className, "ecx-image cms-image")}><BoundText tagName="div" className="ecx-bound-media" preview={bSrc} /></figure>;
   if (!src) return <MediaPlaceholder blockId={block.id} kind="image" icon={ImageIcon} title={labels.image} blockProps={blockProps} />;
-  const cls = cx("ecx-image cms-image", a.align && `ecx-align-${a.align} align${a.align}`);
+  const cls = blockShell("image", a)!.className;
   return (
     <figure {...blockProps} className={cx(blockProps.className, cls)} style={{ ...(blockProps.style ?? {}), position: "relative" }}>
       {selected && editable && <ImageHandle blockId={block.id} />}
@@ -52,8 +52,9 @@ function GalleryEdit({ block, blockProps, labels }: BlockEditProps) {
   const cols = Math.min(6, Math.max(1, Number(block.attrs.columns) || 3));
   void labels;
   return (
-    <figure {...blockProps} className={cx(blockProps.className, "ecx-gallery cms-gallery", `ecx-gallery-columns-${cols}`)} style={{ display: "grid", gap: 8, gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-      {images.map((im, i) => <figure key={i} className="ecx-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" }} /></figure>)}
+    <figure {...blockProps} className={cx(blockProps.className, blockShell("gallery", block.attrs)!.className)} style={{ ...(blockProps.style ?? {}), ...(blockShell("gallery", block.attrs)!.style as CSSProperties) }}>
+      {images.map((im, i) => <figure key={i} className="ecx-gallery-item cms-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" }} /></figure>)}
+      {block.attrs.caption ? <figcaption className="ecx-gallery-caption cms-gallery-caption" style={{ gridColumn: "1 / -1" }}>{String(block.attrs.caption)}</figcaption> : null}
     </figure>
   );
 }
@@ -115,8 +116,9 @@ function EmbedEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
       </div>
     );
   }
+  const shell = blockShell("embed", block.attrs); // vỏ dùng chung với website
   return (
-    <figure {...blockProps} className={cx(blockProps.className, "ecx-embed", info && `ecx-embed-${info.provider}`)}>
+    <figure {...blockProps} className={cx(blockProps.className, shell?.className ?? "ecx-embed")} style={{ ...(blockProps.style ?? {}), ...(shell?.style as CSSProperties | undefined) }}>
       <div className="ecx-embed-preview"><Globe className="ecx-icon" /> {info?.provider ?? ""} <span className="ecx-embed-url">{url}</span></div>
       {typeof block.attrs.caption === "string" && block.attrs.caption && <figcaption>{block.attrs.caption}</figcaption>}
     </figure>
@@ -126,7 +128,7 @@ function EmbedEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
 function HtmlEdit({ block, blockProps, setAttrs, selected, editable }: BlockEditProps) {
   const html = String(block.attrs.html ?? "");
   return (
-    <div {...blockProps} className={cx(blockProps.className, "ecx-html-block")}>
+    <div {...blockProps} className={cx(blockProps.className, blockShell("customHtml", block.attrs)!.className)}>
       {selected && editable
         ? <textarea className="ecx-code-input" value={html} rows={Math.min(20, Math.max(4, html.split("\n").length + 1))} onChange={(e) => setAttrs({ html: e.target.value })} onMouseDown={(e) => e.stopPropagation()} aria-label="HTML" spellCheck={false} />
         // Xem trước trong iframe không cho chạy script (HTML do người khác soạn không chạy được trong trang quản trị)

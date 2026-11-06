@@ -1,3 +1,4 @@
+import { linkRel } from "@ecomcx/ecomweb-content";
 import type { RichMark, RichNode } from "@ecomcx/ecomweb-content";
 import { Fragment, Schema, type Mark, type MarkSpec, type Node as PMNode } from "prosemirror-model";
 
@@ -11,7 +12,7 @@ const linkSpec: MarkSpec = {
   attrs: { href: { default: "" }, target: { default: null }, rel: { default: null } },
   inclusive: false,
   parseDOM: [{ tag: "a[href]", getAttrs: (d) => ({ href: (d as HTMLElement).getAttribute("href"), target: (d as HTMLElement).getAttribute("target"), rel: (d as HTMLElement).getAttribute("rel") }) }],
-  toDOM: (m) => ["a", { href: m.attrs.href, target: m.attrs.target, rel: m.attrs.rel, "data-ecx-link": "" }, 0],
+  toDOM: (m) => ["a", { href: m.attrs.href, target: m.attrs.target, rel: linkRel(m.attrs.rel, m.attrs.target), "data-ecx-link": "" }, 0], // rel giống website
 };
 
 const simple = (tag: string, extra: string[] = []): MarkSpec => ({ parseDOM: [tag, ...extra].map((t) => ({ tag: t })), toDOM: () => [tag, 0] });

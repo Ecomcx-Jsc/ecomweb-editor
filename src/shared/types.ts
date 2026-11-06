@@ -1,6 +1,3 @@
-import type { AnyExtension, Editor, Range } from "@tiptap/core";
-import type { LucideIcon } from "lucide-react";
-
 /** Kích thước ảnh đã tạo sẵn (thumbnail, medium, large…), kèm bản WebP nếu có. */
 export interface MediaSize { url: string; width: number; height: number; webpUrl?: string | null }
 
@@ -33,24 +30,6 @@ export interface MediaProvider {
   get?(id: MediaItem["id"]): Promise<MediaItem | null>;
   /** Tải tệp lên thư viện media (nút "Tải lên", kéo thả tệp vào khối). Không có → chỉ chọn từ thư viện / URL. */
   upload?(files: File[]): Promise<MediaItem[]>;
-}
-
-/** Một lệnh chèn trong slash menu ("/"). */
-export interface InsertItem {
-  key: string;
-  title: string;
-  hint: string;
-  icon: LucideIcon;
-  /** Từ khoá tìm kiếm (không dấu, cách nhau bởi khoảng trắng). */
-  keywords: string;
-  run(editor: Editor, range?: Range): void;
-}
-
-/** Gói mở rộng (plugin của CMS hoặc ứng dụng): thêm node/mark TipTap và lệnh chèn. */
-export interface EditorExtensionPack {
-  name: string;
-  extensions?: AnyExtension[];
-  insertItems?: InsertItem[];
 }
 
 /** Nội dung lưu trữ: danh sách khối (sẵn sàng cho page builder). */

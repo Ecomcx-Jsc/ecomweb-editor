@@ -1,4 +1,4 @@
-import { colorCss, spacingValue } from "@ecomcx/ecomweb-content";
+import { blockShell, buttonWrapShell, colorCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
 import { ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import type { CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
@@ -25,12 +25,15 @@ const TONES: Record<string, string> = { info: "#2563eb", success: "#16a34a", war
 const merge = (bp: BlockEditProps["blockProps"], className: string, style?: CSSProperties, attrs?: Record<string, unknown>) =>
   ({ ...bp, className: cx(bp.className, className), style: { ...(bp.style ?? {}), ...(attrs?.style ? withoutOverridden(style ?? {}, attrs.style) : style) } });
 
+/** Props của vỏ khối lấy từ markup dùng chung với website: thẻ-class-style-thuộc tính cố định + props của canvas (id, chọn khối). */
+const shellProps = (bp: BlockEditProps["blockProps"], type: string, attrs: Record<string, unknown>, parent?: { type: string; attrs?: Record<string, unknown> }) => {
+  const sh = blockShell(type, attrs, parent)!;
+  return { ...merge(bp, sh.className ?? "", sh.style as CSSProperties, attrs), ...sh.attrs };
+};
+
 function GroupEdit({ block, blockProps }: BlockEditProps) {
-  const a = block.attrs;
-  const bg = colorCss(a.background), fg = colorCss(a.textColor);
-  const pad = PADDING[a.padding as string] ?? (bg ? PADDING.medium : undefined);
   return (
-    <div {...merge(blockProps, cx("ecx-group cms-group", a.padding && `ecx-group-${a.padding} cms-group-${a.padding}`), { background: bg, color: fg, padding: pad, borderRadius: bg ? 12 : undefined }, a)}>
+    <div {...shellProps(blockProps, "group", block.attrs)}>
       <InnerBlocks parent={block} />
     </div>
   );
@@ -56,11 +59,10 @@ function ColumnsEdit({ block, blockProps, editable, labels }: BlockEditProps) {
   const { store } = useEditor();
   const t = useMsgs("blocks");
   const a = block.attrs;
-  const stack = a.stack !== false;
   const active = useActiveWithin(block.id);
-  const alignItems = a.verticalAlign === "center" ? "center" : a.verticalAlign === "bottom" ? "flex-end" : "flex-start";
+  const shell = blockShell("columns", a)!; // vỏ dùng chung với website (@ecomcx/ecomweb-content)
   return (
-    <div {...merge(blockProps, cx("ecx-columns cms-columns", a.verticalAlign && `ecx-columns-${a.verticalAlign}`, stack && "is-stack"), { display: "flex", flexWrap: stack ? "wrap" : "nowrap", gap: "1.5rem", alignItems, position: "relative" }, block.attrs)}>
+    <div {...merge(blockProps, shell.className!, shell.style as CSSProperties, block.attrs)}>
       <InnerBlocks parent={block} appender="none" />
       {active && editable && block.content!.length > 1 && <ColumnHandles block={block} />}
       {active && editable && block.content!.length < 6 && store.canInsertInto(block.id) && (
@@ -72,36 +74,38 @@ function ColumnsEdit({ block, blockProps, editable, labels }: BlockEditProps) {
 }
 
 function ColumnEdit({ block, blockProps }: BlockEditProps) {
-  const w = Number(block.attrs.width) > 0 ? Number(block.attrs.width) : 1;
+  const { store } = useEditor();
+  const parent = store.locate(block.id)?.parent;
+  const shell = blockShell("column", block.attrs, parent ? { type: parent.type, attrs: parent.attrs } : undefined)!;
   return (
-    <div {...merge(blockProps, "ecx-column cms-column", { flex: `${w} 1 0`, minWidth: "min(100%, 14rem)" }, block.attrs)}>
+    <div {...merge(blockProps, shell.className!, shell.style as CSSProperties, block.attrs)}>
       <InnerBlocks parent={block} />
     </div>
   );
 }
 
 function ButtonsEdit({ block, blockProps }: BlockEditProps) {
-  return <div {...merge(blockProps, cx("ecx-buttons-group", block.attrs.align && `is-${block.attrs.align}`))}><InnerBlocks parent={block} appender="none" /></div>;
+  return <div {...shellProps(blockProps, "buttons", block.attrs)}><InnerBlocks parent={block} appender="none" /></div>;
 }
 
 function ButtonEdit({ block, blockProps, setAttrs, editable, labels }: BlockEditProps) {
+  const { store } = useEditor();
   const a = block.attrs;
-  const variant = a.variant === "secondary" || a.variant === "outline" ? a.variant : "primary";
   const bound = useBindingPreview(block, "text");
-  const look: CSSProperties = variant === "outline"
-    ? { border: "1px solid var(--ecx-button-bg, var(--cms-button-bg, var(--primary, currentColor)))", color: "var(--ecx-button-bg, var(--cms-button-bg, var(--primary, inherit)))" }
-    : variant === "secondary"
-      ? { background: "var(--ecx-button-secondary-bg, var(--cms-button-secondary-bg, rgba(127,127,127,.15)))", color: "inherit" }
-      : { background: "var(--ecx-button-bg, var(--cms-button-bg, var(--primary, #18181b)))", color: "var(--ecx-button-fg, var(--cms-button-fg, #fff))" };
-  return (
-    <span {...merge(blockProps, cx("ecx-button cms-button", `ecx-button-${variant} cms-button-${variant}`), { display: "inline-block", padding: "0.6em 1.2em", borderRadius: 8, fontWeight: 600, lineHeight: 1.2, ...look }, a)}>
+  const inGroup = store.locate(block.id)?.parent?.type === "buttons";
+  // Website: nút đứng riêng nằm trong đoạn <p class="ecx-buttons"> (căn lề); trong khối "buttons" thì là chính thẻ <a>
+  const link = (
+    <a {...shellProps(inGroup ? blockProps : ({} as BlockEditProps["blockProps"]), "button", a)} onClick={(e) => e.preventDefault()}>
       {bound.bound ? <BoundText preview={bound} /> : <RichText blockId={block.id} field="text" tagName="span" value={String(a.text ?? "")} onChange={(v) => setAttrs({ text: v })} placeholder={labels.buttonText} placeholderAlways editable={editable} />}
-    </span>
+    </a>
   );
+  if (inGroup) return link;
+  const wrap = buttonWrapShell(a);
+  return <p {...merge(blockProps, wrap.className ?? "", wrap.style as CSSProperties)}>{link}</p>;
 }
 
 function SpacerEdit({ block, blockProps }: BlockEditProps) {
-  return <div {...merge(blockProps, "ecx-spacer", { height: spacingValue(block.attrs.height ?? "lg") ?? "1.5rem" })} aria-hidden="true" />;
+  return <div {...shellProps(blockProps, "spacer", block.attrs)} />;
 }
 
 function SeparatorEdit({ blockProps }: BlockEditProps) {
@@ -109,10 +113,12 @@ function SeparatorEdit({ blockProps }: BlockEditProps) {
 }
 
 function CalloutEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
-  const tone = TONES[block.attrs.tone as string] ? (block.attrs.tone as string) : "info";
+  const active = useActiveWithin(block.id);
+  const title = String(block.attrs.title ?? "");
   return (
-    <div {...merge(blockProps, cx("ecx-callout cms-callout", `ecx-callout-${tone} cms-callout-${tone}`), { borderLeft: `4px solid ${TONES[tone]}`, background: `color-mix(in srgb, ${TONES[tone]} 8%, transparent)`, padding: "0.75rem 1rem", borderRadius: 8 }, block.attrs)} role="note">
-      <RichText blockId={block.id} field="title" tagName="p" className="ecx-callout-title cms-callout-title" style={{ margin: 0, fontWeight: 600 }} value={String(block.attrs.title ?? "")} onChange={(v) => setAttrs({ title: v })} placeholder="…" editable={editable} />
+    <div {...shellProps(blockProps, "callout", block.attrs)}>
+      {/* website chỉ in tiêu đề khi có chữ: canvas chỉ hiện ô tiêu đề trống lúc đang chọn khối */}
+      {(title || (active && editable)) && <RichText blockId={block.id} field="title" tagName="p" className="ecx-callout-title cms-callout-title" style={{ margin: 0, fontWeight: 600 }} value={title} onChange={(v) => setAttrs({ title: v })} placeholder="…" editable={editable} />}
       <InnerBlocks parent={block} />
     </div>
   );
@@ -186,11 +192,11 @@ function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
       </div>
     );
   }
-  const overlay = colorCss(a.overlay) ?? (src ? "#000" : undefined);
+  const { overlay, opacity, fixed } = coverParts(a);
   return (
-    <div {...merge(blockProps, cx("ecx-cover", a.contentAlign && a.contentAlign !== "center" && `is-${a.contentAlign}`, a.fixed && src && "is-fixed"), { minHeight: spacingValue(a.minHeight ?? "400px") }, a)}>
-      {src && <img className="ecx-cover-img" src={src} alt={String(a.alt ?? "")} draggable={false} />}
-      {overlay && <span className="ecx-cover-overlay" aria-hidden="true" style={{ background: overlay, opacity: Math.min(100, Math.max(0, Number(a.opacity ?? 50))) / 100 }} />}
+    <div {...shellProps(blockProps, "cover", a)}>
+      {src && !fixed && <img className="ecx-cover-img" src={src} alt={String(a.alt ?? "")} draggable={false} />}
+      {overlay && <span className="ecx-cover-overlay" aria-hidden="true" style={{ background: overlay, opacity }} />}
       <div className="ecx-cover-inner"><InnerBlocks parent={block} /></div>
     </div>
   );
@@ -198,9 +204,8 @@ function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
 
 function MediaTextEdit({ block, blockProps }: BlockEditProps) {
   const a = block.attrs;
-  const width = Math.min(80, Math.max(20, Number(a.width) || 50));
   return (
-    <div {...merge(blockProps, cx("ecx-media-text", a.position === "right" && "is-right", a.verticalAlign && a.verticalAlign !== "center" && `is-${a.verticalAlign}`, a.stack !== false && "is-stack"), { ["--ecx-media-width" as string]: `${width}%` } as CSSProperties)}>
+    <div {...shellProps(blockProps, "mediaText", a)}>
       <figure className="ecx-media-text-media" style={{ margin: 0 }}>{typeof a.src === "string" && a.src ? <img src={a.src} alt={String(a.alt ?? "")} draggable={false} /> : <MediaPick blockId={block.id} />}</figure>
       <div className="ecx-media-text-content"><InnerBlocks parent={block} /></div>
     </div>

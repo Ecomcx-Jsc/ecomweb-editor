@@ -58,6 +58,7 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     ref: null,
     "data-ecx-block": block.id,
     "data-type": block.type,
+    "data-ecx-title": state.selected ? type?.title ?? block.type : undefined,
     tabIndex: type?.kind === "text" ? undefined : -1,
     id: typeof a.anchor === "string" ? a.anchor : undefined,
     className: cx(

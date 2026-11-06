@@ -331,9 +331,9 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
 
   test("đổi khổ màn hình: iframe đổi bề rộng (media query đúng thiết bị)", async ({ page }) => {
     await open(page, "?doc=post");
-    await page.getByRole("button", { name: "mobile" }).click();
+    await page.getByRole("button", { name: "Điện thoại", exact: true }).click();
     await expect(page.locator("iframe[data-ecx-canvas]")).toHaveCSS("width", "390px");
-    await page.getByRole("button", { name: "tablet" }).click();
+    await page.getByRole("button", { name: "Máy tính bảng", exact: true }).click();
     await expect(page.locator("iframe[data-ecx-canvas]")).toHaveCSS("width", "768px");
   });
 });

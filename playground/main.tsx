@@ -1,11 +1,8 @@
 import { createRoot } from "react-dom/client";
 import contentCss from "@ecomcx/ecomweb-content/style.css?url";
-import "../src/legacy/editor.css";
 import "../src/v2/editor.css";
-import { BlockEditor, EditorStore, blocksFromContent, fixTree, flatten, inlineText, registerAnimation, type EditorHost } from "../src/v2";
+import { BlockEditor, EditorStore, blocksFromContent, contentFromBlocks, fixTree, flatten, inlineText, registerAnimation, registerBlock, registerBlockPanel, type EditorHost } from "../src/v2";
 import { defineBlock } from "@ecomcx/ecomweb-content";
-import { registerBlock } from "../src/legacy/blocks";
-import { registerBlockPanel } from "../src/legacy/panels";
 import { registerBindingSource } from "../src/v2/ui/bindings";
 
 /**
@@ -121,8 +118,10 @@ const bigDoc = big ? { type: "doc", content: Array.from({ length: big }, (_, i) 
 const doc = params.get("doc");
 // ?doc=loop: template có "Danh sách bài" (bài lấy qua host.queryPosts)
 const loop = { type: "doc", content: [h(1, "Tin tức"), { type: "query", attrs: { inherit: false, perPage: 3 }, content: [{ type: "postTemplate", attrs: { layout: "list" }, content: [{ type: "postTitle", attrs: { level: 2 } }, { type: "postDate" }, p("Đọc thêm")] }, { type: "pagination" }] }] };
-const initial = bigDoc ?? (params.get("empty") ? null : doc === "post" || params.get("frame") ? post : doc === "rich" ? rich : doc === "loop" ? loop : template);
-const store = new EditorStore({ kind: doc === "post" || doc === "rich" || params.get("frame") ? "post" : "template", title: "Trang chủ", blocks: blocksFromContent(initial) });
+// Test parity: nội dung nạp từ ngoài (window.__INJECT_DOC__) để so với website
+const injected = (window as unknown as { __INJECT_DOC__?: unknown }).__INJECT_DOC__;
+const initial = injected ?? bigDoc ?? (params.get("empty") ? null : doc === "post" || params.get("frame") ? post : doc === "rich" ? rich : doc === "loop" ? loop : template);
+const store = new EditorStore({ kind: injected || doc === "post" || doc === "rich" || params.get("frame") ? "post" : "template", title: "Trang chủ", blocks: blocksFromContent(initial) });
 const frame = params.get("frame") ? { content: frameTemplate, title: "Trang đơn" } : undefined;
 let changes = 0;
 /** Kiểm tra bất biến (test fuzz): cây hợp lệ, định danh không trùng, chữ trên màn hình khớp dữ liệu từng khối. */
@@ -144,7 +143,7 @@ function check(): string[] {
   }
   return errors;
 }
-(window as unknown as { __ecx: unknown }).__ecx = { store, saves, queries, uploads, registerAnimation, check, get changes() { return changes; } };
+(window as unknown as { __ecx: unknown }).__ecx = { content: () => contentFromBlocks(store.getState().docs.root.blocks), store, saves, queries, uploads, registerAnimation, check, get changes() { return changes; } };
 
 createRoot(document.getElementById("root")!).render(
   <BlockEditor store={store} host={host} lang={params.get("lang") === "en" ? "en" : "vi"} dynamicBlocks frame={frame}

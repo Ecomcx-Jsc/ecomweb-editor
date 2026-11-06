@@ -1,3 +1,4 @@
+import { blockCitation, blockShell } from "@ecomcx/ecomweb-content";
 import { Code, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, List, ListChecks, ListOrdered, Pilcrow, Quote, SquareCode, TextQuote, Type } from "lucide-react";
 import type { CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
@@ -5,9 +6,11 @@ import { inlineText, makeBlock, type BNode } from "../core/model";
 import { flatten } from "../core/ops";
 import type { BlockEditProps, BlockTransform, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
+import { useActiveWithin } from "./resize";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 
-const align = (a: Record<string, unknown>): CSSProperties | undefined => (typeof a.textAlign === "string" ? { textAlign: a.textAlign as CSSProperties["textAlign"] } : undefined);
+// Căn chữ lấy từ vỏ dùng chung với website: căn trái không in style (trước đây canvas in thừa)
+const align = (a: Record<string, unknown>, type = "paragraph"): CSSProperties | undefined => blockShell(type, a)?.style as CSSProperties | undefined;
 const HEADING_ICONS = [Heading1, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6];
 
 function ParagraphEdit({ block, blockProps, editable, labels }: BlockEditProps) {
@@ -19,8 +22,8 @@ function ParagraphEdit({ block, blockProps, editable, labels }: BlockEditProps) 
 function HeadingEdit({ block, blockProps, editable, labels }: BlockEditProps) {
   const level = Math.min(6, Math.max(1, Number(block.attrs.level) || 2));
   const bound = useBindingPreview(block, "content");
-  if (bound.bound) return <BoundText tagName={`h${level}`} preview={bound} blockProps={blockProps} style={align(block.attrs)} />;
-  return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={blockProps} style={align(block.attrs)} placeholder={labels.heading} placeholderAlways editable={editable} />;
+  if (bound.bound) return <BoundText tagName={`h${level}`} preview={bound} blockProps={blockProps} style={align(block.attrs, "heading")} />;
+  return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={blockProps} style={align(block.attrs, "heading")} placeholder={labels.heading} placeholderAlways editable={editable} />;
 }
 
 function CodeEdit({ block, blockProps, editable, labels }: BlockEditProps) {
@@ -37,10 +40,14 @@ function PreformattedEdit({ block, blockProps, editable, labels }: BlockEditProp
 }
 
 function PullquoteEdit({ block, blockProps, editable, labels, setAttrs }: BlockEditProps) {
+  const active = useActiveWithin(block.id);
+  const cite = blockCitation(block.attrs) ?? "";
+  const sh = blockShell("pullquote", block.attrs)!;
   return (
-    <figure {...blockProps} className={`${blockProps.className} ecx-pullquote`}>
+    <figure {...blockProps} className={`${blockProps.className} ${sh.className}`}>
       <blockquote><RichText blockId={block.id} value={block.inline} tagName="p" placeholder={labels.pullquote} placeholderAlways editable={editable} /></blockquote>
-      <RichText blockId={block.id} field="citation" tagName="figcaption" value={String(block.attrs.citation ?? "")} onChange={(v) => setAttrs({ citation: v })} placeholder={labels.caption} editable={editable} />
+      {/* website chỉ in nguồn khi có chữ: canvas chỉ hiện ô nguồn trống lúc đang chọn khối */}
+      {(cite || (active && editable)) && <RichText blockId={block.id} field="citation" tagName="figcaption" value={cite} onChange={(v) => setAttrs({ citation: v })} placeholder={labels.caption} editable={editable} />}
     </figure>
   );
 }
@@ -68,8 +75,15 @@ function TaskItemEdit({ block, blockProps, setAttrs, editable }: BlockEditProps)
   );
 }
 
-function QuoteEdit({ block, blockProps }: BlockEditProps) {
-  return <blockquote {...blockProps}><InnerBlocks parent={block} /></blockquote>;
+function QuoteEdit({ block, blockProps, editable, setAttrs, labels }: BlockEditProps) {
+  const cite = blockCitation(block.attrs);
+  // Website in <cite> sau nội dung khi có nguồn: canvas cũng vậy (sửa tại chỗ); đặt / xoá nguồn ở bảng cài đặt khối
+  return (
+    <blockquote {...blockProps}>
+      <InnerBlocks parent={block} />
+      {cite !== undefined && <RichText blockId={block.id} field="citation" tagName="cite" value={cite} onChange={(v) => setAttrs({ citation: v || undefined })} placeholder={labels.caption} editable={editable} />}
+    </blockquote>
+  );
 }
 
 // ---------------------------------------------------------------------------

@@ -71,7 +71,9 @@ test.describe("thu nhỏ", () => {
     await c.locator("[data-ecx-rich]", { hasText: "Chào mừng tới website" }).click();
     await showToolbar(page);
     const handle = page.locator(".ecx-toolbar .ecx-drag-handle");
-    const hb = (await handle.boundingBox())!;
+    // Thanh công cụ còn trượt về chỗ của khối đang chọn (thu nhỏ): chờ vị trí tay nắm đứng yên rồi mới đo
+    let hb = (await handle.boundingBox())!;
+    for (let i = 0; i < 20; i++) { await page.waitForTimeout(50); const next = (await handle.boundingBox())!; const same = Math.abs(next.x - hb.x) < 0.5 && Math.abs(next.y - hb.y) < 0.5; hb = next; if (same) break; }
     const target = (await c.locator(".ecx-columns").first().boundingBox())!;
     await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
     await page.mouse.down();

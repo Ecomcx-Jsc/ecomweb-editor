@@ -53,7 +53,7 @@ test.describe("bố cục + hiệu ứng", () => {
     expect(g.attrs.style.layout.columns).toEqual({ base: 3, mobile: 1 });
     const el = c.locator(`[data-ecx-block="${g.id}"]`);
     expect((await el.evaluate((n) => getComputedStyle(n).gridTemplateColumns)).split(" ").length).toBe(3);
-    await page.getByRole("button", { name: "mobile" }).click();
+    await page.getByRole("button", { name: "Điện thoại", exact: true }).click();
     await expect.poll(async () => (await el.evaluate((n) => getComputedStyle(n).gridTemplateColumns)).split(" ").length).toBe(1);
   });
 

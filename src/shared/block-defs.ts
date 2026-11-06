@@ -3,8 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ComponentType, ReactNode } from "react";
 
 /**
- * Kho khối của plugin (defineBlock + registerBlock) — không phụ thuộc trình soạn nào: bản TipTap (1.x) và bản cây khối (v2)
- * cùng đọc. Panel plugin (registerBlockPanel) cũng nằm ở đây.
+ * Kho khối của plugin (defineBlock + registerBlock) — không phụ thuộc trình soạn nào: trình soạn đọc từ đây. Panel plugin (registerBlockPanel) cũng nằm ở đây.
  */
 export interface BlockEditProps {
   attrs: Record<string, any>;
@@ -31,8 +30,8 @@ const blocks = new Map<string, BlockDefinition>();
 const options = new Map<string, RegisterBlockOptions>();
 const listeners = new Set<() => void>();
 
-export function storeBlockDefinition(def: BlockDefinition, opts: RegisterBlockOptions) { blocks.set(def.name, def); options.set(def.name, opts); listeners.forEach((l) => l()); }
-export function dropBlockDefinition(name: string) { if (blocks.delete(name)) { options.delete(name); listeners.forEach((l) => l()); } }
+export function registerBlock(def: BlockDefinition, opts: RegisterBlockOptions = {}) { blocks.set(def.name, def); options.set(def.name, opts); listeners.forEach((l) => l()); }
+export function unregisterBlock(name: string) { if (blocks.delete(name)) { options.delete(name); listeners.forEach((l) => l()); } }
 export const blockDefinition = (name: string) => blocks.get(name);
 export const blockOptions = (name: string): RegisterBlockOptions => options.get(name) ?? {};
 /** Khối đang đăng ký (để chuẩn hoá + nâng phiên bản khi mở bài). */

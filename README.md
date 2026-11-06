@@ -15,14 +15,12 @@ Trình soạn thảo nội dung dạng khối dựa trên [TipTap](https://tipta
 - Hộp nhập đặt cạnh chỗ soạn (liên kết, alt, chú thích, YouTube, shortcode) thay `window.prompt` — gói mở rộng dùng chung qua `askOf(editor)(…)`
 - Trợ năng: vùng soạn `role="textbox"` + `aria-multiline` + `aria-label` (prop `ariaLabel`), menu theo WAI-ARIA
 - Chữ giao diện tiếng Việt / tiếng Anh (hoặc tự dịch), CSS riêng đổi màu bằng biến
-- Plugin thêm khối: `registerEditorExtension`
-- Lưu dạng JSON (khối) — hiển thị ra HTML bằng renderer của theme hoặc `generateHTML` của TipTap
+- Plugin thêm khối: `defineBlock` + `registerBlock`
+- Lưu dạng JSON (khối) — hiển thị ra HTML bằng renderer của theme
 
-## TipTap đi kèm (vendored)
+## Nền tảng
 
-Trình soạn mang sẵn đúng bản TipTap + ProseMirror đã kiểm thử (`node_modules` của các gói đó được commit, khai báo `bundleDependencies`): cài `@ecomcx/ecomweb-editor` từ GitHub không tải TipTap từ npm — TipTap có ngừng phát triển hay đổi gói thì mọi CMS vẫn cài và build được. Không phần nào khác import TipTap: plugin dùng `defineBlock` / `registerBlock`; lớp cấp thấp (`Node`, `Mark`, `Extension`, `mergeAttributes`) xuất lại từ `@ecomcx/ecomweb-editor`.
-
-Nâng TipTap: đổi phiên bản trong `package.json` → `npm install` → `node scripts/vendor.mjs` → `npm test` (hợp đồng nội dung phải qua) → commit cả `node_modules/` đã vendor.
+Mỗi khối chữ là một ProseMirror nhỏ (prosemirror-state/view/model…), không dùng TipTap. Plugin thêm khối bằng `defineBlock` + `registerBlock`.
 
 ## Dùng
 

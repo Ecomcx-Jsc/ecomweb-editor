@@ -1,6 +1,6 @@
 {
   "name": "@ecomcx/ecomweb-editor",
-  "version": "1.24.0",
+  "version": "1.25.0",
   "description": "Trình soạn nội dung dạng khối của CMS — dùng độc lập trong mọi dự án React (1.x: TipTap; ./v2: cây khối, khung soạn iframe, sửa header/footer tại chỗ).",
   "license": "MIT",
   "repository": {
@@ -17,7 +17,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./style.css": "./src/legacy/editor.css",
+    "./style.css": "./src/v2/editor.css",
     "./v2": "./src/v2/index.ts",
     "./v2/style.css": "./src/v2/editor.css"
   },
@@ -29,26 +29,11 @@
     "*.css"
   ],
   "peerDependencies": {
-    "@ecomcx/ecomweb-content": "^1.18.0",
+    "@ecomcx/ecomweb-content": "^1.19.0",
     "react": ">=18",
     "react-dom": ">=18"
   },
   "dependencies": {
-    "@tiptap/core": "3.32.0",
-    "@tiptap/extension-highlight": "3.32.0",
-    "@tiptap/extension-image": "3.32.0",
-    "@tiptap/extension-list": "3.32.0",
-    "@tiptap/extension-subscript": "3.32.0",
-    "@tiptap/extension-superscript": "3.32.0",
-    "@tiptap/extension-table": "3.32.0",
-    "@tiptap/extension-text-align": "3.32.0",
-    "@tiptap/extension-text-style": "3.32.0",
-    "@tiptap/extension-youtube": "3.32.0",
-    "@tiptap/extensions": "3.32.0",
-    "@tiptap/pm": "3.32.0",
-    "@tiptap/react": "3.32.0",
-    "@tiptap/starter-kit": "3.32.0",
-    "@tiptap/suggestion": "3.32.0",
     "lucide-react": "1.56.0",
     "prosemirror-commands": "1.7.2",
     "prosemirror-history": "1.5.1",
@@ -60,7 +45,7 @@
     "prosemirror-view": "1.42.7"
   },
   "devDependencies": {
-    "@ecomcx/ecomweb-content": "^1.18.0",
+    "@ecomcx/ecomweb-content": "^1.19.0",
     "@playwright/test": "1.53.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
@@ -79,21 +64,5 @@
     "e2e": "playwright test",
     "prepublishOnly": "node scripts/check-publish.mjs"
   },
-  "bundleDependencies": [
-    "@tiptap/core",
-    "@tiptap/extension-highlight",
-    "@tiptap/extension-image",
-    "@tiptap/extension-list",
-    "@tiptap/extension-subscript",
-    "@tiptap/extension-superscript",
-    "@tiptap/extension-table",
-    "@tiptap/extension-text-align",
-    "@tiptap/extension-text-style",
-    "@tiptap/extension-youtube",
-    "@tiptap/extensions",
-    "@tiptap/pm",
-    "@tiptap/react",
-    "@tiptap/starter-kit",
-    "@tiptap/suggestion"
-  ]
+  "bundleDependencies": []
 }

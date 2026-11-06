@@ -304,17 +304,17 @@ test("kéo thả sang tài liệu khác (template → header) là một bước 
 test("đồng bộ khối plugin không đè khối lõi cùng tên (khối 1.x đăng ký qua registerBlock)", async () => {
   const { BlockTypeRegistry } = await import("../src/v2/core/registry");
   const { syncPluginBlocks } = await import("../src/v2/blocks/compat");
-  const { storeBlockDefinition } = await import("../src/shared/block-defs");
+  const { registerBlock } = await import("../src/shared/block-defs");
   const { defineBlock } = await import("@ecomcx/ecomweb-content");
   const r = new BlockTypeRegistry();
   const coreEdit = () => null;
   r.register({ name: "templatePart", title: "Lõi", kind: "atom", edit: coreEdit });
-  storeBlockDefinition(defineBlock({ name: "templatePart", title: "1.x" }), {});
-  storeBlockDefinition(defineBlock({ name: "acme/x", title: "Acme" }), {});
+  registerBlock(defineBlock({ name: "templatePart", title: "1.x" }), {});
+  registerBlock(defineBlock({ name: "acme/x", title: "Acme" }), {});
   const stop = syncPluginBlocks(r);
   assert.equal(r.get("templatePart")!.edit, coreEdit);
   assert.equal(r.get("acme/x")!.title, "Acme");
-  storeBlockDefinition(defineBlock({ name: "acme/x", title: "Acme 2" }), {});
+  registerBlock(defineBlock({ name: "acme/x", title: "Acme 2" }), {});
   assert.equal(r.get("acme/x")!.title, "Acme 2");
   stop();
 });

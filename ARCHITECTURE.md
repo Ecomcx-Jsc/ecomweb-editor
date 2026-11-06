@@ -5,10 +5,9 @@
 ```
 src/
   index.ts        Điểm vào 1.x (`@ecomcx/ecomweb-editor`)
-  legacy/         Trình soạn 1.x dựa trên TipTap (chỉ sửa lỗi, không thêm tính năng)
   i18n/           Đa ngôn ngữ: registerLocale, messages, msgs, format (không phụ thuộc React)
   locales/        Chữ giao diện theo ngôn ngữ: vi/, en/ — mỗi nhóm chữ một file
-  shared/         Dùng chung 1.x + v2, không phụ thuộc TipTap hay v2: đăng ký khối/panel/mẫu của plugin, bảng kiểu dáng, nhãn
+  shared/         Dùng chung, không phụ thuộc v2: đăng ký khối/panel/mẫu của plugin, bảng kiểu dáng, nhãn
   v2/             Trình soạn cây khối (`@ecomcx/ecomweb-editor/v2`)
     core/         Dữ liệu + thao tác thuần: model, ops, structure, store, tables, clipboard, bindings, patterns, host (kiểu)
     text/         Ô gõ chữ (mỗi khối chữ một ProseMirror nhỏ): rich-schema, rich-text, paste

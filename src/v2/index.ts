@@ -28,3 +28,11 @@ export { PrefsStore, localPrefsStorage, usePrefs, DEFAULT_PREFS, type EditorPref
 export { DocTitle } from "./ui/doc-title";
 export { registerBindingSource, unregisterBindingSource, bindingSources, BindingsPanel, BoundText, useBindingPreview, CORE_BINDABLE, type EditorBindingSource, type Binding } from "./ui/bindings";
 export { storeAnimation as registerAnimation, dropAnimation as unregisterAnimation, pluginAnimations, type MotionEffect } from "../shared/animation-store";
+export { defineBlock, type BlockDefinition } from "@ecomcx/ecomweb-content";
+export { registerBlock, unregisterBlock, registeredBlocks, type RegisterBlockOptions } from "../shared/block-defs";
+export { registerBlockPanel, unregisterBlockPanel, blockPanels, type BlockPanel, type BlockPanelProps } from "../shared/panel-store";
+export { registerPattern, unregisterPattern, registeredPatterns, registerCorePatterns, patternNodes, PATTERN_CATEGORIES, type Pattern } from "../shared/patterns";
+export { viLabels, enLabels, labelsLegacy, type EditorLabels } from "../shared/labels";
+export { StylePanel } from "../shared/style-panel";
+export { cleanPastedHtml } from "../shared/paste";
+export type { ContentDoc, MediaItem, MediaKind, MediaProvider, MediaSize } from "../shared/types";

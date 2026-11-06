@@ -22,7 +22,7 @@ export interface BlockEditProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type BlockProps = HTMLAttributes<HTMLElement> & { ref: Ref<any>; "data-ecx-block": string; "data-type": string };
+export type BlockProps = HTMLAttributes<HTMLElement> & { ref: Ref<any>; "data-ecx-block": string; "data-type": string; "data-ecx-title"?: string };
 
 export type BlockCategory = "text" | "media" | "design" | "widgets" | "theme" | "embed" | (string & {});
 

@@ -1,4 +1,4 @@
-/** Kho panel plugin (registerBlockPanel) — không phụ thuộc trình soạn: bản 1.x và v2 cùng đọc. */
+/** Kho panel plugin (registerBlockPanel) — đăng ký ở đây, trình soạn đọc. */
 import type { ComponentType } from "react";
 
 /** Props của panel plugin trong tab "Khối". */
@@ -33,8 +33,8 @@ const panels = new Map<string, BlockPanel>();
 const listeners = new Set<() => void>();
 let snapshot: BlockPanel[] = [];
 const changed = () => { snapshot = [...panels.values()].sort((a, b) => (a.order ?? 10) - (b.order ?? 10)); listeners.forEach((l) => l()); };
-export function storePanel(panel: BlockPanel) { panels.set(panel.id, panel); changed(); }
-export function dropPanel(id: string) { const had = panels.delete(id); if (had) changed(); return had; }
+export function registerBlockPanel(panel: BlockPanel) { panels.set(panel.id, panel); changed(); }
+export function unregisterBlockPanel(id: string) { const had = panels.delete(id); if (had) changed(); return had; }
 
 /** Panel áp dụng cho một loại khối. */
 export const blockPanelsFor = (type: string) => snapshot.filter((p) => !p.blocks || p.blocks.includes(type));
