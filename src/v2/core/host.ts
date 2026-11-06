@@ -27,6 +27,11 @@ export interface EditorHost {
   canvasWrapper?: Array<{ tag: string; attrs?: Record<string, string> }>;
   /** Class thêm cho vùng nội dung của khung soạn (vd "prose max-w-none") — như phần tử nội dung trên website. */
   canvasContentClass?: string;
+  /**
+   * Website vẽ giúp một khối (nút nội dung dạng JSON như khi lưu) bằng code + CSS của theme → HTML. null = không vẽ được
+   * (trình soạn dùng giao diện của mình). Dùng cho khối có `serverRender` (khối động, khối plugin/theme không có `edit`).
+   */
+  renderBlock?(node: { type: string; attrs?: Record<string, unknown>; content?: unknown[] }): Promise<string | null>;
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */

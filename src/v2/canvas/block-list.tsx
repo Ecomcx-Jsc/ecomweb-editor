@@ -1,6 +1,7 @@
 import { normalizeStyle, styleClass } from "@ecomcx/ecomweb-content";
-import { Component, memo, useCallback, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type ReactElement, type ReactNode } from "react";
-import { DocScopeProvider, useDocScope, useEditor, useEditorState } from "../context";
+import { Component, memo, useCallback, useContext, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type ReactElement, type ReactNode } from "react";
+import { DocScopeProvider, LoopPostContext, useDocScope, useEditor, useEditorState } from "../context";
+import { ServerBlock } from "./server-block";
 import { docIdOf, type NestedDocRef } from "../core/host";
 import { blocksFromDoc, makeBlock, type BNode } from "../core/model";
 import type { BlockEditProps, BlockProps } from "../core/registry";
@@ -84,7 +85,7 @@ class BlockBoundary extends Component<{ id: string; type: string; children: Reac
 
 /** Một khối trên khung soạn (memo theo tham chiếu khối: chỉ vẽ lại khối đổi). */
 export const Block = memo(function Block({ node }: { node: BNode }) {
-  const { registry, store, labels } = useEditor();
+  const { registry, store, labels, host } = useEditor();
   const scope = useDocScope();
   const selected = useEditorState(useCallback((s) => s.selection.ids.includes(node.id), [node.id]));
   const editing = useEditorState(useCallback((s) => s.selection.editing === node.id, [node.id]));
@@ -93,6 +94,10 @@ export const Block = memo(function Block({ node }: { node: BNode }) {
   const setAttrs = useCallback((attrs: Record<string, unknown>) => store.setAttrs([node.id], attrs), [node.id, store]);
   const Edit = type?.edit ?? FallbackEdit;
   const props: BlockEditProps = { block: node, attrs: node.attrs, setAttrs, blockProps, selected: selected || editing, editable: scope.mode !== "disabled", labels };
+  // Khối trong vòng lặp bài (query › postTemplate) giữ giao diện của trình soạn: website chỉ biết bài của trang, không biết bài của vòng lặp
+  const loop = useContext(LoopPostContext);
+  if (type?.serverRender && host.renderBlock && !loop)
+    return <BlockBoundary id={node.id} type={node.type}><ServerBlock node={node} blockProps={blockProps} fallback={<Edit {...props} />} /></BlockBoundary>;
   return <BlockBoundary id={node.id} type={node.type}><Edit {...props} /></BlockBoundary>;
 });
 
