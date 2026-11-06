@@ -10,6 +10,17 @@ const insertVia = async (page: Page, query: string) => {
 };
 
 test.describe("bố cục + hiệu ứng", () => {
+  test("ảnh bìa: chọn màu nền từ chỗ chọn → khối không lỗi (hook phải gọi trước return sớm)", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "anh bia");
+    const cover = c.locator('[data-type="cover"]');
+    await expect(cover).toBeVisible();
+    await cover.locator(".ecx-chip-swatch").first().click();
+    await expect(c.locator(".ecx-block-error")).toHaveCount(0);
+    await expect(cover.locator(".ecx-cover-overlay")).toBeVisible();
+  });
+
   test("chèn Hàng ngang: hai khối nằm cạnh nhau; đổi sang Xếp dọc rồi Lưới từ thanh công cụ", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");

@@ -176,9 +176,9 @@ function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const { host } = useEditor();
   const select = (items: MediaItem[]) => setAttrs({ src: items[0].url, alt: items[0].alt || undefined, mediaId: items[0].id });
   const drop = useFileDrop("image", select);
+  const t = useMsgs("blocks"); // hook phải gọi trước mọi return sớm: chọn ảnh/màu làm đổi nhánh render
   // Chưa có ảnh lẫn màu: chỗ chọn ảnh nền hoặc màu nền (không để khối trắng trơn vô hình)
   if (!src && !a.overlay) {
-    const t = useMsgs("blocks");
     return (
       <div {...merge(blockProps, cx("ecx-media-placeholder ecx-cover-placeholder", drop.over && "is-drop-target"))} {...drop.props}>
         <span className="ecx-placeholder-title"><ImageIcon className="ecx-icon" />{t.cover}</span>
