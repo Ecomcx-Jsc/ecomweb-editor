@@ -47,6 +47,7 @@ export const v2 = {
   deviceTablet: "Tablet",
   deviceMobile: "Phone",
   editMenu: "Edit this menu",
+  queryEmptyCollapsed: "When there are no posts (hidden because the list has posts) — click to edit",
   undo: "Undo",
   redo: "Redo",
   listView: "List view",

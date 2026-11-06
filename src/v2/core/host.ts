@@ -69,7 +69,7 @@ export interface DocumentHost {
   save?(ref: NestedDocRef, blocks: BNode[], content: SavedContent): Promise<void>;
 }
 
-export type DynamicPost = { title?: string; date?: string; author?: string; excerpt?: string; image?: string | null; terms?: string[]; comments?: number; link?: string };
+export type DynamicPost = { title?: string; date?: string; author?: string; excerpt?: string; image?: string | null; terms?: string[]; comments?: number; link?: string; /** Nội dung đã lưu của bài (ContentDoc) — khối "Nội dung bài" trong template vẽ nội dung thật thay vì khung giữ chỗ. */ content?: unknown };
 
 /** Thiết lập của khối "Danh sách bài" (attrs của query). */
 export interface QueryArgs { inherit: boolean; postType: string; perPage: number; category?: string; tag?: string; orderBy: string; order: "asc" | "desc" }

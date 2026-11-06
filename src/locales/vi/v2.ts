@@ -47,6 +47,7 @@ export const v2 = {
   deviceTablet: "Máy tính bảng",
   deviceMobile: "Điện thoại",
   editMenu: "Sửa menu này",
+  queryEmptyCollapsed: "Khi không có bài viết (đang ẩn vì danh sách có bài) — bấm để sửa",
   undo: "Hoàn tác",
   redo: "Làm lại",
   listView: "Cây khối",

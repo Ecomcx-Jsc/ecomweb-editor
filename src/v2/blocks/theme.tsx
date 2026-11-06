@@ -4,7 +4,7 @@ import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
 import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
 import type { DynamicPost, QueryArgs } from "../core/host";
 import type { BNode } from "../core/model";
-import { makeBlock } from "../core/model";
+import { blocksFromDoc, makeBlock } from "../core/model";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { useMsgs } from "../i18n";
 
@@ -189,8 +189,16 @@ function PostNavigationEdit({ block, blockProps, labels }: BlockEditProps) {
   );
 }
 
+/** Nội dung đã lưu của bài mẫu → khối chỉ xem (chỉ phần soạn được "richtext"; khối khác của ContentDoc bỏ qua khi xem). */
+function sampleContentNodes(content: unknown): BNode[] | null {
+  const blocks = (content as { blocks?: Array<{ type?: string; data?: unknown }> } | null)?.blocks;
+  if (!Array.isArray(blocks)) return null;
+  const nodes = blocks.filter((b) => b?.type === "richtext" && b.data).flatMap((b) => blocksFromDoc(b.data as never));
+  return nodes.length ? nodes : null;
+}
 function PostContentEdit({ blockProps }: BlockEditProps) {
   const { labels } = useEditor();
+  const sample = sampleContentNodes(useDynamicData().post?.content);
   const t = useMsgs("blocks");
   const scope = useDocScope();
   const frameId = useEditorState((s) => s.frameId);
@@ -203,6 +211,8 @@ function PostContentEdit({ blockProps }: BlockEditProps) {
       </div>
     );
   }
+  // Có bài mẫu → nội dung thật của bài (chỉ xem; sửa nội dung ở trình soạn bài); chưa có → khung giữ chỗ
+  if (sample) return <div {...merge(blockProps, "ecx-post-content ecx-content")}><PreviewBlocks nodes={sample} tag="sample-content" /></div>;
   return <div {...merge(blockProps, "ecx-post-content ecx-content-placeholder")}><FileText className="ecx-icon" /> {t.postContent}</div>;
 }
 
@@ -272,11 +282,30 @@ function PostTemplateEdit({ block, blockProps, editable, labels }: BlockEditProp
     </ul>
   );
 }
-function PaginationEdit({ blockProps }: BlockEditProps) {
-  return <nav {...(merge(blockProps, "ecx-pagination") as object)}>‹ 1 2 3 ›</nav>;
+/** Bài thật của khối query cha (cùng thiết lập) — để phân trang / "không có bài" phản ánh đúng dữ liệu thay vì mẫu cố định. */
+function useParentQueryPosts(block: BNode): { posts: DynamicPost[] | undefined; perPage: number } {
+  const { store } = useEditor();
+  const parentAttrs = useEditorState(useCallback(() => store.locate(block.id)?.parent?.attrs, [block.id, store])) ?? {};
+  const q = queryArgs(parentAttrs);
+  return { posts: useQueryPosts(q), perPage: q.perPage };
 }
-function QueryEmptyEdit({ block, blockProps }: BlockEditProps) {
-  return <div {...merge(blockProps, "ecx-query-empty")}><InnerBlocks parent={block} /></div>;
+function PaginationEdit({ block, blockProps }: BlockEditProps) {
+  const { posts, perPage } = useParentQueryPosts(block);
+  // Ít bài hơn một trang → website không hiện phân trang: vẽ mờ một trang duy nhất
+  const single = posts !== undefined && posts.length < perPage;
+  return <nav {...(merge(blockProps, cx("ecx-pagination", single && "is-single")) as object)} style={single ? { opacity: 0.45 } : undefined}>{single ? "‹ 1 ›" : "‹ 1 2 3 ›"}</nav>;
+}
+function QueryEmptyEdit({ block, blockProps, labels }: BlockEditProps) {
+  const { posts } = useParentQueryPosts(block);
+  // Danh sách đang có bài → khối "không có bài" không hiện trên website: thu gọn thành nhãn mờ (vẫn chọn / sửa được khi bấm vào)
+  const [open, setOpen] = useState(false);
+  const hidden = !!posts?.length && !open;
+  return (
+    <div {...merge(blockProps, cx("ecx-query-empty", hidden && "is-collapsed"))} style={hidden ? { opacity: 0.55 } : undefined}>
+      {hidden && <button type="button" contentEditable={false} className="ecx-edit-link" onClick={() => setOpen(true)}>{labels.queryEmptyCollapsed}</button>}
+      {!hidden && <InnerBlocks parent={block} />}
+    </div>
+  );
 }
 
 /** Vỏ của tài liệu lồng (header/footer, mẫu đồng bộ): viền tím + nhãn, bấm đúp để sửa riêng. */
