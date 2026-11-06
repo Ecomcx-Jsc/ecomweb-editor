@@ -8,6 +8,8 @@ html, body { margin: 0; min-height: 100%; }
 body.ecx-canvas-body { padding: 0; background: #fff; }
 /* Khung bao + vùng soạn luôn ở trạng thái cuối của hiệu ứng: theme ẩn chúng tới khi JS chạy (opacity 0, dịch chuyển…) mà khung soạn không có JS đó */
 [data-ecx-wrapper], .ecx-canvas-root { opacity: 1 !important; visibility: visible !important; transform: none !important; animation: none !important; transition: none !important; clip-path: none !important; filter: none !important; }
+.ecx-edit-link { display: inline-block; margin: 6px 0 0; padding: 2px 8px; border: 1px solid var(--ecx-ui, #1a597b); border-radius: 4px; background: #fff; color: var(--ecx-ui, #1a597b); font: 12px/1.6 system-ui, sans-serif; cursor: pointer; }
+.ecx-edit-link:hover { background: var(--ecx-ui, #1a597b); color: #fff; }
 .ecx-canvas-root { min-height: 100vh; padding: 2rem clamp(1rem, 4vw, 3rem) 40vh; box-sizing: border-box; outline: none; }
 .ecx-canvas-root > * { max-width: var(--ecx-content-width, 760px); margin-left: auto; margin-right: auto; }
 .ecx-canvas-root > .ecx-nested, .ecx-canvas-root > .ecx-cover, .ecx-canvas-root > [data-type="columns"], .ecx-canvas-root > .ecx-align-wide { max-width: var(--ecx-wide-width, 1200px); }

@@ -32,7 +32,14 @@ function SiteLogoEdit({ block, blockProps }: BlockEditProps) {
   return <div {...merge(blockProps, "ecx-site-logo")}>{d.site?.logo ? <img src={d.site.logo} alt="" width={w} draggable={false} /> : <span className="ecx-logo-placeholder" style={{ width: w }}><ImageIcon className="ecx-icon" /></span>}</div>;
 }
 /** Menu: cùng markup với website (theme-sdk) — nav.ecx-navigation-menu > ul > li > a, nút ☰ cho điện thoại. */
-function NavigationEdit({ block, blockProps }: BlockEditProps) {
+/** Nút nhỏ trên khối Menu đang chọn: mở nơi sửa menu của ứng dụng nhúng. */
+function EditMenuButton({ location, selected }: { location: string; selected: boolean }) {
+  const { host, labels } = useEditor();
+  if (!selected || !host.editMenu) return null;
+  return <button type="button" className="ecx-edit-link" contentEditable={false} onMouseDown={(e) => e.stopPropagation()} onClick={() => host.editMenu!(location)}>{labels.editMenu} ↗</button>;
+}
+
+function NavigationEdit({ block, blockProps, selected }: BlockEditProps) {
   const d = useDynamic();
   const { labels } = useEditor();
   const location = String(block.attrs.location ?? "primary");
@@ -44,6 +51,7 @@ function NavigationEdit({ block, blockProps }: BlockEditProps) {
       <div {...merge(blockProps, "ecx-navigation ecx-placeholder-block")}>
         <span className="ecx-placeholder-title"><Menu className="ecx-icon" /> {t.menu} · {location}</span>
         <span className="ecx-placeholder-summary">{t.noMenuIsAssigned}</span>
+        <EditMenuButton location={location} selected={selected} />
       </div>
     );
   }
@@ -52,6 +60,7 @@ function NavigationEdit({ block, blockProps }: BlockEditProps) {
     <div {...merge(blockProps, cx("ecx-navigation", `ecx-navigation-${block.attrs.orientation ?? "horizontal"}`, mobile && "has-mobile"))}>
       <div className="ecx-navigation-items">{menu}</div>
       {mobile && <details className="ecx-navigation-toggle"><summary aria-label={t.menu}>☰</summary>{menu}</details>}
+      <EditMenuButton location={location} selected={selected} />
     </div>
   );
 }

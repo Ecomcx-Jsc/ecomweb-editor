@@ -27,6 +27,8 @@ export interface EditorHost {
   canvasWrapper?: Array<{ tag: string; attrs?: Record<string, string> }>;
   /** Class thêm cho vùng nội dung của khung soạn (vd "prose max-w-none") — như phần tử nội dung trên website. */
   canvasContentClass?: string;
+  /** Mở nơi sửa menu của một vị trí (khối Menu đang chọn hiện nút "Sửa menu"). Không có → không hiện nút. */
+  editMenu?(location: string): void;
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */

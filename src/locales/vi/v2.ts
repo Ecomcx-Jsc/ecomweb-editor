@@ -46,6 +46,7 @@ export const v2 = {
   deviceDesktop: "Máy tính",
   deviceTablet: "Máy tính bảng",
   deviceMobile: "Điện thoại",
+  editMenu: "Sửa menu này",
   undo: "Hoàn tác",
   redo: "Làm lại",
   listView: "Cây khối",

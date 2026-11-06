@@ -46,6 +46,7 @@ export const v2 = {
   deviceDesktop: "Desktop",
   deviceTablet: "Tablet",
   deviceMobile: "Phone",
+  editMenu: "Edit this menu",
   undo: "Undo",
   redo: "Redo",
   listView: "List view",
