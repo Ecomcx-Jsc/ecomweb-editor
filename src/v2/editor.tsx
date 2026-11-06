@@ -158,18 +158,22 @@ export interface BlockEditorProps extends Omit<EditorProviderProps, "children"> 
   defaultDevice?: Device;
   /** Kiểu biến thể khối của theme (theme.json › blockStyles). */
   blockStyles?: Record<string, Array<{ name: string; label: string }>>;
+  /** Tay cầm lưu từ bên ngoài (nút "Lưu tất cả" của ứng dụng): trình soạn gắn hàm lưu vào `current` — cùng việc với nút Lưu / ⌘S. */
+  saveHandle?: { current: (() => Promise<void>) | null };
+  /** Báo khi có / hết thay đổi chưa lưu (kể cả tài liệu lồng). */
+  onDirtyChange?(dirty: boolean): void;
 }
 
 /** Trình soạn đầy đủ: thanh trên cùng, thư viện khối / cây khối, khung soạn, bảng cài đặt. */
-export function BlockEditor({ className, onSave, header, actions, menuExtra, canvasBefore, defaultDevice = "desktop", blockStyles, ...provider }: BlockEditorProps) {
+export function BlockEditor({ className, onSave, header, actions, menuExtra, canvasBefore, defaultDevice = "desktop", blockStyles, saveHandle, onDirtyChange, ...provider }: BlockEditorProps) {
   return (
     <EditorProvider {...provider}>
-      <EditorShell className={className} onSave={onSave} header={header} actions={actions} menuExtra={menuExtra} canvasBefore={canvasBefore} defaultDevice={defaultDevice} blockStyles={blockStyles} />
+      <EditorShell className={className} onSave={onSave} header={header} actions={actions} menuExtra={menuExtra} canvasBefore={canvasBefore} defaultDevice={defaultDevice} blockStyles={blockStyles} saveHandle={saveHandle} onDirtyChange={onDirtyChange} />
     </EditorProvider>
   );
 }
 
-function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefore, defaultDevice, blockStyles }: Pick<BlockEditorProps, "className" | "onSave" | "header" | "actions" | "menuExtra" | "canvasBefore" | "defaultDevice" | "blockStyles">) {
+function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefore, defaultDevice, blockStyles, saveHandle, onDirtyChange }: Pick<BlockEditorProps, "saveHandle" | "onDirtyChange" | "className" | "onSave" | "header" | "actions" | "menuExtra" | "canvasBefore" | "defaultDevice" | "blockStyles">) {
   const ctx = useEditor();
   const { store, labels } = ctx;
   const p = usePrefs(ctx.prefs);
@@ -196,6 +200,12 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
   };
   const saveRef = useRef(save);
   saveRef.current = save;
+  useEffect(() => {
+    if (!saveHandle) return;
+    saveHandle.current = () => saveRef.current();
+    return () => { saveHandle.current = null; };
+  }, [saveHandle]);
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
