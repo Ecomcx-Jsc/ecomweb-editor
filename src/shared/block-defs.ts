@@ -21,6 +21,8 @@ export interface RegisterBlockOptions {
   edit?: ComponentType<BlockEditProps>;
   /** Dịch nhãn ("%khoá%" → chữ theo ngôn ngữ admin) — admin truyền vào. */
   translate?(text: string): string;
+  /** Khối của theme: chỉ chèn được khi soạn template / phần dùng chung (host.scope = "template"), không chèn vào bài viết. */
+  templateOnly?: boolean;
   /** Khối chứa khối khác: nội dung có sẵn khi chèn (mặc định một đoạn văn trống). */
   initialContent?(): Array<Record<string, unknown>>;
 }

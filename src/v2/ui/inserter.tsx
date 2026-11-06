@@ -26,7 +26,7 @@ export interface InsertOption {
 
 /** Các lựa chọn chèn: khối + biến thể có hàm tạo riêng (cột 30/70…). */
 export function useInsertOptions(): InsertOption[] {
-  const { registry, prefs } = useEditor();
+  const { registry, prefs, host } = useEditor();
   const hidden = usePrefs(prefs).hiddenBlockTypes;
   const [version, setVersion] = useState(registry.getVersion());
   useEffect(() => registry.subscribe(() => setVersion(registry.getVersion())), [registry]);
@@ -35,7 +35,7 @@ export function useInsertOptions(): InsertOption[] {
     const out: InsertOption[] = [];
     const hide = new Set(hidden);
     for (const t of registry.all()) {
-      if (t.hidden || hide.has(t.name)) continue;
+      if (t.hidden || hide.has(t.name) || (t.templateOnly && host.scope !== "template")) continue;
       out.push({ key: t.name, title: t.title, description: t.description, icon: t.icon, keywords: t.keywords ?? "", category: t.category ?? "other", type: t.name, create: () => registry.create(t.name) });
       for (const v of t.variations ?? []) {
         if (!v.create) continue;
@@ -43,7 +43,7 @@ export function useInsertOptions(): InsertOption[] {
       }
     }
     return out;
-  }, [registry, version, hidden]);
+  }, [registry, version, hidden, host.scope]);
 }
 
 /** Lọc + xếp hạng: tên bắt đầu bằng chữ gõ > một từ trong tên > từ khoá; tiếng Việt không dấu. */

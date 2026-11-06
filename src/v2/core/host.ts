@@ -34,6 +34,8 @@ export interface EditorHost {
    * (trình soạn dùng giao diện của mình). Dùng cho khối có `serverRender` (khối động, khối plugin/theme không có `edit`).
    */
   renderBlock?(node: { type: string; attrs?: Record<string, unknown>; content?: unknown[] }): Promise<string | null>;
+  /** Nơi đang soạn: "template" = template / phần dùng chung của theme (chèn được khối riêng của theme); mặc định = nội dung bài. */
+  scope?: "template" | "content";
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */

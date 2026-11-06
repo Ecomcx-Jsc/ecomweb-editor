@@ -67,6 +67,8 @@ export interface BlockType {
   structure?: StructureRule;
   /** Ẩn khỏi trình chèn (khối con như column, listItem). */
   hidden?: boolean;
+  /** Khối của theme: chỉ hiện trong trình chèn khi soạn template / phần dùng chung (host.scope = "template"). */
+  templateOnly?: boolean;
   /** Tạo khối mới khi chèn (mặc định: thuộc tính mặc định + nội dung tối thiểu). */
   create?(attrs?: Record<string, unknown>): BNode;
   /** Vẽ trên khung soạn. Không có → khung chung (tên khối + tóm tắt thuộc tính). */
