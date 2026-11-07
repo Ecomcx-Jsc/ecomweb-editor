@@ -369,3 +369,19 @@ test("đang chọn cả khối: ⌘← / ⌘→ / Backspace không làm trình d
   expect(page.url()).toContain("doc=post");
   expect(await page.evaluate(() => !!(window as any).__ecx)).toBe(true);
 });
+
+test("khối Tìm kiếm: khung soạn đổi theo 'Hiện nhãn' + 'Vị trí nút' như website", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await clickEnd(c, "Đoạn thứ hai.");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("/Tìm kiếm");
+  await page.keyboard.press("Enter");
+  const id = (await state(page)).docs.root.blocks.find((b: { type: string }) => b.type === "search").id;
+  await expect(c.locator("form.search-form")).toHaveCount(1);
+  await expect(c.locator("form.search-form label.search-label")).toHaveCount(0);
+  await page.evaluate((i) => (window as any).__ecx.store.setAttrs([i], { showLabel: true, buttonPosition: "left" }), id);
+  await expect(c.locator("form.search-form.search-button-left label.search-label")).toHaveCount(1);
+  expect(await c.locator("form.search-form").evaluate((f) => [...f.children].map((e) => e.tagName))).toEqual(["LABEL", "BUTTON", "INPUT"]);
+  await page.evaluate((i) => (window as any).__ecx.store.setAttrs([i], { buttonPosition: "below" }), id);
+  await expect(c.locator("form.search-form.search-button-below")).toHaveCount(1);
+});

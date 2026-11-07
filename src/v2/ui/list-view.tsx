@@ -25,17 +25,18 @@ export function ListView() {
   if (!doc) return null;
   return (
     <div className="ecx-listview" role="tree" aria-label={labels.listView}>
-      {doc.blocks.map((b) => <ListRow key={b.id} node={b} depth={0} />)}
+      {doc.blocks.map((b, i) => <ListRow key={b.id} node={b} depth={0} first={i === 0} />)}
       {!doc.blocks.length && <p className="ecx-muted ecx-list-empty">{labels.listEmpty}</p>}
       
     </div>
   );
 }
 
-function ListRow({ node, depth }: { node: BNode; depth: number }) {
+function ListRow({ node, depth, first }: { node: BNode; depth: number; first?: boolean }) {
   const ctx = useEditor();
   const { store, registry, ui, host } = ctx;
   const selected = useEditorState(useCallback((s) => s.selection.ids.includes(node.id) || s.selection.editing === node.id, [node.id]));
+  const anySelected = useEditorState((s) => s.selection.ids.length > 0 || !!s.selection.editing);
   const [open, setOpen] = useState(depth < 1);
   const type = registry.get(node.type);
   const Icon = type?.icon ?? Blocks;
@@ -48,12 +49,15 @@ function ListRow({ node, depth }: { node: BNode; depth: number }) {
   return (
     <div role="treeitem" aria-selected={selected} aria-expanded={hasKids ? open : undefined} aria-level={depth + 1}>
       <div className={cx("ecx-list-row", selected && "is-selected", nestedId && "is-nested")} style={{ paddingLeft: 8 + depth * 14 }} data-block={node.id}
+        // Một tabstop cho cả cây (hàng đang chọn, không thì hàng đầu); mũi tên di chuyển, Enter/Space chọn (WAI-ARIA tree)
+        tabIndex={selected || (first && !anySelected) ? 0 : -1}
+        onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); store.select([node.id], { editing: null }); } }}
         onClick={(e) => {
           if (e.shiftKey) store.selectRange(node.id);
           else store.select([node.id], { editing: null });
           ui.blockEl(node.id)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
         }}>
-        {hasKids ? <button type="button" className="ecx-twisty" aria-label={open ? "Collapse" : "Expand"} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>{open ? <ChevronDown className="ecx-icon" /> : <ChevronRight className="ecx-icon" />}</button> : <span className="ecx-twisty" />}
+        {hasKids ? <button type="button" className="ecx-twisty" aria-label={open ? ctx.labels.collapse : ctx.labels.expand} onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>{open ? <ChevronDown className="ecx-icon" /> : <ChevronRight className="ecx-icon" />}</button> : <span className="ecx-twisty" />}
         <Icon className="ecx-icon" />
         <span className="ecx-list-title">{blockLabel(node, type)}</span>
         {!!(node.attrs.lock || node.attrs.templateLock) && <Lock className="ecx-icon ecx-icon-sm" aria-label={ctx.labels.locked} />}

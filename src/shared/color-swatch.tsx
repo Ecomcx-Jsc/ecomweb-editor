@@ -9,9 +9,11 @@ const EMPTY: CSSProperties = { background: "linear-gradient(to top right, transp
  */
 export function ColorSwatchInput({ value, onChange, label, className, size = 26 }: { value?: string; onChange(hex: string): void; label: string; className?: string; size?: number }) {
   const hex = value && /^#[0-9a-f]{6}$/i.test(value) ? value : undefined;
+  // rgb()/hsl()/tên màu hợp lệ cũng hiện đúng màu (bảng chọn của trình duyệt vẫn chỉ nhận #rrggbb nên ô input giữ `hex`)
+  const shown = hex ?? (value && typeof CSS !== "undefined" && CSS.supports?.("color", value) ? value : undefined);
   return (
-    <label className={className} title={hex ?? label} data-empty={hex ? undefined : ""}
-      style={{ position: "relative", display: "inline-block", width: size, height: size, flex: "none", borderRadius: 6, border: "1px solid rgb(0 0 0 / .18)", cursor: "pointer", overflow: "hidden", ...(hex ? { background: hex } : EMPTY) }}>
+    <label className={className} title={shown ?? label} data-empty={shown ? undefined : ""}
+      style={{ position: "relative", display: "inline-block", width: size, height: size, flex: "none", borderRadius: 6, border: "1px solid rgb(0 0 0 / .18)", cursor: "pointer", overflow: "hidden", ...(shown ? { background: shown } : EMPTY) }}>
       <input type="color" aria-label={label} value={hex ?? "#ffffff"} onChange={(e) => onChange(e.target.value)}
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer", border: 0, padding: 0 }} />
     </label>

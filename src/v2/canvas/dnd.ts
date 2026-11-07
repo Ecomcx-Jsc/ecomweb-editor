@@ -112,6 +112,24 @@ function toParent(ctx: EditorContextValue, ev: PointerEvent) {
 
 function findTarget(ctx: EditorContextValue, x: number, y: number, src: Source): DropTarget | null {
   const { ui, store } = ctx;
+  // Thả trên một hàng của Cây khối (trang ngoài): trước / sau khối của hàng đó, leo lên cha nếu chỗ này không nhận
+  const row = document.elementFromPoint(x, y)?.closest<HTMLElement>(".ecx-listview .ecx-list-row[data-block]");
+  if (row?.dataset.block) {
+    let id = row.dataset.block;
+    if (src.ids.some((sid) => sid === id || isInside(store, id, sid))) return null;
+    const r = row.getBoundingClientRect();
+    const after = y > r.top + r.height / 2;
+    for (let guard = 0; guard < 12; guard++) {
+      const loc = store.locate(id);
+      if (!loc) return null;
+      if (canContainAll(loc.parent?.type ?? null, src.types)) {
+        return { docId: loc.docId, parentId: loc.parent?.id ?? null, index: loc.index + (after ? 1 : 0), rect: { left: r.left, top: (after ? r.bottom : r.top) - 2, width: r.width, height: 4 }, horizontal: false };
+      }
+      if (!loc.parent) return null;
+      id = loc.parent.id;
+    }
+    return null;
+  }
   const frame = ui.canvasFrame, doc = ui.canvasDoc;
   if (!frame || !doc) return null;
   const f = frame.getBoundingClientRect();

@@ -13,6 +13,10 @@ export const controls = {
   customValue2: "custom value",
   vertical: "vertical",
   horizontal: "horizontal",
+  sideTop: "top",
+  sideRight: "right",
+  sideBottom: "bottom",
+  sideLeft: "left",
   styles: "Styles",
   advanced: "Advanced",
 };

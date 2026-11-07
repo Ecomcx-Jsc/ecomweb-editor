@@ -196,6 +196,39 @@ function SocialInspector({ attrs, setAttrs, labels }: BlockEditProps) {
   );
 }
 
+/** Danh sách ảnh của gallery trong bảng cài đặt: thêm (nhiều ảnh), mô tả (alt) từng ảnh, đổi thứ tự, xoá. */
+function GalleryInspector({ attrs, setAttrs }: BlockEditProps) {
+  const t = useMsgs("blocks");
+  const { host } = useEditor();
+  type Img = { src: string; alt?: string; width?: number; height?: number; id?: number | string };
+  const images = (Array.isArray(attrs.images) ? attrs.images : []) as Img[];
+  const save = (next: Img[]) => setAttrs({ images: next });
+  const patch = (i: number, p: Partial<Img>) => save(images.map((im, k) => (k === i ? { ...im, ...p } : im)));
+  const move = (i: number, d: -1 | 1) => { const n = [...images]; [n[i], n[i + d]] = [n[i + d], n[i]]; save(n); };
+  const add = async () => {
+    if (!host.media) return;
+    const items = await host.media.pick({ kind: "image", multiple: true });
+    if (items.length) save([...images, ...((mediaAttrs("gallery", items).images ?? []) as Img[])]);
+  };
+  return (
+    <div className="ecx-gallery-editor" role="group" aria-label={t.galleryImages}>
+      <span className="ecx-field-label">{t.galleryImages}</span>
+      {images.map((im, i) => (
+        <div key={`${i}-${im.src}`} className="ecx-social-row" data-gallery-row={i}>
+          <img src={isSafeUrl(im.src) ? im.src : ""} alt="" width={36} height={36} style={{ objectFit: "cover", borderRadius: 4, flex: "none" }} />
+          <input className="ecx-input" type="text" aria-label={format(t.imageAltN, { n: i + 1 })} placeholder={t.imageAltN.replace("{n}", String(i + 1))} value={im.alt ?? ""} onChange={(e) => patch(i, { alt: e.target.value })} />
+          <span className="ecx-social-row-tools">
+            <button type="button" className="ecx-tool" aria-label={t.up} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="ecx-icon ecx-icon-sm" /></button>
+            <button type="button" className="ecx-tool" aria-label={t.down} disabled={i === images.length - 1} onClick={() => move(i, 1)}><ArrowDown className="ecx-icon ecx-icon-sm" /></button>
+            <button type="button" className="ecx-tool" aria-label={t.removeImage} onClick={() => save(images.filter((_, k) => k !== i))}><X className="ecx-icon ecx-icon-sm" /></button>
+          </span>
+        </div>
+      ))}
+      {host.media && <button type="button" className="ecx-btn" onClick={add}><Plus className="ecx-icon ecx-icon-sm" /> {t.addImages}</button>}
+    </div>
+  );
+}
+
 function TocEdit({ block, blockProps, labels }: BlockEditProps) {
   const t = useMsgs("blocks");
   return (
@@ -227,7 +260,7 @@ export function mediaBlocks(): BlockType[] {
       attributes: { ...media, alt: { type: "string", control: "textarea" }, title: { type: "string" }, width: { type: "number" }, height: { type: "number" }, size: { type: "string", default: "large" }, align: { type: "string", enum: ["left", "right", "center", "wide", "full"] }, href: { type: "url" }, linkTarget: { type: "string", enum: ["_self", "_blank"] }, lightbox: { type: "boolean", default: false } },
       supports: { style: true, anchor: true, className: true, blockStyle: true }, summary: (a) => a.alt || a.src,
     },
-    { name: "gallery", title: "Gallery", icon: Images, category: "media", keywords: "gallery bo suu tap nhieu anh album", kind: "atom", edit: GalleryEdit, attributes: { images: { type: "json", default: [] }, columns: { type: "integer", default: 3, min: 1, max: 6 }, caption: { type: "string" }, linkTo: { type: "string", enum: ["none", "media"], default: "media" }, imageCrop: { type: "boolean", default: true }, lightbox: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
+    { name: "gallery", title: "Gallery", icon: Images, category: "media", keywords: "gallery bo suu tap nhieu anh album", kind: "atom", edit: GalleryEdit, inspector: GalleryInspector, attributes: { images: { type: "json", default: [] }, columns: { type: "integer", default: 3, min: 1, max: 6 }, caption: { type: "string" }, linkTo: { type: "string", enum: ["none", "media"], default: "media" }, imageCrop: { type: "boolean", default: true }, lightbox: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
     { name: "video", title: "Video", icon: Video, category: "media", keywords: "video mp4 phim", kind: "atom", edit: VideoEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, poster: { type: "url", control: "media" }, autoplay: { type: "boolean", default: false }, loop: { type: "boolean", default: false }, muted: { type: "boolean", default: false }, controls: { type: "boolean", default: true }, playsInline: { type: "boolean", default: true }, preload: { type: "string", enum: ["none", "metadata", "auto"], default: "metadata" } }, supports: { style: true, anchor: true } },
     { name: "audio", title: "Âm thanh", icon: Music, category: "media", keywords: "am thanh audio nhac mp3 podcast", kind: "atom", edit: AudioEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, autoplay: { type: "boolean", default: false }, loop: { type: "boolean", default: false }, preload: { type: "string", enum: ["none", "metadata", "auto"], default: "metadata" } }, supports: { style: true, anchor: true } },
     { name: "file", title: "Tệp", icon: FileIcon, category: "media", keywords: "tep file pdf tai xuong download tai lieu", kind: "atom", edit: FileEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, size: { type: "number" }, embed: { type: "boolean", default: true }, download: { type: "boolean" } }, supports: { style: true, anchor: true } },

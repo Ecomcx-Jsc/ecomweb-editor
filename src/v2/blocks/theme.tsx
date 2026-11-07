@@ -66,10 +66,20 @@ function NavigationEdit({ block, blockProps, selected }: BlockEditProps) {
     </div>
   );
 }
+/** Giống hệt website (SearchFormClient trong theme-sdk): cùng class `search-form` / `search-button-*`, nhãn, vị trí nút — để CSS của theme và các thuộc tính "Hiện nhãn", "Vị trí nút" thấy ngay trong khung soạn. */
 function SearchEdit({ block, blockProps }: BlockEditProps) {
+  const t = useMsgs("blocks");
+  const pos = String(block.attrs.buttonPosition ?? "right");
+  const button = <button type="button" tabIndex={-1}>{String(block.attrs.buttonText || t.searchButton)}</button>;
   return (
     <div {...merge(blockProps, "ecx-search")}>
-      <form onSubmit={(e) => e.preventDefault()}><input type="search" placeholder={String(block.attrs.placeholder || "…")} readOnly tabIndex={-1} /> <button type="button" tabIndex={-1}>{String(block.attrs.buttonText || "🔍")}</button></form>
+      <form role="search" onSubmit={(e) => e.preventDefault()} style={pos === "below" ? { display: "flex", flexDirection: "column", gap: 8 } : undefined}
+        className={`search-form${pos !== "right" ? ` search-button-${pos}` : ""}`}>
+        {block.attrs.showLabel === true && <label className="search-label">{t.searchLabel}</label>}
+        {pos === "left" && button}
+        <input type="search" placeholder={String(block.attrs.placeholder || t.searchPlaceholder)} aria-label={t.searchLabel} readOnly tabIndex={-1} />
+        {pos !== "left" && button}
+      </form>
     </div>
   );
 }

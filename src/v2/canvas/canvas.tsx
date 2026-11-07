@@ -31,11 +31,22 @@ const SRC_DOC = `<!doctype html><html><head><meta charset="utf-8"><meta name="vi
 /** Khung soạn: iframe mang CSS của website → soạn thấy đúng phông, màu, khoảng cách; media query theo bề rộng thiết bị. */
 /** Tỉ lệ của chế độ thu nhỏ. */
 export const ZOOM_OUT = 0.5;
+/** Khổ "Máy tính" luôn vẽ rộng ít nhất bằng này (> 1024 để CSS tablet của website không áp lên); chỗ hẹp hơn thì thu nhỏ vừa khung thay vì vẽ hẹp. */
+export const DESKTOP_MIN_WIDTH = 1100;
 
 export function Canvas({ device = "desktop", className, contentClassName = "ecx-content", before, after }: CanvasProps) {
   const { ui, labels } = useEditor();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [doc, setDoc] = useState<Document | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [wrapW, setWrapW] = useState(0);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setWrapW(el.clientWidth));
+    ro.observe(el); setWrapW(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
 
   const onLoad = useCallback(() => {
     const f = frameRef.current;
@@ -58,11 +69,12 @@ export function Canvas({ device = "desktop", className, contentClassName = "ecx-
   useUiTick();
   const width = DEVICE_WIDTH[device];
   // Thu nhỏ: khung soạn vẽ ở cỡ gấp đôi rồi thu còn một nửa → thấy cả trang, toạ độ kéo thả / thanh công cụ tự tính theo tỉ lệ
-  const zoom = ui.zoomOut ? ZOOM_OUT : 1;
+  const fit = !width && wrapW > 0 && wrapW < DESKTOP_MIN_WIDTH ? wrapW / DESKTOP_MIN_WIDTH : 1;
+  const zoom = (ui.zoomOut ? ZOOM_OUT : 1) * fit;
   const style = zoom === 1 ? { width: width ? `${width}px` : "100%" }
     : { width: width ? `${width}px` : `${100 / zoom}%`, height: `${100 / zoom}%`, transform: `scale(${zoom})`, transformOrigin: width ? "top center" : "top left", flex: "none" };
   return (
-    <div className={["ecx-canvas-wrap", `is-${device}`, zoom !== 1 && "is-zoomed-out", className].filter(Boolean).join(" ")}>
+    <div ref={wrapRef} className={["ecx-canvas-wrap", `is-${device}`, zoom !== 1 && "is-zoomed-out", className].filter(Boolean).join(" ")}>
       <iframe ref={frameRef} className="ecx-canvas-frame" title={labels.canvas} srcDoc={SRC_DOC} onLoad={onLoad}
         style={style} data-ecx-canvas="" />
       {doc && createPortal(<CanvasWrapper><CanvasRoot doc={doc} contentClassName={contentClassName} before={before} after={after} /></CanvasWrapper>, doc.body)}
@@ -233,14 +245,18 @@ const typing = (el: Element | null) => !!el && ((el as HTMLElement).isContentEdi
 function useCanvasKeys(doc: Document) {
   const { store, ui } = useEditor();
   useEffect(() => {
+    // Phím gõ khi focus ở Cây khối (trang ngoài, không phải iframe): cũng chạy như trong khung soạn
+    const fromTree = (e: KeyboardEvent) => e.target instanceof Element && e.target.ownerDocument !== doc && !!e.target.closest(".ecx-listview");
     const onKey = (e: KeyboardEvent) => {
       // Ô gõ (ProseMirror) đã xử lý phím này
       if (e.defaultPrevented) return;
+      const outer = fromTree(e);
+      if (e.target instanceof Element && e.target.ownerDocument !== doc && !outer) return; // phím của trang ngoài ngoài Cây khối: không phải của khung soạn
       const mod = e.metaKey || e.ctrlKey;
       const k = e.key.toLowerCase();
       if (mod && k === "z") { e.preventDefault(); if (e.shiftKey) store.redo(); else store.undo(); return; }
       if (mod && k === "y") { e.preventDefault(); store.redo(); return; }
-      if (typing(doc.activeElement)) return;
+      if (typing(outer ? (e.target as Element) : doc.activeElement)) return;
       // Phím điều hướng của trình duyệt khi không gõ chữ (Safari: ⌘← / ⌘→ = quay lại / tới trang; Backspace ở trình duyệt cũ)
       // → chặn, không thì rời trình soạn và mất bài đang sửa
       if ((e.metaKey || e.altKey) && (e.key === "ArrowLeft" || e.key === "ArrowRight") && !store.getState().range) { e.preventDefault(); return; }
@@ -304,7 +320,8 @@ function useCanvasKeys(doc: Document) {
         const next = order[i + dir];
         if (!next) return;
         if (e.shiftKey) store.selectRange(next.id); else store.select([next.id], { editing: null });
-        ui.blockEl(next.id)?.focus({ preventScroll: false });
+        if (outer) document.querySelector<HTMLElement>(`.ecx-listview [data-block="${next.id}"]`)?.focus(); // đang ở Cây khối: giữ focus ở cây
+        else ui.blockEl(next.id)?.focus({ preventScroll: false });
         return;
       }
       if (mod && e.shiftKey && k === "d") { e.preventDefault(); store.duplicate(ids); return; }
@@ -347,11 +364,13 @@ function useCanvasKeys(doc: Document) {
     };
     const cut = (e: ClipboardEvent) => onCopy(e, true);
     doc.addEventListener("keydown", onKey);
+    document.addEventListener("keydown", onKey); // Cây khối nằm ở trang ngoài
     doc.addEventListener("copy", onCopy as EventListener);
     doc.addEventListener("cut", cut as EventListener);
     doc.addEventListener("paste", onPaste as EventListener);
     return () => {
       doc.removeEventListener("keydown", onKey);
+      document.removeEventListener("keydown", onKey);
       doc.removeEventListener("copy", onCopy as EventListener);
       doc.removeEventListener("cut", cut as EventListener);
       doc.removeEventListener("paste", onPaste as EventListener);

@@ -69,7 +69,7 @@ const sidesOf = (v: Box): Record<string, string> => (typeof v === "object" && v 
 
 /** Lề trong / ngoài: liên kết (một giá trị) hoặc dọc + ngang. */
 export function SpacingControl({ label, value, onChange, steps, inherited, labels }: {
-  label: string; value: Box; onChange(v: Box): void; steps: string[]; inherited?: string; labels: { vertical: string; horizontal: string; link: string; unlink: string };
+  label: string; value: Box; onChange(v: Box): void; steps: string[]; inherited?: string; labels: { vertical: string; horizontal: string; link: string; unlink: string; top: string; right: string; bottom: string; left: string };
 }) {
   const sides = sidesOf(value);
   const [linked, setLinked] = useState(typeof value !== "object" || value === null || (sides.top === sides.bottom && sides.left === sides.right && sides.top === sides.left));
@@ -92,8 +92,10 @@ export function SpacingControl({ label, value, onChange, steps, inherited, label
       {linked
         ? <StepSlider label={label} steps={steps} value={typeof value === "string" ? value : sides.top} onChange={(v) => set(["top", "right", "bottom", "left"], v)} sideIcon="is-all" />
         : <>
-            <StepSlider label={`${label} ${labels.vertical}`} steps={steps} value={sides.top} onChange={(v) => set(["top", "bottom"], v)} sideIcon="is-vertical" />
-            <StepSlider label={`${label} ${labels.horizontal}`} steps={steps} value={sides.left} onChange={(v) => set(["left", "right"], v)} sideIcon="is-horizontal" />
+            {/* Bỏ liên kết: bốn cạnh riêng (đặt lệch được, vd chỉ padding-bottom) */}
+            {(["top", "right", "bottom", "left"] as const).map((side) => (
+              <StepSlider key={side} label={`${label} ${labels[side]}`} steps={steps} value={sides[side]} onChange={(v) => set([side], v)} sideIcon={`is-${side}`} />
+            ))}
           </>}
     </div>
   );

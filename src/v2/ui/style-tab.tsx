@@ -69,8 +69,18 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
     commit(next);
   };
   const setGroup = (k: "color" | "border", sub: string, v: unknown) => set(k, { ...(style[k] ?? {}), [sub]: v });
-  const reset = (keys: string[]) => { const next: Style = { ...style }; for (const k of keys) delete next[k]; commit(next); };
-  const has = (keys: string[]) => keys.some((k) => style[k] !== undefined);
+  // Khoá theo khổ (cỡ chữ, khoảng cách…): chỉ bỏ giá trị của khổ đang chọn, không xoá các khổ khác
+  const reset = (keys: string[]) => {
+    const next: Style = { ...style };
+    for (const k of keys) {
+      if (RESPONSIVE.has(k) && device !== "base" && style[k] && typeof style[k] === "object") {
+        const r = { ...style[k] }; delete r[device];
+        next[k] = Object.keys(r).length ? r : undefined;
+      } else delete next[k];
+    }
+    commit(next);
+  };
+  const has = (keys: string[]) => keys.some((k) => RESPONSIVE.has(k) && device !== "base" ? style[k]?.[device] !== undefined : style[k] !== undefined);
   const ok = (k: string) => (v: string) => !!normalizeStyle({ [k]: v });
   const tag = (k: string) => RESPONSIVE.has(k) && device !== "base" ? <em className="ecx-device-tag">{t[`device_${device}` as keyof EditorLabels]}</em> : null;
   const row = (k: string, label: string, control: ReactNode) => (
@@ -113,7 +123,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         </>}>
         {row("fontSize", t.style_fontSize, <>
           <Seg label={t.style_fontSize} value={get("fontSize")} onChange={(v) => set("fontSize", v)} options={sizes.map((v) => [v, v.toUpperCase(), v] as [string, string, string])} />
-          <ValueInput label={`${t.style_fontSize}: ${t.custom}`} value={sizes.includes(get("fontSize")) ? undefined : get("fontSize")} inherited={inherited("fontSize")} check={ok("fontSize")} placeholder="18px, 1.25rem" onCommit={(v) => set("fontSize", v)} />
+          <ValueInput label={`${t.style_fontSize}: ${t.custom}`} value={sizes.includes(get("fontSize")) ? undefined : get("fontSize")} inherited={inherited("fontSize")} check={(v) => sizes.includes(v) || (ok("fontSize")(v) && /^([\d.]|(calc|clamp|min|max|var)\()/.test(v))} placeholder="18px, 1.25rem" onCommit={(v) => set("fontSize", v)} />
         </>)}
         {row("appearance", t.style_appearance,
           <select className="ecx-input" value={appearance} aria-label={t.style_appearance} onChange={(e) => {
@@ -136,8 +146,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
       <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
         more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>
           row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}</>}>
-        <SpacingControl label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, link: t.linkSides, unlink: t.unlinkSides }} />
-        <SpacingControl label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, link: t.linkSides, unlink: t.unlinkSides }} />
+        <SpacingControl label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
+        <SpacingControl label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
       </Section>
 
       <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>

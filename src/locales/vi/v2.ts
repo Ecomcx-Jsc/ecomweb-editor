@@ -172,6 +172,8 @@ export const v2 = {
   createPattern: "Tạo mẫu",
   lock: "Khoá…",
   locked: "Đang khoá",
+  collapse: "Thu gọn",
+  expand: "Mở rộng",
   lockTitle: "Khoá khối",
   lockMove: "Không cho di chuyển",
   lockRemove: "Không cho xoá",

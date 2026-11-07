@@ -302,6 +302,10 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-side-icon.is-all { border-style: solid; border-color: var(--ecx-ed-muted); }
 .ecx-side-icon.is-vertical { border-top: 2px solid var(--ecx-ed-fg); border-bottom: 2px solid var(--ecx-ed-fg); }
 .ecx-side-icon.is-horizontal { border-left: 2px solid var(--ecx-ed-fg); border-right: 2px solid var(--ecx-ed-fg); }
+.ecx-side-icon.is-top { border-top: 2px solid var(--ecx-ed-fg); }
+.ecx-side-icon.is-right { border-right: 2px solid var(--ecx-ed-fg); }
+.ecx-side-icon.is-bottom { border-bottom: 2px solid var(--ecx-ed-fg); }
+.ecx-side-icon.is-left { border-left: 2px solid var(--ecx-ed-fg); }
 .ecx-spacing { display: flex; flex-direction: column; gap: 8px; }
 .ecx-spacing-head { display: flex; align-items: center; justify-content: space-between; }
 .ecx-inherit { margin-left: 6px; font-style: normal; font-weight: 400; color: var(--ecx-ed-muted); font-size: 11px; }

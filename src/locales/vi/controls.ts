@@ -13,6 +13,10 @@ export const controls = {
   customValue2: "giá trị tuỳ chỉnh",
   vertical: "dọc",
   horizontal: "ngang",
+  sideTop: "trên",
+  sideRight: "phải",
+  sideBottom: "dưới",
+  sideLeft: "trái",
   styles: "Kiểu dáng",
   advanced: "Nâng cao",
 };

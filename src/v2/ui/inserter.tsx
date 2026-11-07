@@ -197,7 +197,7 @@ function suggestions(options: InsertOption[], counts: Record<string, number>): I
 
 const CATEGORY_ORDER = ["text", "media", "design", "widgets", "theme", "embed"];
 /** Thư viện khối (cột trái): tìm, theo nhóm; bấm để chèn sau khối đang chọn, kéo thả vào khung soạn. */
-export function InserterPanel({ onInserted }: { onInserted?(): void }) {
+export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; onClose?(): void }) {
   const ctx = useEditor();
   const { store, labels } = ctx;
   useUiTick();
@@ -205,29 +205,51 @@ export function InserterPanel({ onInserted }: { onInserted?(): void }) {
   // Khối có luật vị trí (vd "Tổng số bài" chỉ trong Query): ẩn khi từ chỗ đang chọn đi lên tới gốc không có cấp nào nhận
   const cur = store.currentIds[store.currentIds.length - 1];
   const loc = cur ? store.locate(cur) : null;
-  const chain = loc ? [null, ...loc.ancestors.map((id) => store.block(id)?.type ?? null)] : [null];
-  const options = all.filter((o) => chain.some((t) => canContain(t, o.type)));
+  // Chèn vào đúng cấp của khối đang chọn (anh em của nó) → chỉ xét cha trực tiếp; xét cả tổ tiên thì khối như "Tổng số bài" hiện ra nhưng bị loại lặng lẽ khi chèn
+  const parentType = loc?.ancestors.length ? store.block(loc.ancestors[loc.ancestors.length - 1])?.type ?? null : null;
+  const options = all.filter((o) => canContain(parentType, o.type));
+  const panelRef = useRef<HTMLDivElement>(null);
+  // Escape đóng bảng (khi focus đang ở bảng hoặc chưa ở đâu cả; đang gõ trong khung soạn thì Escape thuộc về khung soạn)
+  useEffect(() => {
+    if (!onClose) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape" || ctx.ui.inserter) return;
+      const a = document.activeElement as HTMLElement | null;
+      if (a && !panelRef.current?.contains(a) && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))) return;
+      onClose();
+    };
+    // Nút "Thêm khối" giữ focus trong khung soạn (iframe) nên phím Esc có thể rơi vào tài liệu của khung soạn, không phải trang ngoài
+    const frameDoc = ctx.ui.canvasDoc;
+    document.addEventListener("keydown", onKey);
+    frameDoc?.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("keydown", onKey); frameDoc?.removeEventListener("keydown", onKey); };
+  }, [onClose, ctx.ui]);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"blocks" | "patterns">("blocks");
   const [hover, setHover] = useState<{ o: InsertOption; rect: DOMRect; y: number } | null>(null);
   const results = rankOptions(options, query);
   const catLabel: Record<string, string> = { text: labels.catText, media: labels.catMedia, design: labels.catDesign, widgets: labels.catWidgets, theme: labels.catTheme, embed: labels.catEmbed };
   const p = usePrefs(ctx.prefs);
-  const mostUsed = p.mostUsedBlocks && !query ? options.filter((o) => !o.key.includes("/") && (p.insertCounts[o.type] ?? 0) > 0).sort((a, b) => (p.insertCounts[b.type] ?? 0) - (p.insertCounts[a.type] ?? 0)).slice(0, 6) : [];
+  // "Đã dùng nhiều" tính một lần lúc mở bảng: chèn xong mà mục này hiện/đổi thì cả lưới khối nhảy xuống, bấm nhanh liên tiếp dễ trượt sang khối khác
+  const counts = useRef(p.insertCounts).current;
+  const mostUsed = p.mostUsedBlocks && !query ? options.filter((o) => !o.key.includes("/") && (counts[o.type] ?? 0) > 0).sort((a, b) => (counts[b.type] ?? 0) - (counts[a.type] ?? 0)).slice(0, 6) : [];
+  const lastInserted = useRef<string | null>(null);
   const groups = query ? [["", results] as const] : [...CATEGORY_ORDER, ...new Set(results.map((r) => r.category).filter((c) => !CATEGORY_ORDER.includes(c)))].map((c) => [c, results.filter((r) => r.category === c)] as const).filter(([, l]) => l.length);
   const insert = (o: InsertOption) => {
     const node = o.create();
     ctx.prefs.countInsert(o.type);
     const cur = store.currentIds[store.currentIds.length - 1];
-    if (cur && store.locate(cur)) store.insertAfter(cur, [node]);
+    // Đoạn trống đang chọn mà chính lần chèn trước vừa tạo thì giữ lại (chèn tiếp ra sau nó); đoạn trống của người dùng thì thay như WordPress
+    if (cur && store.locate(cur)) store.insertAfter(cur, [node], { replaceEmpty: cur !== lastInserted.current });
     else {
       const docId = store.activeDocId;
       store.insert(docId, null, store.getState().docs[docId].blocks.length, [node]);
     }
+    lastInserted.current = node.id;
     onInserted?.();
   };
   return (
-    <div className="ecx-inserter-panel" onMouseLeave={() => setHover(null)}>
+    <div ref={panelRef} className="ecx-inserter-panel" role="dialog" aria-label={labels.addBlock} onMouseLeave={() => setHover(null)}>
       {hover && (
         // Thẻ xem trước khi rê chuột: biểu tượng, tên, mô tả của khối
         <div className="ecx-block-preview" role="tooltip" style={{ left: Math.round(hover.rect.right + 8), top: Math.round(Math.min(hover.y, window.innerHeight - 160)) }}>

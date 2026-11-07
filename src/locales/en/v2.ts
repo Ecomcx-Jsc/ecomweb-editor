@@ -172,6 +172,8 @@ export const v2 = {
   createPattern: "Create pattern",
   lock: "Lock…",
   locked: "Locked",
+  collapse: "Collapse",
+  expand: "Expand",
   lockTitle: "Lock block",
   lockMove: "Disable movement",
   lockRemove: "Prevent removal",

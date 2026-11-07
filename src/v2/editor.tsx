@@ -250,7 +250,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
       {error && <div className="ecx-notice is-error" role="alert">{error}</div>}
       {p.fixedToolbar && p.mode === "visual" && <div className="ecx-fixed-toolbar"><BlockToolbar placement="fixed" /></div>}
       <div className="ecx-body">
-        {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel /> : <ListView />}</aside>}
+        {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel onClose={() => setLeft(null)} /> : <ListView />}</aside>}
         <main className="ecx-main">{p.mode === "code" ? <CodeEditor /> : <Canvas device={device} before={canvasBefore} />}</main>
         {right && !p.distractionFree && <aside className="ecx-right"><Inspector blockStyles={blockStyles} /></aside>}
       </div>

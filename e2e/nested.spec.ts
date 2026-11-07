@@ -77,7 +77,7 @@ test.describe("tài liệu lồng (header / footer)", () => {
     const row = page.locator(".ecx-list-row", { hasText: "Phần dùng chung · header" });
     // Cấp ngoài cùng mở sẵn: thấy khối con của header; thu lại thì ẩn
     await expect(page.locator(".ecx-list-row", { hasText: "Nhóm" })).toBeVisible();
-    await row.getByRole("button", { name: "Collapse" }).click();
+    await row.getByRole("button", { name: "Thu gọn" }).click();
     await expect(page.locator(".ecx-list-row", { hasText: "Nhóm" })).toHaveCount(0);
   });
 

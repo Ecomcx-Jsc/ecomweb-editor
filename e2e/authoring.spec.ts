@@ -54,7 +54,7 @@ test.describe("trải nghiệm soạn", () => {
     await expect.poll(async () => (await blocks(page)).find((b) => b.type === "image" && b.attrs.alt === "keo-tha")).toBeTruthy();
   });
 
-  test("lề trong: thanh kéo theo bậc preset, tách dọc / ngang, giá trị tuỳ chỉnh có đơn vị", async ({ page }) => {
+  test("lề trong: thanh kéo theo bậc preset, tách 4 cạnh, giá trị tuỳ chỉnh có đơn vị", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
     const insp = page.locator(".ecx-inspector");
@@ -65,9 +65,11 @@ test.describe("trải nghiệm soạn", () => {
     expect((await blocks(page))[1].attrs.style).toMatchObject({ padding: { base: "lg" } });
     await pad.locator(".ecx-spacing-head .ecx-tool").click();
     const rows = pad.locator(".ecx-step-row");
-    await expect(rows).toHaveCount(2);
-    await rows.nth(1).getByRole("button", { name: /giá trị tuỳ chỉnh/ }).click();
-    await rows.nth(1).locator(".ecx-unit-input input").fill("24");
+    await expect(rows).toHaveCount(4); // trên, phải, dưới, trái
+    for (const i of [1, 3]) { // phải + trái: giá trị tuỳ chỉnh
+      await rows.nth(i).getByRole("button", { name: /giá trị tuỳ chỉnh/ }).click();
+      await rows.nth(i).locator(".ecx-unit-input input").fill("24");
+    }
     expect((await blocks(page))[1].attrs.style).toMatchObject({ padding: { base: { top: "lg", bottom: "lg", left: "24px", right: "24px" } } });
   });
 

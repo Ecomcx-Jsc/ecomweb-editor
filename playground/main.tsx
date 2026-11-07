@@ -74,7 +74,7 @@ const host: EditorHost = {
   },
   // ?media=1: thư viện media giả lập (chọn / tải lên trả về ảnh mẫu)
   ...(params.get("media") ? { media: {
-    async pick() { return [{ id: 7, url: `${location.origin}/sample.svg`, alt: "Ảnh thư viện", fileName: "sample.svg", mimeType: "image/svg+xml", width: 400, height: 200 }]; },
+    async pick() { return [{ id: 7, url: `${location.origin}/sample.svg`, alt: "Ảnh thư viện", fileName: "sample.svg", mimeType: "image/svg+xml", width: 400, height: 200, webpUrl: `${location.origin}/sample.svg?f=webp`, sizes: { medium: { url: `${location.origin}/sample.svg?w=200`, width: 200, height: 100, webpUrl: `${location.origin}/sample.svg?w=200&f=webp` } } }]; },
     async upload(files: File[]) { uploads.push(...files.map((f) => f.name)); return files.map((f, i) => ({ id: 100 + i, url: `${location.origin}/sample.svg`, alt: f.name.replace(/\.[^.]+$/, ""), fileName: f.name, mimeType: f.type, width: 400, height: 200 })); },
   } } : {}),
   choices(kind, args) {
