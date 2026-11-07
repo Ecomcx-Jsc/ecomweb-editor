@@ -21,6 +21,61 @@ test.describe("bố cục + hiệu ứng", () => {
     await expect(cover.locator(".ecx-cover-overlay")).toBeVisible();
   });
 
+  test("cột: nút thêm cột không làm khung canvas tràn ngang", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "cot 50");
+    await expect(c.locator(".ecx-add-column")).toBeVisible();
+    const btn = await c.locator(".ecx-add-column").boundingBox();
+    const cols = await c.locator(".ecx-columns").first().boundingBox();
+    expect(btn!.x + btn!.width).toBeLessThanOrEqual(cols!.x + cols!.width + 0.5); // nút nằm trong khối cột
+    // không bị thanh công cụ nổi (nằm ngoài iframe) che: điểm giữa nút phải trúng chính khung canvas
+    const top = await page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.tagName, { x: btn!.x + btn!.width / 2, y: btn!.y + btn!.height / 2 });
+    expect(top).toBe("IFRAME");
+  });
+
+  test("lưới trên điện thoại: ô trống không làm khung canvas tràn ngang", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "luoi");
+    await expect(c.locator('[data-type="group"]').first()).toBeVisible();
+    await page.getByRole("button", { name: "Điện thoại", exact: true }).click();
+    expect(await c.locator("html").evaluate((h) => h.scrollWidth - h.clientWidth)).toBeLessThanOrEqual(0);
+    // ô trống (gợi ý nowrap) không được có min-width tự động = độ rộng chữ gợi ý
+    const cell = c.locator('[data-type="group"] [data-ecx-rich][data-empty][data-placeholder]').first();
+    await expect(cell).toHaveCSS("min-width", "0px");
+  });
+
+  test("chuyên mục / thẻ: mỗi mục là liên kết rel=tag như website (ăn kiểu liên kết của theme)", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "chuyen muc");
+    const terms = c.locator(".ecx-post-terms");
+    await expect(terms).toBeVisible();
+    await expect(terms.locator('a[rel="tag"]')).toHaveCount(2);
+  });
+
+  test("bảng cài đặt khối Menu: nhãn và giá trị tiếng Việt, không lộ tên thuộc tính thô", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "menu dieu");
+    const insp = page.locator(".ecx-inspector");
+    await expect(insp.getByText("Thu gọn thành nút menu")).toBeVisible();
+    await expect(insp.getByRole("radio", { name: "Luôn luôn" })).toBeVisible();
+    await expect(insp).not.toContainText("overlayMenu");
+  });
+
+  test("YouTube: dán link vào ô trống → hiện ảnh xem trước, không lỗi (hook phải gọi trước return sớm)", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "youtube");
+    const yt = c.locator('[data-type="youtube"]');
+    await yt.getByLabel("YouTube URL").fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    await yt.getByRole("button").last().click();
+    await expect(c.locator(".ecx-block-error")).toHaveCount(0);
+    await expect(c.locator('[data-type="youtube"] img')).toBeVisible();
+  });
+
   test("chèn Hàng ngang: hai khối nằm cạnh nhau; đổi sang Xếp dọc rồi Lưới từ thanh công cụ", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");

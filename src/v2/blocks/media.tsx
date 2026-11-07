@@ -81,8 +81,8 @@ function FileEdit({ block, blockProps }: BlockEditProps) {
 function YoutubeEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const m = String(block.attrs.src ?? "").match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
   const [draft, setDraft] = useState("");
+  const t = useMsgs("blocks"); // hook phải gọi trước mọi return sớm (đổi số hook khi dán link → React #300)
   if (!m) {
-    const t = useMsgs("blocks");
     return (
       <div {...blockProps} className={cx(blockProps.className, "ecx-media-placeholder")}>
         <span className="ecx-placeholder-title"><Play className="ecx-icon" />YouTube</span>

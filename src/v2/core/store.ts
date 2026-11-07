@@ -1,7 +1,7 @@
 import type { RichNode } from "@ecomcx/ecomweb-content";
 import { cloneBlock, inlineLength, joinInline, kindOf, makeBlock, splitInline, type BNode } from "./model";
 import { findBlock, flatten, insertBlocks, mapBlock, moveBlocks, removeBlocks, setAttrs, sibling, topLevelOrdered, type Location } from "./ops";
-import { canContain, fixTree } from "./structure";
+import { canContain, leavesItem, fixTree } from "./structure";
 
 /**
  * Store của trình soạn: nhiều tài liệu cùng lúc (bài/template đang mở + header, footer, mẫu đồng bộ lồng bên trong),
@@ -470,7 +470,7 @@ export class EditorStore {
     const loc = this.locate(afterId);
     if (!loc) return;
     const target = loc.block;
-    if (opts.replaceEmpty !== false && target.type === "paragraph" && !inlineLength(target.inline) && canContain(loc.parent?.type ?? null, nodes[0].type) && this.canRemove(afterId)) {
+    if (opts.replaceEmpty !== false && target.type === "paragraph" && !inlineLength(target.inline) && canContain(loc.parent?.type ?? null, nodes[0].type) && !leavesItem(loc.parent?.type, nodes[0].type) && this.canRemove(afterId)) {
       const focusId = opts.focus !== false ? firstText(nodes[0]) : null;
       this.commit(loc.docId, mapBlock(this.state.docs[loc.docId].blocks, afterId, () => nodes), {
         select: focusId ? { ids: [], editing: focusId } : { ids: nodes.map((n) => n.id), editing: null },
@@ -480,7 +480,7 @@ export class EditorStore {
     }
     // Khối không đặt được ở cấp này (vd chèn nhóm sau một listItem): leo lên tới cấp đặt được
     let at: Location & { docId: string } = loc;
-    while (at.parent && !canContain(at.parent.type, nodes[0].type)) {
+    while (at.parent && (!canContain(at.parent.type, nodes[0].type) || leavesItem(at.parent.type, nodes[0].type))) {
       const up = this.locate(at.parent.id);
       if (!up) break;
       at = up;

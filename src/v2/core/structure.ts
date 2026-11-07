@@ -38,6 +38,9 @@ const RULES: Record<string, StructureRule> = {
   tableHeader: { parents: ["tableRow"], required: p },
 };
 
+/** Mục danh sách / việc chỉ nhận chữ và danh sách lồng: khối lớn (bảng, ảnh, nhóm…) chèn mới thì phải ra ngoài danh sách. */
+export const leavesItem = (parentType: string | null | undefined, child: string) => (parentType === "listItem" || parentType === "taskItem") && !/^(paragraph|bulletList|orderedList|taskList)$/.test(child);
+
 const extra = new Map<string, StructureRule>();
 export function setStructureRule(type: string, rule: StructureRule | null) {
   if (rule) extra.set(type, rule);

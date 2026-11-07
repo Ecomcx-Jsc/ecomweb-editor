@@ -1,3 +1,4 @@
+import { leavesItem } from "../core/structure";
 import { blockDescription } from "./block-descriptions";
 import { Blocks } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from "react";
@@ -70,7 +71,12 @@ export function applyInsert(ctx: ReturnType<typeof useEditor>, req: InserterRequ
   if (req.mode === "slash" && req.blockId) {
     const b = store.block(req.blockId);
     // Đoạn chỉ còn "/từ khoá" → thay cả đoạn bằng khối mới
-    if (b && inlineLength(b.inline) <= (req.query?.length ?? 0) + 1) store.replace(req.blockId, [node], focusOpts(node));
+    const parentType = store.locate(req.blockId)?.parent?.type;
+    if (b && leavesItem(parentType, node.type)) {
+      // trong mục danh sách: khối mới ra sau danh sách, bỏ đoạn "/từ khoá" (mục còn lại tự có đoạn trống)
+      store.insertAfter(req.blockId, [node], { replaceEmpty: false });
+      store.remove([req.blockId], { focusNeighbor: false });
+    } else if (b && inlineLength(b.inline) <= (req.query?.length ?? 0) + 1) store.replace(req.blockId, [node], focusOpts(node));
     else store.insertAfter(req.blockId, [node]);
   } else store.insert(req.docId, req.parentId, req.index, [node]);
   ui.openInserter(null);
@@ -194,7 +200,13 @@ const CATEGORY_ORDER = ["text", "media", "design", "widgets", "theme", "embed"];
 export function InserterPanel({ onInserted }: { onInserted?(): void }) {
   const ctx = useEditor();
   const { store, labels } = ctx;
-  const options = useInsertOptions();
+  useUiTick();
+  const all = useInsertOptions();
+  // Khối có luật vị trí (vd "Tổng số bài" chỉ trong Query): ẩn khi từ chỗ đang chọn đi lên tới gốc không có cấp nào nhận
+  const cur = store.currentIds[store.currentIds.length - 1];
+  const loc = cur ? store.locate(cur) : null;
+  const chain = loc ? [null, ...loc.ancestors.map((id) => store.block(id)?.type ?? null)] : [null];
+  const options = all.filter((o) => chain.some((t) => canContain(t, o.type)));
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"blocks" | "patterns">("blocks");
   const [hover, setHover] = useState<{ o: InsertOption; rect: DOMRect; y: number } | null>(null);

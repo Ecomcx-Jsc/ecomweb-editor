@@ -215,6 +215,26 @@ test.describe("chèn khối", () => {
   });
 });
 
+test("thư viện khối: khối chỉ hợp lệ trong Query (Tổng số bài) ẩn khi đang chọn ngoài Query", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await clickEnd(c, "Đoạn thứ hai.");
+  await page.getByRole("button", { name: "Thêm khối" }).first().click();
+  await expect(page.locator(".ecx-block-tile[data-key='spacer']")).toBeVisible();
+  await expect(page.locator(".ecx-block-tile[data-key='queryTotal']")).toHaveCount(0);
+});
+
+test("chèn bảng khi đang gõ trong danh sách → bảng nằm ngoài danh sách", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await clickEnd(c, "Đoạn thứ hai.");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("- mục một");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("/bang");
+  await page.keyboard.press("Enter");
+  await expect(c.locator('[data-type="table"]')).toHaveCount(1);
+  await expect(c.locator('li [data-type="table"], li table')).toHaveCount(0);
+});
+
 test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
   test("kéo tay nắm trên thanh công cụ: đưa đoạn cuối lên đầu", async ({ page }) => {
     const c = await open(page, "?doc=post");

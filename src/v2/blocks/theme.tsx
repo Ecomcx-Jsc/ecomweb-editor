@@ -111,7 +111,10 @@ function PostAuthorEdit({ blockProps }: BlockEditProps) {
 }
 function PostTermsEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
-  return <p {...merge(blockProps, "ecx-post-terms")}>{(d.post?.terms?.length ? d.post.terms : block.attrs.taxonomy === "post_tag" ? ["Thẻ A", "Thẻ B"] : ["Chuyên mục A", "Chuyên mục B"]).join(String(block.attrs.separator ?? ", "))}</p>;
+  const names = d.post?.terms?.length ? d.post.terms : block.attrs.taxonomy === "post_tag" ? ["Thẻ A", "Thẻ B"] : ["Chuyên mục A", "Chuyên mục B"];
+  const sep = String(block.attrs.separator ?? ", ");
+  // website dựng mỗi mục là <a rel="tag"> (TermLinks) → canvas cũng là liên kết để ăn đúng kiểu liên kết của theme
+  return <p {...merge(blockProps, "ecx-post-terms")}>{names.map((n, i) => <span key={i}>{i > 0 && sep}<a href="#" rel="tag" onClick={(e) => e.preventDefault()}>{n}</a></span>)}</p>;
 }
 function ReadMoreEdit({ block, blockProps }: BlockEditProps) {
   return <p {...merge(blockProps, "ecx-read-more", align(block.attrs))}><a href="#" onClick={(e) => e.preventDefault()}>{String(block.attrs.text || "Đọc tiếp")}</a></p>;

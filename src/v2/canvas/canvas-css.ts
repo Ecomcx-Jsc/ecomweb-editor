@@ -41,6 +41,7 @@ pre [data-ecx-rich], pre[data-ecx-rich] { white-space: pre-wrap; }
 /* min(100%, …) = 0 trong khung co theo nội dung (nút) → dùng độ dài chữ gợi ý, chặn tràn bằng max-width */
 [data-ecx-rich][data-empty][data-placeholder] { min-width: calc(var(--ecx-ph, 0) * .6em); max-width: 100%; }
 span[data-ecx-rich][data-empty][data-placeholder] { display: inline-block; vertical-align: top; }
+[data-ecx-rich][data-empty][data-placeholder] { min-width: 0; } /* ô lưới/flex trống không bị chữ gợi ý (nowrap) đẩy rộng hơn khung */
 [data-ecx-rich][data-empty][data-placeholder]::before { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .ProseMirror-hideselection *::selection { background: transparent; }
 .ProseMirror-selectednode { outline: 2px solid var(--ecx-ui); }
@@ -140,9 +141,9 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-media-error { color: #b42318; font: 12px var(--ecx-ui-font); margin: 6px 0 0; }
 .ecx-cover-placeholder { min-height: 220px; }
 .ecx-btn-ghost { background: none; border-color: transparent; }
-/* tay nắm cột / nút thêm cột định vị theo khối cột (website không cần) */
+/* tay nắm cột / nút thêm cột định vị theo khối cột (website không cần); nút nằm trong khối cột, góc dưới phải: không tràn khung canvas (thanh cuộn ngang) và không bị thanh công cụ nổi (ở trên khối đang chọn) che */
 .ecx-canvas-root .ecx-columns { position: relative; }
-.ecx-add-column { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); z-index: 7; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: #0f1e29; color: #fff; font: 600 18px/1 var(--ecx-ui-font); cursor: pointer; box-shadow: 0 2px 6px rgb(0 0 0 / .2); }
+.ecx-add-column { position: absolute; right: 4px; bottom: 4px; z-index: 7; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: #0f1e29; color: #fff; font: 600 18px/1 var(--ecx-ui-font); cursor: pointer; box-shadow: 0 2px 6px rgb(0 0 0 / .2); }
 .ecx-add-column:hover { background: var(--ecx-ui); }
 .is-zoomed-out .ecx-add-column { display: none; }
 `;
