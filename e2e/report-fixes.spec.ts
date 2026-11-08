@@ -214,4 +214,11 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     expect(parts.length).toBe(2);
     for (const [k, w] of widths) expect(w, `${k} rộng ${w}px`).toBeLessThanOrEqual(300);
   });
+  test("Breadcrumb trên canvas như website: chuyên mục thật của bài mẫu, không có thì bỏ (không hiện chữ giữ chỗ 'Chuyên mục')", async ({ page }) => {
+    const doc = { version: 1, blocks: [{ id: "main", type: "richtext", data: { type: "doc", content: [{ type: "breadcrumbs" }] } }] };
+    await page.addInitScript((d) => { (window as unknown as { __INJECT_DOC__: unknown }).__INJECT_DOC__ = d; }, doc);
+    const text = async (q: string) => { const c = await open(page, q); const nav = c.locator(".ecx-breadcrumbs"); await expect(nav).toBeVisible(); return (await nav.innerText()).replace(/\s*›\s*/g, " › ").replace(/\s+/g, " ").trim(); };
+    expect(await text("?doc=inject&postCategory=Tin%20t%E1%BB%A9c")).toBe("Trang chủ › Tin tức › Bài viết mẫu");
+    expect(await text("?doc=inject&postCategory=")).toBe("Trang chủ › Bài viết mẫu"); // trang / bài không có chuyên mục
+  });
 });

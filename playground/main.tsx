@@ -72,7 +72,7 @@ const host: EditorHost = {
   dynamic: {
     site: { title: "ECOMCX Demo", tagline: "Website mẫu" },
     menus: { primary: [{ title: "Trang chủ" }, { title: "Giới thiệu" }, { title: "Liên hệ" }] },
-    post: { title: "Bài viết mẫu", date: "01/11/2026", author: "Admin", excerpt: "Tóm tắt bài viết mẫu." },
+    post: { title: "Bài viết mẫu", date: "01/11/2026", author: "Admin", excerpt: "Tóm tắt bài viết mẫu.", ...(params.has("postCategory") ? { category: params.get("postCategory") || undefined } : {}) },
   },
   // ?media=1: thư viện media giả lập (chọn / tải lên trả về ảnh mẫu)
   ...(params.get("media") ? { media: {

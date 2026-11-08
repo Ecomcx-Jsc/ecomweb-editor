@@ -188,7 +188,11 @@ function BreadcrumbsEdit({ block, blockProps, labels }: BlockEditProps) {
   const d = useDynamic();
   const t = useMsgs("blocks");
   const sep = String(block.attrs.separator ?? "›");
-  const items = [...(block.attrs.showHome !== false ? [t.home] : []), t.category2, ...(block.attrs.showCurrent !== false ? [d.post?.title || (t.currentPage)] : [])];
+  // Như website: giữa = chuyên mục đầu tiên của bài (trang không có thì bỏ), cuối = tiêu đề bài / trang lưu trữ. Chưa có mẫu → chữ giữ chỗ.
+  // Host cũ chưa gửi `category` → term đầu tiên (thường là chuyên mục)
+  const middle = d.post ? ("category" in d.post ? d.post.category : d.post.terms?.[0]) : d.archive ? undefined : t.category2;
+  const current = d.post?.title || d.archive?.title || t.currentPage;
+  const items = [...(block.attrs.showHome !== false ? [t.home] : []), ...(middle ? [middle] : []), ...(block.attrs.showCurrent !== false ? [current] : [])];
   return (
     <nav {...(merge(blockProps, "ecx-breadcrumbs") as object)}>
       <ol>{items.map((t, i) => <li key={i}>{i > 0 && <span className="ecx-breadcrumbs-sep" aria-hidden="true">{sep}</span>}{i < items.length - 1 ? <a>{t}</a> : <span>{t}</span>}</li>)}</ol>
