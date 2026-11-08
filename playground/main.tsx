@@ -65,7 +65,9 @@ const POSTS = [
   { title: "Hướng dẫn chọn size", date: "20/10/2026", terms: ["huong-dan"] },
 ];
 const host: EditorHost = {
-  canvasStyles: [contentCss, { css: "body { font-family: Georgia, serif; color: #222; } .ecx-site-title { font-weight: 700; } .ecx-navigation-menu { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0; } .ecx-group { display: flex; justify-content: space-between; align-items: center; }" }],
+  canvasStyles: [contentCss, { css: "body { font-family: Georgia, serif; color: #222; } .ecx-site-title { font-weight: 700; } .ecx-navigation-menu { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0; } .ecx-group { display: flex; justify-content: space-between; align-items: center; }" }, ...(params.get("css") ? [{ css: params.get("css")! }] : [])],
+  // ?contentClass=…: class của vùng soạn như website đặt (vd ecx-template), ?css=…: CSS của theme — kiểm CSS theme thắng mặc định của trình soạn
+  ...(params.get("contentClass") ? { canvasContentClass: params.get("contentClass")! } : {}),
   presets: { colors: { primary: "#1a597b", accent: "#f26251", muted: "#757575" }, gradients: { brand: "linear-gradient(135deg, #1a597b, #f26251)" }, shadows: { soft: "0 2px 8px rgb(0 0 0 / .12)" } },
   dynamic: {
     site: { title: "ECOMCX Demo", tagline: "Website mẫu" },

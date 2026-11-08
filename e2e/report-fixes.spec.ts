@@ -204,4 +204,14 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     expect(after[2]).toBe(before[0]); // khối đầu được thả xuống sau khối thứ ba
     expect([...after].sort()).toEqual([...before].sort());
   });
+  test("CSS theme giới hạn bề rộng phần con của template thì header/footer và khối lồng trên canvas cũng theo (như website)", async ({ page }) => {
+    // Website: :where(html[data-theme]) .ecx-template > * { max-width: 300px } → header/footer, bộ cột rộng 300px. Mặc định của trình soạn không được đè.
+    const css = encodeURIComponent(":where(html) .ecx-template > * { box-sizing: border-box; max-width: 300px; margin-inline: auto; }");
+    const c = await open(page, `?contentClass=ecx-template&css=${css}`);
+    await expect(c.locator(".ecx-template-part").first()).toBeVisible();
+    const widths = await c.locator("body").evaluate(() => [...document.querySelectorAll(".ecx-canvas-root > *")].map((e) => [e.classList.contains("ecx-template-part") ? "ecx-template-part" : (e as HTMLElement).dataset.type ?? e.tagName, Math.round(e.getBoundingClientRect().width)] as [string, number]));
+    const parts = widths.filter(([k]) => k === "ecx-template-part");
+    expect(parts.length).toBe(2);
+    for (const [k, w] of widths) expect(w, `${k} rộng ${w}px`).toBeLessThanOrEqual(300);
+  });
 });
