@@ -167,9 +167,35 @@ function PageListEdit({ blockProps }: BlockEditProps) {
 function ArchivesEdit({ block, blockProps }: BlockEditProps) {
   return <ul {...merge(blockProps, "ecx-archives")}>{["11/2026", "10/2026"].map((m, i) => <li key={m}>{m}{block.attrs.showCount === false ? "" : ` (${4 - i})`}</li>)}</ul>;
 }
-function CommentsEdit({ blockProps }: BlockEditProps) {
+/** Cùng markup / class với khu bình luận của website (theme-sdk Comments) → CSS của theme tô canvas như website: 1 bình luận mẫu + form. */
+function CommentsEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
-  return <div {...merge(blockProps, "ecx-comments")}><MessageSquare className="ecx-icon" /> {d.post?.comments ?? 0}</div>;
+  const size = Math.min(128, Math.max(16, Number(block.attrs.avatarSize) || 40));
+  const field = { readOnly: true, tabIndex: -1 } as const;
+  return (
+    <section {...merge(blockProps, "comments-area")}>
+      <h2 className="comments-title">{String(block.attrs.title || "Bình luận")} ({d.post?.comments ?? 0})</h2>
+      <ol className="comment-list">
+        <li className="comment">
+          <article>
+            <header className="comment-meta">
+              <span className="comment-avatar avatar" style={{ display: "inline-block", width: size, height: size, borderRadius: "50%", background: "rgba(127,127,127,.3)", verticalAlign: "middle" }} />
+              <b className="comment-author">Người đọc</b>
+              {block.attrs.showDate === false ? null : <>{" · "}<time>01/11/2026</time></>}
+            </header>
+            <div className="comment-content"><p>Bình luận mẫu — website hiện bình luận thật của bài.</p></div>
+          </article>
+        </li>
+      </ol>
+      <form className="comment-form" onSubmit={(e) => e.preventDefault()}>
+        <h3>Để lại bình luận</h3>
+        <p><label>Bình luận *<textarea rows={5} {...field} /></label></p>
+        <p className="comment-form-row"><label>Tên *<input {...field} /></label><label>Email *<input type="email" {...field} /></label></p>
+        <p><label>Website<input type="url" {...field} /></label></p>
+        <p><button type="button" tabIndex={-1}>Gửi bình luận</button></p>
+      </form>
+    </section>
+  );
 }
 /** Tiêu đề trang lưu trữ / tìm kiếm (H1 của trang chuyên mục, thẻ, tác giả…). */
 function QueryTitleEdit({ block, blockProps, labels }: BlockEditProps) {

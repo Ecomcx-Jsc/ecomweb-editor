@@ -6,7 +6,7 @@ import type { BlockType } from "../core/registry";
 import { messages } from "../../i18n";
 import { DEFAULT_IMAGE_SIZES, hintOf, hintText, imageSizeLabel, optionLabel, type AttrHint } from "./attr-hints";
 import { ColorInput } from "./color-field";
-import { mediaSrcsets } from "../blocks/media-actions";
+import { mediaSrcsets } from "../core/media";
 
 export const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 

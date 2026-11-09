@@ -3,19 +3,10 @@ import { Link2, Upload } from "lucide-react";
 import { useRef, useState, type DragEvent, type ReactNode } from "react";
 import type { MediaItem, MediaKind } from "../../shared/types";
 import { useEditor } from "../context";
+import { mediaSrcsets } from "../core/media";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const ACCEPT: Record<MediaKind, string> = { image: "image/*", gallery: "image/*", video: "video/*", audio: "audio/*", file: "" };
-
-/** srcset (gốc + các cỡ đã tạo) và bản WebP của ảnh thư viện → trình duyệt chọn file vừa khung (điện thoại không tải ảnh gốc). Dưới 2 cỡ thì không cần. */
-export function mediaSrcsets(m: MediaItem): { srcset?: string; webpSrcset?: string } {
-  const cands = Object.values(m.sizes ?? {}).filter((s) => s?.url && s.width > 0).map((s) => ({ w: s.width, url: s.url, webp: s.webpUrl }));
-  if (m.width && m.width > 0) cands.push({ w: m.width, url: m.url, webp: m.webpUrl });
-  const uniq = [...new Map(cands.map((c) => [c.w, c])).values()].sort((a, b) => a.w - b.w);
-  if (uniq.length < 2) return {};
-  const webp = uniq.filter((c) => c.webp);
-  return { srcset: uniq.map((c) => `${c.url} ${c.w}w`).join(", "), webpSrcset: webp.length > 1 ? webp.map((c) => `${c.webp} ${c.w}w`).join(", ") : undefined };
-}
 
 /** Thuộc tính ghi vào khối từ tệp media đã chọn / tải lên. */
 export function mediaAttrs(kind: MediaKind, items: MediaItem[]): Record<string, unknown> {
