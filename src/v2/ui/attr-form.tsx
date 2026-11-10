@@ -4,6 +4,7 @@ import { useEditor } from "../context";
 import type { Choice, ChoiceKind } from "../core/host";
 import type { BlockType } from "../core/registry";
 import { messages } from "../../i18n";
+import { blockOptions } from "../../shared/block-defs";
 import { DEFAULT_IMAGE_SIZES, hintOf, hintText, imageSizeLabel, optionLabel, type AttrHint } from "./attr-hints";
 import { ColorInput } from "./color-field";
 import { mediaSrcsets } from "../core/media";
@@ -82,6 +83,8 @@ function ChoiceField({ hint, attrs, value, set, label }: { hint: AttrHint; attrs
 export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Record<string, any>; onChange(a: Record<string, unknown>): void }) {
   const { host, labels } = useEditor();
   const lang = labels.lang;
+  // Khối plugin: nhãn "%khoá%" dịch bằng hàm dịch đăng ký cùng khối (namespace của plugin); không có thì dịch của host
+  const translate = blockOptions(type.name).translate ?? host.translate;
   const entries = Object.entries(type.attributes ?? {})
     .map(([k, s]) => [k, s, hintOf(type.name, k)] as const)
     .filter(([k, s, h]) => !HIDDEN_ATTRS.has(k) && controlOf(s) !== "hidden" && h.control !== "hidden" && (!h.when || h.when(attrs)));
@@ -89,7 +92,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
   return (
     <div className="ecx-form">
       {entries.map(([k, spec, hint]) => {
-        const label = hintText(hint, "label", lang) ?? attrLabel(k, spec, lang, host.translate);
+        const label = hintText(hint, "label", lang) ?? attrLabel(k, spec, lang, translate);
         const value = attrs[k] ?? spec.default;
         const set = (v: unknown) => onChange({ [k]: v === "" || v === spec.default ? undefined : v });
         const helpText = hintText(hint, "help", lang);
@@ -97,7 +100,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
         const num = spec.type === "integer" || spec.type === "number";
         const opts = (): Array<[string, string]> => hint.options
           ? hint.options.map((v) => [String(v), optionLabel(hint, v, lang)])
-          : (spec.enum ?? []).map((v, i) => [String(v), spec.enumLabels?.[i] ? (host.translate?.(spec.enumLabels[i]) ?? spec.enumLabels[i]) : optionLabel(hint, v, lang)]);
+          : (spec.enum ?? []).map((v, i) => [String(v), spec.enumLabels?.[i] ? (translate?.(spec.enumLabels[i]) ?? spec.enumLabels[i]) : optionLabel(hint, v, lang)]);
         const parse = (v: string) => (v === "" ? undefined : num ? Number(v) : v);
         switch (hint.control ?? controlOf(spec)) {
           case "checkbox":

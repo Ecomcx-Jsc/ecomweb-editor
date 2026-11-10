@@ -1,3 +1,4 @@
+import { blockDefaults } from "@ecomcx/ecomweb-content";
 import { Blocks } from "lucide-react";
 import type { ComponentType } from "react";
 import { blockOptions, onBlockDefinitionsChange, registeredBlocks, type BlockEditProps as V1EditProps } from "../../shared/block-defs";
@@ -40,7 +41,8 @@ export function syncPluginBlocks(registry: BlockTypeRegistry): () => void {
         // Không có xem trước riêng và không chứa khối con → website vẽ bằng renderer của theme/plugin (viết khối một lần)
         serverRender: !o.edit && def.content !== "blocks",
         create: (attrs) => {
-          const defaults = Object.fromEntries(Object.entries(def.attributes).filter(([, s]) => s.default !== undefined).map(([k, s]) => [k, s.default]));
+          // blockDefaults kèm "_v" = phiên bản khối: thiếu nó website coi dữ liệu mới là bản 1 rồi chạy migrate lên dữ liệu đã ở bản mới
+          const defaults = blockDefaults(def);
           const content = def.content === "blocks" ? (o.initialContent?.() ?? [{ type: "paragraph" }]).map((n) => fromRich(n as never)) : undefined;
           return makeBlock(def.name, { ...defaults, ...attrs }, content);
         },

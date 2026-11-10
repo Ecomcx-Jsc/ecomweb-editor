@@ -319,6 +319,24 @@ test("đồng bộ khối plugin không đè khối lõi cùng tên (khối 1.x 
   stop();
 });
 
+test("khối plugin chèn mới mang phiên bản khối (_v) — thiếu thì website chạy migrate bản 1 lên dữ liệu đã ở bản mới", async () => {
+  const { BlockTypeRegistry } = await import("../src/v2/core/registry");
+  const { syncPluginBlocks } = await import("../src/v2/blocks/compat");
+  const { registerBlock } = await import("../src/shared/block-defs");
+  const { defineBlock, migrateBlockAttrs } = await import("@ecomcx/ecomweb-content");
+  const def = defineBlock({ name: "acme/note", title: "Note", version: 2, content: "blocks",
+    attributes: { tone: { type: "string", enum: ["info", "warning"], default: "info" } },
+    migrate: { 1: (a: Record<string, unknown>) => ({ tone: a.color === "red" ? "warning" : "info" }) } });
+  registerBlock(def, {});
+  const r = new BlockTypeRegistry();
+  const stop = syncPluginBlocks(r);
+  const b = r.get("acme/note")!.create!({ tone: "warning" });
+  assert.equal(b.attrs._v, 2);
+  // website: dữ liệu bản 2 giữ nguyên (không bị migrate từ bản 1 về "info")
+  assert.equal((migrateBlockAttrs(def, b.attrs) as { tone: string }).tone, "warning");
+  stop();
+});
+
 // ---------------------------------------------------------------------------
 // Khoá khối
 // ---------------------------------------------------------------------------
