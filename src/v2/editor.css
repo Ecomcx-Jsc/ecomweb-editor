@@ -326,3 +326,13 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
   .ecx-toolbar .ecx-tool { height: 40px; min-width: 38px; }
   .ecx-movers .ecx-tool { height: 20px; min-width: 30px; }
 }
+
+/* Hộp kết quả AI */
+.ecx-ai-body { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.ecx-ai-text { max-height: 50vh; overflow: auto; padding: 10px 12px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; background: var(--ecx-ed-subtle, rgba(127,127,127,.06)); font-size: 14px; line-height: 1.6; }
+.ecx-ai-text p { margin: 0 0 .6em; } .ecx-ai-text p:last-child { margin: 0; }
+.ecx-ai-wait { margin: 0; color: var(--ecx-ed-muted, #667085); animation: ecx-ai-pulse 1.2s ease-in-out infinite; }
+.ecx-ai-error { margin: 0; color: #b42318; }
+.ecx-ai-note { margin: 0; font-size: 12px; color: var(--ecx-ed-muted, #667085); }
+@keyframes ecx-ai-pulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .ecx-ai-wait { animation: none; } }

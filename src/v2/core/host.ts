@@ -52,6 +52,11 @@ export interface EditorHost {
   /** Bài thật cho "Danh sách bài" theo thiết lập của khối (soạn thấy đúng bài sẽ hiện). Không có → dynamic.posts. */
   queryPosts?(query: QueryArgs): Promise<DynamicPost[]>;
   createPattern?(content: SavedContent): Promise<{ ref: number; synced: boolean } | null>;
+  /**
+   * Trợ lý AI (ứng dụng gọi nhà cung cấp, trình soạn chỉ gửi chữ và nhận chữ). Không có → không hiện menu AI.
+   * `task`: rewrite | shorten | expand | fix | summarize | translate | custom. Lỗi: ném Error có thông báo cho người dùng.
+   */
+  ai?: { run(task: string, text: string, opts?: { language?: string; instruction?: string }): Promise<string> };
 }
 
 /** Nội dung lưu (ContentDoc của @ecomcx/ecomweb-content). */

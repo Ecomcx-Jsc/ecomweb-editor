@@ -1,5 +1,6 @@
 import { WIDE_BLOCKS } from "@ecomcx/ecomweb-content";
 import { clearCells, mergeRange, selectedCellRect } from "../core/tables";
+import { AiTools } from "./ai";
 import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
@@ -248,6 +249,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
             </Dropdown>
           </div>
         )}
+        {nodes.length === 1 && first.inline && !type?.plain && ctx.host.ai && <div className="ecx-tool-group"><AiTools block={first} /></div>}
         {view && !type?.plain && !type?.multiline && <MarkTools view={view} onLink={() => setLink(ui.activeRich ?? sel.editing)} />}
         {listItem && (
           <div className="ecx-tool-group">

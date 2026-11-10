@@ -75,7 +75,7 @@ export function MoreMenu({ extra }: { extra?: (close: () => void) => ReactNode }
 }
 
 /** Hộp thoại dùng chung (Esc / bấm nền để đóng, giữ focus trong hộp). */
-function Modal({ title, onClose, children, wide }: { title: string; onClose(): void; children: ReactNode; wide?: boolean }) {
+export function Modal({ title, onClose, children, wide }: { title: string; onClose(): void; children: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const { labels } = useEditor();
   useEffect(() => {
