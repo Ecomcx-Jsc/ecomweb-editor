@@ -57,7 +57,9 @@ pre [data-ecx-rich], pre[data-ecx-rich] { white-space: pre-wrap; }
 [data-ecx-rich][data-empty]:not([data-placeholder-always]):not(:focus)::before { content: none; }
 [data-ecx-rich][data-empty] { position: relative; }
 /* min(100%, …) = 0 trong khung co theo nội dung (nút) → dùng độ dài chữ gợi ý, chặn tràn bằng max-width */
-[data-ecx-rich][data-empty][data-placeholder] { min-width: calc(var(--ecx-ph, 0) * .6em); max-width: 100%; }
+/* Chỉ ô chữ dạng span (nút, nhãn…): đoạn văn trống KHÔNG đặt max-width — luật này ưu tiên cao hơn cột chữ của khung soạn,
+   đoạn trống sẽ rộng hết khung và lệch khỏi cột (gõ chữ vào mới nhảy về) */
+span[data-ecx-rich][data-empty][data-placeholder] { min-width: calc(var(--ecx-ph, 0) * .6em); max-width: 100%; }
 span[data-ecx-rich][data-empty][data-placeholder] { display: inline-block; vertical-align: top; }
 [data-ecx-rich][data-empty][data-placeholder] { min-width: 0; } /* ô lưới/flex trống không bị chữ gợi ý (nowrap) đẩy rộng hơn khung */
 [data-ecx-rich][data-empty][data-placeholder]::before { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
@@ -68,7 +70,7 @@ span[data-ecx-rich][data-empty][data-placeholder] { display: inline-block; verti
 .ecx-block.is-locked { pointer-events: none; }
 .ecx-block.is-locked .ecx-nested:not(.is-locked), .ecx-block.is-locked [data-ecx-editable-doc] { pointer-events: auto; }
 
-.ecx-default-appender { cursor: text; color: #5d6a75; margin: 0; padding: .25em 0; }
+.ecx-default-appender { cursor: text; color: #5d6a75; margin-top: 0; margin-bottom: 0; padding: .25em 0; } /* lề trái/phải auto như khối khác (thẳng cột chữ) */
 .ecx-default-appender:focus { outline: none; }
 .ecx-appender { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; margin: 0; border: 1px dashed color-mix(in srgb, currentColor 30%, transparent); border-radius: 4px; background: transparent; color: inherit; font: 600 20px/1 var(--ecx-ui-font); cursor: pointer; opacity: .6; }
 .ecx-appender:hover { opacity: 1; border-color: var(--ecx-ui); color: var(--ecx-ui); }
