@@ -1,4 +1,4 @@
-import { normalizeStyle, styleClass } from "@ecomcx/ecomweb-content";
+import { normalizeStyle, styleClass, widthClass } from "@ecomcx/ecomweb-content";
 import { Component, memo, useCallback, useContext, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type ReactElement, type ReactNode } from "react";
 import { DocScopeProvider, LoopPostContext, useDocScope, useEditor, useEditorState } from "../context";
 import { ServerBlock } from "./server-block";
@@ -42,6 +42,11 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     const rich = target.closest<HTMLElement>("[data-ecx-rich]");
     if (rich && rich.isContentEditable && !e.shiftKey) return; // bấm vào chữ: ProseMirror đặt con trỏ, focus báo đang gõ
     if (target.closest("input, textarea, select, button, [contenteditable=true]") && !e.shiftKey) return;
+    // Bấm vào phần đệm của ô bảng: con trỏ vào chữ trong ô (như bấm vào ô của Word / WordPress), không chọn cả ô
+    if ((block.type === "tableCell" || block.type === "tableHeader") && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      const text = block.content?.find((b) => b.inline);
+      if (text) { e.preventDefault(); store.focusText(text.id, -1); return; }
+    }
     e.preventDefault();
     // Chọn khối: rời ô gõ, đưa focus về khung soạn (phím Delete, ⌘C… thuộc về vùng chọn khối)
     const active = own.ownerDocument.activeElement as HTMLElement | null;
@@ -67,6 +72,7 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
       state.editing && "is-editing",
       state.mode === "disabled" && "is-locked",
       style && styleClass(style),
+      widthClass(block.type, a),
       typeof a.blockStyle === "string" && `ecx-is-${a.blockStyle}`,
       typeof a.className === "string" && a.className,
     ),

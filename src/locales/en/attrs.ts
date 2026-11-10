@@ -30,6 +30,7 @@ export const attrs = {
   minHeight: "Min height",
   contentAlign: "Content position",
   fixed: "Fixed background",
+  constrained: "Keep inner content at text-column width",
   position: "Media position",
   columns: "Columns",
   footer: "Footer row",

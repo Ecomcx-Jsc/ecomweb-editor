@@ -11,6 +11,8 @@ import { applyDocumentAttrs } from "./document-attrs";
 import { wrapperNodes } from "./wrapper-props";
 import { makeBlock, type BNode } from "../core/model";
 import { flatten, topLevelOrdered } from "../core/ops";
+import { useTableRangeSelect } from "./table-select";
+import { clearCells, deleteRow, selectedCellRect, tableContext } from "../core/tables";
 import { insertSibling, now, richViews } from "../text/rich-text";
 
 export type Device = "desktop" | "tablet" | "mobile";
@@ -33,6 +35,8 @@ const SRC_DOC = `<!doctype html><html><head><meta charset="utf-8"><meta name="vi
 export const ZOOM_OUT = 0.5;
 /** Khổ "Máy tính" luôn vẽ rộng ít nhất bằng này (> 1024 để CSS tablet của website không áp lên); chỗ hẹp hơn thì thu nhỏ vừa khung thay vì vẽ hẹp. */
 export const DESKTOP_MIN_WIDTH = 1100;
+/** Thu nhỏ dưới tỉ lệ này thì chữ quá nhỏ để đọc / gõ (máy thật là điện thoại, tablet dọc): vẽ đúng bề rộng khung, không thu. */
+export const MIN_FIT = 0.6;
 
 export function Canvas({ device = "desktop", className, contentClassName = "ecx-content", before, after }: CanvasProps) {
   const { ui, labels } = useEditor();
@@ -69,7 +73,8 @@ export function Canvas({ device = "desktop", className, contentClassName = "ecx-
   useUiTick();
   const width = DEVICE_WIDTH[device];
   // Thu nhỏ: khung soạn vẽ ở cỡ gấp đôi rồi thu còn một nửa → thấy cả trang, toạ độ kéo thả / thanh công cụ tự tính theo tỉ lệ
-  const fit = !width && wrapW > 0 && wrapW < DESKTOP_MIN_WIDTH ? wrapW / DESKTOP_MIN_WIDTH : 1;
+  const ratio = !width && wrapW > 0 && wrapW < DESKTOP_MIN_WIDTH ? wrapW / DESKTOP_MIN_WIDTH : 1;
+  const fit = ratio >= MIN_FIT ? ratio : 1;
   const zoom = (ui.zoomOut ? ZOOM_OUT : 1) * fit;
   const style = zoom === 1 ? { width: width ? `${width}px` : "100%" }
     : { width: width ? `${width}px` : `${100 / zoom}%`, height: `${100 / zoom}%`, transform: `scale(${zoom})`, transformOrigin: width ? "top center" : "top left", flex: "none" };
@@ -105,6 +110,7 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   useCanvasStyles(doc);
   useCanvasKeys(doc);
   useCanvasEvents(doc);
+  useTableRangeSelect(doc);
   const hasRange = useRangeHighlight(doc);
   return (
     <div className={["ecx-canvas-root", contentClassName, host.canvasContentClass, focus && "is-focus-mode", spotlight && "is-spotlight", ui.zoomOut && "is-zoomed-out", hasRange && "has-text-range"].filter(Boolean).join(" ")} data-ecx-doc={activeId} tabIndex={-1}
@@ -301,6 +307,24 @@ function useCanvasKeys(doc: Document) {
       }
       if (!ids.length) return;
       if (e.altKey && e.key === "F10") { e.preventDefault(); ui.focusToolbar(); return; }
+      // Ô / hàng của bảng: Delete xoá NỘI DUNG ô (xoá khối ô làm bảng lệch), xoá hàng bằng thao tác hàng; Esc chọn cả bảng
+      const cells = selectedCellRect(store, ids);
+      const rows = !cells && ids.every((id) => store.block(id)?.type === "tableRow") ? ids : null;
+      if (cells || rows) {
+        if (e.key === "Backspace" || e.key === "Delete") {
+          e.preventDefault();
+          if (cells) clearCells(store, cells.table, ids);
+          else store.batch(() => { for (const id of [...rows!].reverse()) { const first = store.block(id)?.content?.[0]; const ctx = first && tableContext(store, first.id); if (ctx) deleteRow(store, ctx); } });
+          return;
+        }
+        if (e.key === "Escape") { e.preventDefault(); const t = cells?.table.id ?? store.locate(ids[0])?.parent?.id; if (t) store.select([t], { editing: null }); return; }
+      }
+      // Khối nằm trong ô bảng (đoạn văn trong ô sau khi thôi gõ): Esc chọn cả bảng
+      if (e.key === "Escape" && ids.length === 1) {
+        const loc = store.locate(ids[0]);
+        const table = loc && [...loc.ancestors].reverse().find((a) => store.block(a)?.type === "table");
+        if (table) { e.preventDefault(); store.select([table], { editing: null }); return; }
+      }
       if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); store.remove(ids); return; }
       if (e.key === "Escape") { e.preventDefault(); store.clearSelection(); ui.openInserter(null); return; }
       if (e.key === "Enter" && ids.length === 1) {

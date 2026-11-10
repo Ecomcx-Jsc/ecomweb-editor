@@ -30,6 +30,7 @@ export const attrs = {
   minHeight: "Cao tối thiểu",
   contentAlign: "Vị trí chữ",
   fixed: "Cố định khi cuộn",
+  constrained: "Giữ chữ bên trong theo bề rộng cột chữ",
   position: "Vị trí ảnh",
   columns: "Số cột",
   footer: "Hàng cuối là chân bảng",

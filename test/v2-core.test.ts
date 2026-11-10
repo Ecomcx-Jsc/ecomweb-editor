@@ -483,3 +483,28 @@ test("bảng: gộp phải / dưới, tách ô, thêm / xoá hàng cột đi qua
   assert.deepEqual(normalizeTable(ragged).content!.map((r) => r.content!.length), [3, 2]);
   assert.equal(normalizeTable(t()), t(), "bảng đã vuông giữ nguyên tham chiếu");
 });
+
+test("bảng: bôi đen vùng ô — vùng nới theo ô gộp, gộp cả vùng, xoá nội dung", async () => {
+  const { cellRect, cellsInRect, selectedCellRect, mergeRange, clearCells } = await import("../src/v2/core/tables");
+  const cell = (t: string) => makeBlock("tableCell", {}, [makeBlock("paragraph", {}, t)]);
+  const rows = [0, 1, 2].map((r) => makeBlock("tableRow", {}, [0, 1, 2].map((c) => cell(`${r}${c}`))));
+  const table = makeBlock("table", {}, rows);
+  const st = store(table);
+  const id = (r: number, c: number) => rows[r].content![c].id;
+  assert.deepEqual(cellRect(table, id(0, 0), id(1, 1)), { r0: 0, c0: 0, r1: 1, c1: 1 });
+  assert.equal(cellsInRect(table, { r0: 0, c0: 0, r1: 1, c1: 1 }).length, 4);
+  const sel = selectedCellRect(st, [id(1, 1), id(0, 0)])!;
+  assert.deepEqual(sel.rect, { r0: 0, c0: 0, r1: 1, c1: 1 });
+  mergeRange(st, sel.table, sel.docId, sel.rect);
+  const t1 = st.getState().docs[st.getState().rootId].blocks[0];
+  const first = t1.content![0].content![0];
+  assert.equal(first.attrs.colspan, 2); assert.equal(first.attrs.rowspan, 2);
+  assert.equal(first.content!.map((b) => inlineText(b.inline ?? [])).join("|"), "00|01|10|11", "nội dung các ô nối theo thứ tự");
+  assert.equal(t1.content![0].content!.length, 2, "hàng 1: ô gộp + ô cuối");
+  assert.equal(t1.content![1].content!.length, 1, "hàng 2: chỉ còn ô cuối");
+  // vùng chạm ô gộp → nới ra phủ trọn ô gộp
+  assert.deepEqual(cellRect(t1, t1.content![1].content![0].id, t1.content![2].content![0].id), { r0: 0, c0: 0, r1: 2, c1: 2 });
+  clearCells(st, t1, [t1.content![2].content![0].id]);
+  const t2 = st.getState().docs[st.getState().rootId].blocks[0];
+  assert.equal(inlineText(t2.content![2].content![0].content![0].inline ?? []), "", "xoá nội dung ô");
+});

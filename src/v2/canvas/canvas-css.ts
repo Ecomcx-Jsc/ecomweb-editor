@@ -15,22 +15,37 @@ body.ecx-canvas-body { padding: 0; }
 /* HTML do website vẽ (khối theme/plugin): các lớp hiệu ứng "ẩn tới khi JS chạy" thường gặp luôn ở trạng thái cuối. Theme nên đặt trạng thái ẩn dưới html.ecx-js (chỉ có khi JS chạy) để khỏi phụ thuộc đoán tên lớp. */
 .ecx-server-html [class*="stagger"], .ecx-server-html [class*="reveal"], .ecx-server-html [class*="animate"], .ecx-server-html [class*="fade-"], .ecx-server-html [class*="aos"], .ecx-server-html [data-aos] { opacity: 1 !important; visibility: visible !important; transform: none !important; animation: none !important; transition: none !important; }
 .ecx-canvas-root { min-height: 100vh; padding: 2rem clamp(1rem, 4vw, 3rem) 40vh; box-sizing: border-box; outline: none; }
-.ecx-canvas-root > * { max-width: var(--ecx-content-width, 760px); margin-left: auto; margin-right: auto; }
+/* --ecx-canvas-col: bề rộng cột của khung soạn; KHÔNG đổi --ecx-content-width (nhóm "giữ chữ theo cột" của nội dung dùng biến đó) */
+.ecx-canvas-root > * { max-width: var(--ecx-canvas-col, var(--ecx-content-width, 760px)); margin-left: auto; margin-right: auto; }
 /* Mặc định của trình soạn: độ ưu tiên chỉ bằng "1 class" (:where) — đứng sau dòng trên nên thắng nó, nhưng CSS theme nạp sau (vd .ecx-template > * { max-width: 960px }) thắng lại, như trên website */
 :where(.ecx-canvas-root) > :is(.ecx-nested, .ecx-cover, [data-type="columns"], .ecx-align-wide) { max-width: var(--ecx-wide-width, 1200px); }
-.ecx-canvas-root > .ecx-align-full { max-width: none; }
+.ecx-canvas-root.ecx-canvas-root > .ecx-align-full { max-width: none; }
 /* Header/footer trong template: mặc định rộng hết (cùng mức ưu tiên — theme giới hạn bề rộng phần con của template thì canvas theo) */
 :where(.ecx-canvas-root) > .ecx-template-part { max-width: none; }
-.ecx-canvas-root.is-wide > * { max-width: var(--ecx-wide-width, 1120px); }
+/* Template rộng (full-width / canvas có sẵn): như website — chữ vẫn ở cột chữ, khối Rộng / Toàn trang mới tràn ra */
+.ecx-canvas-root.is-wide { --ecx-canvas-col: var(--ecx-content-width, 760px); }
 /* Template (theme dựng bằng khối): website không giới hạn bề rộng khối con và không có lề soạn — canvas làm y hệt, theme tự quyết bằng CSS của nó
    (chỉ đổi giá trị mặc định của biến, nên CSS theme vẫn thắng nếu có đặt max-width cho .ecx-template > *). */
-.ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content { --ecx-content-width: none; --ecx-wide-width: none; padding-left: 0; padding-right: 0; padding-top: 0; }
+.ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content { --ecx-canvas-col: none; padding-left: 0; padding-right: 0; padding-top: 0; }
+/* Vùng bài của template full-width / canvas có sẵn (.ecx-layout-constrained): cột chữ + lề hai bên như website */
+.ecx-canvas-root.ecx-canvas-root.ecx-layout-constrained { --ecx-canvas-col: var(--ecx-content-width, 760px); padding-left: var(--ecx-gutter, 1.25rem); padding-right: var(--ecx-gutter, 1.25rem); }
+.ecx-canvas-root.ecx-layout-constrained > :is(.ecx-nested, .ecx-cover, [data-type="columns"]):not(.ecx-align-wide, .ecx-align-full) { max-width: var(--ecx-canvas-col); }
+:where(.ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content) > :is(.ecx-nested, .ecx-cover, [data-type="columns"]) { max-width: none; }
+/* Khối "Rộng" / "Toàn trang" (align wide/full): bề rộng và lề âm do style.css của @ecomcx/ecomweb-content (như website), canvas chỉ bỏ giới hạn */
+:where(.ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content) > :is(.ecx-align-wide, .ecx-align-full) { max-width: none; }
+/* Lề tự căn giữa của khung soạn (.ecx-canvas-root > * margin auto) không được đè lề âm của khối rộng / toàn trang */
+.ecx-canvas-root > :is(.ecx-align-wide, .ecx-align-full) { margin-left: calc((100% - var(--_w, 100%)) / 2); margin-right: calc((100% - var(--_w, 100%)) / 2); }
 /* Soạn bài / trang trong khung của website (class entry-content do PostContent đặt): bề rộng cột do theme quyết định, không phải 760px của trình soạn */
 
 .ecx-block { position: relative; scroll-margin: 80px; }
 .ecx-block:focus { outline: none; }
 .ecx-block:not([data-ecx-rich]):hover:not(:has(.ecx-block:hover)) { outline: 1px solid color-mix(in srgb, var(--ecx-ui) 40%, transparent); outline-offset: 3px; }
 .ecx-block.is-selected { outline: 2px solid var(--ecx-ui) !important; outline-offset: 3px; }
+/* Ô bảng đang chọn (một hoặc cả vùng): tô màu như bôi đen, không viền (viền ô chồng lên viền bảng) */
+.ecx-block.is-selected:is([data-type="tableCell"], [data-type="tableHeader"]) { outline: none !important; box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--ecx-ui) 16%, transparent); }
+.ecx-block.is-selected:is([data-type="tableCell"], [data-type="tableHeader"], [data-type="tableRow"])::after { display: none; }
+/* Đang kéo bôi vùng ô: tắt bôi chữ của trình duyệt (chỉ tô ô) */
+.ecx-cell-selecting, .ecx-cell-selecting * { user-select: none !important; -webkit-user-select: none !important; caret-color: transparent; }
 /* Nhãn loại khối (chỉ khi chọn, khối cấp thường; khối lồng đã có .ecx-nested-label). Không đổi bố cục: absolute, không nhận chuột */
 .ecx-block.is-selected:not(.ecx-nested):not(.ecx-column)[data-type]::after { content: attr(data-ecx-title); position: absolute; left: -2px; top: -3px; transform: translateY(-100%); padding: 1px 8px; border-radius: 4px 4px 0 0; background: var(--ecx-ui); color: #fff; font: 600 11px/1.7 var(--ecx-ui-font); letter-spacing: 0; text-transform: none; white-space: nowrap; pointer-events: none; z-index: 5; }
 .ecx-block.is-selected[data-ecx-title=""]::after { content: none; }
@@ -103,6 +118,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-doc-title { margin-top: 0; }
 .ecx-doc-title-input { display: block; width: 100%; margin: 0; padding: 0; border: 0; outline: none; resize: none; overflow: hidden; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; line-height: inherit; text-align: inherit; }
 .ecx-doc-title-input::placeholder { color: inherit; opacity: .35; }
+/* Theme thường tạo kiểu mọi ô nhập (textarea { border; padding } textarea:focus { outline }) — ô tiêu đề không được mang khung ô nhập */
+.ecx-doc-title .ecx-doc-title-input, .ecx-doc-title .ecx-doc-title-input:focus { border: 0; border-radius: 0; outline: none; box-shadow: none; padding: 0; background: transparent; min-height: 0; }
 .ecx-col-handles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
 .ecx-col-handle { position: absolute; width: 12px; margin-left: -6px; cursor: col-resize; pointer-events: auto; touch-action: none; }
 .ecx-col-handle::after { content: ""; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--ecx-ui); opacity: .35; border-radius: 1px; }

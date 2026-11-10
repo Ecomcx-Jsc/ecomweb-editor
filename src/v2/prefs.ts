@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
 /**
  * Tuỳ chọn của trình soạn — cách trình soạn hiển thị cho người đang dùng (không đổi nội dung, không đổi website).
@@ -64,6 +64,14 @@ export class PrefsStore {
   countInsert(type: string) { this.set({ insertCounts: { ...this.prefs.insertCounts, [type]: (this.prefs.insertCounts[type] ?? 0) + 1 } }); }
 }
 
+/** Màn hình hẹp (điện thoại): thanh công cụ nổi đè lên dòng đang gõ và tràn mép → luôn ghim trên cùng (như WordPress trên điện thoại). */
+export const NARROW_QUERY = "(max-width: 640px)";
+const narrowMq = typeof matchMedia === "function" ? matchMedia(NARROW_QUERY) : null;
+const subscribeNarrow = (l: () => void) => { narrowMq?.addEventListener("change", l); return () => narrowMq?.removeEventListener("change", l); };
+const isNarrow = () => !!narrowMq?.matches;
+
 export function usePrefs(store: PrefsStore): EditorPrefs {
-  return useSyncExternalStore(store.subscribe, store.get, store.get);
+  const prefs = useSyncExternalStore(store.subscribe, store.get, store.get);
+  const narrow = useSyncExternalStore(subscribeNarrow, isNarrow, () => false);
+  return useMemo(() => (narrow && !prefs.fixedToolbar ? { ...prefs, fixedToolbar: true } : prefs), [prefs, narrow]);
 }

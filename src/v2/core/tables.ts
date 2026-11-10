@@ -192,3 +192,72 @@ export function normalizeTable(table: BNode): BNode {
   for (const x of g.cells) filled += x.rs * x.cs;
   return (table.content ?? []).length === h && filled === h * w ? table : fromGrid(table, g);
 }
+
+// ---------------------------------------------------------------------------
+// Vùng ô (bôi đen nhiều ô: kéo chuột / Shift+bấm) — như chọn ô của WordPress / Google Docs
+// ---------------------------------------------------------------------------
+export interface CellRect { r0: number; c0: number; r1: number; c1: number }
+
+/** Bảng chứa ô (khối tableCell / tableHeader) + id ô. */
+export function cellTable(store: EditorStore, cellId: string): { table: BNode; docId: string } | null {
+  const cell = store.locate(cellId);
+  if (!cell || (cell.block.type !== "tableCell" && cell.block.type !== "tableHeader")) return null;
+  const row = cell.parent && store.locate(cell.parent.id);
+  return row?.parent?.type === "table" ? { table: row.parent, docId: cell.docId } : null;
+}
+
+/** Hình chữ nhật nhỏ nhất phủ hai ô, nới ra cho tới khi không cắt ngang ô gộp nào. */
+export function cellRect(table: BNode, aId: string, bId: string): CellRect | null {
+  const g = toGrid(table);
+  const a = g.cells.find((x) => x.node.id === aId), b = g.cells.find((x) => x.node.id === bId);
+  if (!a || !b) return null;
+  const r: CellRect = { r0: Math.min(a.r, b.r), c0: Math.min(a.c, b.c), r1: Math.max(a.r + a.rs, b.r + b.rs) - 1, c1: Math.max(a.c + a.cs, b.c + b.cs) - 1 };
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const x of g.cells) {
+      const inter = x.r <= r.r1 && x.r + x.rs - 1 >= r.r0 && x.c <= r.c1 && x.c + x.cs - 1 >= r.c0;
+      if (!inter) continue;
+      const n = { r0: Math.min(r.r0, x.r), c0: Math.min(r.c0, x.c), r1: Math.max(r.r1, x.r + x.rs - 1), c1: Math.max(r.c1, x.c + x.cs - 1) };
+      if (n.r0 !== r.r0 || n.c0 !== r.c0 || n.r1 !== r.r1 || n.c1 !== r.c1) { Object.assign(r, n); changed = true; }
+    }
+  }
+  return r;
+}
+
+/** Ô nằm trong vùng (theo thứ tự hàng rồi cột). */
+export function cellsInRect(table: BNode, rect: CellRect): BNode[] {
+  return toGrid(table).cells.filter((x) => x.r >= rect.r0 && x.r <= rect.r1 && x.c >= rect.c0 && x.c <= rect.c1)
+    .sort((a, b) => a.r - b.r || a.c - b.c).map((x) => x.node);
+}
+
+/** Vùng của các ô đang chọn (cùng một bảng) — null nếu không phải. */
+export function selectedCellRect(store: EditorStore, ids: string[]): { table: BNode; docId: string; rect: CellRect } | null {
+  if (!ids.length) return null;
+  const t = cellTable(store, ids[0]);
+  if (!t || ids.some((id) => cellTable(store, id)?.table.id !== t.table.id)) return null;
+  let rect: CellRect | null = null;
+  for (const id of ids) {
+    const r = cellRect(t.table, ids[0], id);
+    if (!r) return null;
+    rect = rect ? { r0: Math.min(rect.r0, r.r0), c0: Math.min(rect.c0, r.c0), r1: Math.max(rect.r1, r.r1), c1: Math.max(rect.c1, r.c1) } : r;
+  }
+  return { ...t, rect: rect! };
+}
+
+/** Gộp cả vùng thành một ô (ô trên-trái giữ lại, nội dung các ô khác nối vào theo thứ tự). */
+export function mergeRange(store: EditorStore, table: BNode, docId: string, rect: CellRect) {
+  const g = toGrid(table);
+  const inside = g.cells.filter((x) => x.r >= rect.r0 && x.r <= rect.r1 && x.c >= rect.c0 && x.c <= rect.c1).sort((a, b) => a.r - b.r || a.c - b.c);
+  if (inside.length < 2) return;
+  const [keep, ...rest] = inside;
+  const merged: GridCell = { ...keep, node: rest.reduce((n, x) => absorb(n, x.node), keep.node), rs: rect.r1 - rect.r0 + 1, cs: rect.c1 - rect.c0 + 1 };
+  g.cells = g.cells.filter((x) => !inside.includes(x)).concat(merged);
+  replaceTable(store, { table, row: 0, col: 0, docId }, fromGrid(table, g), merged.node);
+}
+
+/** Xoá chữ trong các ô (giữ ô, mỗi ô còn một đoạn trống). */
+export function clearCells(store: EditorStore, table: BNode, ids: string[]) {
+  const set = new Set(ids);
+  const next = { ...table, content: (table.content ?? []).map((row) => ({ ...row, content: (row.content ?? []).map((c) => (set.has(c.id) ? { ...c, content: [makeBlock("paragraph")] } : c)) })) };
+  store.replace(table.id, [next], { select: { ids: [], editing: null } });
+}

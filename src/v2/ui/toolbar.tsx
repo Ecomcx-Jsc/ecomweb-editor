@@ -1,4 +1,6 @@
-import { StickyNote, Keyboard, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
+import { WIDE_BLOCKS } from "@ecomcx/ecomweb-content";
+import { clearCells, mergeRange, selectedCellRect } from "../core/tables";
+import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
@@ -92,7 +94,10 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   // Đo vị trí SAU khi DOM của khung soạn cập nhật (khối vừa tạo chưa có DOM lúc vẽ thanh công cụ)
   const [rect, setRect] = useState<DOMRect | null>(null);
   useLayoutEffect(() => {
-    const r = unionRect(ids.map((id) => ui.blockRect(id)));
+    // Trong bảng: thanh công cụ neo theo cả bảng (như WordPress) — neo theo ô thì thanh đè lên hàng phía trên
+    const loc0 = ids[0] ? store.locate(ids[0]) : null;
+    const table = loc0 ? [...loc0.ancestors].reverse().find((a) => store.block(a)?.type === "table") : undefined;
+    const r = table ? ui.blockRect(table) : unionRect(ids.map((id) => ui.blockRect(id)));
     setRect((prev) => (prev && r && prev.x === r.x && prev.y === r.y && prev.width === r.width && prev.height === r.height ? prev : r));
   });
   const nodes = ids.map((id) => store.block(id)).filter(Boolean) as BNode[];
@@ -117,11 +122,20 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const listItem = parent && (parent.type === "listItem" || parent.type === "taskItem") && loc.index === 0 ? parent : null;
   const transforms = sameType ? (type?.transforms ?? []).filter((t) => nodes.length === 1 || t.multiple) : [];
   const height = 44;
-  const top = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.top + 4, rect.top - height - 8));
+  // Trên khối; không đủ chỗ (khối sát mép trên khung) thì xuống dưới khối nếu còn chỗ — không đè lên dòng chữ đang gõ
+  const above = rect && frame ? rect.top - height - 8 : 0;
+  const below = rect && frame && above < frame.top + 4 && rect.bottom + 8 + height <= frame.bottom - 4 ? rect.bottom + 8 : null;
+  const top = fixed || !rect || !frame ? 0 : Math.round(below ?? Math.max(frame.top + 4, above));
   const left = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.left + 4, Math.min(rect.left, frame.right - Math.min(420, window.innerWidth - 8))));
   const editProps = { block: first, attrs: first.attrs, setAttrs: (a: Record<string, unknown>) => store.setAttrs(ids, a), blockProps: null as never, selected: true, editable: true, labels };
   const Extra = sameType && nodes.length === 1 ? type?.toolbar : undefined;
   const hasAlign = sameType && !!type?.attributes?.textAlign;
+  // Độ rộng (như alignwide/alignfull của WP): chỉ khối cấp cao nhất — khối lồng trong nhóm/cột theo bề rộng của khối cha
+  const hasWidth = sameType && !parent && WIDE_BLOCKS.includes(first.type);
+  // Vùng ô đang bôi đen (không gõ chữ): gộp cả vùng / xoá nội dung
+  const cellRange = sel.ids.length ? selectedCellRect(store, sel.ids) : null;
+  const cellSel = cellRange ? { ...cellRange, many: sel.ids.length > 1 } : null;
+  const width = first.attrs.align === "wide" || first.attrs.align === "full" ? (first.attrs.align as string) : "";
 
   const doTransform = (t: BlockTransform) => {
     const res = t.convert(ordered.map((id) => store.block(id)!));
@@ -219,6 +233,21 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
             ))}
           </div>
         )}
+        {cellSel && (
+          <div className="ecx-tool-group" data-ecx-cell-tools>
+            {cellSel.many && <ToolButton label={labels.mergeCells} className="ecx-tool-wide" onClick={() => mergeRange(store, cellSel.table, cellSel.docId, cellSel.rect)}><TableCellsMerge className="ecx-icon" /><span className="ecx-tool-text">{labels.mergeCells}</span></ToolButton>}
+            <ToolButton label={labels.clearCells} onClick={() => clearCells(store, cellSel.table, ids)}><Eraser className="ecx-icon" /></ToolButton>
+          </div>
+        )}
+        {hasWidth && (
+          <div className="ecx-tool-group">
+            <Dropdown label={labels.width} trigger={<span className="ecx-tool-text" data-ecx-width={width || "default"}>{width === "full" ? <Maximize2 className="ecx-icon" /> : width === "wide" ? <MoveHorizontal className="ecx-icon" /> : <RectangleHorizontal className="ecx-icon" />}</span>}>
+              {(close) => ([["", RectangleHorizontal, labels.widthDefault], ["wide", MoveHorizontal, labels.widthWide], ["full", Maximize2, labels.widthFull]] as const).map(([v, I, l]) => (
+                <MenuItem key={v || "default"} icon={I} label={(v === width ? "✓ " : "") + l} onClick={() => { close(); if (v !== width) store.setAttrs(ids, { align: v || undefined }); }} />
+              ))}
+            </Dropdown>
+          </div>
+        )}
         {view && !type?.plain && !type?.multiline && <MarkTools view={view} onLink={() => setLink(ui.activeRich ?? sel.editing)} />}
         {listItem && (
           <div className="ecx-tool-group">
@@ -227,7 +256,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
           </div>
         )}
         {Extra && <div className="ecx-tool-group"><Extra {...editProps} /></div>}
-        {nodes.length === 1 && contextTools(loc.ancestors, first.id)}
+        {(nodes.length === 1 || cellSel) && contextTools(loc.ancestors, first.id)}
         {nested && <div className="ecx-tool-group"><ToolButton label={labels.editOriginal} className="ecx-tool-wide" onClick={() => store.enterFocus(nested)}><PanelTop className="ecx-icon" /><span className="ecx-tool-text">{labels.editOriginal}</span></ToolButton></div>}
         <div className="ecx-tool-group">
           <Dropdown label={labels.more} trigger={<MoreVertical className="ecx-icon" />}>
