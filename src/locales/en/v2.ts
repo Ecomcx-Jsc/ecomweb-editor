@@ -205,4 +205,5 @@ export const v2 = {
   choiceSelect: "— Select —",
   choiceMissing: "(missing)",
   openInNewTab: "Open in new tab",
+  countdownNoTarget: "No end time yet — set “Target” in the sidebar (until then the website does not show this block)",
 };

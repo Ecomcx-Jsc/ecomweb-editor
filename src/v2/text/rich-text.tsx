@@ -244,7 +244,6 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef, keepCaret: (
   // Tuỳ chọn "Giữ con trỏ trong khối": mũi tên ở đầu/cuối khối không nhảy sang khối khác
   const nav = (view: EditorView, dir: -1 | 1) => !keepCaret() && focusNeighbor(store, ui, view, dir);
   const textMode = () => !pr.current.onChange;
-  const mark = (name: string) => (state: EditorState, dispatch?: EditorView["dispatch"]) => (state.schema.marks[name] ? toggleMark(state.schema.marks[name])(state, dispatch) : false);
   const slashKey = (key: string) => () => (ui.inserter?.mode === "slash" && ui.inserter.blockId === pr.current.blockId && ui.inserterKey ? ui.inserterKey(key) : false);
   /** Lệnh dùng vùng chọn mới nhất (đọc lại từ DOM). */
   const fresh = (cmd: (state: EditorState, dispatch: EditorView["dispatch"] | undefined, view: EditorView | undefined) => boolean) =>
@@ -252,6 +251,8 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef, keepCaret: (
       const s = syncSelection(view) ?? state;
       return cmd(s, view ? view.dispatch.bind(view) : dispatch, view);
     };
+  // Đọc lại vùng chọn từ DOM trước khi đổi định dạng: Shift+End rồi ⌘B ngay (<50ms) thì ProseMirror chưa kịp nhận vùng chọn → chỉ đặt storedMarks
+  const mark = (name: string) => fresh((state, dispatch) => (state.schema.marks[name] ? toggleMark(state.schema.marks[name])(state, dispatch) : false));
   return keymap({
     ArrowDown: (_s, _d, view) => slashKey("ArrowDown")() || (!!view && view.endOfTextblock("down") && nav(view, 1)),
     ArrowUp: (_s, _d, view) => slashKey("ArrowUp")() || (!!view && view.endOfTextblock("up") && nav(view, -1)),

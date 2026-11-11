@@ -27,7 +27,9 @@ body.ecx-canvas-body { padding: 0; }
 /* Template (theme dựng bằng khối): website không giới hạn bề rộng khối con và không có lề soạn — canvas làm y hệt, theme tự quyết bằng CSS của nó
    (chỉ đổi giá trị mặc định của biến, nên CSS theme vẫn thắng nếu có đặt max-width cho .ecx-template > *). */
 .ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content { --ecx-canvas-col: none; padding-left: 0; padding-right: 0; }
-/* padding-top 52px (mọi canvas) = chỗ cho thanh công cụ nổi (44px + 8) trên khối đầu: thiếu chỗ thì thanh đè lên chữ, bấm vào khối trúng nút của thanh */
+/* padding-top 52px (canvas mặc định + template) = chỗ cho thanh công cụ nổi (44px + 8) trên khối đầu: thiếu chỗ thì thanh đè lên chữ, bấm vào khối trúng nút của thanh.
+   Bài (.entry-content): ô tiêu đề nằm trên khối đầu nên đã đủ chỗ — giữ 0 như website (thêm khoảng làm khung bao của trang bài lệch so với lúc mở) */
+.ecx-canvas-root.entry-content { padding-top: 0; }
 /* Vùng bài của template full-width / canvas có sẵn (.ecx-layout-constrained): cột chữ + lề hai bên như website */
 .ecx-canvas-root.ecx-canvas-root.ecx-layout-constrained { --ecx-canvas-col: var(--ecx-content-width, 760px); padding-left: var(--ecx-gutter, 1.25rem); padding-right: var(--ecx-gutter, 1.25rem); }
 .ecx-canvas-root.ecx-layout-constrained > :is(.ecx-nested, .ecx-cover, [data-type="columns"]):not(.ecx-align-wide, .ecx-align-full) { max-width: var(--ecx-canvas-col); }

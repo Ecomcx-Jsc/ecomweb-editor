@@ -55,6 +55,7 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     window.removeEventListener("blur", cancel);
     ui.canvasDoc?.removeEventListener("pointermove", move);
     ui.canvasDoc?.removeEventListener("pointerup", up);
+    ui.canvasDoc?.removeEventListener("keydown", key, true);
     document.body.classList.remove("is-dragging");
     ui.canvasDoc?.body.classList.remove("is-dragging");
     for (const id of src.ids) ui.blockEl(id)?.classList.remove("is-dragging-source");
@@ -87,6 +88,7 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
   document.addEventListener("keydown", key, true);
   ui.canvasDoc?.addEventListener("pointermove", move);
   ui.canvasDoc?.addEventListener("pointerup", up);
+  ui.canvasDoc?.addEventListener("keydown", key, true); // focus thường nằm trong iframe khung soạn (vừa bấm khối) → Escape bắn ở đó
 
   function autoScroll(c: EditorContextValue, y: number) {
     const f = c.ui.canvasFrame?.getBoundingClientRect();

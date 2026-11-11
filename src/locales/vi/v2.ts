@@ -205,4 +205,5 @@ export const v2 = {
   choiceSelect: "— Chọn —",
   choiceMissing: "(không còn)",
   openInNewTab: "Mở trong tab mới",
+  countdownNoTarget: "Chưa chọn thời điểm kết thúc — đặt ở ô “Thời điểm” bên phải (khi chưa đặt, website không hiện khối này)",
 };

@@ -4,7 +4,7 @@ import { AiTools } from "./ai";
 import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
-import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { serializeBlocks } from "../core/clipboard";
 
@@ -127,7 +127,9 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const above = rect && frame ? rect.top - height - 8 : 0;
   const below = rect && frame && above < frame.top + 4 && rect.bottom + 8 + height <= frame.bottom - 4 ? rect.bottom + 8 : null;
   const top = fixed || !rect || !frame ? 0 : Math.round(below ?? Math.max(frame.top + 4, above));
-  const left = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.left + 4, Math.min(rect.left, frame.right - Math.min(420, window.innerWidth - 8))));
+  // Bề ngang theo KHUNG SOẠN (khổ Điện thoại 390px hẹp hơn cửa sổ): thanh dài hơn khung thì cuộn ngang trong khung, không tràn ra ngoài
+  const maxW = frame ? Math.max(120, frame.width - 8) : undefined;
+  const left = fixed || !rect || !frame ? 0 : Math.round(Math.max(frame.left + 4, Math.min(rect.left, frame.right - 4 - Math.min(420, maxW!))));
   const editProps = { block: first, attrs: first.attrs, setAttrs: (a: Record<string, unknown>) => store.setAttrs(ids, a), blockProps: null as never, selected: true, editable: true, labels };
   const Extra = sameType && nodes.length === 1 ? type?.toolbar : undefined;
   const hasAlign = sameType && !!type?.attributes?.textAlign;
@@ -186,7 +188,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
 
   return (
     <>
-      <div className={fixed ? "ecx-toolbar is-fixed" : "ecx-toolbar"} role="toolbar" aria-label={type?.title ?? first.type} style={fixed ? undefined : { top, left }} data-block={first.id}
+      <div className={fixed ? "ecx-toolbar is-fixed" : "ecx-toolbar"} role="toolbar" aria-label={type?.title ?? first.type} style={fixed ? undefined : { top, left, maxWidth: maxW }} data-block={first.id}
         onKeyDown={(e) => {
           // Bàn phím trên thanh công cụ: ←/→ đi giữa các nút, Esc quay về khối
           const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .ecx-tool-group button:not(:disabled), :scope > .ecx-tool-group .ecx-dropdown > button"));
@@ -411,6 +413,16 @@ export function DropIndicator() {
 }
 
 /** Hộp khoá khối: không cho di chuyển / xoá; khối chứa: khoá bố cục bên trong hoặc chỉ cho sửa nội dung. */
+/** Tab / Shift+Tab xoay vòng trong hộp thoại (tự chuyển focus — WebKit mặc định không Tab tới nút nên focus thoát ra ngoài). */
+function trapTab(e: ReactKeyboardEvent<HTMLElement>) {
+  if (e.key !== "Tab") return;
+  const items = [...e.currentTarget.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select, textarea, a[href], [tabindex]:not([tabindex="-1"])')];
+  if (!items.length) return;
+  e.preventDefault();
+  const i = items.indexOf(e.target as HTMLElement);
+  items[(i + (e.shiftKey ? -1 : 1) + items.length) % items.length].focus();
+}
+
 function LockDialog({ block, onClose }: { block: BNode; onClose(): void }) {
   const { store, labels } = useEditor();
   const lock = (block.attrs.lock as { move?: boolean; remove?: boolean } | undefined) ?? {};
@@ -420,7 +432,7 @@ function LockDialog({ block, onClose }: { block: BNode; onClose(): void }) {
     store.setAttrs([block.id], { lock: next.move || next.remove ? next : undefined });
   };
   return (
-    <div className="ecx-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}>
+    <div className="ecx-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown={(e) => { if (e.key === "Escape") onClose(); else trapTab(e); }}>
       <div className="ecx-modal" role="dialog" aria-modal="true" aria-label={labels.lockTitle}>
         <header className="ecx-modal-header"><h2>{labels.lockTitle}</h2></header>
         <div className="ecx-lock-body">

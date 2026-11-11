@@ -47,12 +47,13 @@ export function useInsertOptions(): InsertOption[] {
   }, [registry, version, hidden, host.scope]);
 }
 
-/** Lọc + xếp hạng: tên bắt đầu bằng chữ gõ > một từ trong tên > từ khoá; tiếng Việt không dấu. */
+/** Lọc + xếp hạng: tên trùng hẳn > tên bắt đầu bằng chữ gõ > một từ trong tên > từ khoá; tiếng Việt không dấu. */
 export function rankOptions(list: InsertOption[], query: string): InsertOption[] {
   const q = norm(query.trim());
   if (!q) return list;
   const score = (i: InsertOption) => {
     const title = norm(i.title);
+    if (title === q) return 4; // "/anh" → Ảnh trước Ảnh bìa, Ảnh + chữ
     if (title.startsWith(q)) return 3;
     if (title.split(/\s+/).some((w) => w.startsWith(q))) return 2;
     const words = [...title.split(/\s+/), ...norm(i.keywords).split(/\s+/)];
@@ -209,6 +210,8 @@ export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; on
   const parentType = loc?.ancestors.length ? store.block(loc.ancestors[loc.ancestors.length - 1])?.type ?? null : null;
   const options = all.filter((o) => canContain(parentType, o.type));
   const panelRef = useRef<HTMLDivElement>(null);
+  // Mở bảng (nút Thêm khối) → focus vào ô tìm của bảng như WordPress; người dùng bàn phím gõ tìm ngay, Tab đi trong bảng
+  useEffect(() => { panelRef.current?.querySelector<HTMLInputElement>("input")?.focus({ preventScroll: true }); }, []);
   // Escape đóng bảng (khi focus đang ở bảng hoặc chưa ở đâu cả; đang gõ trong khung soạn thì Escape thuộc về khung soạn)
   useEffect(() => {
     if (!onClose) return;
@@ -240,7 +243,11 @@ export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; on
     ctx.prefs.countInsert(o.type);
     const cur = store.currentIds[store.currentIds.length - 1];
     // Đoạn trống đang chọn mà chính lần chèn trước vừa tạo thì giữ lại (chèn tiếp ra sau nó); đoạn trống của người dùng thì thay như WordPress
-    if (cur && store.locate(cur)) store.insertAfter(cur, [node], { replaceEmpty: cur !== lastInserted.current });
+    const curLoc = cur ? store.locate(cur) : null;
+    const curBlock = cur ? store.block(cur) : null;
+    // Đang chọn khối chứa còn trống (Nhóm, Cột… vừa tạo): chèn VÀO trong nó — chèn ra sau thì phải kéo vào thêm một bước
+    if (curLoc && curBlock && Array.isArray(curBlock.content) && curBlock.content.length === 0 && canContain(curBlock.type, node.type)) store.insert(curLoc.docId, cur, 0, [node]);
+    else if (cur && curLoc) store.insertAfter(cur, [node], { replaceEmpty: cur !== lastInserted.current });
     else {
       const docId = store.activeDocId;
       store.insert(docId, null, store.getState().docs[docId].blocks.length, [node]);

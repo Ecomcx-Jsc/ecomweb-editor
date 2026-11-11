@@ -160,9 +160,11 @@ function ShortcodeEdit({ block, blockProps }: BlockEditProps) {
   return <div {...(merge(blockProps, "ecx-shortcode", { fontFamily: "monospace", opacity: 0.8 }) as object)}>[{String(block.attrs.name || "shortcode")}]</div>;
 }
 
-function CountdownEdit({ block, blockProps }: BlockEditProps) {
+function CountdownEdit({ block, blockProps, labels }: BlockEditProps) {
   const a = block.attrs;
-  return <div {...(merge(blockProps, "ecx-countdown", { textAlign: "center" }) as object)}>{a.label ? <p style={{ margin: 0 }}>{String(a.label)}</p> : null}<strong>{a.target ? String(a.target) : "00 : 00 : 00 : 00"}</strong></div>;
+  // Thiếu / sai thời điểm: website không vẽ khối → trong trình soạn nói rõ, không để khối "mất tích" im lặng
+  if (!Number.isFinite(Date.parse(String(a.target ?? "")))) return <div {...(merge(blockProps, "ecx-countdown ecx-placeholder-block", {}) as object)}>{a.label ? <strong>{String(a.label)}</strong> : null}<span>{labels.countdownNoTarget}</span></div>;
+  return <div {...(merge(blockProps, "ecx-countdown", { textAlign: "center" }) as object)}>{a.label ? <p style={{ margin: 0 }}>{String(a.label)}</p> : null}<strong>{String(a.target)}</strong></div>;
 }
 
 function RatingEdit({ block, blockProps }: BlockEditProps) {
