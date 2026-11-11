@@ -207,6 +207,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-modal-backdrop { position: fixed; inset: 0; z-index: 1100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgb(15 30 41 / .4); animation: ecx-pop .16s var(--ecx-ed-ease); }
 .ecx-modal { width: 100%; max-width: 480px; max-height: calc(100vh - 32px); display: flex; flex-direction: column; background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); border: 1px solid var(--ecx-ed-line); border-radius: 12px; box-shadow: 0 24px 64px -12px rgb(14 40 58 / .35); font: 13px/1.45 var(--ecx-ed-font); overflow: hidden; }
 .ecx-modal.is-wide { max-width: 760px; height: min(620px, calc(100vh - 32px)); }
+.ecx-modal.is-wide:has(.ecx-ai-body) { height: auto; max-width: 640px; } /* hộp AI: cao vừa nội dung, không để khoảng trống */
 .ecx-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 12px 20px; border-bottom: 1px solid var(--ecx-ed-line); }
 .ecx-modal-header h2 { margin: 0; font-size: 15px; font-weight: 600; }
 .ecx-prefs { display: flex; min-height: 0; flex: 1; }
