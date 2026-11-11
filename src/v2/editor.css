@@ -62,6 +62,7 @@
 .ecx-tool-primary:hover:not(:disabled) { background: var(--ecx-ed-accent-hover); color: var(--ecx-ed-accent-fg); }
 .ecx-tool-primary.is-active { background: var(--ecx-ed-fg); color: var(--ecx-ed-panel); }
 .ecx-tool-text { font-weight: 500; white-space: nowrap; color: inherit; }
+.ecx-tool-text:has(> .ecx-icon) { display: inline-flex; align-items: center; gap: 4px; }
 .ecx-tool-group { display: flex; align-items: center; }
 .ecx-tool:active:not(:disabled) { transform: scale(.97); }
 

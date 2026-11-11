@@ -45,7 +45,7 @@ export function AiTools({ block }: { block: BNode }) {
   ];
   return (
     <>
-      <Dropdown label={labels.ai} trigger={<Sparkles className="ecx-icon" />}>
+      <Dropdown label={labels.ai} trigger={<span className="ecx-tool-text"><Sparkles className="ecx-icon" />AI</span>}>
         {(close) => <>
           {items.map((j) => <MenuItem key={j.label} label={j.label} onClick={() => { close(); void run(j); }} />)}
           <MenuItem label={labels.aiCustom} onClick={() => { close(); ask(); }} />
