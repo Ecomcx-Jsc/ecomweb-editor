@@ -257,9 +257,11 @@ function useCanvasKeys(doc: Document) {
       // Ô gõ (ProseMirror) đã xử lý phím này
       if (e.defaultPrevented) return;
       const outer = fromTree(e);
-      if (e.target instanceof Element && e.target.ownerDocument !== doc && !outer) return; // phím của trang ngoài ngoài Cây khối: không phải của khung soạn
       const mod = e.metaKey || e.ctrlKey;
       const k = e.key.toLowerCase();
+      // Vừa bấm nút trên thanh đầu (Lưu, Hoàn tác…): focus ở trang ngoài (nút Lưu tắt sau khi lưu → focus về body) — ⌘Z/⌘Y vẫn là của trình soạn
+      const fromTopbar = mod && (k === "z" || k === "y") && e.target instanceof Element && e.target.ownerDocument !== doc && !typing(e.target) && (!!e.target.closest(".ecx-topbar") || e.target === e.target.ownerDocument.body);
+      if (e.target instanceof Element && e.target.ownerDocument !== doc && !outer && !fromTopbar) return; // phím của trang ngoài ngoài Cây khối: không phải của khung soạn
       if (mod && k === "z") { e.preventDefault(); if (e.shiftKey) store.redo(); else store.undo(); return; }
       if (mod && k === "y") { e.preventDefault(); store.redo(); return; }
       if (typing(outer ? (e.target as Element) : doc.activeElement)) return;

@@ -14,7 +14,7 @@ body.ecx-canvas-body { padding: 0; }
 .ecx-edit-link:hover { background: var(--ecx-ui, #1a597b); color: #fff; }
 /* HTML do website vẽ (khối theme/plugin): các lớp hiệu ứng "ẩn tới khi JS chạy" thường gặp luôn ở trạng thái cuối. Theme nên đặt trạng thái ẩn dưới html.ecx-js (chỉ có khi JS chạy) để khỏi phụ thuộc đoán tên lớp. */
 .ecx-server-html [class*="stagger"], .ecx-server-html [class*="reveal"], .ecx-server-html [class*="animate"], .ecx-server-html [class*="fade-"], .ecx-server-html [class*="aos"], .ecx-server-html [data-aos] { opacity: 1 !important; visibility: visible !important; transform: none !important; animation: none !important; transition: none !important; }
-.ecx-canvas-root { min-height: 100vh; padding: 2rem clamp(1rem, 4vw, 3rem) 40vh; box-sizing: border-box; outline: none; }
+.ecx-canvas-root { min-height: 100vh; padding: 52px clamp(1rem, 4vw, 3rem) 40vh; box-sizing: border-box; outline: none; }
 /* --ecx-canvas-col: bề rộng cột của khung soạn; KHÔNG đổi --ecx-content-width (nhóm "giữ chữ theo cột" của nội dung dùng biến đó) */
 .ecx-canvas-root > * { max-width: var(--ecx-canvas-col, var(--ecx-content-width, 760px)); margin-left: auto; margin-right: auto; }
 /* Mặc định của trình soạn: độ ưu tiên chỉ bằng "1 class" (:where) — đứng sau dòng trên nên thắng nó, nhưng CSS theme nạp sau (vd .ecx-template > * { max-width: 960px }) thắng lại, như trên website */
@@ -26,7 +26,8 @@ body.ecx-canvas-body { padding: 0; }
 .ecx-canvas-root.is-wide { --ecx-canvas-col: var(--ecx-content-width, 760px); }
 /* Template (theme dựng bằng khối): website không giới hạn bề rộng khối con và không có lề soạn — canvas làm y hệt, theme tự quyết bằng CSS của nó
    (chỉ đổi giá trị mặc định của biến, nên CSS theme vẫn thắng nếu có đặt max-width cho .ecx-template > *). */
-.ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content { --ecx-canvas-col: none; padding-left: 0; padding-right: 0; padding-top: 0; }
+.ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content { --ecx-canvas-col: none; padding-left: 0; padding-right: 0; }
+/* padding-top 52px (mọi canvas) = chỗ cho thanh công cụ nổi (44px + 8) trên khối đầu: thiếu chỗ thì thanh đè lên chữ, bấm vào khối trúng nút của thanh */
 /* Vùng bài của template full-width / canvas có sẵn (.ecx-layout-constrained): cột chữ + lề hai bên như website */
 .ecx-canvas-root.ecx-canvas-root.ecx-layout-constrained { --ecx-canvas-col: var(--ecx-content-width, 760px); padding-left: var(--ecx-gutter, 1.25rem); padding-right: var(--ecx-gutter, 1.25rem); }
 .ecx-canvas-root.ecx-layout-constrained > :is(.ecx-nested, .ecx-cover, [data-type="columns"]):not(.ecx-align-wide, .ecx-align-full) { max-width: var(--ecx-canvas-col); }
