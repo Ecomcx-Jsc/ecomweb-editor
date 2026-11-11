@@ -1,9 +1,9 @@
 import { Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useEditor } from "../context";
 import { inlineText, makeBlock, type BNode } from "../core/model";
 import { Modal } from "./options";
-import { Dropdown, MenuItem } from "./toolbar";
+import { Dropdown, MenuItem, ToolButton } from "./toolbar";
 
 type Job = { task: string; label: string; language?: string; instruction?: string };
 
@@ -68,5 +68,67 @@ export function AiTools({ block }: { block: BNode }) {
         </Modal>
       )}
     </>
+  );
+}
+
+/** Khối Ảnh: nút "Tạo mô tả (alt) bằng AI" trên thanh công cụ (ảnh phải chọn từ thư viện media để biết mediaId). */
+export function AiAltButton({ attrs, setAttrs }: { attrs: Record<string, unknown>; setAttrs(a: Record<string, unknown>): void }) {
+  const { host, labels } = useEditor();
+  const [busy, setBusy] = useState(false);
+  if (!host.ai?.altText) return null;
+  const id = Number(attrs.mediaId);
+  const run = async () => {
+    if (!Number.isFinite(id) || id <= 0) { window.alert(labels.aiAltNoMedia); return; }
+    setBusy(true);
+    try { setAttrs({ alt: (await host.ai!.altText!(id, labels.lang === "vi" ? "Vietnamese" : "English")).trim() }); }
+    catch (e) { window.alert((e as Error).message); }
+    finally { setBusy(false); }
+  };
+  return <ToolButton label={labels.aiAlt} onClick={() => void run()} disabled={busy} data-ai-alt><Sparkles className="ecx-icon" /><span className="ecx-tool-text">Alt</span></ToolButton>;
+}
+
+/**
+ * Lệnh /ai: hộp "Viết bằng AI" — gõ yêu cầu, xem kết quả, rồi chèn (thay khối chứa "/ai" nếu gọi từ lệnh gạch chéo).
+ * Một bước hoàn tác; không tự chèn khi chưa bấm.
+ */
+export function AiWrite() {
+  const { host, labels, store, ui } = useEditor();
+  const [at, setAt] = useState<{ blockId?: string; docId: string; parentId: string | null; index: number } | null>(null);
+  const [prompt, setPrompt] = useState("");
+  const [state, setState] = useState<{ loading: boolean; text?: string; error?: string }>({ loading: false });
+  useEffect(() => { ui.openAiWrite = (a) => { setAt(a); setPrompt(""); setState({ loading: false }); }; return () => { ui.openAiWrite = null; }; }, [ui]);
+  if (!at || !host.ai) return null;
+  const run = async () => {
+    if (!prompt.trim()) return;
+    setState({ loading: true });
+    try { setState({ loading: false, text: await host.ai!.run("write", prompt.trim(), {}) }); }
+    catch (e) { setState({ loading: false, error: (e as Error).message }); }
+  };
+  const paragraphs = (state.text ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  const insert = () => {
+    if (!paragraphs.length) return;
+    const nodes = paragraphs.map((p) => makeBlock("paragraph", {}, p));
+    store.batch(() => {
+      if (at.blockId && store.block(at.blockId)) store.replace(at.blockId, nodes);
+      else store.insert(at.docId, at.parentId, at.index, nodes);
+    });
+    setAt(null);
+  };
+  return (
+    <Modal title={labels.aiWrite} onClose={() => setAt(null)} wide>
+      <div className="ecx-ai-body" data-ecx-ai-write>
+        <textarea className="ecx-input" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder={labels.aiWritePrompt} data-ai-write-prompt
+          onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); void run(); } }} />
+        {state.loading && <p className="ecx-ai-wait" role="status">{labels.aiWorking}</p>}
+        {state.error && <p className="ecx-ai-error" role="alert">{state.error}</p>}
+        {state.text && <div className="ecx-ai-text" data-ecx-ai-result>{paragraphs.map((p, i) => <p key={i}>{p}</p>)}</div>}
+        <p className="ecx-ai-note">{labels.aiNote}</p>
+        <div className="ecx-popover-actions">
+          <button type="button" className="ecx-btn" onClick={() => setAt(null)}>{labels.cancel}</button>
+          <button type="button" className="ecx-btn" onClick={() => void run()} disabled={state.loading || !prompt.trim()} data-ai-write-run>{state.text ? labels.aiRetry : labels.aiWriteRun}</button>
+          {state.text && <button type="button" className="ecx-btn ecx-btn-primary" onClick={insert} data-ai-write-insert>{labels.aiInsert}</button>}
+        </div>
+      </div>
+    </Modal>
   );
 }

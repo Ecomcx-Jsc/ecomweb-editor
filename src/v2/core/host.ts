@@ -56,7 +56,11 @@ export interface EditorHost {
    * Trợ lý AI (ứng dụng gọi nhà cung cấp, trình soạn chỉ gửi chữ và nhận chữ). Không có → không hiện menu AI.
    * `task`: rewrite | shorten | expand | fix | summarize | translate | custom. Lỗi: ném Error có thông báo cho người dùng.
    */
-  ai?: { run(task: string, text: string, opts?: { language?: string; instruction?: string }): Promise<string> };
+  ai?: {
+    run(task: string, text: string, opts?: { language?: string; instruction?: string }): Promise<string>;
+    /** Mô tả (alt) cho ảnh trong thư viện media; không có = khối Ảnh không hiện nút AI. */
+    altText?(mediaId: number, language?: string): Promise<string>;
+  };
 }
 
 /** Nội dung lưu (ContentDoc của @ecomcx/ecomweb-content). */

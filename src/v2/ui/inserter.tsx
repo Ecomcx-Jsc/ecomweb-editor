@@ -1,10 +1,10 @@
 import { leavesItem } from "../core/structure";
 import { blockDescription } from "./block-descriptions";
-import { Blocks } from "lucide-react";
+import { Blocks, Sparkles } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { norm } from "../../shared/util";
 import { useEditor, useUiTick, type InserterRequest } from "../context";
-import { cloneBlock, inlineLength, type BNode } from "../core/model";
+import { cloneBlock, inlineLength, makeBlock, type BNode } from "../core/model";
 import type { BlockType } from "../core/registry";
 import { canContain } from "../core/structure";
 import { startDragNew } from "../canvas/dnd";
@@ -23,11 +23,13 @@ export interface InsertOption {
   /** Loại khối gốc (kiểm tra chỗ đặt được). */
   type: string;
   create(): BNode;
+  /** Lệnh riêng thay vì chèn khối (vd "ai-write" mở hộp Viết bằng AI). */
+  action?: "ai-write";
 }
 
 /** Các lựa chọn chèn: khối + biến thể có hàm tạo riêng (cột 30/70…). */
 export function useInsertOptions(): InsertOption[] {
-  const { registry, prefs, host } = useEditor();
+  const { registry, prefs, host, labels } = useEditor();
   const hidden = usePrefs(prefs).hiddenBlockTypes;
   const [version, setVersion] = useState(registry.getVersion());
   useEffect(() => registry.subscribe(() => setVersion(registry.getVersion())), [registry]);
@@ -43,8 +45,9 @@ export function useInsertOptions(): InsertOption[] {
         out.push({ key: `${t.name}/${v.name}`, title: v.standalone ? v.title : `${t.title} ${v.title}`, description: v.description, icon: v.icon ?? t.icon, keywords: `${t.keywords ?? ""} ${v.keywords ?? ""}`, category: t.category ?? "other", type: t.name, create: v.create });
       }
     }
+    if (host.ai) out.push({ key: "ai-write", title: labels.aiWrite, description: labels.aiWriteHint, icon: Sparkles, keywords: "ai viet write gpt claude tro ly", category: "text", type: "paragraph", create: () => makeBlock("paragraph"), action: "ai-write" });
     return out;
-  }, [registry, version, hidden, host.scope]);
+  }, [registry, version, hidden, host.scope, host.ai, labels]);
 }
 
 /** Lọc + xếp hạng: tên trùng hẳn > tên bắt đầu bằng chữ gõ > một từ trong tên > từ khoá; tiếng Việt không dấu. */
@@ -67,6 +70,11 @@ export function rankOptions(list: InsertOption[], query: string): InsertOption[]
 /** Chèn một lựa chọn theo yêu cầu (slash: thay đoạn "/…"; nút "+": vào vị trí). */
 export function applyInsert(ctx: ReturnType<typeof useEditor>, req: InserterRequest, opt: InsertOption) {
   const { store, ui, prefs } = ctx;
+  if (opt.action === "ai-write") {
+    ui.openInserter(null);
+    ui.openAiWrite?.({ blockId: req.mode === "slash" ? req.blockId : undefined, docId: req.docId, parentId: req.parentId ?? null, index: req.index ?? 0 });
+    return;
+  }
   const node = opt.create();
   prefs.countInsert(opt.type);
   if (req.mode === "slash" && req.blockId) {

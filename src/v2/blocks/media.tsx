@@ -2,6 +2,7 @@ import { blockShell, embedInfo, isSafeUrl } from "@ecomcx/ecomweb-content";
 import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Play, Globe, X } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 import { useEditor } from "../context";
+import { AiAltButton } from "../ui/ai";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
@@ -27,6 +28,8 @@ function MediaPlaceholder({ blockId, kind, icon: Icon, title, blockProps }: { bl
     </div>
   );
 }
+
+function ImageAiTools({ attrs, setAttrs }: BlockEditProps) { return <AiAltButton attrs={attrs} setAttrs={setAttrs} />; }
 
 function ImageEdit({ block, blockProps, setAttrs, editable, labels, selected }: BlockEditProps) {
   const a = block.attrs;
@@ -256,7 +259,7 @@ export function mediaBlocks(): BlockType[] {
   const media = { src: { type: "url" as const, control: "media" as const }, mediaId: { type: "json" as const }, caption: { type: "string" as const } };
   return [
     {
-      name: "image", title: "Ảnh", icon: ImageIcon, category: "media", keywords: "anh hinh image photo", kind: "atom", edit: ImageEdit,
+      name: "image", title: "Ảnh", icon: ImageIcon, category: "media", keywords: "anh hinh image photo", kind: "atom", edit: ImageEdit, toolbar: ImageAiTools,
       attributes: { ...media, alt: { type: "string", control: "textarea" }, title: { type: "string" }, width: { type: "number" }, height: { type: "number" }, size: { type: "string", default: "large" }, align: { type: "string", enum: ["left", "right", "center", "wide", "full"] }, href: { type: "url" }, linkTarget: { type: "string", enum: ["_self", "_blank"] }, lightbox: { type: "boolean", default: false } },
       supports: { style: true, anchor: true, className: true, blockStyle: true }, summary: (a) => a.alt || a.src,
     },

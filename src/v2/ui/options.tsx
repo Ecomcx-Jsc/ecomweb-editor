@@ -78,13 +78,16 @@ export function MoreMenu({ extra }: { extra?: (close: () => void) => ReactNode }
 export function Modal({ title, onClose, children, wide }: { title: string; onClose(): void; children: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const { labels } = useEditor();
+  // onClose qua ref: người gọi hay truyền hàm mới mỗi lần vẽ — chạy lại effect mỗi phím gõ sẽ trả focus về chỗ cũ (ô nhập trong hộp mất focus)
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>("button, input, [tabindex]")?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onClose(); } };
+    ref.current?.querySelector<HTMLElement>("textarea, input, button, [tabindex]")?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeRef.current(); } };
     document.addEventListener("keydown", onKey, true);
     return () => { document.removeEventListener("keydown", onKey, true); prev?.focus?.(); };
-  }, [onClose]);
+  }, []);
   return (
     <div className="ecx-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div ref={ref} className={cx("ecx-modal", wide && "is-wide")} role="dialog" aria-modal="true" aria-label={title}>

@@ -10,6 +10,7 @@ import { Canvas, type Device } from "./canvas/canvas";
 import { EditorContext, EditorUi, useEditor, useEditorState, useUiTick, type EditorContextValue } from "./context";
 import type { EditorHost } from "./core/host";
 import { InserterPanel, InserterPopover } from "./ui/inserter";
+import { AiWrite } from "./ui/ai";
 import { labelsV2, type V2Labels } from "./labels";
 import { localesVersion, onLocalesChange } from "../i18n";
 import { blocksFromDoc, docFromBlocks, type BNode } from "./core/model";
@@ -292,6 +293,7 @@ export function EditorOverlays() {
     <>
       <BlockToolbar />
       <InserterPopover />
+      <AiWrite />
       <DropIndicator />
       <LiveRegion />
     </>

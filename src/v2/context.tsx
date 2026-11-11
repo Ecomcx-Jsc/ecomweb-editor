@@ -42,6 +42,8 @@ export class EditorUi {
   activeRich: string | null = null;
   /** Mở hộp sửa liên kết cho ô gõ (khoá richViews). */
   openLink: ((viewKey: string) => void) | null = null;
+  /** Mở hộp "Viết bằng AI": chèn ở vị trí (khối chứa lệnh /ai thì thay khối đó). */
+  openAiWrite: ((at: { blockId?: string; docId: string; parentId: string | null; index: number }) => void) | null = null;
 
   subscribe = (l: () => void) => { this.listeners.add(l); return () => { this.listeners.delete(l); }; };
   getTick = () => this.tick;
