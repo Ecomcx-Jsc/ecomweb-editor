@@ -39,7 +39,12 @@ export const patterns = {
   introTitle: "About us",
   introText: "A short introduction to the company, its mission and values.",
   contact: "Contact",
-  contactD: "Contact details + social links",
+  contactD: "Heading, short intro and a contact form",
   contactTitle: "Get in touch",
   contactText: "Address · Phone · Email",
+  send: "Send",
+  thanks: "Thank you! We will get back to you soon.",
+  name: "Full name",
+  email: "Email",
+  message: "Message",
 };

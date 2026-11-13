@@ -52,4 +52,6 @@ export const blockTitles = {
   postTemplate: "Khuôn mỗi bài",
   pagination: "Phân trang",
   queryEmpty: "Khi không có bài",
+  form: "Form",
+  formField: "Ô nhập",
 };

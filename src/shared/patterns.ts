@@ -73,9 +73,12 @@ function corePatterns(t: L): Pattern[] {
       { type: "pullquote", attrs: { citation: t.who }, content: [text(t.quote)] }] },
     { name: "core/intro", category: "text", title: t.intro, description: t.introD, keywords: "about gioi thieu media", content: [
       { type: "mediaText", attrs: { position: "left", width: 50, verticalAlign: "center" }, content: [h(2, t.introTitle), p(t.introText), buttons("left", btn(t.learn, "outline"))] }] },
-    { name: "core/contact", category: "contact", title: t.contact, description: t.contactD, keywords: "contact lien he", content: [
+    { name: "core/contact", category: "contact", title: t.contact, description: t.contactD, keywords: "contact lien he form", content: [
       h(2, t.contactTitle), p(t.contactText),
-      { type: "socialLinks", attrs: { links: [{ service: "facebook", url: "https://facebook.com" }, { service: "zalo", url: "https://zalo.me" }, { service: "email", url: "mailto:hello@example.com" }] } }] },
+      { type: "form", attrs: { submitText: t.send, successMessage: t.thanks }, content: [
+        { type: "formField", attrs: { kind: "text", name: "name", label: t.name, required: true, width: "half" } },
+        { type: "formField", attrs: { kind: "email", name: "email", label: t.email, required: true, width: "half" } },
+        { type: "formField", attrs: { kind: "textarea", name: "message", label: t.message, required: true } }] }] },
   ];
 }
 

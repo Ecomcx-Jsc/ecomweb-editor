@@ -39,7 +39,12 @@ export const patterns = {
   introTitle: "Về chúng tôi",
   introText: "Giới thiệu ngắn về công ty, sứ mệnh và giá trị.",
   contact: "Liên hệ",
-  contactD: "Thông tin liên hệ + mạng xã hội",
+  contactD: "Tiêu đề, giới thiệu ngắn và form liên hệ",
   contactTitle: "Liên hệ với chúng tôi",
   contactText: "Địa chỉ · Số điện thoại · Email",
+  send: "Gửi",
+  thanks: "Cảm ơn bạn! Chúng tôi sẽ liên hệ lại sớm.",
+  name: "Họ và tên",
+  email: "Email",
+  message: "Nội dung",
 };

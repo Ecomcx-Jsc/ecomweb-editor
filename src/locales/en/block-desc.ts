@@ -50,4 +50,6 @@ export const blockDesc = {
   postNavigation: "Links to the previous and next posts.",
   query: "A list of posts by criteria.",
   templatePart: "A shared part (header, footer…) — edit once, update everywhere.",
+  form: "Basic contact / sign-up form: submissions are kept in the admin and emailed. Advanced forms: plugins.",
+  formField: "One field of a form: text, email, phone, message, choice, consent…",
 };

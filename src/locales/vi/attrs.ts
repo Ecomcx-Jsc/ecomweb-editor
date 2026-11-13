@@ -70,4 +70,10 @@ export const attrs = {
   showTitle: "Hiện tiêu đề bài",
   anchor: "Neo (id)",
   className: "Class CSS",
+  kind: "Loại",
+  help: "Ghi chú dưới ô",
+  required: "Bắt buộc",
+  submitText: "Chữ trên nút gửi",
+  successMessage: "Lời cảm ơn sau khi gửi",
+  notifyEmail: "Email nhận thông báo",
 };

@@ -50,4 +50,6 @@ export const blockDesc = {
   postNavigation: "Liên kết tới bài trước và bài sau.",
   query: "Danh sách bài theo điều kiện (chuyên mục, số bài, sắp xếp).",
   templatePart: "Phần dùng chung (header, footer…) — sửa một nơi, đổi mọi trang.",
+  form: "Form liên hệ / đăng ký cơ bản: bài gửi lưu trong admin và báo qua email. Form nâng cao: plugin.",
+  formField: "Một ô của form: chữ, email, điện thoại, nội dung, chọn, đồng ý…",
 };

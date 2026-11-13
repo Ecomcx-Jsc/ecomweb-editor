@@ -70,4 +70,10 @@ export const attrs = {
   showTitle: "Show post titles",
   anchor: "Anchor",
   className: "CSS class",
+  kind: "Type",
+  help: "Help text",
+  required: "Required",
+  submitText: "Submit button text",
+  successMessage: "Thank-you message",
+  notifyEmail: "Notification email",
 };

@@ -42,6 +42,18 @@ function library(t: L): Pattern[] {
   const member = (): Node => card([img(t.member), h(3, t.member), muted(t.role), p(t.bio)], { padding: { base: "lg" }, textAlign: { base: "center" } });
   const info = (label: string, value: string): Node => card([h(3, label), p(value)], { padding: { base: "lg" } });
   const links = (title: string, items: string[]): Node => ({ type: "column", content: [h(4, title), { type: "bulletList", content: items.map((s) => ({ type: "listItem", content: [{ type: "paragraph", content: [link(s)] }] })) }] });
+  // Form cơ bản của lõi (khối form): formId để trống — trình soạn tạo mã khi mẫu được chèn
+  const fld = (kind: string, name: string, label: string, extra: Record<string, unknown> = {}): Node => ({ type: "formField", attrs: { kind, name, label, ...extra } });
+  const contactForm = (topics = false): Node => ({ type: "form", attrs: { submitText: t.fSend, successMessage: t.fThanks }, content: [
+    fld("text", "name", t.fName, { required: true, width: "half" }), fld("tel", "phone", t.fPhone, { required: true, width: "half" }),
+    fld("email", "email", t.fEmail),
+    ...(topics ? [fld("select", "topic", t.fTopic, { options: [t.topic1, t.topic2, t.topic3] })] : []),
+    fld("textarea", "message", t.fMessage, { required: true, placeholder: t.fMessageP }),
+    fld("consent", "consent", t.fConsent, { required: true }),
+  ] });
+  const infoRow = (icon: string, label: string, value: string): Node => ({ type: "group", attrs: { style: { layout: { type: "flex", direction: { base: "row" }, align: { base: "start" }, wrap: false }, gap: "md" } }, content: [
+    { type: "icon", attrs: { name: icon, size: 22, style: { color: { text: "primary" } } } },
+    { type: "group", content: [p(label, { style: { fontWeight: "600", margin: { base: "0" } } }), muted(value, { margin: { base: "0" } })] }] });
   const m = (id: string, category: string, keywords: string, content: Node[]): Pattern => ({ name: `core/${id}`, category, title: t[id.replace(/-/g, "_")], description: t[`${id.replace(/-/g, "_")}D`], keywords, content });
 
   return [
@@ -127,10 +139,18 @@ function library(t: L): Pattern[] {
       section([muted(t.trusted, { ...center, textTransform: "uppercase", letterSpacing: "0.08em", fontSize: { base: "sm" } }), grid(5, [1, 2, 3, 4, 5].map(() => img(t.logo)), { motion: { in: "fade", stagger: true } })])]),
 
     // ---------------- contact ----------------
+    m("contact-form", "contact", "lien he form gui tin nhan contact form", [
+      section([{ type: "columns", attrs: { verticalAlign: "top" }, content: [
+        { type: "column", attrs: { width: 40 }, content: [eyebrow(t.l_contact), h(2, t.contactTitle), muted(t.contactSub, { fontSize: { base: "lg" } }), { type: "spacer", attrs: { height: "sm" } },
+          { type: "group", attrs: { style: { layout: { type: "flex", direction: { base: "column" } }, gap: "lg" } }, content: [
+            infoRow("phone", t.phone, t.phoneV), infoRow("mail", t.email, t.emailV), infoRow("mapPin", t.address, t.addressV), infoRow("clock", t.hours, t.hoursV)] }] },
+        { type: "column", attrs: { width: 60 }, content: [card([contactForm(true)], { padding: { base: "xl", mobile: "lg" }, shadow: "md", motion: undefined })] }] }],
+        { motion: { in: "fade" } })]),
     m("contact-split", "contact", "lien he chia doi contact split", [
       section([{ type: "columns", content: [
-        { type: "column", content: [h(2, t.contactTitle), muted(t.contactSub), p(`${t.address}: ${t.addressV}`), p(`${t.phone}: ${t.phoneV}`), p(`${t.email}: ${t.emailV}`)] },
-        { type: "column", content: [buttons("left", btn(t.call), btn(t.chat, "outline")), { type: "socialLinks", attrs: { links: [{ service: "facebook", url: "https://facebook.com" }, { service: "zalo", url: "https://zalo.me" }, { service: "email", url: "mailto:hello@example.com" }] } }] }] }])]),
+        { type: "column", content: [h(2, t.contactTitle), muted(t.contactSub), p(`${t.address}: ${t.addressV}`), p(`${t.phone}: ${t.phoneV}`), p(`${t.email}: ${t.emailV}`),
+          { type: "socialLinks", attrs: { links: [{ service: "facebook", url: "https://facebook.com" }, { service: "zalo", url: "https://zalo.me" }, { service: "email", url: "mailto:hello@example.com" }] } }] },
+        { type: "column", content: [contactForm()] }] }])]),
     m("contact-cards", "contact", "the lien he dia chi dien thoai email contact cards", [
       section([h(2, t.contactTitle, center), muted(t.contactSub, center), { type: "spacer", attrs: { height: "md" } }, grid(3, [info(t.address, t.addressV), info(t.phone, t.phoneV), info(t.email, t.emailV)], slideUp())])]),
 

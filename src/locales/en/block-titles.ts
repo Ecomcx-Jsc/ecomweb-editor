@@ -52,4 +52,6 @@ export const blockTitles = {
   postTemplate: "Post template",
   pagination: "Pagination",
   queryEmpty: "No results",
+  form: "Form",
+  formField: "Form field",
 };
