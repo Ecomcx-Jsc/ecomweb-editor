@@ -1,4 +1,4 @@
-import { CORE_NODES, FORM_FIELD_NAME } from "@ecomcx/ecomweb-content";
+import { CORE_NODES, FORM_FIELD_NAME, blockShell } from "@ecomcx/ecomweb-content";
 import { ClipboardList, TextCursorInput } from "lucide-react";
 import { useEffect, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
@@ -33,7 +33,7 @@ function FormEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
     <div {...merge(blockProps, "ecx-form-blocks")} data-form-id={String(a.formId ?? "")}>
       <InnerBlocks parent={block} />
       <div className="ecx-form-actions">
-        <span className="ecx-button is-primary" role="presentation">
+        <span className={blockShell("button", { variant: "primary" })?.className} style={blockShell("button", { variant: "primary" })?.style as CSSProperties} role="presentation">
           <RichText blockId={block.id} field="submitText" tagName="span" value={String(a.submitText ?? "")} onChange={(v) => setAttrs({ submitText: v })} placeholder={t.formSubmit} placeholderAlways editable={editable} />
         </span>
       </div>
