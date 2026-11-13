@@ -1,4 +1,5 @@
-import { normalizeStyle, styleClass, widthClass } from "@ecomcx/ecomweb-content";
+import { controlsCss, normalizeStyle, styleClass, widthClass } from "@ecomcx/ecomweb-content";
+import { blockControls } from "../../shared/panel-store";
 import { Component, memo, useCallback, useContext, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type ReactElement, type ReactNode } from "react";
 import { DocScopeProvider, LoopPostContext, useDocScope, useEditor, useEditorState } from "../context";
 import { ServerBlock } from "./server-block";
@@ -72,6 +73,7 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
       state.editing && "is-editing",
       state.mode === "disabled" && "is-locked",
       style && styleClass(style),
+      controlsCss(blockControls(), block.type, a)?.cls,
       widthClass(block.type, a),
       typeof a.blockStyle === "string" && `ecx-is-${a.blockStyle}`,
       typeof a.className === "string" && a.className,

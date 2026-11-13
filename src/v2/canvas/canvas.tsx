@@ -1,4 +1,5 @@
-import { collectStyles, normalizeStyle, presetCss, type BlockStyle } from "@ecomcx/ecomweb-content";
+import { collectStyles, controlsCss, normalizeStyle, presetCss, type BlockStyle } from "@ecomcx/ecomweb-content";
+import { blockAssets, blockControls, blockReadyFns, onBlockPanelsChange } from "../../shared/panel-store";
 import { createElement, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { onAnimationsChange, pluginAnimations } from "../../shared/animation-store";
 import { createPortal } from "react-dom";
@@ -19,6 +20,7 @@ export type Device = "desktop" | "tablet" | "mobile";
 export const DEVICE_WIDTH: Record<Device, number | null> = { desktop: null, tablet: 768, mobile: 390 };
 
 export interface CanvasProps {
+  /** Bỏ trống = theo `ui.device` (khổ dùng chung với tab Kiểu dáng). */
   device?: Device;
   className?: string;
   /** Class của vùng nội dung trong iframe (theme thường tạo kiểu .ecx-content / .entry-content). */
@@ -34,11 +36,11 @@ const SRC_DOC = `<!doctype html><html><head><meta charset="utf-8"><meta name="vi
 /** Tỉ lệ của chế độ thu nhỏ. */
 export const ZOOM_OUT = 0.5;
 /** Khổ "Máy tính" luôn vẽ rộng ít nhất bằng này (> 1024 để CSS tablet của website không áp lên); chỗ hẹp hơn thì thu nhỏ vừa khung thay vì vẽ hẹp. */
-export const DESKTOP_MIN_WIDTH = 1100;
+export const DESKTOP_MIN_WIDTH = 1025;
 /** Thu nhỏ dưới tỉ lệ này thì chữ quá nhỏ để đọc / gõ (máy thật là điện thoại, tablet dọc): vẽ đúng bề rộng khung, không thu. */
 export const MIN_FIT = 0.6;
 
-export function Canvas({ device = "desktop", className, contentClassName = "ecx-content", before, after }: CanvasProps) {
+export function Canvas({ device: deviceProp, className, contentClassName = "ecx-content", before, after }: CanvasProps) {
   const { ui, labels } = useEditor();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [doc, setDoc] = useState<Document | null>(null);
@@ -71,6 +73,8 @@ export function Canvas({ device = "desktop", className, contentClassName = "ecx-
   useEffect(() => () => { if (ui.canvasFrame === frameRef.current) { ui.canvasFrame = null; ui.canvasDoc = null; } }, [ui]);
 
   useUiTick();
+  // Không truyền device → theo khổ dùng chung của trình soạn (DeviceSwitcher, tab Kiểu dáng)
+  const device = deviceProp ?? ui.device;
   const width = DEVICE_WIDTH[device];
   // Thu nhỏ: khung soạn vẽ ở cỡ gấp đôi rồi thu còn một nửa → thấy cả trang, toạ độ kéo thả / thanh công cụ tự tính theo tỉ lệ
   const ratio = !width && wrapW > 0 && wrapW < DESKTOP_MIN_WIDTH ? wrapW / DESKTOP_MIN_WIDTH : 1;
@@ -194,8 +198,12 @@ function useCanvasStyles(doc: Document) {
   const docs = useEditorState((s) => s.docs);
   // Kiểu dáng gom theo từng cây khối (cache theo tham chiếu): gõ chữ không đổi style → không duyệt lại cả tài liệu dài
   const perTree = useRef(new WeakMap<BNode[], BlockStyle[]>());
+  const controls = useSyncExternalStore(onBlockPanelsChange, blockControls, blockControls);
   const css = useMemo(() => {
     const styles: BlockStyle[] = [];
+    // Ô điều khiển khai CSS của plugin — cùng hàm controlsCss website dùng
+    const ctrl = new Map<string, string>();
+    if (controls.length) for (const d of Object.values(docs)) for (const b of flatten(d.blocks)) { const c = controlsCss(controls, b.type, b.attrs); if (c) ctrl.set(c.cls, c.css); }
     for (const d of Object.values(docs)) {
       let list = perTree.current.get(d.blocks);
       if (!list) {
@@ -205,8 +213,9 @@ function useCanvasStyles(doc: Document) {
       }
       styles.push(...list);
     }
-    return collectStyles(styles);
-  }, [docs]);
+    return collectStyles(styles) + [...ctrl.values()].join("");
+  }, [docs, controls]);
+  usePluginRuntime(doc, docs);
   void store;
   useLayoutEffect(() => {
     let el = head.querySelector<HTMLStyleElement>("style[data-ecx=blocks]");
@@ -224,7 +233,7 @@ function useCanvasStyles(doc: Document) {
 
 /** Cuộn / đổi cỡ trong iframe → thanh công cụ đo lại vị trí. */
 function useCanvasEvents(doc: Document) {
-  const { ui } = useEditor();
+  const { ui, store } = useEditor();
   useEffect(() => {
     const win = doc.defaultView!;
     let raf = 0;
@@ -237,11 +246,28 @@ function useCanvasEvents(doc: Document) {
     win.addEventListener("resize", bump);
     const ro = new ResizeObserver(bump);
     ro.observe(doc.body);
+    // Chuột phải / Shift+F10 / phím Menu trên khối → menu của khối (BlockContextMenu); Shift + chuột phải giữ menu của trình duyệt (chính tả, dán…)
+    const menu = (e: MouseEvent) => {
+      const el = (e.target as Element | null)?.closest?.<HTMLElement>("[data-ecx-block]");
+      const id = el?.dataset.ecxBlock;
+      if (!id || !ui.canvasFrame || (e.shiftKey && e.button === 2) || store.modeOf(id) === "disabled") return;
+      e.preventDefault();
+      const sel = store.getState().selection;
+      const ids = sel.ids.includes(id) ? sel.ids : sel.editing === id ? [id] : null;
+      if (!ids) store.select([id], { editing: null });
+      const f = ui.canvasFrame.getBoundingClientRect();
+      const scale = f.width / (ui.canvasFrame.offsetWidth || f.width) || 1;
+      // Mở bằng bàn phím: không có toạ độ chuột → neo dưới góc trái của khối
+      const r = !e.clientX && !e.clientY ? ui.blockRect(id) : null;
+      ui.openContextMenu({ x: r ? r.left : f.left + e.clientX * scale, y: r ? r.top + Math.min(r.height, 24) : f.top + e.clientY * scale, ids: ids ?? [id] });
+    };
+    doc.addEventListener("contextmenu", menu);
     return () => {
       win.removeEventListener("scroll", bump); win.removeEventListener("resize", bump); ro.disconnect(); cancelAnimationFrame(raf);
       doc.removeEventListener("mousemove", moved); document.removeEventListener("mousemove", moved);
+      doc.removeEventListener("contextmenu", menu);
     };
-  }, [doc, ui]);
+  }, [doc, ui, store]);
 }
 
 /** Đang gõ chữ / ô nhập: phím thuộc về ô đó. */
@@ -446,4 +472,51 @@ function useRangeHighlight(doc: Document): boolean {
     };
   }, [range, revision, doc, store, ui]);
   return !!range;
+}
+
+/**
+ * onBlockReady + asset theo nhu cầu của plugin trong khung soạn (iframe): gọi lại khi khối đổi thuộc tính (dọn bản cũ trước),
+ * dọn khi khối rời DOM; asset nạp một lần khi nội dung có khối / class khớp.
+ */
+function usePluginRuntime(doc: Document, docs: Record<string, { blocks: BNode[] }>) {
+  const ready = useSyncExternalStore(onBlockPanelsChange, blockReadyFns, blockReadyFns);
+  const assets = useSyncExternalStore(onBlockPanelsChange, blockAssets, blockAssets);
+  const live = useRef(new Map<HTMLElement, { attrs: unknown; cleanups: Array<void | (() => void)> }>());
+  useEffect(() => {
+    const byId = new Map<string, BNode>();
+    for (const d of Object.values(docs)) for (const b of flatten(d.blocks)) byId.set(b.id, b);
+    if (assets.length) {
+      const types = new Set([...byId.values()].map((b) => b.type));
+      const classes = [...byId.values()].flatMap((b) => (typeof b.attrs.className === "string" ? b.attrs.className.split(/\s+/) : []));
+      for (const a of assets) {
+        const hit = a.when.blocks?.some((t) => types.has(t)) || (!!a.when.className && classes.some((c) => c.startsWith(a.when.className!)));
+        if (!hit || doc.head.querySelector(`[data-ecx-asset="${CSS.escape(a.src)}"]`)) continue;
+        const el = a.kind === "style" ? Object.assign(doc.createElement("link"), { rel: "stylesheet", href: a.src }) : Object.assign(doc.createElement("script"), { src: a.src, async: true });
+        el.dataset.ecxAsset = a.src;
+        doc.head.append(el);
+      }
+    }
+    const run = () => {
+      const seen = new Set<HTMLElement>();
+      if (ready.length) for (const el of doc.querySelectorAll<HTMLElement>("[data-ecx-block]")) {
+        const b = byId.get(el.dataset.ecxBlock!);
+        if (!b) continue;
+        const fns = ready.filter((r) => r.type === "*" || r.type === b.type);
+        if (!fns.length) continue;
+        seen.add(el);
+        const cur = live.current.get(el);
+        if (cur && cur.attrs === b.attrs) continue;
+        cur?.cleanups.forEach((c) => { try { c?.(); } catch { /* bỏ qua */ } });
+        live.current.set(el, { attrs: b.attrs, cleanups: fns.map((r) => { try { return r.fn(el, b.attrs); } catch (e) { console.warn("[ecomweb-editor] onBlockReady", b.type, e); } }) });
+      }
+      for (const [el, v] of live.current) if (!seen.has(el)) { v.cleanups.forEach((c) => { try { c?.(); } catch { /* bỏ qua */ } }); live.current.delete(el); }
+    };
+    run();
+    if (!ready.length) return;
+    // Khối vẽ lại / thêm / bỏ mà tài liệu không đổi tham chiếu (vd ServerBlock tải xong)
+    const mo = new MutationObserver(run);
+    mo.observe(doc.body, { childList: true, subtree: true });
+    return () => mo.disconnect();
+  }, [doc, docs, ready, assets]);
+  useEffect(() => () => { for (const v of live.current.values()) v.cleanups.forEach((c) => { try { c?.(); } catch { /* bỏ qua */ } }); live.current.clear(); }, []);
 }

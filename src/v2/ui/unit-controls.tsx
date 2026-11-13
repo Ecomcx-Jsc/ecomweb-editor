@@ -16,7 +16,7 @@ const parse = (v: unknown): { n: string; unit: string } | null => {
   return m ? { n: m[1], unit: m[2] ?? "px" } : null;
 };
 
-export function UnitInput({ value, onChange, label, max = 100, units = UNITS, slider = true }: { value?: string; onChange(v: string | undefined): void; label: string; max?: number; units?: string[]; slider?: boolean }) {
+export function UnitInput({ value, onChange, label, max = 100, units = UNITS, slider = true, placeholder }: { value?: string; onChange(v: string | undefined): void; label: string; max?: number; units?: string[]; slider?: boolean; placeholder?: string }) {
   const t = useMsgs("controls");
   const p = parse(value);
   const [n, setN] = useState(p?.n ?? "");
@@ -27,7 +27,7 @@ export function UnitInput({ value, onChange, label, max = 100, units = UNITS, sl
   return (
     <div className="ecx-unit-row">
       <div className="ecx-unit-input">
-        <input type="number" inputMode="decimal" aria-label={label} value={n} placeholder={p ? undefined : value ?? ""} step={unit === "px" || unit === "%" ? 1 : 0.1}
+        <input type="number" inputMode="decimal" aria-label={label} value={n} placeholder={p ? undefined : value ?? placeholder ?? ""} step={unit === "px" || unit === "%" ? 1 : 0.1}
           onChange={(e) => { setN(e.target.value); emit(e.target.value, unit); }} />
         <select aria-label={`${label}: ${t.unit}`} value={unit} onChange={(e) => { setUnit(e.target.value); if (n !== "") emit(n, e.target.value); }}>
           {units.map((u) => <option key={u} value={u}>{u}</option>)}

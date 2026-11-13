@@ -32,6 +32,9 @@ export class EditorUi {
   typing = false;
   /** Thu nhỏ: cả trang trong tầm nhìn, chỉ chọn / sắp xếp các phần (khối cấp cao nhất). */
   zoomOut = false;
+  /** Khổ màn hình đang soạn: khung soạn vẽ theo bề rộng này, tab Kiểu dáng sửa giá trị của khổ này (dùng chung, đổi một nơi thì nơi kia theo). */
+  device: "desktop" | "tablet" | "mobile" = "desktop";
+  setDevice(d: "desktop" | "tablet" | "mobile") { if (this.device !== d) { this.device = d; this.bump(); } }
   /** Mở thư viện khối đầy đủ (cột trái) — nút "Xem tất cả" của chèn nhanh; ứng dụng / BlockEditor gán. */
   browseAll: (() => void) | null = null;
   setZoomOut(v: boolean) { if (this.zoomOut !== v) { this.zoomOut = v; this.bump(); } }
@@ -69,6 +72,9 @@ export class EditorUi {
   /** Alt+F10: đưa bàn phím lên thanh công cụ của khối. */
   focusToolbar() { document.querySelector<HTMLElement>(".ecx-toolbar button:not(:disabled)")?.focus(); }
   setDrag(d: DragState | null) { this.drag = d; this.bump(); }
+  /** Menu chuột phải đang mở: vị trí theo toạ độ trang ngoài + các khối áp dụng. */
+  contextMenu: { x: number; y: number; ids: string[] } | null = null;
+  openContextMenu(m: { x: number; y: number; ids: string[] } | null) { if (m || this.contextMenu) { this.contextMenu = m; this.bump(); } }
 }
 
 export interface InserterRequest {

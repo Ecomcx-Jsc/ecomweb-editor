@@ -1,7 +1,7 @@
 import { WIDE_BLOCKS } from "@ecomcx/ecomweb-content";
 import { clearCells, mergeRange, selectedCellRect } from "../core/tables";
 import { AiTools } from "./ai";
-import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter } from "lucide-react";
+import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter, Paintbrush, ClipboardPaste } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
@@ -18,6 +18,8 @@ import { topLevelOrdered } from "../core/ops";
 import type { BlockTransform } from "../core/registry";
 import { insertSibling, richViews } from "../text/rich-text";
 import { canContain } from "../core/structure";
+import { blockActionsFor } from "../../shared/panel-store";
+import { copyStyle, hasCopiedStyle, menuPosition, pastedStyle } from "./block-menu";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 
@@ -150,12 +152,6 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
     const text = firstText(res[0]);
     if (text) store.focusText(text, -1);
   };
-  const copy = async () => {
-    const s = serializeBlocks(ordered.map((id) => store.block(id)!));
-    try {
-      await navigator.clipboard.write([new ClipboardItem({ "text/plain": new Blob([s.text], { type: "text/plain" }), "text/html": new Blob([s.html], { type: "text/html" }) })]);
-    } catch { /* trình duyệt chặn ghi clipboard: người dùng vẫn chép được bằng Ctrl+C */ }
-  };
  /** Công cụ của các khối bao ngoài (bảng, bộ cột, nhóm nút) — mỗi loại một lần, gần nhất trước. */
   const contextTools = (ancestors: string[], currentId: string) => {
     const seen = new Set<string>();
@@ -167,24 +163,12 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
       return <div className="ecx-tool-group" key={`ctx-${id}`}><T ancestor={anc} currentId={currentId} /></div>;
     });
   };
- /** Tạo mẫu từ các khối đang chọn; mẫu đồng bộ → thay khối bằng tham chiếu tới mẫu. */
-  const createPattern = async () => {
-    const picked = ordered.map((id) => store.block(id)!).filter(Boolean);
-    const res = await ctx.host.createPattern!(contentFromBlocks(picked));
-    if (!res?.synced) return;
-    const ref = makeBlock("syncedPattern", { ref: res.ref });
-    store.batch(() => {
-      store.replace(ordered[0], [ref], { select: { ids: [ref.id], editing: null }, caret: null });
-      if (ordered.length > 1) store.remove(ordered.slice(1), { focusNeighbor: false });
-    });
-  };
   // Khoá khối: ẩn thao tác không được phép
   const movable = ordered.every((id) => store.canMove(id));
   const removable = ordered.every((id) => store.canRemove(id));
   const insertable = store.canInsertInto(parent?.id ?? null);
   const isLocked = nodes.length === 1 && !!(first.attrs.lock || first.attrs.templateLock);
   const nested = first.type === "templatePart" || first.type === "syncedPattern" ? ui.blockEl(first.id)?.dataset.ecxNested : undefined;
-  const canGroup = canContain(parent?.type ?? null, "group");
 
   return (
     <>
@@ -264,21 +248,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
         {nested && <div className="ecx-tool-group"><ToolButton label={labels.editOriginal} className="ecx-tool-wide" onClick={() => store.enterFocus(nested)}><PanelTop className="ecx-icon" /><span className="ecx-tool-text">{labels.editOriginal}</span></ToolButton></div>}
         <div className="ecx-tool-group">
           <Dropdown label={labels.more} trigger={<MoreVertical className="ecx-icon" />}>
-            {(close) => (
-              <>
-                {insertable && <>
-                  <MenuItem icon={CopyPlus} label={labels.duplicate} shortcut={`${mod}⇧D`} onClick={() => { close(); store.duplicate(ordered); }} />
-                  <MenuItem icon={ArrowUpToLine} label={labels.insertBefore} shortcut={`${mod}⌥T`} onClick={() => { close(); insertSibling(store, ordered[0], 0); }} />
-                  <MenuItem icon={ArrowDownToLine} label={labels.insertAfter} shortcut={`${mod}⌥Y`} onClick={() => { close(); insertSibling(store, ordered[ordered.length - 1], 1); }} />
-                </>}
-                <MenuItem icon={Copy} label={labels.copy} onClick={() => { close(); void copy(); }} />
-                {ctx.host.createPattern && <MenuItem icon={Shapes} label={labels.createPattern} onClick={() => { close(); void createPattern(); }} />}
-                {canGroup && removable && movable && insertable && <MenuItem icon={GroupIcon} label={labels.group} onClick={() => { close(); store.wrap(ordered, "group"); }} />}
-                {nodes.length === 1 && first.content && first.type === "group" && removable && <MenuItem icon={Ungroup} label={labels.ungroup} onClick={() => { close(); store.unwrap(first.id); }} />}
-                {nodes.length === 1 && !store.isContentOnly(first.id) && <MenuItem icon={Lock} label={labels.lock} onClick={() => { close(); setLockOpen(true); }} />}
-                {removable && <MenuItem icon={Trash2} label={labels.remove} shortcut="⇧⌥Z" danger onClick={() => { close(); store.remove(ordered); }} />}
-              </>
-            )}
+            {(close) => <BlockMenuItems ids={ids} close={close} onLock={() => setLockOpen(true)} />}
           </Dropdown>
         </div>
       </div>
@@ -330,6 +300,125 @@ function MarkTools({ view, onLink }: { view: EditorView; onLink(): void }) {
         {(close) => more.map(([name, I, l]) => <MenuItem key={name} icon={I} label={isActive(name) ? `✓ ${l}` : l} onClick={() => { close(); toggle(name); }} />)}
       </Dropdown>
     </div>
+  );
+}
+
+/** Mục của menu ⋮ trên thanh công cụ khối — dùng chung với menu chuột phải (BlockContextMenu). */
+function BlockMenuItems({ ids, close, onLock }: { ids: string[]; close(): void; onLock(): void }) {
+  const ctx = useEditor();
+  const { store, ui, labels } = ctx;
+  const nodes = ids.map((id) => store.block(id)).filter(Boolean) as BNode[];
+  const loc = nodes[0] ? store.locate(nodes[0].id) : null;
+  if (!loc) return null;
+  const first = nodes[0];
+  const parent = loc.parent;
+  const ordered = topLevelOrdered(store.getState().docs[loc.docId].blocks, ids);
+  const movable = ordered.every((id) => store.canMove(id));
+  const removable = ordered.every((id) => store.canRemove(id));
+  const insertable = store.canInsertInto(parent?.id ?? null);
+  const canGroup = canContain(parent?.type ?? null, "group");
+  const styleEditable = ordered.every((id) => !store.isContentOnly(id) && store.modeOf(id) !== "disabled");
+  const copy = async () => {
+    const s = serializeBlocks(ordered.map((id) => store.block(id)!));
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ "text/plain": new Blob([s.text], { type: "text/plain" }), "text/html": new Blob([s.html], { type: "text/html" }) })]);
+    } catch { /* trình duyệt chặn ghi clipboard: người dùng vẫn chép được bằng Ctrl+C */ }
+  };
+  /** Tạo mẫu từ các khối đang chọn; mẫu đồng bộ → thay khối bằng tham chiếu tới mẫu. */
+  const createPattern = async () => {
+    const picked = ordered.map((id) => store.block(id)!).filter(Boolean);
+    const res = await ctx.host.createPattern!(contentFromBlocks(picked));
+    if (!res?.synced) return;
+    const ref = makeBlock("syncedPattern", { ref: res.ref });
+    store.batch(() => {
+      store.replace(ordered[0], [ref], { select: { ids: [ref.id], editing: null }, caret: null });
+      if (ordered.length > 1) store.remove(ordered.slice(1), { focusNeighbor: false });
+    });
+  };
+  return (
+    <>
+      {insertable && <>
+        <MenuItem icon={CopyPlus} label={labels.duplicate} shortcut={`${mod}⇧D`} onClick={() => { close(); store.duplicate(ordered); }} />
+        <MenuItem icon={ArrowUpToLine} label={labels.insertBefore} shortcut={`${mod}⌥T`} onClick={() => { close(); insertSibling(store, ordered[0], 0); }} />
+        <MenuItem icon={ArrowDownToLine} label={labels.insertAfter} shortcut={`${mod}⌥Y`} onClick={() => { close(); insertSibling(store, ordered[ordered.length - 1], 1); }} />
+      </>}
+      <MenuItem icon={Copy} label={labels.copy} onClick={() => { close(); void copy(); }} />
+      <MenuItem icon={Paintbrush} label={labels.copyStyle} onClick={() => { close(); copyStyle(first.attrs); ui.announce(labels.styleCopied); }} />
+      {hasCopiedStyle() && styleEditable && <MenuItem icon={ClipboardPaste} label={labels.pasteStyle} onClick={() => { close(); store.setAttrs(ordered, pastedStyle()!); }} />}
+      {ctx.host.createPattern && <MenuItem icon={Shapes} label={labels.createPattern} onClick={() => { close(); void createPattern(); }} />}
+      {blockActionsFor(nodes.map((n) => n.type)).map((a) => (
+        <MenuItem key={a.id} icon={a.icon} label={ctx.host.translate ? ctx.host.translate(a.label) : a.label} onClick={() => {
+          close();
+          Promise.resolve(a.run({ blocks: nodes.map((b) => ({ id: b.id, type: b.type, attrs: b.attrs })), setAttrs: (x) => store.setAttrs(ordered, x) }))
+            .catch((e) => console.warn("[ecomweb-editor] block action", a.id, e));
+        }} />
+      ))}
+      {canGroup && removable && movable && insertable && <MenuItem icon={GroupIcon} label={labels.group} onClick={() => { close(); store.wrap(ordered, "group"); }} />}
+      {nodes.length === 1 && first.content && first.type === "group" && removable && <MenuItem icon={Ungroup} label={labels.ungroup} onClick={() => { close(); store.unwrap(first.id); }} />}
+      {nodes.length === 1 && !store.isContentOnly(first.id) && <MenuItem icon={Lock} label={labels.lock} onClick={() => { close(); onLock(); }} />}
+      {removable && <MenuItem icon={Trash2} label={labels.remove} shortcut="⇧⌥Z" danger onClick={() => { close(); store.remove(ordered); }} />}
+    </>
+  );
+}
+
+/**
+ * Menu chuột phải trên khối: cùng mục với menu ⋮ (BlockMenuItems). Mở bằng chuột phải, Shift+F10 hoặc phím Menu (khung soạn gọi ui.openContextMenu);
+ * ↑/↓/Home/End đi giữa các mục, Esc / Tab / bấm ra ngoài / cuộn thì đóng.
+ */
+export function BlockContextMenu() {
+  const { ui, store, labels } = useEditor();
+  useUiTick();
+  const at = ui.contextMenu;
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const [lock, setLock] = useState<BNode | null>(null);
+  // refocus: bàn phím quay về khối (Esc / Tab) hoặc khung soạn (chọn mục xong — khối có thể đã bị xoá / thay)
+  const close = (refocus?: "block" | "canvas") => {
+    const id = ui.contextMenu?.ids[0];
+    ui.openContextMenu(null);
+    const root = ui.canvasDoc?.querySelector<HTMLElement>(".ecx-canvas-root");
+    if (refocus) ((refocus === "block" && id && ui.blockEl(id)) || root)?.focus({ preventScroll: true });
+  };
+  useLayoutEffect(() => {
+    const m = ref.current;
+    if (!at || !m) { setPos(null); return; }
+    // Gốc toạ độ của "fixed" có thể là khối cha có transform (như Dropdown): đo rồi trừ ra
+    const origin = m.getBoundingClientRect();
+    const p = menuPosition(at.x, at.y, m.offsetWidth, m.offsetHeight, window.innerWidth, window.innerHeight);
+    setPos({ top: p.top - Math.round(origin.top), left: p.left - Math.round(origin.left) });
+  }, [at]);
+  useEffect(() => { if (pos) ref.current?.querySelector<HTMLElement>("[role=menuitem]")?.focus(); }, [pos]);
+  useEffect(() => {
+    if (!at) return;
+    const docs = [document, ui.canvasDoc].filter(Boolean) as Document[];
+    const outside = (e: Event) => { if (!ref.current?.contains(e.target as Node)) close(); };
+    const resize = () => close();
+    for (const d of docs) { d.addEventListener("mousedown", outside, true); d.addEventListener("scroll", outside, true); }
+    window.addEventListener("resize", resize);
+    return () => { for (const d of docs) { d.removeEventListener("mousedown", outside, true); d.removeEventListener("scroll", outside, true); } window.removeEventListener("resize", resize); };
+  }, [at, ui]);
+  return (
+    <>
+      {at && (
+        <div ref={ref} className="ecx-menu is-floating ecx-context-menu" role="menu" aria-label={labels.blockMenu}
+          style={pos ? { top: pos.top, left: pos.left } : { visibility: "hidden", top: 0, left: 0 }}
+          onContextMenu={(e) => e.preventDefault()}
+          onKeyDown={(e) => {
+            const items = Array.from(e.currentTarget.querySelectorAll<HTMLElement>("[role=menuitem]"));
+            const i = items.indexOf(document.activeElement as HTMLElement);
+            const go = (n: number) => { e.preventDefault(); items[(n + items.length) % items.length]?.focus(); };
+            if (e.key === "ArrowDown") go(i + 1);
+            else if (e.key === "ArrowUp") go(i < 0 ? -1 : i - 1);
+            else if (e.key === "Home") go(0);
+            else if (e.key === "End") go(-1);
+            else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close("block"); }
+            else if (e.key === "Tab") { e.preventDefault(); close("block"); }
+          }}>
+          <BlockMenuItems ids={at.ids} close={() => close("canvas")} onLock={() => setLock(store.block(at.ids[0]) ?? null)} />
+        </div>
+      )}
+      {lock && <LockDialog block={lock} onClose={() => setLock(null)} />}
+    </>
   );
 }
 

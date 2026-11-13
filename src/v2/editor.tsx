@@ -10,6 +10,7 @@ import { Canvas, type Device } from "./canvas/canvas";
 import { EditorContext, EditorUi, useEditor, useEditorState, useUiTick, type EditorContextValue } from "./context";
 import type { EditorHost } from "./core/host";
 import { InserterPanel, InserterPopover } from "./ui/inserter";
+import { SectionAdder } from "./ui/section-adder";
 import { AiWrite } from "./ui/ai";
 import { labelsV2, type V2Labels } from "./labels";
 import { localesVersion, onLocalesChange } from "../i18n";
@@ -20,7 +21,7 @@ import { ListView } from "./ui/list-view";
 import { PrefsStore, usePrefs, type PrefsStorage } from "./prefs";
 import { Breadcrumbs, CodeEditor, MoreMenu } from "./ui/options";
 import { EditorStore, type DocRecord } from "./core/store";
-import { BlockToolbar, DropIndicator, ToolButton } from "./ui/toolbar";
+import { BlockContextMenu, BlockToolbar, DropIndicator, ToolButton } from "./ui/toolbar";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 
@@ -181,7 +182,8 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
   const [left, setLeft] = useState<"inserter" | "list" | null>(() => (ctx.prefs.get().showListView ? "list" : null));
   useEffect(() => { ctx.ui.browseAll = () => setLeft("inserter"); return () => { ctx.ui.browseAll = null; }; }, [ctx.ui]);
   const [right, setRight] = useState(true);
-  const [device, setDevice] = useState<Device>(defaultDevice ?? "desktop");
+  // Khổ ban đầu do ứng dụng chọn; sau đó dùng chung qua ui.device (DeviceSwitcher, tab Kiểu dáng)
+  useEffect(() => { if (defaultDevice) ctx.ui.setDevice(defaultDevice); }, [ctx.ui, defaultDevice]);
   const [saving, setSaving] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   useEditorState((s) => s.revision);
@@ -235,9 +237,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
           {p.mode === "visual" && <ZoomToggle />}
         </div>
         <div className="ecx-topbar-end">
-          <div className="ecx-tool-group" role="group" aria-label={labels.devices}>
-            {([["desktop", Monitor, labels.deviceDesktop], ["tablet", Tablet, labels.deviceTablet], ["mobile", Smartphone, labels.deviceMobile]] as const).map(([d, I, text]) => <ToolButton key={d} label={text} active={device === d} onClick={() => setDevice(d)}><I className="ecx-icon" /></ToolButton>)}
-          </div>
+          <DeviceSwitcher />
           {!p.distractionFree && <ToolButton label={labels.settings} active={right} onClick={() => setRight(!right)}><PanelRight className="ecx-icon" /></ToolButton>}
           {actions}
           <MoreMenu extra={menuExtra} />
@@ -252,11 +252,23 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
       {p.fixedToolbar && p.mode === "visual" && <div className="ecx-fixed-toolbar"><BlockToolbar placement="fixed" /></div>}
       <div className="ecx-body">
         {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel onClose={() => setLeft(null)} /> : <ListView />}</aside>}
-        <main className="ecx-main">{p.mode === "code" ? <CodeEditor /> : <Canvas device={device} before={canvasBefore} />}</main>
+        <main className="ecx-main">{p.mode === "code" ? <CodeEditor /> : <Canvas before={canvasBefore} />}</main>
         {right && !p.distractionFree && <aside className="ecx-right"><Inspector blockStyles={blockStyles} /></aside>}
       </div>
       {p.showBreadcrumbs && !p.distractionFree && p.mode === "visual" && <Breadcrumbs />}
       <EditorOverlays />
+    </div>
+  );
+}
+
+/** Chọn khổ màn hình đang soạn (máy tính / máy tính bảng / điện thoại): khung soạn và tab Kiểu dáng cùng theo. */
+export function DeviceSwitcher() {
+  const { ui, labels } = useEditor();
+  useUiTick();
+  return (
+    <div className="ecx-tool-group" role="group" aria-label={labels.devices}>
+      {([["desktop", Monitor, labels.deviceDesktop], ["tablet", Tablet, labels.deviceTablet], ["mobile", Smartphone, labels.deviceMobile]] as const).map(([d, I, text]) =>
+        <ToolButton key={d} label={text} active={ui.device === d} aria-pressed={ui.device === d} onClick={() => ui.setDevice(d)}><I className="ecx-icon" /></ToolButton>)}
     </div>
   );
 }
@@ -292,7 +304,9 @@ export function EditorOverlays() {
   return (
     <>
       <BlockToolbar />
+      <BlockContextMenu />
       <InserterPopover />
+      <SectionAdder />
       <AiWrite />
       <DropIndicator />
       <LiveRegion />

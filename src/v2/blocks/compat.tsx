@@ -37,6 +37,7 @@ export function syncPluginBlocks(registry: BlockTypeRegistry): () => void {
         description: def.description ? t(def.description) : undefined,
         icon: o.icon ?? Blocks,
         templateOnly: o.templateOnly,
+        ...(o.styleGroups ? { supports: { style: o.styleGroups.length ? o.styleGroups : false } } : {}),
         edit: o.edit ? wrapV1Edit(o.edit) : undefined,
         // Không có xem trước riêng và không chứa khối con → website vẽ bằng renderer của theme/plugin (viết khối một lần)
         serverRender: !o.edit && def.content !== "blocks",

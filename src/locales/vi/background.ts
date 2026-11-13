@@ -1,0 +1,22 @@
+/** Mục Ảnh nền trong tab Kiểu dáng (ảnh, cách phủ, điểm lấy nét, lặp, cố định, lớp phủ). */
+export const background = {
+  title: "Ảnh nền",
+  image: "Ảnh",
+  choose: "Chọn ảnh",
+  replace: "Đổi ảnh",
+  remove: "Bỏ ảnh",
+  url: "Đường dẫn ảnh",
+  inherited: "Đang dùng ảnh của khổ lớn hơn. Chọn ảnh khác để thay riêng cho khổ này.",
+  size: "Cách phủ",
+  cover: "Phủ kín",
+  cover_help: "Ảnh phủ kín khối, có thể bị cắt bớt",
+  contain: "Vừa khung",
+  contain_help: "Hiện trọn ảnh, có thể còn khoảng trống",
+  auto: "Gốc",
+  auto_help: "Giữ kích thước gốc của ảnh",
+  focal: "Điểm lấy nét",
+  repeat: "Lặp lại ảnh",
+  fixed: "Cố định khi cuộn (parallax, chỉ trên máy tính)",
+  overlay: "Lớp phủ",
+  opacity: "Độ đậm lớp phủ",
+};

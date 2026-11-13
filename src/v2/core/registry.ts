@@ -96,7 +96,8 @@ export interface BlockType {
   plain?: boolean;
   /** Khối chữ: chữ gợi ý khi trống. */
   placeholder?: string | ((labels: V2Labels) => string);
-  supports?: { style?: boolean; anchor?: boolean; className?: boolean; blockStyle?: boolean; align?: boolean };
+  /** style: false = không có tab Kiểu dáng; mảng nhóm ("typography", "color", "background"…) = chỉ hiện các nhóm đó (xem ui/style-supports.ts). */
+  supports?: { style?: boolean | string[]; anchor?: boolean; className?: boolean; blockStyle?: boolean; align?: boolean };
   /** Tóm tắt một dòng (cây khối, khung chung). */
   summary?(attrs: Record<string, any>): string | undefined;
 }

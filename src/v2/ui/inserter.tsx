@@ -7,7 +7,7 @@ import { useEditor, useUiTick, type InserterRequest } from "../context";
 import { cloneBlock, inlineLength, makeBlock, type BNode } from "../core/model";
 import type { BlockType } from "../core/registry";
 import { canContain } from "../core/structure";
-import { startDragNew } from "../canvas/dnd";
+import { startDragBlocks, startDragNew } from "../canvas/dnd";
 import { usePrefs } from "../prefs";
 import { onPatternsChange, patternBlocks, registeredPatterns, type Pattern } from "../core/patterns";
 import { useSyncExternalStore } from "react";
@@ -115,6 +115,9 @@ export function InserterPopover() {
   const options = useAllowed(req, useInsertOptions());
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
+  // Giữa hai section cấp trên cùng (nút "+ Thêm section"): có thêm tab Mẫu để chèn cả section tại chỗ
+  const [patternTab, setPatternTab] = useState(false);
+  useEffect(() => { setPatternTab(false); }, [req]);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const q = req?.mode === "slash" ? req.query ?? "" : query;
@@ -168,7 +171,15 @@ export function InserterPopover() {
             else if (e.key === "Escape") { e.preventDefault(); ui.openInserter(null); }
           }} />
       )}
-      {quick ? (
+      {req.mode === "between" && !req.parentId && (
+        <div className="ecx-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={!patternTab} className={!patternTab ? "is-active" : undefined} onClick={() => setPatternTab(false)}>{labels.blocks}</button>
+          <button type="button" role="tab" aria-selected={patternTab} className={patternTab ? "is-active" : undefined} onClick={() => setPatternTab(true)}>{labels.patterns}</button>
+        </div>
+      )}
+      {patternTab ? (
+        <div className="ecx-inserter-list ecx-inserter-patterns"><PatternList query={query} at={req} onInserted={() => ui.openInserter(null)} /></div>
+      ) : quick ? (
         <>
           <div className="ecx-quick-grid" role="listbox" aria-label={labels.blocks}>
             {quick.map((o, i) => (
@@ -312,8 +323,9 @@ export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; on
 }
 
 /** Mẫu (lõi, theme, plugin, người dùng tạo): bấm chèn sau khối đang chọn; mẫu đồng bộ chèn thành tham chiếu. */
-function PatternList({ query, onInserted }: { query: string; onInserted?(): void }) {
-  const { store, labels } = useEditor();
+function PatternList({ query, onInserted, at }: { query: string; onInserted?(): void; at?: { docId: string; parentId: string | null; index: number } }) {
+  const ctx = useEditor();
+  const { store, labels } = ctx;
   const all = useSyncExternalStore(onPatternsChange, registeredPatterns, registeredPatterns);
   const q = norm(query.trim());
   const list = q ? all.filter((p) => norm(`${p.title} ${p.keywords ?? ""} ${p.category}`).includes(q)) : all;
@@ -324,8 +336,11 @@ function PatternList({ query, onInserted }: { query: string; onInserted?(): void
     const nodes = patternBlocks(p);
     if (!nodes.length) return;
     const cur = store.currentIds[store.currentIds.length - 1];
-    if (cur && store.locate(cur)) store.insertAfter(cur, nodes, { focus: false });
+    if (at) store.insert(at.docId, at.parentId, at.index, nodes, { focus: false });
+    else if (cur && store.locate(cur)) store.insertAfter(cur, nodes, { focus: false });
     else { const docId = store.activeDocId; store.insert(docId, null, store.getState().docs[docId].blocks.length, nodes, { focus: false }); }
+    // Mẫu nhiều khối: chọn khối đầu (không chọn cả nhóm → tab Cài đặt có nội dung, không chồng nhãn)
+    if (nodes.length > 1) store.select([nodes[0].id]);
     onInserted?.();
   };
   if (!list.length) return <p className="ecx-muted">{labels.noResults}</p>;
@@ -335,7 +350,7 @@ function PatternList({ query, onInserted }: { query: string; onInserted?(): void
         <section key={c}>
           <h3 className="ecx-panel-heading">{catName(c)}</h3>
           {list.filter((p) => p.category === c).map((p) => (
-            <button key={p.name} type="button" className="ecx-pattern-card" data-pattern={p.name} onClick={() => insert(p)}>
+            <button key={p.name} type="button" className="ecx-pattern-card" data-pattern={p.name} onPointerDown={(e) => startDragBlocks(ctx, e, () => patternBlocks(p))} onClick={() => insert(p)}>
               <strong>{p.title}</strong>{p.description && <span className="ecx-muted">{p.description}</span>}
             </button>
           ))}

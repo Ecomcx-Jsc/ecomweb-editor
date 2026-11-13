@@ -98,7 +98,7 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     await open(page, "?doc=post");
     await page.waitForTimeout(500); // khung đổi bề rộng có hiệu ứng .25s
     const m = await page.evaluate(() => { const f = document.querySelector("iframe[data-ecx-canvas]") as HTMLIFrameElement; return { inner: f.contentWindow!.innerWidth, shown: Math.round(f.getBoundingClientRect().width) }; });
-    expect(m.inner).toBeGreaterThanOrEqual(1100);
+    expect(m.inner).toBeGreaterThanOrEqual(1025); // DESKTOP_MIN_WIDTH: > 1024 (CSS tablet của website), thấp nhất có thể để ít phải thu nhỏ
     expect(m.shown).toBeLessThanOrEqual(900); // vẫn nằm gọn trong trang
   });
 
@@ -136,17 +136,18 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     expect(attrs).toMatchObject({ width: 400, height: 200, mediaId: 7, alt: "ALT-CU" }); // media giả lập trả 400×200
   });
 
-  test("ô cỡ chữ tuỳ chỉnh: chữ rác bị đánh dấu sai và không lưu; 18px hợp lệ", async ({ page }) => {
+  test("ô cỡ chữ tuỳ chỉnh: ô số + đơn vị + thanh kéo; xoá số thì bỏ giá trị", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
     await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
-    const input = insp(page).getByLabel(/Cỡ chữ: /).first();
-    await input.fill("abc"); await input.blur();
-    await expect(input).toHaveAttribute("aria-invalid", "true");
-    expect((await blockOf(page, "paragraph")).attrs.style?.fontSize).toBeUndefined();
-    await input.fill("18px"); await input.blur();
-    await expect(input).not.toHaveAttribute("aria-invalid", "true");
+    const input = insp(page).getByLabel(/^Cỡ chữ: tuỳ chỉnh$/).first();
+    await expect(input).toHaveAttribute("type", "number"); // ô số: không gõ được chữ rác
+    await input.fill("18");
     expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "18px" });
+    await insp(page).getByLabel(/^Cỡ chữ: tuỳ chỉnh: đơn vị$/).first().selectOption("rem");
+    expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "18rem" });
+    await input.fill("");
+    expect((await blockOf(page, "paragraph")).attrs.style?.fontSize).toBeUndefined();
   });
 
   test("ô màu: chọn màu preset thì ô màu hiện đúng màu đó (không hiện như 'chưa đặt')", async ({ page }) => {

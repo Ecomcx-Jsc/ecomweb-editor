@@ -1,0 +1,22 @@
+/** Background image section of the Style tab (image, size, focal point, repeat, fixed, overlay). */
+export const background = {
+  title: "Background image",
+  image: "Image",
+  choose: "Choose image",
+  replace: "Replace",
+  remove: "Remove",
+  url: "Image URL",
+  inherited: "Using the image of the larger screen. Choose another image to override it for this screen.",
+  size: "Fit",
+  cover: "Cover",
+  cover_help: "Fill the block, the image may be cropped",
+  contain: "Contain",
+  contain_help: "Show the whole image, may leave empty space",
+  auto: "Original",
+  auto_help: "Keep the image's original size",
+  focal: "Focal point",
+  repeat: "Repeat image",
+  fixed: "Fixed while scrolling (parallax, desktop only)",
+  overlay: "Overlay",
+  opacity: "Overlay strength",
+};

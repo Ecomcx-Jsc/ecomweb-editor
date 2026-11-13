@@ -3,9 +3,9 @@
  * khung soạn là iframe mang CSS của website, sửa header/footer ngay trong template, một lịch sử hoàn tác xuyên tài liệu,
  * mỗi khối chữ là một ProseMirror nhỏ (gõ tiếng Việt ổn định). Đọc/ghi đúng định dạng của @ecomcx/ecomweb-content.
  */
-export { BlockEditor, EditorProvider, EditorOverlays, saveAll, blocksFromContent, contentFromBlocks, splitContent, type BlockEditorProps, type EditorProviderProps } from "./editor";
+export { BlockEditor, DeviceSwitcher, EditorProvider, EditorOverlays, saveAll, blocksFromContent, contentFromBlocks, splitContent, type BlockEditorProps, type EditorProviderProps } from "./editor";
 export { Canvas, DEVICE_WIDTH, type CanvasProps, type Device } from "./canvas/canvas";
-export { BlockToolbar, DropIndicator, ToolButton, Dropdown, MenuItem } from "./ui/toolbar";
+export { BlockToolbar, BlockContextMenu, DropIndicator, ToolButton, Dropdown, MenuItem } from "./ui/toolbar";
 export { InserterPanel, InserterPopover, rankOptions, useInsertOptions, type InsertOption } from "./ui/inserter";
 export { Inspector } from "./ui/inspector";
 export { AttrForm } from "./ui/attr-form";
@@ -30,7 +30,7 @@ export { registerBindingSource, unregisterBindingSource, bindingSources, Binding
 export { storeAnimation as registerAnimation, dropAnimation as unregisterAnimation, pluginAnimations, type MotionEffect } from "../shared/animation-store";
 export { defineBlock, type BlockDefinition } from "@ecomcx/ecomweb-content";
 export { registerBlock, unregisterBlock, registeredBlocks, type RegisterBlockOptions } from "../shared/block-defs";
-export { registerBlockPanel, unregisterBlockPanel, blockPanels, type BlockPanel, type BlockPanelProps } from "../shared/panel-store";
+export { registerBlockPanel, unregisterBlockPanel, blockPanels, registerBlockAction, unregisterBlockAction, onBlockReady, registerBlockAssets, type BlockPanel, type BlockPanelProps, type BlockAction, type BlockActionContext, type BlockReadyFn, type BlockAsset } from "../shared/panel-store";
 export { registerPattern, unregisterPattern, registeredPatterns, registerCorePatterns, patternNodes, PATTERN_CATEGORIES, type Pattern } from "../shared/patterns";
 export { viLabels, enLabels, labelsLegacy, type EditorLabels } from "../shared/labels";
 export { StylePanel } from "../shared/style-panel";

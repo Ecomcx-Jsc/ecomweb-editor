@@ -21,7 +21,7 @@ export function layoutFor(kind: Kind, prev?: BlockLayout): BlockLayout | undefin
   return { type: "flex", direction: { base: kind === "stack" ? "column" : "row" }, ...(prev?.justify ? { justify: prev.justify } : {}), ...(prev?.align ? { align: prev.align } : {}) };
 }
 
-export function LayoutEffectsPanel({ type, style: raw, onChange, device }: { type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device }) {
+export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects = true, hover = true }: { type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; effects?: boolean; hover?: boolean }) {
   const { labels, host } = useEditor();
   const t = useMsgs("layout");
   const style: BlockStyle = normalizeStyle(raw) ?? {};
@@ -92,7 +92,7 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device }: { typ
         </Section>
       )}
 
-      <Section title={t.effects} defaultOpen={!!(style.gradient || style.shadow || style.aspectRatio || style.position)}>
+      {effects && <Section title={t.effects} defaultOpen={!!(style.gradient || style.shadow || style.aspectRatio || style.position)}>
         <Row label={t.gradient}>
           <div className="ecx-chip-row">
             <button type="button" className={cx("ecx-chip", !style.gradient && "is-active")} onClick={() => set({ gradient: undefined })}>{t.none}</button>
@@ -124,9 +124,9 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device }: { typ
           </select>
         </Row>
         <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set({ position: e.target.checked ? { type: "sticky" } : undefined })} /> {t.sticky}</label>
-      </Section>
+      </Section>}
 
-      <Section title={t.hover} defaultOpen={!!style.hover}>
+      {hover && <Section title={t.hover} defaultOpen={!!style.hover}>
         {(["text", "background"] as const).map((k) => (
           <Row key={k} label={t[k]}>
             <ColorInput label={t[k]} value={style.hover?.color?.[k]} onChange={(v) => set({ hover: { ...style.hover, color: { ...style.hover?.color, [k]: v } } })} />
@@ -141,7 +141,7 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device }: { typ
           </select>
         </Row>
         <label className="ecx-check"><input type="checkbox" checked={!!style.hover?.lift} onChange={(e) => set({ hover: { ...style.hover, lift: e.target.checked || undefined } })} /> {t.lift}</label>
-      </Section>
+      </Section>}
     </div>
   );
 }

@@ -118,9 +118,12 @@ test.describe("bố cục + hiệu ứng", () => {
     const g = await groupOf(page);
     expect(g.attrs.style.layout.columns).toEqual({ base: 3, mobile: 1 });
     const el = c.locator(`[data-ecx-block="${g.id}"]`);
-    expect((await el.evaluate((n) => getComputedStyle(n).gridTemplateColumns)).split(" ").length).toBe(3);
-    await page.getByRole("button", { name: "Điện thoại", exact: true }).click();
+    // Khổ dùng chung: chọn Điện thoại ở tab Kiểu dáng thì khung soạn cũng thu về khổ điện thoại → thấy ngay 1 cột
     await expect.poll(async () => (await el.evaluate((n) => getComputedStyle(n).gridTemplateColumns)).split(" ").length).toBe(1);
+    // Và ngược lại: nút Máy tính trên thanh trên → khung soạn + tab Kiểu dáng về khổ máy tính
+    await page.getByRole("button", { name: "Máy tính", exact: true }).click();
+    await expect.poll(async () => (await el.evaluate((n) => getComputedStyle(n).gridTemplateColumns)).split(" ").length).toBe(3);
+    await expect(insp.getByRole("radio", { name: /Máy tính|Desktop/ }).first()).toHaveAttribute("aria-checked", "true");
   });
 
   test("nền chuyển màu (preset theme + tuỳ chỉnh), bóng, nhấc lên khi rê chuột", async ({ page }) => {

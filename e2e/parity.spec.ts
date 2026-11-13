@@ -23,9 +23,12 @@ async function loadSiteRenderer(): Promise<(content: unknown, ctx: unknown) => P
   mkdirSync(dir, { recursive: true });
   const stub = path.join(dir, "next-stub.cjs");
   writeFileSync(stub, "const C = (p) => null; module.exports = { __esModule: true, default: C, usePathname: () => '/', useRouter: () => ({}), useSearchParams: () => new URLSearchParams(), useLinkStatus: () => ({ pending: false }) };");
+  // next/link: vẽ <a> như Next.js; esbuild nạp CJS kiểu Node (default = module.exports) nên xuất chính component (theme-sdk dùng Link cho link nội bộ trong nội dung, nút, ảnh)
+  const linkStub = path.join(dir, "next-link-stub.cjs");
+  writeFileSync(linkStub, "const { createElement } = require('react'); const L = ({ prefetch, replace, scroll, ...p }) => createElement('a', p); L.useLinkStatus = () => ({ pending: false }); module.exports = L;");
   const out = path.join(dir, "rich.cjs");
   await build({ entryPoints: [path.resolve(here, "../../sdk/packages/theme-sdk/src/rich.tsx")], bundle: true, platform: "node", format: "cjs", outfile: out, jsx: "automatic",
-    external: ["react", "react-dom"], alias: { "next/navigation": stub, "next/link": stub, "next/form": stub }, logLevel: "error", nodePaths: [path.resolve(here, "../../sdk/node_modules")] });
+    external: ["react", "react-dom"], alias: { "next/navigation": stub, "next/link": linkStub, "next/form": stub }, logLevel: "error", nodePaths: [path.resolve(here, "../../sdk/node_modules")] });
   return (createRequire(import.meta.url)(out) as { renderContent: (c: unknown, x: unknown) => Promise<unknown> }).renderContent;
 }
 

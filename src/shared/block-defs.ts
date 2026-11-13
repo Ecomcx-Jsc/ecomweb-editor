@@ -22,6 +22,11 @@ export interface RegisterBlockOptions {
   translate?(text: string): string;
   /** Khối của theme: chỉ chèn được khi soạn template / phần dùng chung (host.scope = "template"), không chèn vào bài viết. */
   templateOnly?: boolean;
+  /**
+   * Nhóm của tab Kiểu dáng khối hiện: "typography" "color" "background" "spacing" "border" "effects" "hover" "motion" "visibility".
+   * Không khai → khối chứa có đủ, khối khác có mọi nhóm trừ ảnh nền. [] = không có tab Kiểu dáng.
+   */
+  styleGroups?: string[];
   /** Khối chứa khối khác: nội dung có sẵn khi chèn (mặc định một đoạn văn trống). */
   initialContent?(): Array<Record<string, unknown>>;
 }

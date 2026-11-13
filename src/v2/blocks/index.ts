@@ -6,6 +6,7 @@ import { mediaBlocks } from "./media";
 import { textBlocks } from "./text";
 import { themeBlocks } from "./theme";
 import { formBlocks } from "./form";
+import { blockDescription } from "../ui/block-descriptions";
 
 /** Tên khối theo ngôn ngữ giao diện (khối có nhãn trong bộ chữ). */
 const TITLE_KEYS: Partial<Record<string, keyof V2Labels>> = {
@@ -23,7 +24,7 @@ export function coreBlockTypes(labels: V2Labels): BlockType[] {
     const title = key ? String(labels[key]) : str(names[t.name]) ?? t.title;
     // Biến thể đứng riêng (Hàng ngang / Xếp dọc / Lưới) theo ngôn ngữ
     const variations = t.variations?.map((v) => { const vt = str(names[`${t.name}/${v.name}`]); return vt ? { ...v, title: vt } : v; });
-    return { ...t, title, variations };
+    return { ...t, title, variations, description: t.description ?? blockDescription(t.name, labels.lang) };
   });
 }
 

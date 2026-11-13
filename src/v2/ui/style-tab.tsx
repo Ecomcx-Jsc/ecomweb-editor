@@ -3,10 +3,12 @@ import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Monitor, Smartphone, 
 import { useEffect, useState, type ReactNode } from "react";
 import { labelsLegacy, type EditorLabels } from "../../shared/labels";
 import { useEditor } from "../context";
+import { BackgroundPanel } from "./background-panel";
 import { ColorInput } from "./color-field";
 import { LayoutEffectsPanel } from "./layout-panel";
 import { MotionPanel } from "./motion-panel";
 import { Section, Seg, cx } from "./style-controls";
+import { styleGroups, type StyleGroup } from "./style-supports";
 import { SpacingControl, UnitInput } from "./unit-controls";
 import { useMsgs } from "../i18n";
 
@@ -43,7 +45,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; onDeviceChange(d: Device): void;
   variants?: Array<{ name: string; label: string }>; variant?: string | null; onVariantChange?(v: string | null): void;
 }) {
-  const { host, labels } = useEditor();
+  const { host, labels, registry } = useEditor();
   const t = labelsLegacy(labels.lang);
   const ct = useMsgs("controls");
   const presets = host.presets;
@@ -86,6 +88,9 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   const row = (k: string, label: string, control: ReactNode) => (
     <div className="ecx-style-row" key={k}><span className="ecx-field-label">{label}{tag(k)}</span>{control}</div>
   );
+  // Nhóm khối hỗ trợ; nhóm đã có giá trị vẫn hiện để sửa / xoá (dữ liệu cũ, khối dán từ nơi khác)
+  const groups = styleGroups(type, registry.get(type));
+  const show = (g: StyleGroup, keys: string[]) => groups.has(g) || keys.some((k) => style[k] !== undefined);
   const appearance = `${style.fontWeight ?? ""}${style.fontStyle === "italic" ? "i" : ""}`;
 
   return (
@@ -108,7 +113,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         </div>
       )}
 
-      <Section title={t.style_typography} modified={has(TYPO)} onReset={() => reset(TYPO)} moreOpen={has(["fontFamily", "letterSpacing", "textDecoration", "textTransform"])}
+      {show("typography", TYPO) && <Section title={t.style_typography} modified={has(TYPO)} onReset={() => reset(TYPO)} moreOpen={has(["fontFamily", "letterSpacing", "textDecoration", "textTransform"])}
         more={<>
           {row("fontFamily", t.style_fontFamily,
             <select className="ecx-input" value={style.fontFamily ?? ""} aria-label={t.style_fontFamily} onChange={(e) => set("fontFamily", e.target.value || undefined)}>
@@ -122,8 +127,9 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
             options={[["none", "—", t.none], ["uppercase", "AB", t.upper], ["lowercase", "ab", t.lower], ["capitalize", "Ab", t.capitalize]]} />)}
         </>}>
         {row("fontSize", t.style_fontSize, <>
-          <Seg label={t.style_fontSize} value={get("fontSize")} onChange={(v) => set("fontSize", v)} options={sizes.map((v) => [v, v.toUpperCase(), v] as [string, string, string])} />
-          <ValueInput label={`${t.style_fontSize}: ${t.custom}`} value={sizes.includes(get("fontSize")) ? undefined : get("fontSize")} inherited={inherited("fontSize")} check={(v) => sizes.includes(v) || (ok("fontSize")(v) && /^([\d.]|(calc|clamp|min|max|var)\()/.test(v))} placeholder="18px, 1.25rem" onCommit={(v) => set("fontSize", v)} />
+          <Seg label={t.style_fontSize} value={get("fontSize")} onChange={(v) => set("fontSize", v)} options={sizes.map((v) => [v, v.toUpperCase(), presets?.fontSizes?.[v] ? `${v} · ${presets.fontSizes[v]}` : v] as [string, string, string])} />
+          {/* Cỡ tuỳ chỉnh: ô số + đơn vị + thanh kéo (preset chọn ở hàng trên; giá trị clamp() cũ hiện làm gợi ý) */}
+          <UnitInput label={`${t.style_fontSize}: ${t.custom}`} value={sizes.includes(get("fontSize")) ? undefined : get("fontSize")} placeholder={inherited("fontSize") ?? "18px"} units={["px", "rem", "em"]} max={96} onChange={(v) => set("fontSize", v)} />
         </>)}
         {row("appearance", t.style_appearance,
           <select className="ecx-input" value={appearance} aria-label={t.style_appearance} onChange={(e) => {
@@ -136,38 +142,41 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         {row("lineHeight", t.style_lineHeight, <ValueInput label={t.style_lineHeight} value={get("lineHeight")} inherited={inherited("lineHeight")} check={ok("lineHeight")} placeholder="1.5" onCommit={(v) => set("lineHeight", v == null ? undefined : Number(v))} />)}
         {row("textAlign", t.textAlign, <Seg label={t.textAlign} value={get("textAlign")} onChange={(v) => set("textAlign", v)}
           options={[["left", AlignLeft, t.alignLeft], ["center", AlignCenter, t.alignCenter], ["right", AlignRight, t.alignRight], ["justify", AlignJustify, t.alignJustify]]} />)}
-      </Section>
+      </Section>}
 
-      <Section title={t.style_color} modified={has(["color"])} onReset={() => reset(["color"])}>
+      {show("color", ["color"]) && <Section title={t.style_color} modified={has(["color"])} onReset={() => reset(["color"])}>
         {row("text", t.style_text, <ColorInput label={t.style_text} value={style.color?.text} onChange={(v) => setGroup("color", "text", v)} />)}
         {row("background", t.style_background, <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />)}
-      </Section>
+      </Section>}
 
-      <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
+      {show("background", ["background"]) && <BackgroundPanel style={raw} onChange={onChange} device={device} />}
+
+      {show("spacing", SPACING) && <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
         more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>
           row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}</>}>
         <SpacingControl label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
         <SpacingControl label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
-      </Section>
+      </Section>}
 
-      <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>
+      {show("border", ["border", "radius"]) && <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>
         {row("borderWidth", t.style_borderWidth, <UnitInput label={t.style_borderWidth} value={style.border?.width} max={20} units={["px", "em", "rem"]} onChange={(v) => setGroup("border", "width", v)} />)}
         {row("borderStyle", t.style_borderStyle, <Seg label={t.style_borderStyle} value={style.border?.style} onChange={(v) => setGroup("border", "style", v)}
           options={[["solid", "—", t.border_solid], ["dashed", "- -", t.border_dashed], ["dotted", "···", t.border_dotted]]} />)}
         {row("borderColor", t.style_borderColor, <ColorInput label={t.style_borderColor} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />)}
         {row("radius", t.style_radius, <UnitInput label={t.style_radius} value={typeof style.radius === "string" ? style.radius : undefined} max={60} units={["px", "%", "em", "rem"]} onChange={(v) => set("radius", v)} />)}
-      </Section>
+      </Section>}
 
-      <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device} />
+      <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device}
+        effects={show("effects", ["gradient", "shadow", "aspectRatio", "position"])} hover={show("hover", ["hover"])} />
 
-      <MotionPanel type={type} style={raw} onChange={onChange} />
+      {show("motion", ["motion"]) && <MotionPanel type={type} style={raw} onChange={onChange} />}
 
-      <Section title={t.style_visibility} modified={has(["hide"])} onReset={() => reset(["hide"])} defaultOpen={has(["hide"])}>
+      {show("visibility", ["hide"]) && <Section title={t.style_visibility} modified={has(["hide"])} onReset={() => reset(["hide"])} defaultOpen={has(["hide"])}>
         {(["desktop", "tablet", "mobile"] as const).map((d) => (
           <label key={d} className="ecx-check"><input type="checkbox" checked={!!style.hide?.includes(d)}
             onChange={(e) => set("hide", e.target.checked ? [...(style.hide ?? []), d] : (style.hide ?? []).filter((x) => x !== d))} /> {t[`hide_${d}`]}</label>
         ))}
-      </Section>
+      </Section>}
     </div>
   );
 }

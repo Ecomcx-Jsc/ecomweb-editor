@@ -23,7 +23,15 @@ export function startDragNew(ctx: EditorContextValue, e: ReactPointerEvent, opti
   begin(ctx, e, { ids: [], types: [option.type], create: () => option.create(), newType: option.type });
 }
 
-interface Source { ids: string[]; types: string[]; create?: () => BNode; newType?: string }
+interface Source { ids: string[]; types: string[]; create?: () => BNode | BNode[]; newType?: string }
+
+/** Kéo một mẫu (nhiều khối) từ thư viện vào khung soạn: thả = chèn cả mẫu, chọn khối đầu của mẫu. */
+export function startDragBlocks(ctx: EditorContextValue, e: ReactPointerEvent, create: () => BNode[]) {
+  if (e.button !== 0) return;
+  const sample = create();
+  if (!sample.length) return;
+  begin(ctx, e, { ids: [], types: sample.map((n) => n.type), create, newType: sample[0].type });
+}
 
 function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
   const { ui, store } = ctx;
@@ -68,7 +76,12 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     cleanup();
     ui.setDrag(null);
     if (!wasStarted || !target) return;
-    if (src.create) store.insert(target.docId, target.parentId, target.index, [src.create()]);
+    if (src.create) {
+      const made = src.create();
+      const nodes = Array.isArray(made) ? made : [made];
+      store.insert(target.docId, target.parentId, target.index, nodes);
+      if (nodes.length > 1) store.select([nodes[0].id]);
+    }
     else store.moveTo(src.ids, target.docId, target.parentId, target.index);
     // Không để click sau khi thả chèn thêm khối (thư viện khối)
     handle.addEventListener("click", (c) => { c.stopPropagation(); c.preventDefault(); }, { capture: true, once: true });
