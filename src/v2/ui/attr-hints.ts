@@ -100,7 +100,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "form.notifyEmail": { help: true },
   "formField.kind": { control: "select", options: ["text", "email", "tel", "textarea", "select", "radio", "checkbox", "consent", "number", "date"] },
   "formField.name": { label: true, help: true },
-  "formField.label": { label: true },
+  "formField.label": { label: true, help: true },
   "formField.width": { control: "segmented", options: ["full", "half"] },
   "search.showLabel": { label: true },
   "search.buttonPosition": { control: "segmented", label: true, options: ["right", "left", "below"] },

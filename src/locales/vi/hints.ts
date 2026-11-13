@@ -187,6 +187,7 @@ export const hints = {
   "formField.name.label": "Tên ô (khoá dữ liệu)",
   "formField.name.help": "Chữ thường không dấu, số, gạch dưới; dùng trong bài gửi và xuất CSV.",
   "formField.label.label": "Nhãn",
+  "formField.label.help": "Ô \"Đồng ý\": gắn link bằng [chữ](đường dẫn), vd Tôi đồng ý với [điều khoản](/dieu-khoan) và [chính sách bảo mật](/chinh-sach-bao-mat).",
   "formField.width.opt.full": "Cả hàng",
   "formField.width.opt.half": "Nửa hàng",
   "form.notifyEmail.help": "Để trống: gửi về email quản trị của website.",

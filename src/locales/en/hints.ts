@@ -187,6 +187,7 @@ export const hints = {
   "formField.name.label": "Field name (data key)",
   "formField.name.help": "Lowercase letters, digits, underscores; used in submissions and CSV export.",
   "formField.label.label": "Label",
+  "formField.label.help": "Consent field: add links with [text](path), e.g. I agree to the [terms](/terms) and the [privacy policy](/privacy).",
   "formField.width.opt.full": "Full row",
   "formField.width.opt.half": "Half row",
   "form.notifyEmail.help": "Empty: sent to the site's admin email.",
