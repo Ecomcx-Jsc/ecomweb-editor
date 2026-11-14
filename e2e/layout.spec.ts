@@ -111,8 +111,8 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
-    await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
-    // Khổ điện thoại trong bảng Kiểu dáng rồi đặt 1 cột
+    await insp.getByRole("tab", { name: "Nâng cao" }).click();
+    // Khổ điện thoại trong bảng Nâng cao (bố cục) rồi đặt 1 cột
     await insp.getByRole("radio", { name: /Điện thoại|Mobile/ }).first().click();
     await insp.getByLabel("Số cột").selectOption("1");
     const g = await groupOf(page);
@@ -134,8 +134,8 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
-    await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
-    await insp.getByRole("button", { name: "Nền & hiệu ứng" }).click();
+    // Nhóm: ô Nền ở tab Cài đặt — loại Chuyển màu
+    await insp.getByRole("radio", { name: "Chuyển màu" }).click();
     await insp.getByRole("button", { name: "brand" }).click();
     let g = await groupOf(page);
     expect(g.attrs.style.gradient).toBe("brand");
@@ -144,6 +144,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await insp.getByRole("button", { name: "Tuỳ chỉnh", exact: true }).click();
     g = await groupOf(page);
     expect(g.attrs.style.gradient).toMatch(/^linear-gradient\(135deg, #1a597b 0%, #f26251 100%\)$/);
+    await insp.getByRole("tab", { name: "Nâng cao" }).click(); // mục Nền & hiệu ứng tự mở (khối đã có chuyển màu)
     await insp.getByLabel("Đổ bóng").first().selectOption("md");
     await expect.poll(() => el.evaluate((n) => getComputedStyle(n).boxShadow)).not.toBe("none");
     await insp.getByRole("button", { name: "Khi rê chuột" }).click();

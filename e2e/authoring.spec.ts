@@ -58,7 +58,7 @@ test.describe("trải nghiệm soạn", () => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
     const insp = page.locator(".ecx-inspector");
-    await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
+    await insp.getByRole("tab", { name: "Nâng cao" }).click(); // khoảng cách: lớp chung của mọi khối (như Advanced của Elementor)
     const pad = insp.locator(".ecx-spacing").first();
     const slider = pad.locator("input[type=range]").first();
     await slider.fill("4"); // -1 = không, 0 = "0", … 4 = "lg"

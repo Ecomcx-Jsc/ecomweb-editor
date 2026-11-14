@@ -21,7 +21,40 @@ export function layoutFor(kind: Kind, prev?: BlockLayout): BlockLayout | undefin
   return { type: "flex", direction: { base: kind === "stack" ? "column" : "row" }, ...(prev?.justify ? { justify: prev.justify } : {}), ...(prev?.align ? { align: prev.align } : {}) };
 }
 
-export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects = true, hover = true }: { type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; effects?: boolean; hover?: boolean }) {
+/** Nền chuyển màu: preset của theme hoặc hai màu + góc (dùng ở mục Hiệu ứng và ô Nền). */
+export function GradientField({ value, onChange }: { value?: string; onChange(g: string | undefined): void }) {
+  const { host } = useEditor();
+  const t = useMsgs("layout");
+  const gradPresets = Object.keys(host.presets?.gradients ?? {});
+  const g = value && !gradPresets.includes(value) ? /^linear-gradient\((\d{1,3})deg, (#[0-9a-f]{3,8}) 0%, (#[0-9a-f]{3,8}) 100%\)$/i.exec(value) : null;
+  const [angle, setAngle] = useState(g ? Number(g[1]) : 135);
+  const [c1, setC1] = useState(g?.[2] ?? "#1a597b");
+  const [c2, setC2] = useState(g?.[3] ?? "#f26251");
+  const applyCustom = (a = angle, x = c1, y = c2) => onChange(normalizeGradient(`linear-gradient(${a}deg, ${x} 0%, ${y} 100%)`));
+  return (
+    <>
+      <div className="ecx-chip-row">
+        <button type="button" className={cx("ecx-chip", !value && "is-active")} onClick={() => onChange(undefined)}>{t.none}</button>
+        {gradPresets.map((name) => (
+          <button key={name} type="button" className={cx("ecx-chip ecx-chip-swatch", value === name && "is-active")} title={name} aria-label={name}
+            style={{ background: host.presets!.gradients![name] }} onClick={() => onChange(name)} />
+        ))}
+        <button type="button" className={cx("ecx-chip ecx-chip-swatch", g && "is-active")} title={t.custom}
+          style={{ background: `linear-gradient(${angle}deg, ${c1}, ${c2})` }} onClick={() => applyCustom()} />
+      </div>
+      {g && (
+        <div className="ecx-gradient-edit">
+          <label>{t.from} <input type="color" value={c1} onChange={(e) => { setC1(e.target.value); applyCustom(angle, e.target.value, c2); }} /></label>
+          <label>{t.to} <input type="color" value={c2} onChange={(e) => { setC2(e.target.value); applyCustom(angle, c1, e.target.value); }} /></label>
+          <label>{t.angle} <input type="range" min={0} max={360} step={15} value={angle} onChange={(e) => { setAngle(Number(e.target.value)); applyCustom(Number(e.target.value)); }} aria-label={t.angle} /> {angle}°</label>
+        </div>
+      )}
+    </>
+  );
+}
+
+/** `gradient` = false khi khối đã có ô Nền (chuyển màu sửa ở đó, không lặp lại ở Hiệu ứng). */
+export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects = true, hover = true, gradient = true }: { type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; effects?: boolean; hover?: boolean; gradient?: boolean }) {
   const { labels, host } = useEditor();
   const t = useMsgs("layout");
   const style: BlockStyle = normalizeStyle(raw) ?? {};
@@ -40,13 +73,6 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
     return Object.keys(next).length ? next : undefined;
   };
 
-  // Nền chuyển màu: preset của theme hoặc hai màu + góc
-  const gradPresets = Object.keys(host.presets?.gradients ?? {});
-  const g = style.gradient && !gradPresets.includes(style.gradient) ? /^linear-gradient\((\d{1,3})deg, (#[0-9a-f]{3,8}) 0%, (#[0-9a-f]{3,8}) 100%\)$/i.exec(style.gradient) : null;
-  const [angle, setAngle] = useState(g ? Number(g[1]) : 135);
-  const [c1, setC1] = useState(g?.[2] ?? "#1a597b");
-  const [c2, setC2] = useState(g?.[3] ?? "#f26251");
-  const applyCustom = (a = angle, x = c1, y = c2) => set({ gradient: normalizeGradient(`linear-gradient(${a}deg, ${x} 0%, ${y} 100%)`) });
   const shadows = ["sm", "md", "lg", "xl", ...Object.keys(host.presets?.shadows ?? {}).filter((s) => !["sm", "md", "lg", "xl"].includes(s))];
 
   return (
@@ -93,24 +119,7 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
       )}
 
       {effects && <Section title={t.effects} defaultOpen={!!(style.gradient || style.shadow || style.aspectRatio || style.position)}>
-        <Row label={t.gradient}>
-          <div className="ecx-chip-row">
-            <button type="button" className={cx("ecx-chip", !style.gradient && "is-active")} onClick={() => set({ gradient: undefined })}>{t.none}</button>
-            {gradPresets.map((name) => (
-              <button key={name} type="button" className={cx("ecx-chip ecx-chip-swatch", style.gradient === name && "is-active")} title={name} aria-label={name}
-                style={{ background: host.presets!.gradients![name] }} onClick={() => set({ gradient: name })} />
-            ))}
-            <button type="button" className={cx("ecx-chip ecx-chip-swatch", g && "is-active")} title={t.custom}
-              style={{ background: `linear-gradient(${angle}deg, ${c1}, ${c2})` }} onClick={() => applyCustom()} />
-          </div>
-          {g && (
-            <div className="ecx-gradient-edit">
-              <label>{t.from} <input type="color" value={c1} onChange={(e) => { setC1(e.target.value); applyCustom(angle, e.target.value, c2); }} /></label>
-              <label>{t.to} <input type="color" value={c2} onChange={(e) => { setC2(e.target.value); applyCustom(angle, c1, e.target.value); }} /></label>
-              <label>{t.angle} <input type="range" min={0} max={360} step={15} value={angle} onChange={(e) => { setAngle(Number(e.target.value)); applyCustom(Number(e.target.value)); }} aria-label={t.angle} /> {angle}°</label>
-            </div>
-          )}
-        </Row>
+        {gradient && <Row label={t.gradient}><GradientField value={style.gradient} onChange={(g) => set({ gradient: g })} /></Row>}
         <Row label={t.shadow}>
           <select className="ecx-input" aria-label={t.shadow} value={style.shadow ?? ""} onChange={(e) => set({ shadow: e.target.value || undefined })}>
             <option value="">—</option><option value="none">{t.none}</option>

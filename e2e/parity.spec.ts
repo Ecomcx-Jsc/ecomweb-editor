@@ -15,7 +15,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(here, "../../content/fixtures");
 const site = { name: "Test", url: "https://example.com", locale: "vi" } as never;
 // Không đưa vào: bindings-lock — nội dung gắn dữ liệu phụ thuộc nguồn dữ liệu (canvas xem trước bằng dữ liệu mẫu của host, website bằng dữ liệu thật) nên không so từng chữ.
-const FILES = ["basic-blocks", "layout-blocks", "all-core-nodes", "block-extras", "block-styles", "style-layout-effects", "style-motion", "attr-coercion"];
+const FILES = ["basic-blocks", "layout-blocks", "all-core-nodes", "block-extras", "block-styles", "style-layout-effects", "style-motion", "attr-coercion", "block-controls"];
 
 /** Renderer của website (theme-sdk/rich.tsx) gói thành CommonJS để chạy trong Node; `next/navigation` (chỉ dùng ở trình duyệt) thay bằng khung rỗng. */
 async function loadSiteRenderer(): Promise<(content: unknown, ctx: unknown) => Promise<unknown>> {

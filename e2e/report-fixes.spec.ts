@@ -82,7 +82,7 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
   test("Khoảng đệm: bỏ liên kết thì có đủ 4 cạnh, đặt riêng được một cạnh", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
-    await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
+    await insp(page).getByRole("tab", { name: "Nâng cao" }).click();
     const closed = insp(page).locator(".ecx-style-section-toggle[aria-expanded='false']");
     for (let i = 0; i < 8 && (await closed.count()); i++) await closed.first().click();
     const sp = insp(page).locator(".ecx-spacing").first();

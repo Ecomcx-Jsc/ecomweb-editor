@@ -1,6 +1,6 @@
 import { blockShell, buttonWrapShell, colorCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
 import { ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
-import type { CSSProperties } from "react";
+import { useEffect, useSyncExternalStore, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
 import { withoutOverridden } from "./inline-style";
 import { makeBlock } from "../core/model";
@@ -139,14 +139,43 @@ function AccordionEdit({ block, blockProps }: BlockEditProps) {
   return <div {...(merge(blockProps, "ecx-accordion") as object)}><InnerBlocks parent={block} /></div>;
 }
 
-function TabsEdit({ block, blockProps }: BlockEditProps) {
-  return <div {...(merge(blockProps, "ecx-tabs") as object)}><InnerBlocks parent={block} /></div>;
+/** Thẻ đang mở của từng khối tabs trên khung soạn (không lưu vào nội dung — website luôn mở thẻ đầu). */
+const openTabs = new Map<string, number>();
+const tabListeners = new Set<() => void>();
+const setOpenTab = (id: string, i: number) => { openTabs.set(id, i); tabListeners.forEach((l) => l()); };
+const useOpenTab = (id: string) => useSyncExternalStore((l) => { tabListeners.add(l); return () => { tabListeners.delete(l); }; }, () => openTabs.get(id) ?? 0);
+
+/** Tabs như website (TabsClient): thanh tiêu đề (vai trò tablist / tab) + một thẻ hiện; tiêu đề gõ ngay trên thanh, trống = "Tab N". */
+function TabsEdit({ block, blockProps, editable }: BlockEditProps) {
+  const { store } = useEditor();
+  const t = useMsgs("blockStyle");
+  const active = useOpenTab(block.id);
+  const tabs = (block.content ?? []).filter((c) => c.type === "tab");
+  return (
+    <div {...(merge(blockProps, "ecx-tabs") as object)}>
+      <div role="tablist" className="ecx-tabs-list">
+        {tabs.map((tab, i) => (
+          <div key={tab.id} role="tab" aria-selected={i === active} tabIndex={-1} className={cx("ecx-tab-button", i === active && "is-active")} onMouseDown={() => setOpenTab(block.id, i)}>
+            <RichText blockId={tab.id} field="title" tagName="span" value={String(tab.attrs.title ?? "")} onChange={(v) => store.setAttrs([tab.id], { title: v })} placeholder={t.tabTitle.replace("{n}", String(i + 1))} placeholderAlways editable={editable} />
+          </div>
+        ))}
+      </div>
+      <InnerBlocks parent={block} />
+    </div>
+  );
 }
 
-function TabEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
+function TabEdit({ block, blockProps }: BlockEditProps) {
+  const { store } = useEditor();
+  const loc = store.locate(block.id);
+  const parentId = loc?.parent?.id ?? "";
+  const index = (loc?.parent?.content ?? []).filter((c) => c.type === "tab").findIndex((c) => c.id === block.id);
+  const open = useOpenTab(parentId) === index;
+  const within = useActiveWithin(block.id);
+  // Chọn khối nằm trong thẻ đang ẩn (danh sách khối, tìm kiếm…) → mở thẻ đó
+  useEffect(() => { if (within && !open && parentId) setOpenTab(parentId, index); }, [within, open, parentId, index]);
   return (
-    <div {...(merge(blockProps, "ecx-tab", { borderLeft: "3px solid rgba(127,127,127,.4)", paddingLeft: 12, marginBlock: 8 }) as object)}>
-      <RichText blockId={block.id} field="title" tagName="strong" value={String(block.attrs.title ?? "")} onChange={(v) => setAttrs({ title: v })} placeholder="Tab…" placeholderAlways editable={editable} />
+    <div {...(merge(blockProps, "ecx-tab ecx-tab-panel", open ? undefined : { display: "none" }) as object)} role="tabpanel">
       <InnerBlocks parent={block} />
     </div>
   );
@@ -180,7 +209,8 @@ function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const drop = useFileDrop("image", select);
   const t = useMsgs("blocks"); // hook phải gọi trước mọi return sớm: chọn ảnh/màu làm đổi nhánh render
   // Chưa có ảnh lẫn màu: chỗ chọn ảnh nền hoặc màu nền (không để khối trắng trơn vô hình)
-  if (!src && !a.overlay) {
+  const st = normalizeStyle(a.style);
+  if (!src && !a.overlay && !st?.color?.background && !st?.gradient && !st?.background?.image) {
     return (
       <div {...merge(blockProps, cx("ecx-media-placeholder ecx-cover-placeholder", drop.over && "is-drop-target"))} {...drop.props}>
         <span className="ecx-placeholder-title"><ImageIcon className="ecx-icon" />{t.cover}</span>
@@ -194,11 +224,11 @@ function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
       </div>
     );
   }
-  const { overlay, opacity, fixed } = coverParts(a);
+  const { overlay, fixed, imgStyle, overlayStyle } = coverParts(a);
   return (
     <div {...shellProps(blockProps, "cover", a)}>
-      {src && !fixed && <img className="ecx-cover-img" src={src} alt={String(a.alt ?? "")} draggable={false} />}
-      {overlay && <span className="ecx-cover-overlay" aria-hidden="true" style={{ background: overlay, opacity }} />}
+      {src && !fixed && <img className="ecx-cover-img" src={src} alt={String(a.alt ?? "")} draggable={false} style={imgStyle as CSSProperties} />}
+      {overlay && <span className="ecx-cover-overlay" aria-hidden="true" style={overlayStyle as CSSProperties} />}
       <div className="ecx-cover-inner"><InnerBlocks parent={block} /></div>
     </div>
   );
@@ -270,8 +300,8 @@ export function layoutBlocks(): BlockType[] {
       variations: [
         { name: "50-50", title: "50 / 50", icon: Columns2, create: () => columns(1, 1) },
         { name: "33-33-33", title: "33 / 33 / 33", icon: Columns3, create: () => columns(1, 1, 1) },
-        { name: "30-70", title: "30 / 70", icon: LayoutPanelLeft, create: () => columns(30, 70) },
-        { name: "70-30", title: "70 / 30", icon: LayoutPanelLeft, create: () => columns(70, 30) },
+        { name: "33-66", title: "33 / 66", icon: LayoutPanelLeft, create: () => columns(33, 67) },
+        { name: "66-33", title: "66 / 33", icon: LayoutPanelLeft, create: () => columns(67, 33) },
         { name: "25x4", title: "25 / 25 / 25 / 25", icon: Columns4, create: () => columns(1, 1, 1, 1) },
       ],
       supports: { style: true, anchor: true, className: true },
@@ -311,7 +341,7 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "tabs", title: "Tabs", icon: PanelTop, category: "text", keywords: "tabs the tab chuyen doi noi dung", kind: "container", edit: TabsEdit,
-      create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
+      create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "Tab 1" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "Tab 2" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
     },
     {
       name: "tab", title: "Tab", icon: PanelTop, category: "text", keywords: "tab", kind: "container", edit: TabEdit, hidden: true, structure: { parents: ["tabs"] },

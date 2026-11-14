@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { controlsCss, defineBlockControls } from "@ecomcx/ecomweb-content";
+import { CORE_CONTROLS, controlsCss, defineBlockControls } from "@ecomcx/ecomweb-content";
 import { blockActionsFor, blockAssets, blockControls, blockPanelsFor, blockReadyFns, onBlockReady, registerBlockAction, registerBlockAssets, registerBlockPanel, unregisterBlockAction, unregisterBlockPanel } from "../src/shared/panel-store";
 
 // Plugin thử dùng cả 4 chỗ cắm (ô khai CSS ở tab Kiểu dáng cho mọi khối, onBlockReady, asset theo nhu cầu, hành động khối).
@@ -19,7 +19,15 @@ test("panel khai CSS: tab Kiểu dáng, mọi khối, CSS giống hệt website 
   assert.deepEqual(controlsCss(blockControls(), "image", attrs), site);
   assert.equal(controlsCss(blockControls(), "image", { acmeRotate: 99, acmeGlow: "red;}x{" }), null);
   unregisterBlockPanel("acme-tilt/tilt");
-  assert.equal(blockControls().length, 0);
+  assert.equal(blockControls().length, CORE_CONTROLS.length);
+});
+
+test("ô Kiểu dáng của khối lõi (1.24): khung soạn dùng đúng bộ khai báo của website → cùng class + CSS", () => {
+  const attrs = { listMarker: "check", listMarkerColor: "#e11d48", listGap: { base: "16px", mobile: "8px" } };
+  const site = controlsCss(CORE_CONTROLS, "bulletList", attrs)!;
+  assert.deepEqual(controlsCss(blockControls(), "bulletList", attrs), site);
+  assert.match(site.css, /li::marker\{color: #e11d48\}/);
+  assert.match(site.css, /@media \(max-width:640px\)/);
 });
 
 test("panel khai CSS nguy hiểm bị từ chối lúc đăng ký", () => {

@@ -14,7 +14,7 @@ async function groupInspector(page: Page) {
   await showToolbar(page);
   await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
   const insp = page.locator(".ecx-inspector");
-  await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await insp.getByRole("tab", { name: "Nâng cao" }).click();
   await insp.getByRole("button", { name: "Chuyển động" }).click();
   return { c, insp };
 }

@@ -59,7 +59,11 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "youtube.src": { label: true },
   "youtube.start": { label: true },
   "image.src": { label: true },
-  "cover.src": { label: true },
+  "cover.src": { label: true, control: "hidden" }, // ảnh, lớp phủ, cố định: ô Nền (background-panel.tsx)
+  "cover.overlay": { control: "hidden" },
+  "cover.fixed": { control: "hidden" },
+  "group.background": { control: "hidden" }, // màu nền cũ của nhóm: ô Nền (chuyển sang style.color.background khi sửa)
+  "group.textColor": { when: (a) => !!a.textColor }, // màu chữ cũ: chỉ hiện khi có giá trị — màu chữ mới ở tab Kiểu dáng
   "pullquote.citation": { label: true },
   "audio.name": { control: "hidden" },
   "heading.level": { control: "select", options: levels(1, 6), help: true },
@@ -74,7 +78,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "columns.verticalAlign": { control: "segmented", options: V_ALIGN },
   "mediaText.verticalAlign": { control: "segmented", options: V_ALIGN },
   "cover.contentAlign": { control: "segmented", options: V_ALIGN },
-  "cover.opacity": { control: "range", min: 0, max: 100, step: 5, unit: "%" },
+  "cover.opacity": { control: "hidden" },
   "mediaText.position": { control: "segmented", options: ["left", "right"] },
   "mediaText.width": { control: "range", min: 15, max: 85, step: 5, unit: "%" },
   "buttons.align": { control: "segmented", options: [...ALIGN, "space-between"] },

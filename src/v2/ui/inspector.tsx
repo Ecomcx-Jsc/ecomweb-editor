@@ -8,18 +8,27 @@ import type { BNode } from "../core/model";
 import { AttrForm, Field, attrName, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { StyleTab } from "./style-tab";
+import { BackgroundControl } from "./background-panel";
+import { BlockStyleSections } from "./block-style-panel";
+import { styleGroups } from "./style-supports";
 import { ColorInput } from "./color-field";
 import { UnitInput } from "./unit-controls";
 import { useMsgs } from "../i18n";
 
-/** Bảng cài đặt của khối đang chọn: thẻ khối, tab Cài đặt (form + phần riêng của khối), tab Kiểu dáng. */
+/** Khối "khung" (như Container / Section của Elementor): ô Nền đặt ngay tab Cài đặt — chỗ người dùng tìm đầu tiên. */
+const BG_IN_SETTINGS = new Set(["group", "column", "cover"]);
+
+/**
+ * Bảng cài đặt của khối đang chọn (như Elementor): thẻ khối, tab Cài đặt (nội dung: form + phần riêng của khối), tab Kiểu dáng
+ * (mục riêng của khối từ core-controls + ô Nền + chữ / màu) và tab Nâng cao (khoảng cách, viền, hiệu ứng, chuyển động, ẩn hiện, neo / class).
+ */
 export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<{ name: string; label: string }>> }) {
   const { store, registry, labels, ui } = useEditor();
   useUiTick();
   const t = useMsgs("controls");
   const sel = useEditorState((s) => s.selection);
   useEditorState((s) => s.revision);
-  const [tab, setTab] = useState<"settings" | "style">("settings");
+  const [tab, setTab] = useState<"settings" | "style" | "advanced">("settings");
   // Khổ dùng chung với khung soạn: chọn "Điện thoại" ở đây thì khung soạn cũng thu về khổ điện thoại
   const device: Device = ui.device === "desktop" ? "base" : ui.device;
   const setDevice = (d: Device) => ui.setDevice(d === "base" ? "desktop" : d);
@@ -32,7 +41,9 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const Icon = type?.icon ?? Blocks;
   const disabled = store.modeOf(first.id) === "disabled";
   const setAttrs = (a: Record<string, unknown>) => store.setAttrs(ids, a);
-  const Custom = same && nodes.length === 1 ? type?.inspector : undefined;
+  const single = same && nodes.length === 1;
+  const Custom = single ? type?.inspector : undefined;
+  const styled = type?.supports?.style !== false && !store.isContentOnly(first.id);
   const bindable = type?.bindable ?? CORE_BINDABLE[first.type];
   const variants = [...(CORE_BLOCK_STYLES[first.type] ?? []).map((name) => ({ name, label: (t.blockStyle as Record<string, string>)[name] ?? name })), ...(blockStyles?.[first.type] ?? [])];
   return (
@@ -45,27 +56,36 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
         <>
           <div className="ecx-tabs" role="tablist">
             <button type="button" role="tab" aria-selected={tab === "settings"} className={cx(tab === "settings" && "is-active")} onClick={() => setTab("settings")}>{labels.settings}</button>
-            {type?.supports?.style !== false && !store.isContentOnly(first.id) && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}>{t.styles}</button>}
+            {styled && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}>{t.styles}</button>}
+            {(styled || nodes.length === 1) && <button type="button" role="tab" aria-selected={tab === "advanced"} className={cx(tab === "advanced" && "is-active")} onClick={() => setTab("advanced")}>{t.advanced}</button>}
           </div>
-          {tab === "settings" ? (
+          {tab === "settings" || (tab === "style" && !styled) ? (
             <div className="ecx-panel">
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
+              {styled && single && BG_IN_SETTINGS.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
               {Custom && <Custom block={first} attrs={first.attrs} setAttrs={setAttrs} blockProps={null as never} selected editable labels={labels} />}
               {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} />}
               {nodes.length === 1 && bindable?.length && <BindingsPanel block={first} bindable={bindable} onChange={(b) => setAttrs({ bindings: b })} />}
-              {nodes.length === 1 && (
-                <details className="ecx-advanced">
-                  <summary>{t.advanced}</summary>
-                  <Field label={attrName("anchor", labels.lang) ?? "anchor"}><input className="ecx-input" value={String(first.attrs.anchor ?? "")} onChange={(e) => setAttrs({ anchor: e.target.value.replace(/[^\w-]/g, "") || undefined })} /></Field>
-                  <Field label={attrName("className", labels.lang) ?? "className"}><input className="ecx-input" value={String(first.attrs.className ?? "")} onChange={(e) => setAttrs({ className: e.target.value || undefined })} /></Field>
-                </details>
-              )}
+            </div>
+          ) : tab === "style" ? (
+            <div className="ecx-panel">
+              <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="style"
+                variants={variants.length ? variants : undefined} variant={(first.attrs.blockStyle as string) ?? null} onVariantChange={(v) => setAttrs({ blockStyle: v ?? undefined })}
+                lead={single && <>
+                  <BlockStyleSections type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />
+                  {!BG_IN_SETTINGS.has(first.type) && (styleGroups(first.type, type).has("background") || !!(first.attrs.style as { background?: unknown } | undefined)?.background) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
+                </>} />
+              {single && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} tab="style" />}
             </div>
           ) : (
             <div className="ecx-panel">
-              <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice}
-                variants={variants.length ? variants : undefined} variant={(first.attrs.blockStyle as string) ?? null} onVariantChange={(v) => setAttrs({ blockStyle: v ?? undefined })} />
-              {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} tab="style" />}
+              {styled && <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="advanced" />}
+              {nodes.length === 1 && (
+                <div className="ecx-form">
+                  <Field label={attrName("anchor", labels.lang) ?? "anchor"}><input className="ecx-input" value={String(first.attrs.anchor ?? "")} onChange={(e) => setAttrs({ anchor: e.target.value.replace(/[^\w-]/g, "") || undefined })} /></Field>
+                  <Field label={attrName("className", labels.lang) ?? "className"}><input className="ecx-input" value={String(first.attrs.className ?? "")} onChange={(e) => setAttrs({ className: e.target.value || undefined })} /></Field>
+                </div>
+              )}
             </div>
           )}
         </>

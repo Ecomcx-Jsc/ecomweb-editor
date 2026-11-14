@@ -15,6 +15,8 @@ const CORE: Record<string, StyleGroup[]> = {
   image: MEDIA, gallery: MEDIA, video: MEDIA, youtube: MEDIA, embed: MEDIA, featuredImage: MEDIA, siteLogo: MEDIA, avatar: MEDIA,
   icon: ["color", "spacing", "motion", "visibility"],
   socialLinks: ["color", "spacing", "motion", "visibility"],
+  // Màu nút (Thường / Rê chuột) ở mục Nút riêng (core-controls) — không lặp nhóm Màu chung (dữ liệu cũ có màu vẫn hiện để sửa)
+  button: NO_BACKGROUND.filter((g) => g !== "color"),
 };
 
 /**

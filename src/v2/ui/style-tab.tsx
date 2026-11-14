@@ -3,7 +3,6 @@ import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Monitor, Smartphone, 
 import { useEffect, useState, type ReactNode } from "react";
 import { labelsLegacy, type EditorLabels } from "../../shared/labels";
 import { useEditor } from "../context";
-import { BackgroundPanel } from "./background-panel";
 import { ColorInput } from "./color-field";
 import { LayoutEffectsPanel } from "./layout-panel";
 import { MotionPanel } from "./motion-panel";
@@ -41,9 +40,15 @@ function ValueInput({ value, onCommit, check, placeholder, label, inherited }: {
     onChange={(e) => setText(e.target.value)} onBlur={commit} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commit(); } }} />;
 }
 
-export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange }: {
+/**
+ * `part`: "style" = biến thể, chữ, màu (tab Kiểu dáng); "advanced" = khoảng cách, viền, bố cục / hiệu ứng, hover, chuyển động, ẩn hiện
+ * (tab Nâng cao — lớp chung của mọi khối như Advanced của Elementor); bỏ trống = tất cả. Ô Nền vẽ ở BackgroundControl.
+ */
+export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange, part, lead }: {
   type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; onDeviceChange(d: Device): void;
-  variants?: Array<{ name: string; label: string }>; variant?: string | null; onVariantChange?(v: string | null): void;
+  variants?: Array<{ name: string; label: string }>; variant?: string | null; onVariantChange?(v: string | null): void; part?: "style" | "advanced";
+  /** Mục vẽ sau Chữ / Màu (mục riêng của khối, ô Nền). */
+  lead?: ReactNode;
 }) {
   const { host, labels, registry } = useEditor();
   const t = labelsLegacy(labels.lang);
@@ -90,7 +95,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   );
   // Nhóm khối hỗ trợ; nhóm đã có giá trị vẫn hiện để sửa / xoá (dữ liệu cũ, khối dán từ nơi khác)
   const groups = styleGroups(type, registry.get(type));
-  const show = (g: StyleGroup, keys: string[]) => groups.has(g) || keys.some((k) => style[k] !== undefined);
+  const inPart = (g: StyleGroup) => !part || (part === "style") === ["typography", "color"].includes(g);
+  const show = (g: StyleGroup, keys: string[]) => inPart(g) && (groups.has(g) || keys.some((k) => style[k] !== undefined));
   const appearance = `${style.fontWeight ?? ""}${style.fontStyle === "italic" ? "i" : ""}`;
 
   return (
@@ -101,7 +107,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
           options={[["base", Monitor, t.device_base], ["tablet", Tablet, t.device_tablet], ["mobile", Smartphone, t.device_mobile]]} />
       </div>
 
-      {variants && variants.length > 0 && (
+      {part !== "advanced" && variants && variants.length > 0 && (
         <div className="ecx-style-row">
           <span className="ecx-field-label">{t.blockVariant}</span>
           <div role="radiogroup" aria-label={t.blockVariant} className="ecx-seg is-text">
@@ -146,10 +152,11 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
 
       {show("color", ["color"]) && <Section title={t.style_color} modified={has(["color"])} onReset={() => reset(["color"])}>
         {row("text", t.style_text, <ColorInput label={t.style_text} value={style.color?.text} onChange={(v) => setGroup("color", "text", v)} />)}
-        {row("background", t.style_background, <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />)}
+        {/* Khối có ô Nền: màu nền sửa ở đó (một chỗ) */}
+        {(!groups.has("background") || part === undefined) && row("background", t.style_background, <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />)}
       </Section>}
 
-      {show("background", ["background"]) && <BackgroundPanel style={raw} onChange={onChange} device={device} />}
+      {lead}
 
       {show("spacing", SPACING) && <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
         more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>
@@ -166,8 +173,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         {row("radius", t.style_radius, <UnitInput label={t.style_radius} value={typeof style.radius === "string" ? style.radius : undefined} max={60} units={["px", "%", "em", "rem"]} onChange={(v) => set("radius", v)} />)}
       </Section>}
 
-      <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device}
-        effects={show("effects", ["gradient", "shadow", "aspectRatio", "position"])} hover={show("hover", ["hover"])} />
+      {part !== "style" && <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device}
+        effects={show("effects", ["gradient", "shadow", "aspectRatio", "position"])} hover={show("hover", ["hover"])} gradient={!groups.has("background")} />}
 
       {show("motion", ["motion"]) && <MotionPanel type={type} style={raw} onChange={onChange} />}
 

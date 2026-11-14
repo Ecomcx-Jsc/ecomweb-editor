@@ -19,3 +19,15 @@ test("widget lõi có trong thư viện khối: tên theo ngôn ngữ, mô tả,
   }
   assert.equal(coreBlockTypes(labelsV2("vi")).find((x) => x.name === "counter")!.title, "Bộ đếm số");
 });
+
+test("ô Kiểu dáng lõi có trong thuộc tính khối (danh mục AI) nhưng ẩn khỏi form Cài đặt; khối chưa khai attributes giữ mô tả CORE_NODES", () => {
+  const types = Object.fromEntries(coreBlockTypes(labelsV2("vi")).map((t) => [t.name, t]));
+  assert.deepEqual(types.bulletList.attributes?.listMarker?.control, "hidden");
+  assert.ok(types.bulletList.attributes?.listMarker?.enum?.includes("check"));
+  assert.equal(types.button.attributes?.buttonBg?.type, "string");
+  assert.equal(types.image.attributes?.imageOpacity?.max, 1);
+  assert.equal(types.tabs.attributes?.align?.control, "hidden");
+  // Thuộc tính sẵn có của khối không đổi
+  assert.equal(types.heading.attributes?.level?.control, undefined);
+  assert.equal(types.spacer.attributes?.textShadow, undefined);
+});

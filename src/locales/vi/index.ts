@@ -18,8 +18,9 @@ import { legacyBasic } from "./legacy-basic";
 import { legacyDynamic } from "./legacy-dynamic";
 import { motion } from "./motion";
 import { background } from "./background";
+import { blockStyle } from "./block-style";
 import { patternLib } from "./pattern-lib";
 import { patterns } from "./patterns";
 import { shortcuts } from "./shortcuts";
 
-export const vi = { v2, legacy, attrs, background, bindings, blockDesc, blockTitles, blocks, controls, hints, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, shortcuts };
+export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, hints, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, shortcuts };

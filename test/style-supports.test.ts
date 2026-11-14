@@ -12,4 +12,5 @@ test("tab Kiểu dáng chỉ hiện nhóm khối hỗ trợ: ảnh nền cho kh�
   assert.ok(!styleGroups("image").has("typography"));
   const plugin = { name: "acme-card", kind: "atom", supports: { style: ["color", "nonsense", "border"] } } as never;
   assert.deepEqual([...styleGroups("acme-card", plugin)], ["color", "border"]);
+  assert.ok(!styleGroups("button").has("color") && styleGroups("button").has("typography")); // màu nút: mục Nút riêng
 });

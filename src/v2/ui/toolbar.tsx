@@ -99,7 +99,8 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   useLayoutEffect(() => {
     // Trong bảng: thanh công cụ neo theo cả bảng (như WordPress) — neo theo ô thì thanh đè lên hàng phía trên
     const loc0 = ids[0] ? store.locate(ids[0]) : null;
-    const table = loc0 ? [...loc0.ancestors].reverse().find((a) => store.block(a)?.type === "table") : undefined;
+    // Tab: neo theo cả khối Tabs — neo theo nội dung tab thì thanh đè lên thanh tiêu đề tab
+    const table = loc0 ? [...loc0.ancestors].reverse().find((a) => ["table", "tabs"].includes(store.block(a)?.type ?? "")) : undefined;
     const r = table ? ui.blockRect(table) : unionRect(ids.map((id) => ui.blockRect(id)));
     setRect((prev) => (prev && r && prev.x === r.x && prev.y === r.y && prev.width === r.width && prev.height === r.height ? prev : r));
   });

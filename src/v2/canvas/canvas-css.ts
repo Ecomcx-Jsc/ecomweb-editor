@@ -165,6 +165,13 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-media-actions form .ecx-input { flex: 1; }
 .ecx-media-error { color: #b42318; font: 12px var(--ecx-ui-font); margin: 6px 0 0; }
 .ecx-cover-placeholder { min-height: 220px; }
+/* Bảng: ô trống vẫn thấy lưới + có chỗ bấm dù theme bỏ viền bảng (chỉ trong trình soạn — outline không đổi bố cục) */
+.ecx-canvas-root .ecx-table table { width: 100%; border-collapse: collapse; }
+.ecx-canvas-root .ecx-table :is(td, th) { min-width: 3em; height: 2.5em; outline: 1px dashed color-mix(in srgb, currentColor 22%, transparent); outline-offset: -1px; }
+/* Tabs: thanh tiêu đề luôn thấy và bấm được (thẻ đang ẩn: display none inline) */
+.ecx-canvas-root .ecx-tabs-list { display: flex; flex-wrap: wrap; min-height: 2.5em; }
+.ecx-canvas-root .ecx-tab-button { cursor: pointer; }
+.ecx-canvas-root .ecx-tab-button [data-ecx-rich] { display: inline-block; min-width: 3em; }
 .ecx-btn-ghost { background: none; border-color: transparent; }
 /* tay nắm cột / nút thêm cột định vị theo khối cột (website không cần); nút nằm trong khối cột, góc dưới phải: không tràn khung canvas (thanh cuộn ngang) và không bị thanh công cụ nổi (ở trên khối đang chọn) che */
 .ecx-canvas-root .ecx-columns { position: relative; }

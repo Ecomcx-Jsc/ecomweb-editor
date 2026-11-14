@@ -1,3 +1,4 @@
+import { CORE_NODES, coreControlsFor, type AttrSpec, type BlockAttrSpec } from "@ecomcx/ecomweb-content";
 import { messages } from "../../i18n";
 import type { V2Labels } from "../labels";
 import type { BlockType, BlockTypeRegistry } from "../core/registry";
@@ -17,6 +18,23 @@ const TITLE_KEYS: Partial<Record<string, keyof V2Labels>> = {
   pullquote: "pullquote", cover: "cover", customHtml: "html", embed: "embed",
 };
 
+/**
+ * Ô Kiểu dáng lõi (core-controls) khai thêm vào thuộc tính của khối, ẩn khỏi form Cài đặt (sửa ở tab Kiểu dáng) — để danh mục khối
+ * gửi cho AI (aiCatalog) biết tên / giá trị hợp lệ. Khối chưa khai `attributes` giữ mô tả của CORE_NODES (cũng ẩn) như trước.
+ */
+function withStyleAttrs(t: BlockType): BlockType["attributes"] {
+  const ctl = Object.entries(coreControlsFor(t.name));
+  if (!ctl.length) return t.attributes;
+  const hidden = (s: AttrSpec): BlockAttrSpec => ({ ...s, control: "hidden" });
+  const base = t.attributes ?? Object.fromEntries(Object.entries(CORE_NODES[t.name]?.attrs ?? {}).map(([k, s]) => [k, hidden(s)]));
+  return {
+    ...base,
+    ...Object.fromEntries(ctl.map(([k, s]) => [k, hidden(s.type === "number"
+      ? { type: "number", min: s.min, max: s.max }
+      : { type: "string", ...(s.type === "enum" ? { enum: s.options?.map((o) => (typeof o === "string" ? o : o.value)) } : {}) })])),
+  };
+}
+
 export function coreBlockTypes(labels: V2Labels): BlockType[] {
   const names = messages("blockTitles", labels.lang);
   return [...textBlocks(), ...layoutBlocks(), ...mediaBlocks(), ...formBlocks(labels.lang), ...widgetBlocks(labels.lang), ...themeBlocks()].map((t) => {
@@ -25,7 +43,7 @@ export function coreBlockTypes(labels: V2Labels): BlockType[] {
     const title = key ? String(labels[key]) : str(names[t.name]) ?? t.title;
     // Biến thể đứng riêng (Hàng ngang / Xếp dọc / Lưới) theo ngôn ngữ
     const variations = t.variations?.map((v) => { const vt = str(names[`${t.name}/${v.name}`]); return vt ? { ...v, title: vt } : v; });
-    return { ...t, title, variations, description: t.description ?? blockDescription(t.name, labels.lang) };
+    return { ...t, title, variations, description: t.description ?? blockDescription(t.name, labels.lang), attributes: withStyleAttrs(t) };
   });
 }
 

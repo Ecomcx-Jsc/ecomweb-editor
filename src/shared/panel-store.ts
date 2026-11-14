@@ -1,6 +1,6 @@
 /** Kho panel plugin (registerBlockPanel) — đăng ký ở đây, trình soạn đọc. */
 import type { ComponentType } from "react";
-import { defineBlockControls, type BlockControls, type ControlSpec } from "@ecomcx/ecomweb-content";
+import { CORE_CONTROLS, defineBlockControls, type BlockControls, type ControlSpec } from "@ecomcx/ecomweb-content";
 
 /** Props của panel plugin trong tab "Khối". */
 export interface BlockPanelProps {
@@ -40,12 +40,13 @@ const listeners = new Set<() => void>();
 let snapshot: BlockPanel[] = [];
 const changed = () => {
   snapshot = [...panels.values()].sort((a, b) => (a.order ?? 10) - (b.order ?? 10));
-  controls = snapshot.flatMap((p) => { const t = typed(p); return Object.keys(t).length ? [{ id: p.id, blocks: p.blocks ?? "*", attributes: t }] : []; });
+  controls = [...CORE_CONTROLS, ...snapshot.flatMap((p) => { const t = typed(p); return Object.keys(t).length ? [{ id: p.id, blocks: p.blocks ?? "*", attributes: t }] : []; })];
   listeners.forEach((l) => l());
 };
 /** Thuộc tính có `type` + `css` → ô điều khiển khai CSS (kiểm khai báo ngay lúc đăng ký: sai → ném lỗi). */
 const typed = (p: BlockPanel) => Object.fromEntries(Object.entries(p.attributes ?? {}).filter(([, s]) => "type" in s && s.type)) as Record<string, ControlSpec>;
-let controls: BlockControls[] = [];
+// Ô Kiểu dáng của khối lõi (1.24) luôn có, ô của plugin thêm sau
+let controls: BlockControls[] = [...CORE_CONTROLS];
 export function registerBlockPanel(panel: BlockPanel) {
   const t = typed(panel);
   if (Object.keys(t).length) defineBlockControls({ id: panel.id, blocks: panel.blocks ?? "*", attributes: t });
@@ -55,7 +56,7 @@ export function unregisterBlockPanel(id: string) { const had = panels.delete(id)
 
 /** Panel áp dụng cho một loại khối. */
 export const blockPanelsFor = (type: string, tab: "block" | "style" = "block") => snapshot.filter((p) => (p.blocks === undefined || p.blocks === "*" || p.blocks.includes(type)) && (p.tab ?? "block") === tab);
-/** Ô điều khiển khai CSS của mọi panel (đầu vào của controlsCss — cùng hàm website dùng). */
+/** Ô điều khiển khai CSS: của khối lõi + của mọi panel (đầu vào của controlsCss — cùng hàm website dùng). */
 export const blockControls = () => controls;
 export const blockPanels = () => snapshot;
 export function onBlockPanelsChange(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; }
