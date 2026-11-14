@@ -81,4 +81,10 @@ export const blockDesc = {
   tableRow: "Một hàng của bảng.",
   tableHeader: "Ô tiêu đề của bảng.",
   tableCell: "Một ô của bảng.",
+  iconBox: "Icon + tiêu đề + mô tả (thẻ tính năng / dịch vụ), có thể gắn liên kết; icon nằm trên hoặc bên trái.",
+  imageBox: "Ảnh + tiêu đề + mô tả (thẻ dịch vụ / sản phẩm / chi nhánh), có thể gắn liên kết.",
+  iconList: "Danh sách có icon ở đầu mỗi dòng (lợi ích, checklist, thông tin liên hệ), dọc hoặc hàng ngang; mỗi mục có thể có liên kết.",
+  counter: "Con số nổi bật (vd 1.200+ khách hàng) đếm lên khi cuộn tới; có tiền tố / hậu tố và nhãn.",
+  testimonial: "Lời chứng thực của khách hàng: câu trích, tên, chức danh và ảnh đại diện.",
+  progressBar: "Thanh tiến độ có nhãn và phần trăm (kỹ năng, mục tiêu), chạy lên khi cuộn tới.",
 };

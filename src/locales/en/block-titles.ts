@@ -54,4 +54,10 @@ export const blockTitles = {
   queryEmpty: "No results",
   form: "Form",
   formField: "Form field",
+  iconBox: "Icon Box",
+  imageBox: "Image Box",
+  iconList: "Icon List",
+  counter: "Counter",
+  testimonial: "Testimonial",
+  progressBar: "Progress Bar",
 };

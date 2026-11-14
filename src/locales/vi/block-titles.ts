@@ -54,4 +54,10 @@ export const blockTitles = {
   queryEmpty: "Khi không có bài",
   form: "Form",
   formField: "Ô nhập",
+  iconBox: "Hộp icon",
+  imageBox: "Hộp ảnh",
+  iconList: "Danh sách icon",
+  counter: "Bộ đếm số",
+  testimonial: "Lời chứng thực",
+  progressBar: "Thanh tiến độ",
 };

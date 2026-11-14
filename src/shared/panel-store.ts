@@ -26,6 +26,8 @@ export interface BlockPanel {
   /**
    * Thuộc tính thêm vào khối (kể cả khối lõi), vd { lazy: { default: true } } — cần khai báo để trình soạn lưu được.
    * Bắt buộc có `blocks` khi khai báo thuộc tính. Website đọc được qua filter "post.blocks" hoặc renderer của plugin.
+   * Có `type` → ô tự vẽ: number/color/length/enum (sinh CSS), boolean/string/url/textarea/datetime (chỉ ô, editor 1.29).
+   * `label` và nhãn `options: [{ value, label }]` nhận "%khoá%" (admin dịch theo slug plugin, CMS ≥ 1.30).
    */
   attributes?: Record<string, { default?: unknown; label?: string } | (ControlSpec & { label?: string })>;
   /** Giao diện riêng; bỏ trống = trình soạn tự vẽ ô cho các thuộc tính có `type`. */

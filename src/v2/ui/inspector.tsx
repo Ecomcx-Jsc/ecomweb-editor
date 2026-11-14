@@ -1,5 +1,5 @@
 import type { Device } from "@ecomcx/ecomweb-content";
-import { CORE_BLOCK_STYLES } from "@ecomcx/ecomweb-content";
+import { CORE_BLOCK_STYLES, controlValue, optionValue } from "@ecomcx/ecomweb-content";
 import { Blocks } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { blockPanelsFor, onBlockPanelsChange, type BlockPanel } from "../../shared/panel-store";
@@ -92,6 +92,12 @@ function PluginPanels({ type, attrs, setAttrs, tab = "block" }: { type: string; 
   );
 }
 
+/** Giá trị ISO → ô datetime-local (giờ của máy người soạn); lưu lại bằng toISOString (UTC). */
+const toLocal = (iso: unknown) => {
+  const d = typeof iso === "string" ? new Date(iso) : null;
+  return !d || Number.isNaN(d.getTime()) ? "" : new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+};
+
 /** Ô tự vẽ cho thuộc tính khai `type` của panel không có component riêng. */
 function ControlFields({ panel, attrs, setAttrs }: { panel: BlockPanel; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void }) {
   const { host } = useEditor();
@@ -109,8 +115,22 @@ function ControlFields({ panel, attrs, setAttrs }: { panel: BlockPanel; attrs: R
           <Field key={name} label={label}>
             <select className="ecx-input" value={v ?? ""} onChange={(e) => set(e.target.value)}>
               <option value="">—</option>
-              {spec.options?.map((o) => <option key={o} value={o}>{o}</option>)}
+              {spec.options?.map((o) => { const val = optionValue(o); return <option key={val} value={val}>{(typeof o === "object" && tr(o.label)) || val}</option>; })}
             </select>
+          </Field>
+        );
+        // Kiểu chỉ có ô (content 1.23): giá trị không hợp lệ (controlValue) được báo, vẫn giữ để người soạn sửa
+        const invalid = v !== undefined && v !== "" && controlValue(spec, v) === undefined;
+        if (spec.type === "boolean") return (
+          <label key={name} className="ecx-check"><input type="checkbox" checked={v === true} onChange={(e) => set(e.target.checked || undefined)} /> {label}</label>
+        );
+        if (spec.type === "string" || spec.type === "url" || spec.type === "textarea" || spec.type === "datetime") return (
+          <Field key={name} label={label}>
+            {spec.type === "textarea"
+              ? <textarea className="ecx-input" rows={4} maxLength={spec.maxLength ?? 5000} value={typeof v === "string" ? v : ""} aria-invalid={invalid || undefined} onChange={(e) => set(e.target.value)} />
+              : spec.type === "datetime"
+                ? <input className="ecx-input" type="datetime-local" value={toLocal(v)} aria-invalid={invalid || undefined} onChange={(e) => set(e.target.value ? new Date(e.target.value).toISOString() : undefined)} />
+                : <input className="ecx-input" type={spec.type === "url" ? "url" : "text"} maxLength={spec.type === "string" ? spec.maxLength ?? 200 : 2048} value={typeof v === "string" ? v : ""} aria-invalid={invalid || undefined} onChange={(e) => set(e.target.value)} />}
           </Field>
         );
         return (

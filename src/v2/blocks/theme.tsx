@@ -1,5 +1,6 @@
 import { Star, AlignLeft, ArrowLeftRight, CalendarDays, ChevronsRight, Heading1, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { ICON_PATHS } from "@ecomcx/ecomweb-content";
 import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
 import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
 import type { DynamicPost, QueryArgs } from "../core/host";
@@ -153,7 +154,8 @@ function LoginOutEdit({ block, blockProps }: BlockEditProps) {
 }
 function IconEdit({ block, blockProps }: BlockEditProps) {
   const size = Math.min(128, Math.max(12, Number(block.attrs.size) || 24));
-  return <div {...merge(blockProps, "ecx-icon-block", align(block.attrs))}><span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><Star width={size} height={size} />{String(block.attrs.name ?? "star")}</span></div>;
+  const path = ICON_PATHS[String(block.attrs.name ?? "star")] ?? ICON_PATHS.star;
+  return <div {...merge(blockProps, "ecx-icon-block", align(block.attrs))}><svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={path} /></svg></div>;
 }
 function FootnotesEdit({ block, blockProps }: BlockEditProps) {
   return <aside {...merge(blockProps, "ecx-footnotes")}>{block.attrs.title ? <p className="ecx-footnotes-title">{String(block.attrs.title)}</p> : null}<ol><li>Chú thích 1</li><li>Chú thích 2</li></ol></aside>;

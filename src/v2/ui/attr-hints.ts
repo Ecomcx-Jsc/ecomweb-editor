@@ -1,3 +1,4 @@
+import { ICON_NAMES } from "@ecomcx/ecomweb-content";
 import { format, messages } from "../../i18n";
 import type { ChoiceKind } from "../core/host";
 
@@ -118,7 +119,20 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "loginout.logoutText": { label: true },
   "pageList.parentId": { label: true },
   "archives.showCount": { label: true },
-  "icon.name": { control: "select", options: ["check", "x", "star", "heart", "arrowRight", "phone", "mail", "mapPin", "clock", "info", "alert", "externalLink"] },
+  "icon.name": { control: "select", options: [...ICON_NAMES] },
+  "iconBox.icon": { control: "select", options: [...ICON_NAMES] },
+  "iconBox.position": { control: "segmented", label: true, options: ["top", "left"] },
+  "iconBox.level": { control: "select", options: levels(2, 6) },
+  "imageBox.level": { control: "select", options: levels(2, 6) },
+  "imageBox.src": { label: true },
+  "iconList.icon": { control: "select", options: [...ICON_NAMES] },
+  "iconList.layout": { control: "segmented", options: ["list", "inline"] },
+  "counter.start": { label: true },
+  "counter.prefix": { label: true },
+  "counter.separator": { control: "select", label: true, options: ["none", ",", ".", "space"] },
+  "counter.duration": { help: true },
+  "testimonial.src": { label: true },
+  "progressBar.value": { control: "range", label: true, min: 0, max: 100, step: 1, unit: "%" },
   "languageSwitcher.display": { control: "segmented", options: ["inline", "dropdown"] },
   "postTerms.taxonomy": { control: "choice", choice: { kind: "taxonomy" } },
   "query.postType": { control: "choice", choice: { kind: "postType" }, when: notInherit },

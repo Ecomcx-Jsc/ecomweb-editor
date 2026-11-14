@@ -81,4 +81,10 @@ export const blockDesc = {
   tableRow: "One table row.",
   tableHeader: "Table header cell.",
   tableCell: "One table cell.",
+  iconBox: "Icon + title + description (feature / service card), optional link; icon on top or to the left.",
+  imageBox: "Image + title + description (service / product / location card), optional link.",
+  iconList: "List with an icon at the start of each line (benefits, checklist, contact details), vertical or inline; each item can link.",
+  counter: "Highlighted number (e.g. 1,200+ customers) that counts up when scrolled into view; prefix / suffix and label.",
+  testimonial: "Customer testimonial: quote, name, role and avatar.",
+  progressBar: "Labelled progress bar with a percentage (skills, goals) that fills when scrolled into view.",
 };

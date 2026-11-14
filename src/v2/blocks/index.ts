@@ -6,6 +6,7 @@ import { mediaBlocks } from "./media";
 import { textBlocks } from "./text";
 import { themeBlocks } from "./theme";
 import { formBlocks } from "./form";
+import { widgetBlocks } from "./widgets";
 import { blockDescription } from "../ui/block-descriptions";
 
 /** Tên khối theo ngôn ngữ giao diện (khối có nhãn trong bộ chữ). */
@@ -18,7 +19,7 @@ const TITLE_KEYS: Partial<Record<string, keyof V2Labels>> = {
 
 export function coreBlockTypes(labels: V2Labels): BlockType[] {
   const names = messages("blockTitles", labels.lang);
-  return [...textBlocks(), ...layoutBlocks(), ...mediaBlocks(), ...formBlocks(labels.lang), ...themeBlocks()].map((t) => {
+  return [...textBlocks(), ...layoutBlocks(), ...mediaBlocks(), ...formBlocks(labels.lang), ...widgetBlocks(labels.lang), ...themeBlocks()].map((t) => {
     const key = TITLE_KEYS[t.name];
     const str = (v: unknown) => (typeof v === "string" ? v : undefined);
     const title = key ? String(labels[key]) : str(names[t.name]) ?? t.title;
