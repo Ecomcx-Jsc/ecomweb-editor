@@ -8,56 +8,86 @@ import type { BlockEditProps, BlockTransform, BlockType } from "../core/registry
 import { RichText } from "../text/rich-text";
 import { useActiveWithin } from "./resize";
 import { BoundText, useBindingPreview } from "../ui/bindings";
+import { useMsgs } from "../i18n";
+import { useEditor } from "../context";
 
 // Căn chữ lấy từ vỏ dùng chung với website: căn trái không in style (trước đây canvas in thừa)
 const align = (a: Record<string, unknown>, type = "paragraph"): CSSProperties | undefined => blockShell(type, a)?.style as CSSProperties | undefined;
 const HEADING_ICONS = [Heading1, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6];
 
-function ParagraphEdit({ block, blockProps, editable, labels }: BlockEditProps) {
+function ParagraphEdit({ block, blockProps, editable }: BlockEditProps) {
   const bound = useBindingPreview(block, "content");
+  const tp = useMsgs("placeholders");
+  const { store } = useEditor();
   if (bound.bound) return <BoundText tagName="p" preview={bound} blockProps={blockProps} style={align(block.attrs)} />;
-  return <RichText blockId={block.id} value={block.inline} tagName="p" blockProps={blockProps} style={align(block.attrs)} placeholder={labels.typeSlash} editable={editable} />;
+  // Gợi ý theo vai trò: mục danh sách / việc khác đoạn văn thường
+  const parent = store.locate(block.id)?.parent?.type;
+  const ph = parent === "listItem" ? tp.listItem : parent === "taskItem" ? tp.taskItem : tp.paragraph;
+  return <RichText blockId={block.id} value={block.inline} tagName="p" blockProps={blockProps} style={align(block.attrs)} placeholder={ph} placeholderAlways editable={editable} />;
 }
 
-function HeadingEdit({ block, blockProps, editable, labels }: BlockEditProps) {
+function HeadingEdit({ block, blockProps, editable }: BlockEditProps) {
+  const tp = useMsgs("placeholders");
   const level = Math.min(6, Math.max(1, Number(block.attrs.level) || 2));
   const bound = useBindingPreview(block, "content");
   if (bound.bound) return <BoundText tagName={`h${level}`} preview={bound} blockProps={blockProps} style={align(block.attrs, "heading")} />;
-  return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={blockProps} style={align(block.attrs, "heading")} placeholder={labels.heading} placeholderAlways editable={editable} />;
+  return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={blockProps} style={align(block.attrs, "heading")} placeholder={tp.heading} placeholderAlways editable={editable} />;
 }
 
-function CodeEdit({ block, blockProps, editable, labels }: BlockEditProps) {
+const CODE_LANGS = ["html", "css", "javascript", "typescript", "json", "bash", "python", "php", "sql", "csharp", "yaml", "markdown"];
+function CodeEdit({ block, blockProps, editable, setAttrs }: BlockEditProps) {
   const lang = typeof block.attrs.language === "string" ? block.attrs.language : undefined;
+  const tp = useMsgs("placeholders");
+  const active = useActiveWithin(block.id);
   return (
     <pre {...blockProps}>
-      <RichText blockId={block.id} value={block.inline} tagName="code" className={lang ? `language-${lang}` : undefined} multiline plain placeholder={labels.codeBlock} placeholderAlways editable={editable} />
+      {/* Chọn ngôn ngữ ngay trên khối (chỉ trình soạn) */}
+      {editable && active && (
+        <label className="ecx-ph-corner" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+          <span className="ecx-ph-label">{tp.language}</span>
+          <select className="ecx-input" value={lang ?? ""} onChange={(e) => setAttrs({ language: e.target.value || undefined })}>
+            <option value="">{tp.languageAuto}</option>
+            {[...new Set([...(lang ? [lang] : []), ...CODE_LANGS])].map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </label>
+      )}
+      <RichText blockId={block.id} value={block.inline} tagName="code" className={lang ? `language-${lang}` : undefined} multiline plain placeholder={tp.code} placeholderAlways editable={editable} />
     </pre>
   );
 }
 
-function PreformattedEdit({ block, blockProps, editable, labels }: BlockEditProps) {
-  return <RichText blockId={block.id} value={block.inline} tagName="pre" className="ecx-pre" blockProps={blockProps} breakOnEnter placeholder={labels.preformatted} placeholderAlways editable={editable} />;
+function PreformattedEdit({ block, blockProps, editable }: BlockEditProps) {
+  const tp = useMsgs("placeholders");
+  return <RichText blockId={block.id} value={block.inline} tagName="pre" className="ecx-pre" blockProps={blockProps} breakOnEnter placeholder={tp.preformatted} placeholderAlways editable={editable} />;
 }
 
-function PullquoteEdit({ block, blockProps, editable, labels, setAttrs }: BlockEditProps) {
-  const active = useActiveWithin(block.id);
+function PullquoteEdit({ block, blockProps, editable, setAttrs }: BlockEditProps) {
+  const tp = useMsgs("placeholders");
   const cite = blockCitation(block.attrs) ?? "";
   const sh = blockShell("pullquote", block.attrs)!;
   return (
     <figure {...blockProps} className={`${blockProps.className} ${sh.className}`}>
-      <blockquote><RichText blockId={block.id} value={block.inline} tagName="p" placeholder={labels.pullquote} placeholderAlways editable={editable} /></blockquote>
-      {/* website chỉ in nguồn khi có chữ: canvas chỉ hiện ô nguồn trống lúc đang chọn khối */}
-      {(cite || (active && editable)) && <RichText blockId={block.id} field="citation" tagName="figcaption" value={cite} onChange={(v) => setAttrs({ citation: v })} placeholder={labels.caption} editable={editable} />}
+      <blockquote><RichText blockId={block.id} value={block.inline} tagName="p" placeholder={tp.quote} placeholderAlways editable={editable} /></blockquote>
+      {/* website chỉ in nguồn khi có chữ: trình soạn luôn có ô người nói để thấy chỗ gõ */}
+      {(cite || editable) && <RichText blockId={block.id} field="citation" tagName="figcaption" value={cite} onChange={(v) => setAttrs({ citation: v })} placeholder={tp.speaker} placeholderAlways editable={editable} />}
     </figure>
   );
 }
 
-function ListEdit({ block, blockProps }: BlockEditProps) {
+function ListEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   const Tag = block.type === "orderedList" ? "ol" : "ul";
   const start = Number(block.attrs.start);
+  const tp = useMsgs("placeholders");
+  const active = useActiveWithin(block.id);
   return (
     <Tag {...(blockProps as object)} className={`${blockProps.className}${block.type === "taskList" ? " ecx-task-list task-list" : ""}`} start={Tag === "ol" && start > 1 ? start : undefined}>
       <InnerBlocks parent={block} appender="none" />
+      {/* Số bắt đầu chỉnh ngay trên khối (chỉ khi đang thao tác trong danh sách số) */}
+      {Tag === "ol" && editable && active && (
+        <li className="ecx-ph-corner is-list" contentEditable={false} onMouseDown={(e) => e.stopPropagation()} role="presentation">
+          <label><span className="ecx-ph-label">{tp.startAt}</span> <input className="ecx-input" type="number" min={1} value={start > 0 ? start : 1} onChange={(e) => setAttrs({ start: Math.max(1, Number(e.target.value) || 1) })} /></label>
+        </li>
+      )}
     </Tag>
   );
 }
@@ -75,13 +105,14 @@ function TaskItemEdit({ block, blockProps, setAttrs, editable }: BlockEditProps)
   );
 }
 
-function QuoteEdit({ block, blockProps, editable, setAttrs, labels }: BlockEditProps) {
+function QuoteEdit({ block, blockProps, editable, setAttrs }: BlockEditProps) {
   const cite = blockCitation(block.attrs);
-  // Website in <cite> sau nội dung khi có nguồn: canvas cũng vậy (sửa tại chỗ); đặt / xoá nguồn ở bảng cài đặt khối
+  const tp = useMsgs("placeholders");
+  // Website in <cite> sau nội dung khi có nguồn: trình soạn luôn có ô nguồn ("— Thêm nguồn…") để sửa tại chỗ
   return (
     <blockquote {...blockProps}>
       <InnerBlocks parent={block} />
-      {cite !== undefined && <RichText blockId={block.id} field="citation" tagName="cite" value={cite} onChange={(v) => setAttrs({ citation: v || undefined })} placeholder={labels.caption} editable={editable} />}
+      {(cite !== undefined || editable) && <RichText blockId={block.id} field="citation" tagName="cite" value={cite ?? ""} onChange={(v) => setAttrs({ citation: v || undefined })} placeholder={tp.citation} placeholderAlways editable={editable} />}
     </blockquote>
   );
 }

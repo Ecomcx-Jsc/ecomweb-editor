@@ -1,13 +1,14 @@
 import { blockShell, embedInfo, isSafeUrl } from "@ecomcx/ecomweb-content";
 import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Play, Globe, X } from "lucide-react";
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { useEditor } from "../context";
 import { AiAltButton } from "../ui/ai";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { ImageHandle } from "./resize";
-import { MediaActions, mediaAttrs, useFileDrop } from "./media-actions";
+import { mediaAttrs } from "../ui/media-actions";
+import { LinkPlaceholder, MediaPlaceholder } from "../ui/placeholders";
 import type { MediaItem, MediaKind } from "../../shared/types";
 import { useMsgs } from "../i18n";
 import { format } from "../../i18n";
@@ -15,48 +16,44 @@ import { format } from "../../i18n";
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const safe = (u: unknown) => (typeof u === "string" && isSafeUrl(u) ? u : "");
 
-/** Ô trống của khối media: chọn từ thư viện hoặc dán đường dẫn. */
-function MediaPlaceholder({ blockId, kind, icon: Icon, title, blockProps }: { blockId: string; kind: MediaKind; icon: typeof ImageIcon; title: string; blockProps: BlockEditProps["blockProps"] }) {
-  const { store, labels } = useEditor();
-  const select = (items: MediaItem[]) => store.setAttrs([blockId], mediaAttrs(kind, items));
-  const drop = useFileDrop(kind, select);
-  return (
-    <div {...blockProps} {...drop.props} className={cx(blockProps.className, "ecx-media-placeholder", drop.over && "is-drop-target")}>
-      <span className="ecx-placeholder-title"><Icon className="ecx-icon" />{title}</span>
-      <p className="ecx-placeholder-hint">{labels.dropHint[kind] ?? labels.dropHint.file}</p>
-      <MediaActions kind={kind} onSelect={select} onUrl={kind === "gallery" ? undefined : (url) => store.setAttrs([blockId], { src: url })} />
-    </div>
-  );
+/** Ô trống của khối media: vùng kéo thả + Tải lên / Thư viện / URL (bộ ô giữ chỗ dùng chung). */
+function MediaDrop({ blockId, kind, blockProps }: { blockId: string; kind: MediaKind; blockProps: BlockEditProps["blockProps"] }) {
+  const { store } = useEditor();
+  return <MediaPlaceholder kind={kind} blockProps={blockProps} onSelect={(items) => store.setAttrs([blockId], mediaAttrs(kind, items))} onUrl={kind === "gallery" ? undefined : (url) => store.setAttrs([blockId], { src: url })} />;
 }
 
 function ImageAiTools({ attrs, setAttrs }: BlockEditProps) { return <AiAltButton attrs={attrs} setAttrs={setAttrs} />; }
 
-function ImageEdit({ block, blockProps, setAttrs, editable, labels, selected }: BlockEditProps) {
+function ImageEdit({ block, blockProps, setAttrs, editable, selected }: BlockEditProps) {
   const a = block.attrs;
+  const tp = useMsgs("placeholders");
   const bSrc = useBindingPreview(block, "src"), bAlt = useBindingPreview(block, "alt"), bCap = useBindingPreview(block, "caption");
   const src = bSrc.bound ? safe(bSrc.value) : safe(a.src);
   if (bSrc.bound && !src) return <figure {...blockProps} className={cx(blockProps.className, "ecx-image cms-image")}><BoundText tagName="div" className="ecx-bound-media" preview={bSrc} /></figure>;
-  if (!src) return <MediaPlaceholder blockId={block.id} kind="image" icon={ImageIcon} title={labels.image} blockProps={blockProps} />;
+  if (!src) return <MediaDrop blockId={block.id} kind="image" blockProps={blockProps} />;
   const cls = blockShell("image", a)!.className;
   return (
     <figure {...blockProps} className={cx(blockProps.className, cls)} style={{ ...(blockProps.style ?? {}), position: "relative" }}>
       {selected && editable && <ImageHandle blockId={block.id} />}
       <img src={src} alt={bAlt.bound ? bAlt.value ?? "" : String(a.alt ?? "")} data-ecx-bound={bSrc.bound ? "" : undefined} title={bSrc.bound ? bSrc.label : undefined} width={Number(a.width) || undefined} height={Number(a.height) || undefined} draggable={false} style={Number(a.width) ? { width: Number(a.width), maxWidth: "100%", height: "auto" } : undefined} />
       {bCap.bound ? <BoundText tagName="figcaption" preview={bCap} /> : (a.caption || editable) && (
-        <RichText blockId={block.id} field="caption" tagName="figcaption" value={String(a.caption ?? "")} onChange={(v) => setAttrs({ caption: v })} placeholder={labels.caption} editable={editable} />
+        <RichText blockId={block.id} field="caption" tagName="figcaption" value={String(a.caption ?? "")} onChange={(v) => setAttrs({ caption: v })} placeholder={tp.caption} editable={editable} />
       )}
     </figure>
   );
 }
 
-function GalleryEdit({ block, blockProps, labels }: BlockEditProps) {
+function GalleryEdit({ block, blockProps, setAttrs, editable, selected }: BlockEditProps) {
   const images = (Array.isArray(block.attrs.images) ? block.attrs.images : []) as Array<{ src: string; alt?: string }>;
-  if (!images.length) return <MediaPlaceholder blockId={block.id} kind="gallery" icon={Images} title="Gallery" blockProps={blockProps} />;
+  const tp = useMsgs("placeholders");
+  if (!images.length) return <MediaDrop blockId={block.id} kind="gallery" blockProps={blockProps} />;
   const cols = Math.min(6, Math.max(1, Number(block.attrs.columns) || 3));
-  void labels;
+  const add = (items: MediaItem[]) => setAttrs({ images: [...images, ...((mediaAttrs("gallery", items).images ?? []) as typeof images)] });
   return (
     <figure {...blockProps} className={cx(blockProps.className, blockShell("gallery", block.attrs)!.className)} style={{ ...(blockProps.style ?? {}), ...(blockShell("gallery", block.attrs)!.style as CSSProperties) }}>
       {images.map((im, i) => <figure key={i} className="ecx-gallery-item cms-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" }} /></figure>)}
+      {/* Có ảnh rồi vẫn còn ô "+" cuối lưới để thêm tiếp (chỉ khi đang chọn: website không có ô này) */}
+      {editable && selected && <MediaPlaceholder kind="gallery" compact title={tp.addImage} icon={Plus} className="ecx-gallery-add" onSelect={add} />}
       {block.attrs.caption ? <figcaption className="ecx-gallery-caption cms-gallery-caption" style={{ gridColumn: "1 / -1" }}>{String(block.attrs.caption)}</figcaption> : null}
     </figure>
   );
@@ -64,61 +61,40 @@ function GalleryEdit({ block, blockProps, labels }: BlockEditProps) {
 
 function VideoEdit({ block, blockProps, labels }: BlockEditProps) {
   const src = safe(block.attrs.src);
-  if (!src) return <MediaPlaceholder blockId={block.id} kind="video" icon={Video} title="Video" blockProps={blockProps} />;
+  if (!src) return <MediaDrop blockId={block.id} kind="video" blockProps={blockProps} />;
   void labels;
   return <figure {...blockProps} className={cx(blockProps.className, "ecx-video cms-video")}><video src={src} controls preload="metadata" style={{ width: "100%", pointerEvents: "none" }} /></figure>;
 }
 
 function AudioEdit({ block, blockProps }: BlockEditProps) {
   const src = safe(block.attrs.src);
-  if (!src) return <MediaPlaceholder blockId={block.id} kind="audio" icon={Music} title="Audio" blockProps={blockProps} />;
+  if (!src) return <MediaDrop blockId={block.id} kind="audio" blockProps={blockProps} />;
   return <figure {...blockProps} className={cx(blockProps.className, "ecx-audio cms-audio")}><audio src={src} controls preload="metadata" style={{ width: "100%", pointerEvents: "none" }} /></figure>;
 }
 
 function FileEdit({ block, blockProps }: BlockEditProps) {
   const src = safe(block.attrs.src);
-  if (!src) return <MediaPlaceholder blockId={block.id} kind="file" icon={FileIcon} title="File" blockProps={blockProps} />;
+  if (!src) return <MediaDrop blockId={block.id} kind="file" blockProps={blockProps} />;
   return <div {...blockProps} className={cx(blockProps.className, "ecx-file cms-file")}><span className="ecx-file-link cms-file-link">{String(block.attrs.name || src)}</span></div>;
 }
 
-function YoutubeEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
-  const m = String(block.attrs.src ?? "").match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
-  const [draft, setDraft] = useState("");
-  const t = useMsgs("blocks"); // hook phải gọi trước mọi return sớm (đổi số hook khi dán link → React #300)
-  if (!m) {
-    return (
-      <div {...blockProps} className={cx(blockProps.className, "ecx-media-placeholder")}>
-        <span className="ecx-placeholder-title"><Play className="ecx-icon" />YouTube</span>
-        <p className="ecx-placeholder-hint">{t.pasteAYoutubeLink}</p>
-        <form className="ecx-media-actions" contentEditable={false} onMouseDown={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (/(?:v=|youtu\.be\/|embed\/)[\w-]{11}/.test(draft)) setAttrs({ src: draft.trim() }); }}>
-          <input className="ecx-input" type="url" placeholder="https://youtu.be/…" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label="YouTube URL" />
-          <button type="submit" className="ecx-btn ecx-btn-primary">{t.embed}</button>
-        </form>
-      </div>
-    );
-  }
+const YT = /(?:v=|youtu\.be\/|embed\/)([\w-]{11})/; // cùng mẫu với website (theme-sdk)
+function YoutubeEdit({ block, blockProps, setAttrs }: BlockEditProps) {
+  const m = String(block.attrs.src ?? "").match(YT);
+  const tp = useMsgs("placeholders");
+  if (!m) return <LinkPlaceholder blockProps={blockProps} icon={Play} title={tp.pasteToEmbed} label="YouTube URL" validate={(u) => YT.test(u)} onSubmit={(src) => setAttrs({ src })} />;
   return (
     <div {...blockProps} className={cx(blockProps.className, "ecx-youtube embed")}>
-      {m ? <img src={`https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`} alt="YouTube" draggable={false} style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover" }} /> : "YouTube"}
+      <img src={`https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`} alt="YouTube" draggable={false} style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover" }} />
     </div>
   );
 }
 
-function EmbedEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
+function EmbedEdit({ block, blockProps, setAttrs }: BlockEditProps) {
   const url = String(block.attrs.url ?? "");
   const info = embedInfo(url);
-  const [draft, setDraft] = useState(url);
-  if (!url) {
-    return (
-      <div {...blockProps} className={cx(blockProps.className, "ecx-media-placeholder")}>
-        <span className="ecx-placeholder-title"><Globe className="ecx-icon" />{labels.embed}</span>
-        <form className="ecx-media-actions" contentEditable={false} onMouseDown={(e) => e.stopPropagation()} onSubmit={(e) => { e.preventDefault(); if (isSafeUrl(draft)) setAttrs({ url: draft.trim() }); }}>
-          <input className="ecx-input" type="url" placeholder="https://…" value={draft} onChange={(e) => setDraft(e.target.value)} aria-label={labels.embed} />
-          <button type="submit" className="ecx-btn">{labels.apply}</button>
-        </form>
-      </div>
-    );
-  }
+  const tp = useMsgs("placeholders");
+  if (!url) return <LinkPlaceholder blockProps={blockProps} icon={Globe} title={tp.pasteToEmbed} hint={tp.embedHint} embed onSubmit={(u) => setAttrs({ url: u })} />;
   const shell = blockShell("embed", block.attrs); // vỏ dùng chung với website
   return (
     <figure {...blockProps} className={cx(blockProps.className, shell?.className ?? "ecx-embed")} style={{ ...(blockProps.style ?? {}), ...(shell?.style as CSSProperties | undefined) }}>
@@ -128,14 +104,27 @@ function EmbedEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   );
 }
 
-function HtmlEdit({ block, blockProps, setAttrs, selected, editable }: BlockEditProps) {
+/** HTML: chuyển Mã / Xem trước ngay trên khối (mã trống → ô gõ mã luôn hiện). */
+const htmlPreview = new Set<string>();
+function HtmlEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   const html = String(block.attrs.html ?? "");
+  const tp = useMsgs("placeholders");
+  const [, bump] = useState(0);
+  const preview = !!html && (htmlPreview.has(block.id) || !editable);
+  const show = (p: boolean) => { if (p) htmlPreview.add(block.id); else htmlPreview.delete(block.id); bump((n) => n + 1); };
   return (
     <div {...blockProps} className={cx(blockProps.className, blockShell("customHtml", block.attrs)!.className)}>
-      {selected && editable
-        ? <textarea className="ecx-code-input" value={html} rows={Math.min(20, Math.max(4, html.split("\n").length + 1))} onChange={(e) => setAttrs({ html: e.target.value })} onMouseDown={(e) => e.stopPropagation()} aria-label="HTML" spellCheck={false} />
+      {editable && (
+        <div className="ecx-ph-tabs" role="tablist" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+          <Code2 className="ecx-icon" aria-hidden /> HTML
+          <button type="button" role="tab" aria-selected={!preview} className={cx("ecx-ph-tab", !preview && "is-active")} onClick={() => show(false)}>{tp.htmlCode}</button>
+          <button type="button" role="tab" aria-selected={preview} disabled={!html} className={cx("ecx-ph-tab", preview && "is-active")} onClick={() => show(true)}>{tp.htmlPreview}</button>
+        </div>
+      )}
+      {preview
         // Xem trước trong iframe không cho chạy script (HTML do người khác soạn không chạy được trong trang quản trị)
-        : html ? <iframe className="ecx-html-preview" sandbox="" srcDoc={html} title="HTML" /> : <span className="ecx-placeholder-title"><Code2 className="ecx-icon" />HTML</span>}
+        ? <iframe className="ecx-html-preview" sandbox="" srcDoc={html} title="HTML" />
+        : <textarea className="ecx-code-input" value={html} placeholder={tp.htmlPlaceholder} rows={Math.min(20, Math.max(4, html.split("\n").length + 1))} readOnly={!editable} onChange={(e) => setAttrs({ html: e.target.value })} onMouseDown={(e) => e.stopPropagation()} aria-label="HTML" spellCheck={false} />}
     </div>
   );
 }
@@ -149,21 +138,30 @@ const socialName = (s: string) => SOCIAL.find(([v]) => v === s)?.[1] ?? s;
 type SocialLink = { service: string; url: string; label?: string };
 const linksOf = (a: Record<string, unknown>) => (Array.isArray(a.links) ? a.links : []) as SocialLink[];
 
-function SocialEdit({ block, blockProps, labels }: BlockEditProps) {
-  const t = useMsgs("blocks");
-  const links = linksOf(block.attrs).filter((l) => l.url);
+function SocialEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
+  const tp = useMsgs("placeholders");
+  const all = linksOf(block.attrs);
+  const links = all.filter((l) => l.url);
   const a = block.attrs;
-  if (!links.length) {
-    return (
-      <div {...(blockProps as object)} className={cx(blockProps.className, "ecx-placeholder-block")}>
-        <span className="ecx-placeholder-title"><Share2 className="ecx-icon" /> {t.socialLinks}</span>
-        <span className="ecx-placeholder-summary">{t.addLinksInThe}</span>
-      </div>
-    );
-  }
+  const [adding, setAdding] = useState(false);
+  const [service, setService] = useState("facebook");
+  // Bấm "+" chọn mạng và dán link ngay trên khối (danh sách đầy đủ vẫn ở bảng cài đặt)
+  const adder = editable && (adding || !links.length) ? (
+    <span className="ecx-social-add" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+      {!adding ? <button type="button" className="ecx-add-item" onClick={() => setAdding(true)}><Plus className="ecx-icon ecx-icon-sm" aria-hidden />{tp.socialAdd}</button> : (
+        <form className="ecx-ph-row" onSubmit={(e) => { e.preventDefault(); const url = String(new FormData(e.currentTarget).get("url") ?? "").trim(); if (!url || !isSafeUrl(url)) return; setAttrs({ links: [...all, { service, url }] }); setAdding(false); }}>
+          <select className="ecx-input" aria-label={tp.socialNetwork} value={service} onChange={(e) => setService(e.target.value)}>{SOCIAL.map(([v, n]) => <option key={v} value={v}>{n}</option>)}</select>
+          <input className="ecx-input" name="url" type="url" aria-label={tp.link} placeholder={service === "email" ? "mailto:ban@congty.vn" : "https://…"} autoFocus />
+          <button type="submit" className="ecx-btn ecx-btn-primary">OK</button>
+        </form>
+      )}
+    </span>
+  ) : null;
+  if (!links.length) return <div {...(blockProps as object)} className={cx(blockProps.className, "ecx-media-placeholder ecx-ph-inline")} data-ecx-placeholder="social"><span className="ecx-ph-title"><Share2 className="ecx-icon" />{adder}</span></div>;
   return (
     <ul {...(blockProps as object)} className={cx(blockProps.className, "ecx-social", `is-${a.size ?? "medium"}`, typeof a.align === "string" && `is-${a.align}`, !!a.showLabels && "has-labels")}>
       {links.map((l, i) => <li key={i}><a className={`ecx-social-${l.service}`} title={l.label || socialName(l.service)} onClick={(e) => e.preventDefault()}>{l.label || socialName(l.service)}</a></li>)}
+      {adder ? <li className="ecx-ph-add">{adder}</li> : editable && <li className="ecx-ph-add"><button type="button" className="ecx-add-item" contentEditable={false} aria-label={tp.socialAdd} title={tp.socialAdd} onMouseDown={(e) => e.stopPropagation()} onClick={() => setAdding(true)}><Plus className="ecx-icon ecx-icon-sm" aria-hidden /></button></li>}
     </ul>
   );
 }
@@ -232,18 +230,20 @@ function GalleryInspector({ attrs, setAttrs }: BlockEditProps) {
   );
 }
 
-function TocEdit({ block, blockProps, labels }: BlockEditProps) {
+function TocEdit({ block, blockProps }: BlockEditProps) {
   const t = useMsgs("blocks");
+  const tp = useMsgs("placeholders");
+  const max = Math.min(4, Math.max(2, Number(block.attrs.maxLevel) || 3));
   return (
     <nav {...(blockProps as object)} className={cx(blockProps.className, "ecx-toc")}>
       <p className="ecx-toc-title">{String(block.attrs.title || (t.contents))}</p>
-      <TocItems maxLevel={Math.min(4, Math.max(2, Number(block.attrs.maxLevel) || 3))} />
+      <TocItems maxLevel={max} empty={<p className="ecx-placeholder-hint ecx-ph-note" contentEditable={false}>{tp.tocHint.replace("{n}", String(max))}</p>} />
     </nav>
   );
 }
 
 /** Mục lục xem trước: tiêu đề của tài liệu đang soạn. */
-function TocItems({ maxLevel }: { maxLevel: number }) {
+function TocItems({ maxLevel, empty }: { maxLevel: number; empty?: ReactNode }) {
   const { store } = useEditor();
   const doc = store.getState().docs[store.activeDocId];
   const items: Array<{ level: number; text: string }> = [];
@@ -252,6 +252,7 @@ function TocItems({ maxLevel }: { maxLevel: number }) {
     if (b.content) walk(b.content);
   });
   if (doc) walk(doc.blocks);
+  if (!items.length && empty) return <>{empty}</>;
   return <ol>{items.map((h, i) => <li key={i} style={h.level > 2 ? { marginLeft: `${h.level - 2}em` } : undefined}>{h.text || "…"}</li>)}</ol>;
 }
 

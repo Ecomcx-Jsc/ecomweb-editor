@@ -16,10 +16,10 @@ export const attrName = (name: string, lang: string): string | undefined => { co
 /** Thuộc tính sửa ở chỗ khác (thanh công cụ, trên khung soạn) hoặc dữ liệu kỹ thuật. */
 const HIDDEN_ATTRS = new Set(["style", "blockStyle", "anchor", "className", "mediaId", "srcset", "webpSrcset", "images", "links", "colwidth", "colspan", "rowspan", "_v", "id"]); // gộp ô: dùng lệnh Gộp / Tách của công cụ bảng (sửa số tay làm lệch bảng)
 
-const attrLabel = (name: string, spec: BlockAttrSpec, lang: string, translate?: (s: string) => string) =>
+export const attrLabel = (name: string, spec: BlockAttrSpec, lang: string, translate?: (s: string) => string) =>
   spec.label ? (translate ? translate(spec.label) : spec.label) : attrName(name, lang) ?? name;
 
-function controlOf(spec: BlockAttrSpec): NonNullable<BlockAttrSpec["control"]> {
+export function controlOf(spec: BlockAttrSpec): NonNullable<BlockAttrSpec["control"]> {
   if (spec.control) return spec.control;
   if (spec.enum) return "select";
   switch (spec.type) {

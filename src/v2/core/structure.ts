@@ -32,7 +32,8 @@ const RULES: Record<string, StructureRule> = {
   column: { parents: ["columns"], wrapSelfWith: "columns" },
   buttons: { allowedChildren: ["button"], removeWhenEmpty: true },
   button: { parents: ["buttons"], wrapSelfWith: "buttons" },
-  table: { allowedChildren: ["tableRow"], wrapChildrenWith: "tableRow", removeWhenEmpty: true },
+  // Bảng rỗng (vừa chèn, chưa chọn kích thước) giữ lại: trình soạn hỏi số cột / hàng, website không vẽ bảng không có hàng
+  table: { allowedChildren: ["tableRow"], wrapChildrenWith: "tableRow" },
   tableRow: { parents: ["table"], allowedChildren: ["tableCell", "tableHeader"], wrapChildrenWith: "tableCell", removeWhenEmpty: true },
   tableCell: { parents: ["tableRow"], required: p },
   tableHeader: { parents: ["tableRow"], required: p },

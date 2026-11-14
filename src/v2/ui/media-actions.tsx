@@ -19,7 +19,7 @@ export function mediaAttrs(kind: MediaKind, items: MediaItem[]): Record<string, 
  * Chọn media ngay trên khối: Tải lên (có thể kéo thả tệp vào cả vùng), Thư viện, Chèn từ URL. Dùng cho ảnh, gallery,
  * video, âm thanh, tệp, ảnh bìa, ảnh + chữ.
  */
-export function MediaActions({ kind, onSelect, onUrl, compact, extra }: { kind: MediaKind; onSelect(items: MediaItem[]): void; onUrl?(url: string): void; compact?: boolean; extra?: ReactNode }) {
+export function MediaActions({ kind, onSelect, onUrl, compact, extra, accept }: { kind: MediaKind; onSelect(items: MediaItem[]): void; onUrl?(url: string): void; compact?: boolean; extra?: ReactNode; accept?: string }) {
   const { host, labels } = useEditor();
   const file = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -49,7 +49,7 @@ export function MediaActions({ kind, onSelect, onUrl, compact, extra }: { kind: 
         </form>
       )}
       {error && <p className="ecx-media-error" role="alert">{error}</p>}
-      <input ref={file} type="file" hidden accept={ACCEPT[kind] || undefined} multiple={kind === "gallery"} onChange={(e) => { void upload([...(e.target.files ?? [])]); e.target.value = ""; }} />
+      <input ref={file} type="file" hidden accept={accept ?? (ACCEPT[kind] || undefined)} multiple={kind === "gallery"} onChange={(e) => { void upload([...(e.target.files ?? [])]); e.target.value = ""; }} />
     </div>
   );
 }
@@ -64,7 +64,8 @@ export function useFileDrop(kind: MediaKind, onSelect: (items: MediaItem[]) => v
     over,
     props: {
       onDragOver: (e: DragEvent) => { if (!hasFiles(e)) return; e.preventDefault(); setOver(true); },
-      onDragLeave: () => setOver(false),
+      // Rời sang phần tử con vẫn ở trong vùng: giữ trạng thái (không nhấp nháy)
+      onDragLeave: (e: DragEvent) => { if (!(e.currentTarget as Node).contains(e.relatedTarget as Node | null)) setOver(false); },
       onDrop: async (e: DragEvent) => {
         if (!hasFiles(e)) return;
         e.preventDefault(); setOver(false);

@@ -1,7 +1,8 @@
 import { Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useEditor } from "../context";
-import { inlineText, makeBlock, type BNode } from "../core/model";
+import type { RichNode } from "@ecomcx/ecomweb-content";
+import { fromRich, inlineText, makeBlock, type BNode } from "../core/model";
 import { Modal } from "./options";
 import { Dropdown, MenuItem, ToolButton } from "./toolbar";
 
@@ -95,19 +96,22 @@ export function AiWrite() {
   const { host, labels, store, ui } = useEditor();
   const [at, setAt] = useState<{ blockId?: string; docId: string; parentId: string | null; index: number } | null>(null);
   const [prompt, setPrompt] = useState("");
-  const [state, setState] = useState<{ loading: boolean; text?: string; error?: string }>({ loading: false });
+  const [state, setState] = useState<{ loading: boolean; text?: string; nodes?: RichNode[]; error?: string }>({ loading: false });
   useEffect(() => { ui.openAiWrite = (a) => { setAt(a); setPrompt(""); setState({ loading: false }); }; return () => { ui.openAiWrite = null; }; }, [ui]);
   if (!at || !host.ai) return null;
   const run = async () => {
     if (!prompt.trim()) return;
     setState({ loading: true });
-    try { setState({ loading: false, text: await host.ai!.run("write", prompt.trim(), {}) }); }
-    catch (e) { setState({ loading: false, error: (e as Error).message }); }
+    try {
+      const r = host.ai!.write ? await host.ai!.write(prompt.trim()) : { text: await host.ai!.run("write", prompt.trim(), {}) };
+      setState({ loading: false, text: r.text, nodes: Array.isArray(r.nodes) && r.nodes.length ? r.nodes as RichNode[] : undefined });
+    } catch (e) { setState({ loading: false, error: (e as Error).message }); }
   };
   const paragraphs = (state.text ?? "").split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
   const insert = () => {
     if (!paragraphs.length) return;
-    const nodes = paragraphs.map((p) => makeBlock("paragraph", {}, p));
+    // Có khối dạng lưu (tiêu đề, danh sách) thì chèn đúng khối; ứng dụng cũ chỉ trả chữ → mỗi đoạn một khối đoạn văn
+    const nodes = state.nodes ? state.nodes.map(fromRich) : paragraphs.map((p) => makeBlock("paragraph", {}, p));
     store.batch(() => {
       if (at.blockId && store.block(at.blockId)) store.replace(at.blockId, nodes);
       else store.insert(at.docId, at.parentId, at.index, nodes);

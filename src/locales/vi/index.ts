@@ -22,5 +22,6 @@ import { blockStyle } from "./block-style";
 import { patternLib } from "./pattern-lib";
 import { patterns } from "./patterns";
 import { shortcuts } from "./shortcuts";
+import { placeholders } from "./placeholders";
 
-export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, hints, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, shortcuts };
+export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, hints, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };

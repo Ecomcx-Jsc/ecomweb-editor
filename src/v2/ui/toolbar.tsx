@@ -119,6 +119,9 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const type = registry.get(first.type);
   const sameType = nodes.every((n) => n.type === first.type);
   const Icon = type?.icon ?? Blocks;
+  // Tên khối nằm trong thanh công cụ (nút đầu: biểu tượng + tên + ▾ đổi loại) — thay nhãn tên riêng trên khối (bị thanh đè)
+  const variation = sameType && nodes.length === 1 ? type?.variations?.find((v) => v.standalone && v.isActive?.(first.attrs)) : undefined;
+  const name = nodes.length > 1 ? `${nodes.length} ${labels.blocks}` : variation?.title ?? type?.title ?? first.type;
   const editingText = !sel.ids.length && !!sel.editing;
   const view = editingText ? activeView(ui.activeRich, sel.editing!) : null;
   const ordered = topLevelOrdered(store.getState().docs[loc.docId].blocks, ids);
@@ -191,13 +194,13 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
         <div className="ecx-tool-group">
           {parent && <ToolButton label={labels.selectParent} onClick={() => store.select([parent.id], { editing: null })}><ArrowUpLeft className="ecx-icon" /></ToolButton>}
           {transforms.length && removable && !store.isContentOnly(first.id) ? (
-            <Dropdown label={labels.transform} trigger={<><Icon className="ecx-icon" /><ChevronDown className="ecx-icon ecx-icon-sm" /></>}>
+            <Dropdown label={`${name} · ${labels.transform}`} className="ecx-toolbar-type" trigger={<><Icon className="ecx-icon" /><span className="ecx-tool-text ecx-toolbar-name">{name}</span><ChevronDown className="ecx-icon ecx-icon-sm" /></>}>
               {(close) => transforms.map((t, i) => {
                 const target = registry.get(t.to);
                 return <MenuItem key={i} icon={target?.icon} label={`${target?.title ?? t.to}${t.title ? ` ${t.title}` : ""}`} onClick={() => { close(); doTransform(t); }} />;
               })}
             </Dropdown>
-          ) : <span className="ecx-tool is-static" title={type?.title}><Icon className="ecx-icon" /></span>}
+          ) : <span className="ecx-tool is-static ecx-toolbar-type" title={name}><Icon className="ecx-icon" /><span className="ecx-tool-text ecx-toolbar-name">{name}</span></span>}
           {movable && <>
             <ToolButton label={labels.drag} className="ecx-drag-handle" onPointerDown={(e: React.PointerEvent) => startDrag(ctx, e, ordered)}><GripVertical className="ecx-icon" /></ToolButton>
             <div className="ecx-movers">
@@ -491,7 +494,8 @@ export function DropIndicator() {
   if (!ui.drag) return null;
   return (
     <>
-      {t && <div className="ecx-drop-line" style={{ left: t.rect.left, top: t.rect.top, width: t.rect.width, height: t.rect.height }} data-horizontal={t.horizontal || undefined} />}
+      {/* key theo chỗ thả: sang chỗ mới thì thanh chạy lại từ giữa ra hai đầu (như WordPress) */}
+      {t && <div key={`${t.docId}:${t.parentId}:${t.index}`} className="ecx-drop-line" style={{ left: t.rect.left, top: t.rect.top, width: t.rect.width, height: t.rect.height }} data-horizontal={t.horizontal || undefined} />}
       <div className={t ? "ecx-drag-chip" : "ecx-drag-chip is-blocked"} style={{ left: ui.drag.x + 12, top: ui.drag.y + 12 }}>{(() => {
         // Tên khối đang kéo (nhiều khối: số lượng); không có chỗ thả hợp lệ → mờ đi
         const type = registry.get(ui.drag.newType ?? store.block(ui.drag.ids[0] ?? "")?.type ?? "");

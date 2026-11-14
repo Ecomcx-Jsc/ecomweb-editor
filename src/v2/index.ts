@@ -9,6 +9,9 @@ export { BlockToolbar, BlockContextMenu, DropIndicator, ToolButton, Dropdown, Me
 export { InserterPanel, InserterPopover, rankOptions, useInsertOptions, type InsertOption } from "./ui/inserter";
 export { Inspector } from "./ui/inspector";
 export { AttrForm } from "./ui/attr-form";
+export { MediaPlaceholder, TextPlaceholder, LinkPlaceholder, PickPlaceholder, AddBlockButton, AddItemButton, MissingNote, type MediaPlaceholderProps, type TextPlaceholderProps, type LinkPlaceholderProps, type PickPlaceholderProps, type AddBlockButtonProps } from "./ui/placeholders";
+export { MediaActions, useFileDrop } from "./ui/media-actions";
+export { placeholderFields } from "./blocks/compat";
 export { ListView, blockLabel } from "./ui/list-view";
 export { Block, InnerBlocks, NestedDoc, DocBlocks, Appender, FallbackEdit, useBlockProps } from "./canvas/block-list";
 export { RichText, richViews, type RichTextProps } from "./text/rich-text";

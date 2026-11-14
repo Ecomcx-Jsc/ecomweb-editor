@@ -68,7 +68,7 @@ test.describe("kiểu dáng khối kiểu Elementor", () => {
     ]);
     const bar = c.locator('[data-ecx-block="t"] [role=tablist]');
     await expect(bar.locator("[role=tab]")).toHaveCount(2);
-    await expect(bar.locator("[role=tab]").nth(1).locator("[data-placeholder]")).toHaveAttribute("data-placeholder", "Tab 2");
+    await expect(bar.locator("[role=tab]").nth(1).locator("[data-placeholder]")).toHaveAttribute("data-placeholder", "Tên tab…");
     await expect(c.getByText("Nội dung 2")).toBeHidden();
     await page.evaluate(() => (window as any).__ecx.store.clearSelection()); // thanh công cụ nổi của đoạn đang chọn nằm đè thanh tab
     await bar.locator("[role=tab]").nth(1).click();

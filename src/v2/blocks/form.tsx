@@ -9,6 +9,7 @@ import { messages } from "../../i18n";
 import { RichText } from "../text/rich-text";
 import { Field } from "../ui/attr-form";
 import { useEditor } from "../context";
+import { AddBlockButton } from "../ui/placeholders";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const merge = (bp: BlockEditProps["blockProps"], className: string, style?: CSSProperties) => ({ ...bp, className: cx(bp.className, className), style: { ...(bp.style ?? {}), ...style } });
@@ -26,12 +27,14 @@ export function fieldNameFrom(label: string, taken: string[] = []): string {
 
 function FormEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   const t = useMsgs("blocks");
+  const tp = useMsgs("placeholders");
   const a = block.attrs;
   // Mẫu (pattern) chèn vào chưa có mã: tạo một lần để máy chủ nhận ra form này
   useEffect(() => { if (editable && !a.formId) setAttrs({ formId: newFormId() }); }, [editable, a.formId, setAttrs]);
   return (
     <div {...merge(blockProps, "ecx-form-blocks")} data-form-id={String(a.formId ?? "")}>
       <InnerBlocks parent={block} />
+      {editable && <AddBlockButton parentId={block.id} label={tp.addField} className="is-inline" />}
       <div className="ecx-form-actions">
         <span className={blockShell("button", { variant: "primary" })?.className} style={blockShell("button", { variant: "primary" })?.style as CSSProperties} role="presentation">
           <RichText blockId={block.id} field="submitText" tagName="span" value={String(a.submitText ?? "")} onChange={(v) => setAttrs({ submitText: v })} placeholder={t.formSubmit} placeholderAlways editable={editable} />

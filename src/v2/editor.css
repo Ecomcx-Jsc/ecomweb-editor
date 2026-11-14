@@ -174,13 +174,17 @@ select.ecx-input { padding-right: 6px; }
 .ecx-list-row:hover .ecx-list-drag { opacity: 1; }
 
 /* Kéo thả */
-.ecx-drop-line { position: fixed; z-index: 45; background: var(--ecx-ed-accent, #1a597b); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 1px #fff; }
+.ecx-drop-line { position: fixed; z-index: 45; background: var(--ecx-ed-accent, #1a597b); border-radius: 2px; pointer-events: none; box-shadow: 0 0 0 1px #fff, 0 0 0 7px color-mix(in srgb, var(--ecx-ed-accent, #1a597b) 22%, transparent); } /* vị trí thả: dải xanh rõ, không chỉ vạch mảnh */
+.ecx-drop-line { transform-origin: center; animation: ecx-drop-grow .2s ease-out; }
+.ecx-drop-line[data-horizontal] { animation-name: ecx-drop-grow-y; }
+@keyframes ecx-drop-grow { from { transform: scaleX(0); opacity: 0; } }
+@keyframes ecx-drop-grow-y { from { transform: scaleY(0); opacity: 0; } }
 .ecx-drag-chip.is-blocked { opacity: .55; }
 .ecx-drag-chip { display: inline-flex; align-items: center; gap: 6px; position: fixed; z-index: 46; padding: 3px 8px; background: var(--ecx-ed-fg, #0f1e29); color: var(--ecx-ed-panel, #fff); border-radius: 6px; font: 600 12px var(--ecx-ed-font, system-ui); pointer-events: none; box-shadow: var(--ecx-ed-shadow); }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
-  .ecx-toolbar, .ecx-menu, .ecx-popover, .ecx-left, .ecx-right { animation: none; }
+  .ecx-toolbar, .ecx-menu, .ecx-popover, .ecx-left, .ecx-right, .ecx-drop-line { animation: none; }
   .ecx-pattern-card:hover, .ecx-tool:active:not(:disabled) { transform: none; }
 }
 

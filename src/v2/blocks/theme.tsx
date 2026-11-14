@@ -8,6 +8,7 @@ import type { BNode } from "../core/model";
 import { blocksFromDoc, makeBlock } from "../core/model";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { useMsgs } from "../i18n";
+import { MediaPlaceholder } from "../ui/placeholders";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 const align = (a: Record<string, unknown>): CSSProperties | undefined => (typeof a.textAlign === "string" ? { textAlign: a.textAlign as CSSProperties["textAlign"] } : undefined);
@@ -29,10 +30,35 @@ function SiteTaglineEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
   return <p {...merge(blockProps, "ecx-site-tagline", align(block.attrs))}>{d.site?.tagline || "Tagline"}</p>;
 }
-function SiteLogoEdit({ block, blockProps }: BlockEditProps) {
+/** Nhãn của ô giữ chỗ khối giao diện: cam = thiếu dữ liệu (kèm nút đi tới chỗ nhập). */
+function Missing({ children }: { children: ReactNode }) {
+  return <span className="ecx-ph-badge is-missing" contentEditable={false}>{children}</span>;
+}
+/** Nút đi tới trang quản trị nhập dữ liệu còn thiếu (host.openAdmin). */
+function AdminButton({ target, args, children, primary }: { target: Parameters<NonNullable<ReturnType<typeof useEditor>["host"]["openAdmin"]>>[0]; args?: Record<string, string>; children: ReactNode; primary?: boolean }) {
+  const { host } = useEditor();
+  if (!host.openAdmin) return null;
+  return <button type="button" className={cx("ecx-btn", primary && "ecx-btn-primary")} contentEditable={false} onMouseDown={(e) => e.stopPropagation()} onClick={() => host.openAdmin!(target, args)}>{children}</button>;
+}
+
+function SiteLogoEdit({ block, blockProps, editable }: BlockEditProps) {
   const d = useDynamic();
+  const { host } = useEditor();
+  const tp = useMsgs("placeholders");
+  const [saved, setSaved] = useState<string | null>(null);
   const w = Number(block.attrs.width) || 120;
-  return <div {...merge(blockProps, "ecx-site-logo")}>{d.site?.logo ? <img src={d.site.logo} alt="" width={w} draggable={false} /> : <span className="ecx-logo-placeholder" style={{ width: w }}><ImageIcon className="ecx-icon" /></span>}</div>;
+  const logo = d.site?.logo || saved;
+  if (logo || !editable) return <div {...merge(blockProps, "ecx-site-logo")}>{logo ? <img src={logo} alt="" width={w} draggable={false} /> : <span className="ecx-logo-placeholder" style={{ width: w }}><ImageIcon className="ecx-icon" /></span>}</div>;
+  // Chưa có logo: ô thả logo — chọn xong là đổi logo cho cả website (host.setSiteLogo); không có thì nút mở Tuỳ biến
+  return (
+    <div {...merge(blockProps, "ecx-site-logo ecx-ph-theme is-missing")} data-ecx-placeholder="logo">
+      <Missing>{tp.noLogo}</Missing>
+      {host.setSiteLogo
+        ? <MediaPlaceholder kind="image" compact title={tp.dropLogo} onSelect={(items) => { host.setSiteLogo!(items[0]).then(() => setSaved(items[0].url), () => {}); }} />
+        : <AdminButton target="customize" primary>{tp.openSettings}</AdminButton>}
+      <p className="ecx-placeholder-hint">{tp.logoAll}</p>
+    </div>
+  );
 }
 /** Menu: cùng markup với website (theme-sdk) — nav.ecx-navigation-menu > ul > li > a, nút ☰ cho điện thoại. */
 /** Nút nhỏ trên khối Menu đang chọn: mở nơi sửa menu của ứng dụng nhúng. */
@@ -49,12 +75,20 @@ function NavigationEdit({ block, blockProps, selected }: BlockEditProps) {
   const items = d.menus?.[location];
   const mobile = block.attrs.mobile !== false;
   const t = useMsgs("blocks");
+  const tp = useMsgs("placeholders");
+  const { host } = useEditor();
   if (!items?.length) {
+    // Vị trí chưa có menu: nhãn cam + nút tạo / chọn menu (thay cho cột liên kết trống)
     return (
-      <div {...merge(blockProps, "ecx-navigation ecx-placeholder-block")}>
-        <span className="ecx-placeholder-title"><Menu className="ecx-icon" /> {t.menu} · {location}</span>
-        <span className="ecx-placeholder-summary">{t.noMenuIsAssigned}</span>
-        <EditMenuButton location={location} selected={selected} />
+      <div {...merge(blockProps, "ecx-navigation ecx-media-placeholder ecx-ph-theme is-missing")} data-ecx-placeholder="menu">
+        <span className="ecx-placeholder-title"><Menu className="ecx-icon" /> {t.menu}</span>
+        <Missing>{tp.menuEmpty.replace("{location}", location)}</Missing>
+        {host.editMenu && (
+          <span className="ecx-ph-row" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+            <button type="button" className="ecx-btn ecx-btn-primary" onClick={() => host.editMenu!(location)}>{tp.createMenu}</button>
+            <button type="button" className="ecx-btn" onClick={() => host.editMenu!(location)}>{tp.pickMenu}</button>
+          </span>
+        )}
       </div>
     );
   }
@@ -105,10 +139,14 @@ function PostExcerptEdit({ block, blockProps }: BlockEditProps) {
 }
 function FeaturedImageEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
+  const tp = useMsgs("placeholders");
   const ratio = block.attrs.aspect && block.attrs.aspect !== "auto" ? String(block.attrs.aspect) : undefined;
   return (
     <div {...merge(blockProps, "ecx-featured-image", { aspectRatio: ratio ?? (d.post?.image ? undefined : "16/9"), overflow: "hidden" })}>
-      {d.post?.image ? <img src={d.post.image} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <span className="ecx-image-placeholder"><ImageIcon className="ecx-icon" /></span>}
+      {d.post?.image ? <img src={d.post.image} alt="" draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (
+        // Giải thích thay vì khung trống
+        <span className="ecx-image-placeholder ecx-ph-theme" data-ecx-placeholder="featured"><ImageIcon className="ecx-icon" /><Missing>{tp.noFeatured}</Missing><span className="ecx-placeholder-hint">{tp.noFeaturedHint}</span></span>
+      )}
     </div>
   );
 }
@@ -246,7 +284,7 @@ function sampleContentNodes(content: unknown): BNode[] | null {
   return nodes.length ? nodes : null;
 }
 function PostContentEdit({ blockProps }: BlockEditProps) {
-  const { labels } = useEditor();
+  const tp = useMsgs("placeholders");
   const sample = sampleContentNodes(useDynamicData().post?.content);
   const t = useMsgs("blocks");
   const scope = useDocScope();
@@ -262,10 +300,31 @@ function PostContentEdit({ blockProps }: BlockEditProps) {
   }
   // Có bài mẫu → nội dung thật của bài (chỉ xem; sửa nội dung ở trình soạn bài); chưa có → khung giữ chỗ
   if (sample) return <div {...merge(blockProps, "ecx-post-content ecx-content")}><PreviewBlocks nodes={sample} tag="sample-content" /></div>;
-  return <div {...merge(blockProps, "ecx-post-content ecx-content-placeholder")}><FileText className="ecx-icon" /> {t.postContent}</div>;
+  return <div {...merge(blockProps, "ecx-post-content ecx-content-placeholder")} data-ecx-placeholder="post-content"><FileText className="ecx-icon" /> <span><strong>{t.postContent}</strong><br /><span className="ecx-placeholder-hint">{tp.postContentHint}</span></span></div>;
 }
 
-function QueryEdit({ block, blockProps }: BlockEditProps) {
+/** Kiểu hiển thị của danh sách bài khi chèn (như Query Loop của WordPress: chọn mẫu trước rồi hiện bài thật). */
+const QUERY_LAYOUTS = {
+  list: () => [makeBlock("postTemplate", { layout: "list" }, [makeBlock("postTitle", { level: 2, link: true }), makeBlock("postDate"), makeBlock("postExcerpt")]), makeBlock("pagination")],
+  grid: () => [makeBlock("postTemplate", { layout: "grid", columns: 3 }, [makeBlock("postTitle", { level: 3, link: true }), makeBlock("postExcerpt")]), makeBlock("pagination")],
+  cards: () => [makeBlock("postTemplate", { layout: "grid", columns: 3 }, [makeBlock("featuredImage", { link: true, aspect: "16/9" }), makeBlock("postTitle", { level: 3, link: true }), makeBlock("postDate")]), makeBlock("pagination")],
+};
+function QueryEdit({ block, blockProps, editable }: BlockEditProps) {
+  const { store } = useEditor();
+  const tp = useMsgs("placeholders");
+  if (editable && !block.content?.length) {
+    const items: Array<[keyof typeof QUERY_LAYOUTS, typeof Rows3, string]> = [["list", Rows3, tp.queryList], ["grid", LayoutTemplate, tp.queryGrid], ["cards", ImageIcon, tp.queryCards]];
+    return (
+      <div {...merge(blockProps, "ecx-query")} data-ecx-placeholder="query">
+        <div className="ecx-media-placeholder ecx-ph-choose" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+          <p className="ecx-ph-title">{tp.queryChoose}</p>
+          <div className="ecx-ph-choices">
+            {items.map(([k, I, label]) => <button key={k} type="button" className="ecx-ph-choice" onClick={() => store.replace(block.id, [{ ...block, content: QUERY_LAYOUTS[k]() }])}><I className="ecx-icon" aria-hidden />{label}</button>)}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return <div {...merge(blockProps, "ecx-query")}><InnerBlocks parent={block} /></div>;
 }
 /** Thiết lập của khối query (mặc định giống website). */
@@ -315,9 +374,10 @@ function PostTemplateEdit({ block, blockProps, editable, labels }: BlockEditProp
   const count = posts ? Math.max(1, Math.min(posts.length, q.perPage, 6)) : 3;
   const current = Math.min(active, count - 1);
   const t = useMsgs("blocks");
+  const tp = useMsgs("placeholders");
   return (
     <ul {...(merge(blockProps, cx("ecx-post-template", grid && "is-grid"), grid ? { display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "1.5rem" } : undefined) as object)} data-ecx-posts={posts ? posts.length : ""}>
-      {posts && !posts.length && <li className="ecx-post ecx-post-none">{t.noPostsMatchThese}</li>}
+      {posts && !posts.length && <li className="ecx-post ecx-post-none ecx-ph-theme is-missing" data-ecx-placeholder="no-posts"><Missing>{tp.noPosts}</Missing> <span className="ecx-placeholder-hint">{tp.noPostsHint}</span> <AdminButton target="newPost" args={{ postType: q.postType }}>+ {tp.writeFirst}</AdminButton></li>}
       {Array.from({ length: count }, (_, i) => {
         const post = posts?.[i] ?? null;
         if (i === current) return <li key="edit" className={cx("ecx-post", count > 1 && "is-active")}><LoopPostContext.Provider value={post}><InnerBlocks parent={block} /></LoopPostContext.Provider></li>;
@@ -423,7 +483,8 @@ export function themeBlocks(): BlockType[] {
     {
       name: "query", title: "Danh sách bài", icon: Rows3, category: theme, keywords: "danh sach bai query loop tin tuc", kind: "container", edit: QueryEdit,
       attributes: { inherit: { type: "boolean", default: true }, postType: { type: "string", default: "post" }, perPage: { type: "integer", default: 10, min: 1, max: 100 }, category: { type: "string" }, tag: { type: "string" }, orderBy: { type: "string", enum: ["date", "title", "modified", "menu_order", "comment_count", "rand"], default: "date" }, order: { type: "string", enum: ["desc", "asc"], default: "desc" }, authorId: { type: "integer", min: 1 }, search: { type: "string" }, exclude: { type: "string" }, sticky: { type: "string", enum: ["any", "only", "exclude"], default: "any" }, orderByMeta: { type: "string" }, paginate: { type: "boolean", default: false } },
-      create: () => makeBlock("query", { inherit: true }, [makeBlock("postTemplate", { layout: "list" }, [makeBlock("postTitle", { level: 2, link: true }), makeBlock("postExcerpt")]), makeBlock("pagination")]),
+      // Mới chèn: chưa có khuôn → hỏi kiểu hiển thị trước (Danh sách / Lưới / Thẻ có ảnh)
+      create: () => makeBlock("query", { inherit: true }, []),
       supports: { style: true, className: true },
     },
     { name: "postTemplate", title: "Khuôn mỗi bài", icon: LayoutTemplate, kind: "container", edit: PostTemplateEdit, hidden: true, attributes: { layout: { type: "string", enum: ["list", "grid"], default: "list" }, columns: { type: "integer", default: 3, min: 1, max: 6 } }, structure: { parents: ["query"] } },

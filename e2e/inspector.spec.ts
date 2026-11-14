@@ -25,7 +25,7 @@ test.describe("bảng cài đặt khối", () => {
     expect((await blockOf(page, "navigation")).attrs.orientation).toBe("vertical");
     await expect(nav).toHaveClass(/ecx-navigation-vertical/);
     await location.selectOption("footer");
-    await expect(c.locator(".ecx-navigation").first()).toContainText("Chưa có menu nào gán cho vị trí này");
+    await expect(c.locator(".ecx-navigation").first()).toContainText("Vị trí “footer” chưa có menu");
   });
 
   test("Danh sách bài: chuyên mục chọn từ danh sách thật; bật “Theo trang đang xem” thì ẩn các thiết lập truy vấn", async ({ page }) => {
@@ -49,18 +49,18 @@ test.describe("bảng cài đặt khối", () => {
     await page.keyboard.press("Enter");
     await page.keyboard.type("/mang xa hoi");
     await page.keyboard.press("Enter");
-    await expect(c.locator(".ecx-placeholder-block", { hasText: "Mạng xã hội" })).toBeVisible();
+    await expect(c.locator('[data-ecx-placeholder="social"]')).toBeVisible();
     const ed = insp(page).locator(".ecx-social-editor");
     await ed.getByRole("button", { name: "Thêm liên kết" }).click();
     await ed.getByLabel("Địa chỉ 1").fill("https://facebook.com/ecomcx");
     await ed.getByRole("button", { name: "Thêm liên kết" }).click();
     await ed.getByLabel("Mạng 2").selectOption("zalo");
     await ed.getByLabel("Địa chỉ 2").fill("https://zalo.me/0900000000");
-    await expect(c.locator(".ecx-social li")).toHaveText(["Facebook", "Zalo"]);
+    await expect(c.locator(".ecx-social li:not(.ecx-ph-add)")).toHaveText(["Facebook", "Zalo"]);
     await ed.locator("[data-social-row='1']").getByRole("button", { name: "Lên" }).click();
     expect((await blockOf(page, "socialLinks")).attrs.links.map((l: { service: string }) => l.service)).toEqual(["zalo", "facebook"]);
     await ed.locator("[data-social-row='1']").getByRole("button", { name: "Xoá liên kết" }).click();
-    await expect(c.locator(".ecx-social li")).toHaveText(["Zalo"]);
+    await expect(c.locator(".ecx-social li:not(.ecx-ph-add)")).toHaveText(["Zalo"]);
   });
 
   test("tab Kiểu dáng: một kiểu giao diện, màu preset, đặt lại; cỡ chữ theo khổ điện thoại hiện giá trị kế thừa", async ({ page }) => {

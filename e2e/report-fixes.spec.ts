@@ -145,7 +145,8 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     await input.fill("18");
     expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "18px" });
     await insp(page).getByLabel(/^Cỡ chữ: tuỳ chỉnh: đơn vị$/).first().selectOption("rem");
-    expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "18rem" });
+    // đổi đơn vị thì quy đổi giá trị (18px = 1.125rem), không giữ nguyên con số — từ 1.29.1
+    expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "1.125rem" });
     await input.fill("");
     expect((await blockOf(page, "paragraph")).attrs.style?.fontSize).toBeUndefined();
   });

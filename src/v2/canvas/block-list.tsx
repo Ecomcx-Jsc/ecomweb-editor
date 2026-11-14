@@ -64,7 +64,6 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     ref: null,
     "data-ecx-block": block.id,
     "data-type": block.type,
-    "data-ecx-title": state.selected ? type?.title ?? block.type : undefined,
     tabIndex: type?.kind === "text" ? undefined : -1,
     id: typeof a.anchor === "string" ? a.anchor : undefined,
     className: cx(
@@ -105,8 +104,9 @@ export const Block = memo(function Block({ node }: { node: BNode }) {
   const props: BlockEditProps = { block: node, attrs: node.attrs, setAttrs, blockProps, selected: selected || editing, editable: scope.mode !== "disabled", labels };
   // Khối trong vòng lặp bài (query › postTemplate) giữ giao diện của trình soạn: website chỉ biết bài của trang, không biết bài của vòng lặp
   const loop = useContext(LoopPostContext);
+  // editWhenSelected: đang chọn → ô giữ chỗ của trình soạn; vẫn đi qua ServerBlock để ô nhập không bị dựng lại (mất focus) khi chọn / bỏ chọn
   if (type?.serverRender && host.renderBlock && !loop)
-    return <BlockBoundary id={node.id} type={node.type}><ServerBlock node={node} blockProps={blockProps} fallback={<Edit {...props} />} /></BlockBoundary>;
+    return <BlockBoundary id={node.id} type={node.type}><ServerBlock node={node} blockProps={blockProps} fallback={<Edit {...props} />} live={!(type.editWhenSelected && (selected || editing) && scope.mode !== "disabled")} /></BlockBoundary>;
   return <BlockBoundary id={node.id} type={node.type}><Edit {...props} /></BlockBoundary>;
 });
 
@@ -161,13 +161,13 @@ export function InnerBlocks({ parent, appender = "auto" }: { parent: BNode; appe
 export function Appender({ docId, parentId, index }: { docId: string; parentId: string | null; index: number }) {
   const { ui, labels } = useEditor();
   return (
-    <button type="button" className="ecx-appender" aria-label={labels.addBlock} title={labels.addBlock} contentEditable={false}
+    <button type="button" className="ecx-appender" title={labels.addBlock} contentEditable={false}
       onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
       onClick={(e) => {
         const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
         const f = ui.canvasFrame?.getBoundingClientRect();
         ui.openInserter({ mode: "appender", docId, parentId, index, rect: { left: (f?.left ?? 0) + r.left, top: (f?.top ?? 0) + r.top, bottom: (f?.top ?? 0) + r.bottom } });
-      }}>+</button>
+      }} data-ecx-placeholder="add"><span aria-hidden="true">+</span> {labels.addBlock}</button>
   );
 }
 

@@ -30,6 +30,13 @@ export interface EditorHost {
   /** Mở nơi sửa menu của một vị trí (khối Menu đang chọn hiện nút "Sửa menu"). Không có → không hiện nút. */
   editMenu?(location: string): void;
   /**
+   * Mở trang quản trị để nhập dữ liệu còn thiếu của khối giao diện (ô giữ chỗ cam): "menus" (tạo / chọn menu), "customize" (logo, tên
+   * website), "newPost" (viết bài đầu tiên; args.postType). Không có → không hiện nút.
+   */
+  openAdmin?(target: "menus" | "customize" | "settings" | "newPost", args?: Record<string, string>): void;
+  /** Đặt logo cho cả website từ ô thả logo của khối Logo (trả về khi đã lưu). Không có → ô thả logo chỉ có nút mở Tuỳ biến. */
+  setSiteLogo?(item: import("../../shared/types").MediaItem): Promise<void>;
+  /**
    * Website vẽ giúp một khối (nút nội dung dạng JSON như khi lưu) bằng code + CSS của theme → HTML. null = không vẽ được
    * (trình soạn dùng giao diện của mình). Dùng cho khối có `serverRender` (khối động, khối plugin/theme không có `edit`).
    */
@@ -58,6 +65,8 @@ export interface EditorHost {
    */
   ai?: {
     run(task: string, text: string, opts?: { language?: string; instruction?: string }): Promise<string>;
+    /** Viết nội dung mới theo yêu cầu; `nodes` là khối dạng lưu (tiêu đề, danh sách…) — có thì chèn đúng khối, không thì tách `text` thành đoạn văn. */
+    write?(prompt: string): Promise<{ text: string; nodes?: unknown[] }>;
     /** Mô tả (alt) cho ảnh trong thư viện media; không có = khối Ảnh không hiện nút AI. */
     altText?(mediaId: number, language?: string): Promise<string>;
   };

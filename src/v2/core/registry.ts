@@ -22,7 +22,7 @@ export interface BlockEditProps {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type BlockProps = HTMLAttributes<HTMLElement> & { ref: Ref<any>; "data-ecx-block": string; "data-type": string; "data-ecx-title"?: string };
+export type BlockProps = HTMLAttributes<HTMLElement> & { ref: Ref<any>; "data-ecx-block": string; "data-type": string };
 
 export type BlockCategory = "text" | "media" | "design" | "widgets" | "theme" | "embed" | (string & {});
 
@@ -79,6 +79,8 @@ export interface BlockType {
    * ServerSideRender chỉ cho khối động của plugin). `edit` chỉ dùng khi đang tải / website không vẽ được / khối nằm trong vòng lặp bài.
    */
   serverRender?: boolean;
+  /** Khối `serverRender`: đang chọn thì vẽ `edit` (ô giữ chỗ để nhập), bỏ chọn mới hiện bản website vẽ. */
+  editWhenSelected?: boolean;
   /** Thanh công cụ riêng của khối (chèn vào thanh công cụ nổi). */
   toolbar?: ComponentType<BlockEditProps>;
   /**
