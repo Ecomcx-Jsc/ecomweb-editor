@@ -144,6 +144,7 @@ export const hints = {
   "gallery.linkTo.opt.media": "Open full image",
   "gallery.imageCrop.label": "Crop images to fit",
   "gallery.lightbox.label": "Enlarge on click",
+  "image.lightbox.label": "Enlarge on click",
   "countdown.expiredText.label": "Text when expired",
   "navigation.overlayMenu.label": "Collapse into menu button",
   "navigation.overlayMenu.opt.never": "Never",

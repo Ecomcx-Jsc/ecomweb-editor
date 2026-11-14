@@ -144,6 +144,7 @@ export const hints = {
   "gallery.linkTo.opt.media": "Mở ảnh gốc",
   "gallery.imageCrop.label": "Cắt ảnh cho đều khung",
   "gallery.lightbox.label": "Phóng to khi bấm",
+  "image.lightbox.label": "Phóng to khi bấm",
   "countdown.expiredText.label": "Chữ khi hết giờ",
   "navigation.overlayMenu.label": "Thu gọn thành nút menu",
   "navigation.overlayMenu.opt.never": "Không",

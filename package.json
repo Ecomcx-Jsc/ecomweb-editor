@@ -1,6 +1,6 @@
 {
   "name": "@ecomcx/ecomweb-editor",
-  "version": "1.29.0",
+  "version": "1.29.1",
   "description": "Trình soạn nội dung dạng khối của CMS — dùng độc lập trong mọi dự án React (1.x: TipTap; ./v2: cây khối, khung soạn iframe, sửa header/footer tại chỗ).",
   "license": "MIT",
   "repository": {
@@ -29,7 +29,7 @@
     "*.css"
   ],
   "peerDependencies": {
-    "@ecomcx/ecomweb-content": "^1.23.0",
+    "@ecomcx/ecomweb-content": "^1.23.1",
     "react": ">=18",
     "react-dom": ">=18"
   },
@@ -45,7 +45,7 @@
     "prosemirror-view": "1.42.7"
   },
   "devDependencies": {
-    "@ecomcx/ecomweb-content": "^1.23.0",
+    "@ecomcx/ecomweb-content": "^1.23.1",
     "@playwright/test": "1.53.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",

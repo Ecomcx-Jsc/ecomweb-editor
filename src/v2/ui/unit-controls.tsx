@@ -15,6 +15,12 @@ const parse = (v: unknown): { n: string; unit: string } | null => {
   const m = typeof v === "string" ? /^(-?\d*\.?\d+)(px|rem|em|%|vw|vh)?$/.exec(v.trim()) : typeof v === "number" ? [String(v), String(v), "px"] : null;
   return m ? { n: m[1], unit: m[2] ?? "px" } : null;
 };
+/** Đổi đơn vị giữ nguyên cỡ thật: px ↔ rem / em theo 16px (22px → 1.375rem). %, vw, vh phụ thuộc khung chứa → giữ số. */
+export const convertUnit = (n: string, from: string, to: string): string => {
+  const px = (u: string) => (u === "px" ? 1 : u === "rem" || u === "em" ? 16 : 0);
+  if (n === "" || !px(from) || !px(to) || !Number.isFinite(Number(n))) return n;
+  return String(Math.round((Number(n) * px(from)) / px(to) * 1000) / 1000);
+};
 
 export function UnitInput({ value, onChange, label, max = 100, units = UNITS, slider = true, placeholder }: { value?: string; onChange(v: string | undefined): void; label: string; max?: number; units?: string[]; slider?: boolean; placeholder?: string }) {
   const t = useMsgs("controls");
@@ -29,7 +35,7 @@ export function UnitInput({ value, onChange, label, max = 100, units = UNITS, sl
       <div className="ecx-unit-input">
         <input type="number" inputMode="decimal" aria-label={label} value={n} placeholder={p ? undefined : value ?? placeholder ?? ""} step={unit === "px" || unit === "%" ? 1 : 0.1}
           onChange={(e) => { setN(e.target.value); emit(e.target.value, unit); }} />
-        <select aria-label={`${label}: ${t.unit}`} value={unit} onChange={(e) => { setUnit(e.target.value); if (n !== "") emit(n, e.target.value); }}>
+        <select aria-label={`${label}: ${t.unit}`} value={unit} onChange={(e) => { const u = e.target.value, m = convertUnit(n, unit, u); setUnit(u); setN(m); if (m !== "") emit(m, u); }}>
           {units.map((u) => <option key={u} value={u}>{u}</option>)}
         </select>
       </div>

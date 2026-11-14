@@ -15,6 +15,10 @@ const POSITIONS = ["0% 0%", "50% 0%", "100% 0%", "0% 50%", "50% 50%", "100% 50%"
 export function BackgroundPanel({ style: raw, onChange, device }: { style: unknown; onChange(style: BlockStyle | null): void; device: Device }) {
   const { host } = useEditor();
   const t = useMsgs("background");
+  // Ảnh nền chỉ nhận đường dẫn tương đối hoặc https → URL media cùng website (site http) đổi thành "/uploads/…"
+  const sameOriginPath = (v: string) => {
+    try { const u = new URL(v, location.href); return u.origin === location.origin ? u.pathname + u.search : v; } catch { return v; }
+  };
   const style: BlockStyle = normalizeStyle(raw) ?? {};
   const bg: BlockBackground = style.background ?? {};
   const [url, setUrl] = useState("");
@@ -24,6 +28,7 @@ export function BackgroundPanel({ style: raw, onChange, device }: { style: unkno
   /** Giá trị theo khổ đang chọn (ảnh, cách phủ, điểm lấy nét). */
   const setAt = (k: "image" | "size" | "position", v: string | undefined) => {
     const r: Record<string, string | undefined> = { ...(bg[k] ?? {}) };
+    if (v && k === "image") v = sameOriginPath(v);
     if (v) r[device] = v; else delete r[device];
     set({ [k]: Object.keys(r).length ? r : undefined });
   };

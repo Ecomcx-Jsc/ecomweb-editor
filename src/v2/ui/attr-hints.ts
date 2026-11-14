@@ -145,6 +145,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "query.exclude": { label: true, when: notInherit },
   "query.sticky": { control: "select", options: ["any", "only", "exclude"], when: notInherit },
   "image.href": { label: true },
+  "image.lightbox": { label: true },
   "image.linkTarget": { control: "segmented", label: true, options: ["_self", "_blank"] },
   "orderedList.reversed": { label: true },
   "blockquote.citation": { label: true },

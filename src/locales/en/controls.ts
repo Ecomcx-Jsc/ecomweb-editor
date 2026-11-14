@@ -19,4 +19,6 @@ export const controls = {
   sideLeft: "left",
   styles: "Styles",
   advanced: "Advanced",
+  /** Tên biến thể kiểu khối của lõi (CORE_BLOCK_STYLES). */
+  blockStyle: { stripes: "Stripes", rounded: "Rounded", circle: "Circle", plain: "Plain", dots: "Dots", wide: "Wide", pill: "Pill", card: "Card" },
 };

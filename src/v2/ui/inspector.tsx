@@ -34,7 +34,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const setAttrs = (a: Record<string, unknown>) => store.setAttrs(ids, a);
   const Custom = same && nodes.length === 1 ? type?.inspector : undefined;
   const bindable = type?.bindable ?? CORE_BINDABLE[first.type];
-  const variants = [...(CORE_BLOCK_STYLES[first.type] ?? []).map((name) => ({ name, label: name })), ...(blockStyles?.[first.type] ?? [])];
+  const variants = [...(CORE_BLOCK_STYLES[first.type] ?? []).map((name) => ({ name, label: (t.blockStyle as Record<string, string>)[name] ?? name })), ...(blockStyles?.[first.type] ?? [])];
   return (
     <div className="ecx-inspector">
       <div className="ecx-block-card">
