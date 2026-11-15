@@ -428,3 +428,4 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-box4-steps { display: flex; flex-wrap: wrap; gap: 4px; }
 .ecx-box4-steps .ecx-chip { min-width: 36px; font-weight: 600; }
 .ecx-box4-pop .ecx-pop-foot { margin-top: 0; }
+.ecx-style-section-head .ecx-switch { margin-right: 2px; }

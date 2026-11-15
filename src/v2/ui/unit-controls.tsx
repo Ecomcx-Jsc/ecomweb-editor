@@ -55,9 +55,11 @@ const SIDES: Side[] = ["top", "right", "bottom", "left"];
  * Đệm / lề bốn cạnh: 4 ô Trên · Phải · Dưới · Trái (vạch đậm ở đúng cạnh, hiện tên bậc hoặc số), xích = 4 cạnh như nhau.
  * Rê chuột lên ô → khối đang chọn được tô vùng đệm (bên trong) / lề (bên ngoài) trên khung soạn. Bấm ô → bảng chọn bậc + giá trị tuỳ chỉnh.
  */
-export function SpacingControl({ label, value, onChange, steps, inherited, labels, kind = "padding", device, onReset }: {
+export function SpacingControl({ label, value, onChange, steps, inherited, labels, kind = "padding", device, onReset, vizTarget }: {
   label: string; value: Box; onChange(v: Box): void; steps: string[]; inherited?: string; labels: { vertical: string; horizontal: string; link: string; unlink: string; top: string; right: string; bottom: string; left: string };
   kind?: SpacingKind; device?: Device; onReset?(): void;
+  /** Phần tử được tô (mặc định: khối đang chọn) — vd một phần của khối. */
+  vizTarget?(): HTMLElement | null;
 }) {
   const { store, ui } = useEditor();
   const t = useMsgs("controls");
@@ -67,7 +69,7 @@ export function SpacingControl({ label, value, onChange, steps, inherited, label
   const hover = useRef<Side | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const ok = (v: string) => !!normalizeStyle({ padding: v });
-  const blockEl = () => { const s = store.getState().selection; const id = s.ids[0] ?? s.editing; return id ? ui.blockEl(id) : null; };
+  const blockEl = () => { if (vizTarget) return vizTarget(); const s = store.getState().selection; const id = s.ids[0] ?? s.editing; return id ? ui.blockEl(id) : null; };
   const names = () => Object.fromEntries(SIDES.map((s) => [s, sides[s] && steps.includes(sides[s]) ? sides[s].toUpperCase() : undefined])) as Partial<Record<Side, string>>;
   const viz = (side: Side | null) => { if (!side) { hideSpacingViz(ui.canvasDoc); return; } showSpacingViz(blockEl(), kind, linked ? SIDES : [side], names()); };
   // Giá trị đổi khi đang rê / đang mở bảng chọn: vẽ lại lớp tô sau khi khối nhận CSS mới

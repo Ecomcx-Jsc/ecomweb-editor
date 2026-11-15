@@ -48,11 +48,13 @@ function ValueInput({ value, onCommit, check, placeholder, label, inherited }: {
  * `part`: "style" = biến thể, chữ, màu (tab Kiểu dáng); "advanced" = khoảng cách, viền, bố cục / hiệu ứng, hover, chuyển động, ẩn hiện
  * (tab Nâng cao — lớp chung của mọi khối như Advanced của Elementor); bỏ trống = tất cả. Ô Nền vẽ ở BackgroundControl.
  */
-export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange, part, lead }: {
+export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange, part, lead, parts }: {
   type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; onDeviceChange(d: Device): void;
   variants?: Array<{ name: string; label: string }>; variant?: string | null; onVariantChange?(v: string | null): void; part?: "style" | "advanced";
   /** Mục vẽ sau Chữ / Màu (mục riêng của khối, ô Nền). */
   lead?: ReactNode;
+  /** Khối chia phần: các phần đứng đầu; Kiểu chữ / Màu chung của cả khối chỉ hiện khi đã có giá trị (nội dung cũ). */
+  parts?: boolean;
 }) {
   const { host, labels, registry } = useEditor();
   const t = labelsLegacy(labels.lang);
@@ -102,7 +104,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   // Nhóm khối hỗ trợ; nhóm đã có giá trị vẫn hiện để sửa / xoá (dữ liệu cũ, khối dán từ nơi khác)
   const groups = styleGroups(type, registry.get(type));
   const inPart = (g: StyleGroup) => !part || (part === "style") === ["typography", "color"].includes(g);
-  const show = (g: StyleGroup, keys: string[]) => inPart(g) && (groups.has(g) || keys.some((k) => style[k] !== undefined));
+  const show = (g: StyleGroup, keys: string[]) => inPart(g) && ((groups.has(g) && !(parts && (g === "typography" || g === "color"))) || keys.some((k) => style[k] !== undefined));
   const appearance = `${style.fontWeight ?? ""}${style.fontStyle === "italic" ? "i" : ""}`;
 
   return (
@@ -119,6 +121,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
           </div>
         </div>
       )}
+
+      {parts && lead}
 
       {show("typography", TYPO) && <Section title={t.style_typography} modified={has(TYPO)} onReset={() => reset(TYPO)} moreOpen={has(["fontFamily", "letterSpacing", "textDecoration", "textTransform"])}
         more={<>
@@ -157,7 +161,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         {(!groups.has("background") || part === undefined) && <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />}
       </Section>}
 
-      {lead}
+      {!parts && lead}
 
       {show("spacing", SPACING) && <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
         more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>

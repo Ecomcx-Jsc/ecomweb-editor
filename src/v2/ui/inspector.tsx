@@ -11,6 +11,9 @@ import { StyleTab } from "./style-tab";
 import { Section, SectionGroup } from "./style-controls";
 import { BackgroundControl } from "./background-panel";
 import { BlockStyleSections } from "./block-style-panel";
+import { PartsSections } from "./parts-panel";
+import { partsFor } from "@ecomcx/ecomweb-content";
+import { blockControls } from "../../shared/panel-store";
 import { styleGroups } from "./style-supports";
 import { ColorInput } from "./color-field";
 import { UnitInput } from "./unit-controls";
@@ -43,6 +46,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const disabled = store.modeOf(first.id) === "disabled";
   const setAttrs = (a: Record<string, unknown>) => store.setAttrs(ids, a);
   const single = same && nodes.length === 1;
+  const hasParts = single && partsFor(blockControls(), first.type).length > 0;
   const Custom = single ? type?.inspector : undefined;
   const styled = type?.supports?.style !== false && !store.isContentOnly(first.id);
   const bindable = type?.bindable ?? CORE_BINDABLE[first.type];
@@ -75,8 +79,10 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             <div className="ecx-panel">
               <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="style"
                 variants={variants.length ? variants : undefined} variant={(first.attrs.blockStyle as string) ?? null} onVariantChange={(v) => setAttrs({ blockStyle: v ?? undefined })}
+                parts={hasParts}
                 lead={single && <>
-                  <BlockStyleSections type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />
+                  <PartsSections blockId={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />
+                  <BlockStyleSections type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} legacyOnly={hasParts} />
                   {!BG_IN_SETTINGS.has(first.type) && (styleGroups(first.type, type).has("background") || !!(first.attrs.style as { background?: unknown } | undefined)?.background) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
                 </>} />
               {single && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} tab="style" />}

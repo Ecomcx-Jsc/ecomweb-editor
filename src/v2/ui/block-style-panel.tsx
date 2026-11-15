@@ -12,13 +12,15 @@ type State = "normal" | "hover" | "active";
  * Ô khai ở @ecomcx/ecomweb-content core-controls → website và khung soạn sinh cùng CSS (controlsCss). Ô `responsive` sửa theo khổ
  * đang chọn ở đầu tab; ô có `state` nằm trong thẻ Rê chuột / Đang mở của mục.
  */
-export function BlockStyleSections({ type, attrs, setAttrs, device }: { type: string; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void; device: Device }) {
+/** `legacyOnly`: khối đã chia phần (attrs.parts) — chỉ hiện mục ô rời đã có giá trị (nội dung cũ), để sửa / xoá. */
+export function BlockStyleSections({ type, attrs, setAttrs, device, legacyOnly }: { type: string; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void; device: Device; legacyOnly?: boolean }) {
   const t = useMsgs("blockStyle");
   const sections = new Map<string, Array<[string, ControlSpec]>>();
   for (const [name, spec] of Object.entries(coreControlsFor(type))) {
     const k = spec.section ?? "text";
     sections.set(k, [...(sections.get(k) ?? []), [name, spec]]);
   }
+  if (legacyOnly) for (const [k, list] of sections) if (!list.some(([n]) => attrs[n] !== undefined)) sections.delete(k);
   if (!sections.size) return null;
   return <>{[...sections].map(([key, list]) => <ControlSection key={key} title={(t.section as Record<string, string>)[key] ?? key} list={list} attrs={attrs} setAttrs={setAttrs} device={device} />)}</>;
 }
