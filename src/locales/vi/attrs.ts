@@ -1,5 +1,7 @@
 /** Tên thuộc tính khối trong bảng cài đặt (khoá = tên thuộc tính), dùng khi khối không tự khai báo nhãn. */
 export const attrs = {
+  iconPosition: "Vị trí icon",
+  ariaLabel: "Nhãn cho trình đọc màn hình",
   level: "Cấp tiêu đề",
   textAlign: "Căn chữ",
   start: "Bắt đầu từ",

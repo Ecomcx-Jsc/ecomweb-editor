@@ -14,7 +14,9 @@ export interface AttrHint {
   label?: true;
   /** Khoá của hint (do hintOf điền) — dùng tra chữ. */
   key?: string;
-  control?: "select" | "segmented" | "range" | "choice" | "newTab" | "suggest" | "code" | "hidden";
+  control?: "select" | "segmented" | "range" | "choice" | "newTab" | "suggest" | "code" | "hidden" | "icon";
+  /** control "icon": có lựa chọn "Không có icon". */
+  allowNone?: true;
   options?: Opt[];
   /** Ô chọn lấy dữ liệu từ ứng dụng (host.choices); tham số tính từ thuộc tính hiện tại. */
   choice?: { kind: ChoiceKind; args?: (attrs: Record<string, unknown>) => Record<string, string> };
@@ -39,6 +41,12 @@ const levels = (from: number, to: number, zero?: boolean): Opt[] => [
 const notInherit = (a: Record<string, unknown>) => a.inherit === false;
 
 export const ATTR_HINTS: Record<string, AttrHint> = {
+  // v3: chọn icon bằng lưới có ô tìm (mọi khối có thuộc tính icon); nút: icon trái / phải, rộng hết khung, nhãn trình đọc màn hình
+  "*.icon": { control: "icon" },
+  "button.icon": { control: "icon", allowNone: true },
+  "button.iconPosition": { control: "segmented", options: ["left", "right"], when: (a) => !!a.icon },
+  "button.width": { control: "segmented", options: ["auto", "full"] },
+  "button.ariaLabel": { help: true },
   "*.textAlign": { control: "segmented", options: [...ALIGN, "justify"] },
   "*.mime": { control: "hidden" },
   "video.name": { control: "hidden" },

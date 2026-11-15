@@ -122,6 +122,33 @@ export function ImageHandle({ blockId }: { blockId: string }) {
  * Dải kéo đệm trên / dưới của khối bố cục đang chọn (Nhóm, Bộ cột, Cột, Ảnh bìa): rê vào mép thì hiện dải, kéo lên / xuống đổi đệm
  * của khổ màn hình đang xem (lưu px, giữ các cạnh khác); khi kéo, vùng đệm được tô kèm số px — như ô Đệm ở bảng bên phải.
  */
+/** Kéo mép dưới để đổi chiều cao khối (Khoảng trống): ghi `attrs.height` = "NNpx". Dùng chung kiểu tay nắm của dải đệm. */
+export function HeightHandle({ blockId }: { blockId: string }) {
+  const { store, ui, labels } = useEditor();
+  const start = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const handle = e.currentTarget as HTMLElement;
+    const el = ui.blockEl(blockId);
+    if (!el) return;
+    const h0 = el.getBoundingClientRect().height, y0 = e.clientY;
+    handle.setPointerCapture(e.pointerId);
+    handle.classList.add("is-dragging");
+    const move = (ev: PointerEvent) => store.setAttrs([blockId], { height: `${Math.max(8, Math.round(h0 + ev.clientY - y0))}px` });
+    const up = () => {
+      handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up);
+      handle.classList.remove("is-dragging"); store.breakMerge(); focusCanvas(handle);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+  };
+  return (
+    <span className="ecx-pad-handles" contentEditable={false} aria-hidden="true">
+      <span className="ecx-pad-handle is-bottom" title={labels.resize} onPointerDown={start} onMouseDown={(e) => e.stopPropagation()} />
+    </span>
+  );
+}
+
 export function PaddingHandles({ blockId }: { blockId: string }) {
   const { store, ui, labels } = useEditor();
   const start = (side: "top" | "bottom", e: React.PointerEvent) => {

@@ -11,6 +11,7 @@ export const controls = {
   linkSides: "Bốn cạnh như nhau",
   unlinkSides: "Chỉnh từng cạnh",
   noMotion: "Chưa có hiệu ứng",
+  noIcon: "Không có icon", searchIcons: "Tìm icon…", noIconFound: "Không thấy icon",
   tablet: "Máy tính bảng",
   mobile: "Điện thoại",
   modified: "đã chỉnh",

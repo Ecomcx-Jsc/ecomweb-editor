@@ -11,6 +11,7 @@ export const controls = {
   linkSides: "All sides the same",
   unlinkSides: "Edit each side",
   noMotion: "No effect yet",
+  noIcon: "No icon", searchIcons: "Search icons…", noIconFound: "No icon found",
   tablet: "Tablet",
   mobile: "Mobile",
   modified: "modified",

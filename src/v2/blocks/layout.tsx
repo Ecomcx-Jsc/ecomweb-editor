@@ -1,4 +1,4 @@
-import { blockShell, buttonWrapShell, colorCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
+import { blockShell, buttonIcon, buttonWrapShell, colorCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
 import { ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import { useEffect, useSyncExternalStore, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
@@ -9,7 +9,7 @@ import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useEditor } from "../context";
 import { ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
-import { ColumnHandles, PaddingHandles, useActiveWithin } from "./resize";
+import { ColumnHandles, HeightHandle, PaddingHandles, useActiveWithin } from "./resize";
 import { ColumnInspector, ColumnsInspector } from "./columns-inspector";
 import { layoutFor, layoutKind } from "../ui/layout-panel";
 import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
@@ -112,10 +112,15 @@ function ButtonEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   const a = block.attrs;
   const bound = useBindingPreview(block, "text");
   const inGroup = store.locate(block.id)?.parent?.type === "buttons";
+  // Icon của nút (content buttonIcon — cùng svg với website)
+  const ic = buttonIcon(a);
+  const icon = ic && <svg className="ecx-widget-icon" viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={String((ic.children?.[0] as { props?: { d?: string } })?.props?.d ?? "")} /></svg>;
   // Website: nút đứng riêng nằm trong đoạn <p class="ecx-buttons"> (căn lề); trong khối "buttons" thì là chính thẻ <a>
   const link = (
     <a {...shellProps(inGroup ? blockProps : ({} as BlockEditProps["blockProps"]), "button", a)} onClick={(e) => e.preventDefault()}>
+      {icon && a.iconPosition !== "right" && icon}
       {bound.bound ? <BoundText preview={bound} /> : <RichText blockId={block.id} field="text" tagName="span" value={String(a.text ?? "")} onChange={(v) => setAttrs({ text: v })} placeholder={tp.buttonText} placeholderAlways editable={editable} />}
+      {icon && a.iconPosition === "right" && icon}
     </a>
   );
   if (inGroup) return link;
@@ -123,12 +128,12 @@ function ButtonEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   return <p {...merge(blockProps, wrap.className ?? "", wrap.style as CSSProperties)}>{link}</p>;
 }
 
-function SpacerEdit({ block, blockProps }: BlockEditProps) {
+function SpacerEdit({ block, blockProps, selected, editable }: BlockEditProps) {
   const tp = useMsgs("placeholders");
   const props = shellProps(blockProps, "spacer", block.attrs);
   const h = props.style?.height ?? block.attrs.height;
   // Nhãn kích thước chỉ trong trình soạn (CSS ::before, không thêm phần tử con — website là div rỗng)
-  return <div {...props} data-ecx-size={tp.spacer.replace("{size}", String(h ?? ""))} />;
+  return <div {...props} data-ecx-size={tp.spacer.replace("{size}", String(h ?? ""))}>{selected && editable && <HeightHandle blockId={block.id} />}</div>;
 }
 
 function SeparatorEdit({ blockProps }: BlockEditProps) {
@@ -411,7 +416,8 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "button", title: "Nút", icon: MousePointerClick, kind: "atom", edit: ButtonEdit, hidden: true,
-      attributes: { text: { type: "string" }, href: { type: "url" }, target: { type: "string", enum: ["_self", "_blank"] }, rel: { type: "string" }, variant: { type: "string", enum: ["primary", "secondary", "outline"], default: "primary" } },
+      attributes: { text: { type: "string" }, href: { type: "url" }, target: { type: "string", enum: ["_self", "_blank"] }, rel: { type: "string" }, variant: { type: "string", enum: ["primary", "secondary", "outline"], default: "primary" },
+        icon: { type: "string" }, iconPosition: { type: "string", enum: ["left", "right"] }, width: { type: "string", enum: ["auto", "full"] }, ariaLabel: { type: "string" } },
       create: (attrs) => makeBlock("button", { variant: "primary", ...attrs }),
       supports: { style: true, className: true }, summary: (a) => a.text,
     },

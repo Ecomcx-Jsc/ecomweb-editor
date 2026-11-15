@@ -7,6 +7,7 @@ import { messages } from "../../i18n";
 import { blockOptions } from "../../shared/block-defs";
 import { DEFAULT_IMAGE_SIZES, hintOf, hintText, imageSizeLabel, optionLabel, type AttrHint } from "./attr-hints";
 import { ColorInput } from "./color-field";
+import { IconPicker } from "./icon-picker";
 import { mediaSrcsets } from "../core/media";
 
 export const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
@@ -109,7 +110,11 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
             return <label key={k} className="ecx-check"><input type="checkbox" checked={value === "_blank"} onChange={(e) => set(e.target.checked ? "_blank" : undefined)} /> {labels.openInNewTab}</label>;
           case "segmented":
             return <Field key={k} label={label} group><SegText label={label} value={value == null ? undefined : String(value)} options={opts()} onChange={(v) => set(v === undefined ? undefined : parse(v))} />{help}</Field>;
-          case "select":
+          case "select": {
+            // Ít lựa chọn, chữ ngắn → dãy nút bấm (một chạm, thấy hết lựa chọn) như bảng của các bộ khối lớn; cấp tiêu đề → H1…H6
+            const list = k === "level" ? opts().map(([v]) => [v, `H${v}`] as [string, string]) : opts();
+            if (list.length >= 2 && list.length <= 6 && list.every(([, text]) => text.length <= 12))
+              return <Field key={k} label={label} group><SegText label={label} value={value == null ? undefined : String(value)} options={list} onChange={(v) => set(v === undefined ? undefined : parse(v))} />{help}</Field>;
             return (
               <Field key={k} label={label}>
                 <select className="ecx-input" value={value == null ? "" : String(value)} onChange={(e) => set(parse(e.target.value))}>
@@ -119,6 +124,9 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
                 {help}
               </Field>
             );
+          }
+          case "icon":
+            return <Field key={k} label={label}><IconPicker label={label} value={value == null ? undefined : String(value)} allowNone={hint.allowNone} onChange={(v) => set(v)} />{help}</Field>;
           case "choice":
             return <Field key={k} label={label}><ChoiceField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
           case "range": {

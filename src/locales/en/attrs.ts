@@ -1,5 +1,7 @@
 /** Block attribute names in the settings panel (key = attribute name), used when a block does not declare its own label. */
 export const attrs = {
+  iconPosition: "Icon position",
+  ariaLabel: "Screen reader label",
   level: "Level",
   textAlign: "Text align",
   start: "Start at",

@@ -461,3 +461,13 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-preset-del { width: 28px; height: 28px; display: grid; place-items: center; border: 0; border-radius: 6px; background: none; color: var(--ecx-ed-muted); cursor: pointer; }
 .ecx-preset-del:hover { background: var(--ecx-ed-subtle); color: #c0392b; }
 .ecx-preset-name { display: flex; gap: 6px; padding: 2px; }
+/* Ô chọn icon: lưới có ô tìm */
+.ecx-icon-picker { position: relative; }
+.ecx-icon-picker-btn { display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 10px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); font: inherit; cursor: pointer; transition: border-color .05s linear; }
+.ecx-icon-picker-btn:hover, .ecx-icon-picker-btn.is-open { border-color: var(--ecx-ed-accent); }
+.ecx-icon-picker-name { flex: 1; text-align: left; font-size: 12px; color: var(--ecx-ed-muted); }
+.ecx-icon-pop { position: absolute; z-index: 25; top: calc(100% + 6px); left: 0; right: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid var(--ecx-ed-line); border-radius: 10px; background: var(--ecx-ed-panel); box-shadow: var(--ecx-ed-shadow); animation: ecx-pop .1s linear; }
+.ecx-icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; max-height: 220px; overflow: auto; }
+.ecx-icon-cell { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid transparent; border-radius: 7px; background: none; color: var(--ecx-ed-fg); cursor: pointer; }
+.ecx-icon-cell:hover { background: var(--ecx-ed-subtle); }
+.ecx-icon-cell.is-active { border-color: var(--ecx-ed-accent); background: var(--ecx-ed-accent-soft); color: var(--ecx-ed-accent); }
