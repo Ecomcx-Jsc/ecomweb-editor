@@ -1,5 +1,5 @@
 import { normalizeStyle, type BlockStyle, type Device } from "@ecomcx/ecomweb-content";
-import { AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalSpaceBetween, AlignStartHorizontal, ArrowDown, ArrowRight, StretchHorizontal } from "lucide-react";
+import { AlignCenter, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalDistributeCenter, AlignHorizontalSpaceAround, AlignHorizontalSpaceBetween, AlignLeft, AlignRight, AlignStartHorizontal, ArrowDown, ArrowLeft, ArrowRight, ArrowUp, StretchHorizontal } from "lucide-react";
 import type { CSSProperties } from "react";
 import { useEditor } from "../context";
 import type { BNode } from "../core/model";
@@ -88,6 +88,10 @@ export function ColumnsInspector({ block, attrs, setAttrs }: BlockEditProps) {
   const gap = (k: "columnsGap" | "columnsRowGap") => atDevice<string>(attrs[k] as Responsive<string>, device);
   const setGap = (k: "columnsGap" | "columnsRowGap", v: string | undefined) => setAttrs({ [k]: withDevice(attrs[k] as Responsive<string>, device, v) });
   const valign = (attrs.verticalAlign as string | undefined) ?? "top";
+  const rowStyle = (normalizeStyle(attrs.style) ?? {}) as BlockStyle;
+  const rowMax = atDevice<string>(rowStyle.maxWidth as Responsive<string>, device);
+  // Đặt rộng tối đa mà chưa có lề → lề trái / phải tự động để hàng nằm giữa (lề đã đặt thì giữ)
+  const setRowMax = (v: string | undefined) => setAttrs({ style: normalizeStyle({ ...rowStyle, maxWidth: mapDevice(rowStyle.maxWidth as Responsive<string>, device, v), ...(v && !rowStyle.margin ? { margin: { base: { left: "auto", right: "auto" } } } : {}) }) ?? undefined });
 
   return (
     <div className="ecx-form">
@@ -118,6 +122,9 @@ export function ColumnsInspector({ block, attrs, setAttrs }: BlockEditProps) {
           <UnitInput label={`${k === "columnsGap" ? t.gap : t.rowGap}: px`} value={gap(k) && !spaces.includes(gap(k)!) ? gap(k) : undefined} units={["px", "rem", "%"]} max={160} onChange={(v) => setGap(k, v)} />
         </Row>
       ))}
+      <Row label={t.rowMaxWidth} device={device} onReset={rowMax ? () => setRowMax(undefined) : undefined}>
+        <UnitInput label={t.rowMaxWidth} value={rowMax} units={["px", "rem", "%"]} max={1600} onChange={setRowMax} />
+      </Row>
       <Row label={t.valign}>
         <Seg label={t.valign} value={valign} onChange={(v) => setAttrs({ verticalAlign: v === "top" ? undefined : v })}
           options={[["top", AlignStartHorizontal, t.top], ["center", AlignCenterHorizontal, t.middle], ["bottom", AlignEndHorizontal, t.bottom], ["stretch", StretchHorizontal, t.stretch]]} />
@@ -137,30 +144,51 @@ export function ColumnInspector({ attrs, setAttrs }: BlockEditProps) {
   const put = (patch: Partial<NonNullable<BlockStyle["layout"]>>) => setAttrs({ style: normalizeStyle({ ...style, layout: { ...layout, ...patch, type: "flex" } }) });
   const field = <K extends "direction" | "justify" | "align">(k: K) => atDevice<string>(layout[k] as Responsive<string>, device);
   const setField = (k: "direction" | "justify" | "align", v: string | undefined) => put({ [k]: mapDevice(layout[k] as Responsive<string>, device, v) } as never);
-  const vertical = (field("direction") ?? atDevice<string>(layout.direction as Responsive<string>, "base") ?? "column") === "column";
+  const vertical = (field("direction") ?? atDevice<string>(layout.direction as Responsive<string>, "base") ?? "column").startsWith("column");
+  // Trục chính có thêm dàn đều: giữa các khối / quanh các khối / đều nhau
+  const spread: [string, typeof ArrowDown, string][] = [["between", AlignHorizontalSpaceBetween, t.between], ["around", AlignHorizontalSpaceAround, t.around], ["evenly", AlignHorizontalDistributeCenter, t.evenly]];
+  const resp = <K extends "textAlign" | "maxWidth">(k: K) => atDevice<string>(style[k] as Responsive<string>, device);
+  const setResp = (k: "textAlign" | "maxWidth", v: string | undefined) => setAttrs({ style: normalizeStyle({ ...style, [k]: mapDevice(style[k] as Responsive<string>, device, v) }) ?? undefined });
+  const href = typeof attrs.href === "string" ? attrs.href : "";
   const gap = atDevice<string>(style.gap as Responsive<string>, device);
   return (
     <div className="ecx-form">
       <Row label={t.direction} device={device} onReset={field("direction") && device !== "base" ? () => setField("direction", undefined) : undefined}>
         <Seg label={t.direction} value={field("direction") ?? (device === "base" ? "column" : undefined)} onChange={(v) => setField("direction", v ?? "column")}
-          options={[["column", ArrowDown, t.vertical], ["row", ArrowRight, t.horizontal]]} />
+          options={[["column", ArrowDown, t.vertical], ["row", ArrowRight, t.horizontal], ["column-reverse", ArrowUp, t.verticalReverse], ["row-reverse", ArrowLeft, t.horizontalReverse]]} />
       </Row>
       {/* Căn theo trục: dọc → căn ngang là align, căn dọc là justify; ngang thì ngược lại */}
       <Row label={t.halign} device={device} onReset={field(vertical ? "align" : "justify") ? () => setField(vertical ? "align" : "justify", undefined) : undefined}>
         <Seg label={t.halign} value={field(vertical ? "align" : "justify")} onChange={(v) => setField(vertical ? "align" : "justify", v)}
           options={vertical
             ? [["start", AlignStartHorizontal, t.left], ["center", AlignCenterHorizontal, t.center], ["end", AlignEndHorizontal, t.right], ["stretch", StretchHorizontal, t.fill]]
-            : [["start", AlignStartHorizontal, t.left], ["center", AlignCenterHorizontal, t.center], ["end", AlignEndHorizontal, t.right], ["between", AlignHorizontalSpaceBetween, t.between]]} />
+            : [["start", AlignStartHorizontal, t.left], ["center", AlignCenterHorizontal, t.center], ["end", AlignEndHorizontal, t.right], ...spread]} />
       </Row>
       <Row label={t.valign} device={device} onReset={field(vertical ? "justify" : "align") ? () => setField(vertical ? "justify" : "align", undefined) : undefined}>
         <Seg label={t.valign} value={field(vertical ? "justify" : "align")} onChange={(v) => setField(vertical ? "justify" : "align", v)}
           options={vertical
-            ? [["start", AlignStartHorizontal, t.top], ["center", AlignCenterHorizontal, t.middle], ["end", AlignEndHorizontal, t.bottom], ["between", AlignHorizontalSpaceBetween, t.between]]
+            ? [["start", AlignStartHorizontal, t.top], ["center", AlignCenterHorizontal, t.middle], ["end", AlignEndHorizontal, t.bottom], ...spread]
             : [["start", AlignStartHorizontal, t.top], ["center", AlignCenterHorizontal, t.middle], ["end", AlignEndHorizontal, t.bottom], ["stretch", StretchHorizontal, t.fill]]} />
       </Row>
       <Row label={t.innerGap} device={device} onReset={gap !== undefined ? () => setAttrs({ style: normalizeStyle({ ...style, gap: mapDevice(style.gap as Responsive<string>, device, undefined) }) }) : undefined}>
         <Seg label={t.innerGap} value={gap} onChange={(v) => setAttrs({ style: normalizeStyle({ ...style, gap: mapDevice(style.gap as Responsive<string>, device, v), layout }) })}
           options={spaces.map((s) => [s, s === "0" ? "0" : s.toUpperCase(), s] as [string, string, string])} />
+      </Row>
+      <Row label={t.textAlign} device={device} onReset={resp("textAlign") ? () => setResp("textAlign", undefined) : undefined}>
+        <Seg label={t.textAlign} value={resp("textAlign")} onChange={(v) => setResp("textAlign", v)}
+          options={[["left", AlignLeft, t.left], ["center", AlignCenter, t.center], ["right", AlignRight, t.right]]} />
+      </Row>
+      <Row label={t.maxWidth} device={device} onReset={resp("maxWidth") ? () => setResp("maxWidth", undefined) : undefined}>
+        <UnitInput label={t.maxWidth} value={resp("maxWidth")} units={["px", "rem", "%"]} max={1600} onChange={(v) => setResp("maxWidth", v)} />
+      </Row>
+      {/* Liên kết phủ cả cột (cả cột thành một vùng bấm) */}
+      <Row label={t.overlayLink}>
+        <input className="ecx-input" type="url" inputMode="url" aria-label={t.overlayLink} placeholder="https://… / /duong-dan" value={href} onChange={(e) => setAttrs({ href: e.target.value || undefined })} />
+        {href && <>
+          <p className="ecx-field-help">{t.overlayNote}</p>
+          <label className="ecx-check-row"><input type="checkbox" role="switch" className="ecx-switch" checked={attrs.linkTarget === "_blank"} onChange={(e) => setAttrs({ linkTarget: e.target.checked ? "_blank" : undefined })} /> {t.newTab}</label>
+          <input className="ecx-input" aria-label={t.linkLabel} placeholder={t.linkLabel} value={typeof attrs.linkLabel === "string" ? attrs.linkLabel : ""} onChange={(e) => setAttrs({ linkLabel: e.target.value || undefined })} />
+        </>}
       </Row>
     </div>
   );

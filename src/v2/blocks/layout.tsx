@@ -407,7 +407,7 @@ export function layoutBlocks(): BlockType[] {
       ],
       supports: { style: true, anchor: true, className: true },
     },
-    { name: "column", title: "Cột", icon: RectangleHorizontal, kind: "container", edit: ColumnEdit, inspector: ColumnInspector, hidden: true, attributes: { width: { type: "number", min: 1, max: 100, control: "hidden" } }, create: () => col(), supports: { style: true } },
+    { name: "column", title: "Cột", icon: RectangleHorizontal, kind: "container", edit: ColumnEdit, inspector: ColumnInspector, hidden: true, attributes: { width: { type: "number", min: 1, max: 100, control: "hidden" }, href: { type: "url" }, linkTarget: { type: "string", enum: ["_self", "_blank"] }, linkLabel: { type: "string" } }, create: () => col(), supports: { style: true } },
     {
       name: "buttons", title: "Nút", icon: MousePointerClick, category: "design", keywords: "nut button cta lien ket", kind: "container", edit: ButtonsEdit,
       attributes: { align: { type: "string", enum: ["left", "center", "right", "space-between"] } },

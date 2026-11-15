@@ -46,3 +46,28 @@ test.describe("v3: cài đặt riêng từng khối", () => {
     expect((await find(page, "spacer")).attrs.height).toBe("lg");
   });
 });
+
+test("cột: hướng đảo, dàn đều quanh, căn chữ, rộng tối đa, liên kết cả cột", async ({ page }) => {
+  const c = await open(page, "?doc=rich");
+  const col = c.locator(".ecx-column").first();
+  await col.locator("[data-ecx-rich]").first().click();
+  for (let i = 0; i < 4 && (await page.locator(".ecx-inspector").getByRole("radio", { name: "Dọc, đảo thứ tự" }).count()) === 0; i++)
+    await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+  await insp(page).getByRole("radio", { name: "Dọc, đảo thứ tự" }).click();
+  await expect(col).toHaveCSS("flex-direction", "column-reverse");
+  await insp(page).getByRole("radio", { name: "Dàn đều quanh" }).click();
+  await expect(col).toHaveCSS("justify-content", "space-around");
+  await insp(page).getByRole("radiogroup", { name: "Căn chữ" }).getByRole("radio", { name: "Giữa" }).click();
+  await expect(col).toHaveCSS("text-align", "center");
+  await insp(page).getByLabel("Liên kết cả cột").fill("/gioi-thieu");
+  await insp(page).getByRole("switch", { name: "Mở tab mới" }).check();
+  const attrs = (await find(page, "column")).attrs;
+  expect(attrs).toMatchObject({ href: "/gioi-thieu", linkTarget: "_blank" });
+  // Bộ cột: rộng tối đa → hàng hẹp lại và nằm giữa
+  await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+  await insp(page).getByRole("spinbutton", { name: /Rộng tối đa của hàng/ }).fill("400");
+  const row = c.locator(".ecx-columns").first();
+  await expect(row).toHaveCSS("max-width", "400px");
+  const [box, parent] = await row.evaluate((el) => [el.getBoundingClientRect(), el.parentElement!.getBoundingClientRect()].map((r) => [r.left, r.right]));
+  expect(Math.abs((box[0] - parent[0]) - (parent[1] - box[1]))).toBeLessThan(2);
+});

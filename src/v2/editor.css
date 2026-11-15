@@ -471,3 +471,5 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-icon-cell { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid transparent; border-radius: 7px; background: none; color: var(--ecx-ed-fg); cursor: pointer; }
 .ecx-icon-cell:hover { background: var(--ecx-ed-subtle); }
 .ecx-icon-cell.is-active { border-color: var(--ecx-ed-accent); background: var(--ecx-ed-accent-soft); color: var(--ecx-ed-accent); }
+
+.ecx-check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
