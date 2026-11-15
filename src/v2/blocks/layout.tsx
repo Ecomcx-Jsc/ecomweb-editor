@@ -10,6 +10,7 @@ import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useEditor } from "../context";
 import { ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
 import { ColumnHandles, PaddingHandles, useActiveWithin } from "./resize";
+import { ColumnInspector, ColumnsInspector } from "./columns-inspector";
 import { layoutFor, layoutKind } from "../ui/layout-panel";
 import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
 import { ToolButton } from "../ui/toolbar";
@@ -389,8 +390,9 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "columns", title: "Cột", icon: Columns2, category: "design", keywords: "cot columns bo cuc layout", kind: "container", edit: ColumnsEdit,
-      attributes: { verticalAlign: { type: "string", enum: ["top", "center", "bottom"] }, stack: { type: "boolean", default: true } },
-      create: () => columns(0, 0), contextToolbar: ColumnsTools,
+      // Cài đặt vẽ ở ColumnsInspector (số cột, bố cục theo khổ, khe, căn dọc) — ô tự sinh ẩn
+      attributes: { verticalAlign: { type: "string", enum: ["top", "center", "bottom", "stretch"], control: "hidden" }, stack: { type: "boolean", default: true, control: "hidden" } },
+      create: () => columns(0, 0), contextToolbar: ColumnsTools, inspector: ColumnsInspector,
       variations: [
         { name: "50-50", title: "50 / 50", icon: Columns2, create: () => columns(0, 0) },
         { name: "33-33-33", title: "33 / 33 / 33", icon: Columns3, create: () => columns(0, 0, 0) },
@@ -400,7 +402,7 @@ export function layoutBlocks(): BlockType[] {
       ],
       supports: { style: true, anchor: true, className: true },
     },
-    { name: "column", title: "Cột", icon: RectangleHorizontal, kind: "container", edit: ColumnEdit, hidden: true, attributes: { width: { type: "number", min: 1, max: 100 } }, create: () => col(), supports: { style: true } },
+    { name: "column", title: "Cột", icon: RectangleHorizontal, kind: "container", edit: ColumnEdit, inspector: ColumnInspector, hidden: true, attributes: { width: { type: "number", min: 1, max: 100, control: "hidden" } }, create: () => col(), supports: { style: true } },
     {
       name: "buttons", title: "Nút", icon: MousePointerClick, category: "design", keywords: "nut button cta lien ket", kind: "container", edit: ButtonsEdit,
       attributes: { align: { type: "string", enum: ["left", "center", "right", "space-between"] } },

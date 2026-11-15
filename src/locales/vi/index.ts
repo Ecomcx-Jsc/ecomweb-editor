@@ -13,6 +13,7 @@ import { blockTitles } from "./block-titles";
 import { blocks } from "./blocks";
 import { controls } from "./controls";
 import { parts } from "./parts";
+import { columns } from "./columns";
 import { hints } from "./hints";
 import { layout } from "./layout";
 import { legacyBasic } from "./legacy-basic";
@@ -25,4 +26,4 @@ import { patterns } from "./patterns";
 import { shortcuts } from "./shortcuts";
 import { placeholders } from "./placeholders";
 
-export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, hints, parts, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };
+export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };

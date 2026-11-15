@@ -8,6 +8,7 @@ import { blockTitles } from "./block-titles";
 import { blocks } from "./blocks";
 import { controls } from "./controls";
 import { parts } from "./parts";
+import { columns } from "./columns";
 import { hints } from "./hints";
 import { layout } from "./layout";
 import { legacyBasic } from "./legacy-basic";
@@ -21,4 +22,4 @@ import { shortcuts } from "./shortcuts";
 import { placeholders } from "./placeholders";
 
 /** Tiếng Anh: đủ khoá như vi/ (thiếu khoá là lỗi biên dịch) và là ngôn ngữ dự phòng của mọi ngôn ngữ khác. */
-export const en: typeof vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, hints, parts, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };
+export const en: typeof vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };

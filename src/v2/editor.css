@@ -429,3 +429,16 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-box4-steps .ecx-chip { min-width: 36px; font-weight: 600; }
 .ecx-box4-pop .ecx-pop-foot { margin-top: 0; }
 .ecx-style-section-head .ecx-switch { margin-right: 2px; }
+/* Bộ cột: bộ đếm số cột, hình bố cục */
+.ecx-stepper { display: flex; align-items: center; height: 34px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; overflow: hidden; }
+.ecx-stepper button { width: 36px; height: 100%; border: 0; background: var(--ecx-ed-subtle); color: var(--ecx-ed-fg); font: 600 16px var(--ecx-ed-font); cursor: pointer; }
+.ecx-stepper button:disabled { opacity: .4; cursor: default; }
+.ecx-stepper output { flex: 1; text-align: center; font-weight: 600; }
+.ecx-layout-thumbs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ecx-layout-thumb { display: flex; gap: 3px; height: 40px; padding: 7px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; background: var(--ecx-ed-panel); cursor: pointer; transition: border-color .05s linear; }
+.ecx-layout-thumb i { flex: 1; min-width: 4px; border-radius: 2px; background: var(--ecx-ed-line-strong, #c9d0d7); }
+.ecx-layout-thumb.is-stack { flex-direction: column; }
+.ecx-layout-thumb.is-stack i { flex: 1; }
+.ecx-layout-thumb:hover { border-color: var(--ecx-ed-accent); }
+.ecx-layout-thumb.is-active { border-color: var(--ecx-ed-accent); background: var(--ecx-ed-accent-soft); }
+.ecx-layout-thumb.is-active i { background: var(--ecx-ed-accent); }
