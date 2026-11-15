@@ -481,3 +481,19 @@ test("mục lục: khoảng cấp H3–H4, thu gọn, danh sách 2 cột không 
   await expect(toc.locator("details.ecx-toc-details > summary")).toBeVisible();
   await expect(toc.locator("ul.ecx-toc-list.is-plain.has-cols-2 > li")).toHaveText(["Ba", "Bốn"]);
 });
+
+test("form: Cc, tiêu đề email, chuyển trang; ô 1/3 hàng + tự điền", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "F", type: "form", attrs: { formId: "f_t" }, content: [
+    { id: "F1", type: "formField", attrs: { kind: "text", name: "ten", label: "Tên" } }, { id: "F2", type: "formField", attrs: { kind: "text", name: "ho", label: "Họ" } }] }], { focus: false }); s.select(["F"], { editing: null }); });
+  await insp(page).getByRole("textbox", { name: "Đồng gửi (Cc)" }).fill("a@x.vn, b@x.vn");
+  await insp(page).getByRole("textbox", { name: "Tiêu đề email báo" }).fill("Khách hỏi giá");
+  await insp(page).getByRole("textbox", { name: "Chuyển tới trang sau khi gửi" }).fill("/cam-on");
+  expect((await find(page, "form")).attrs).toMatchObject({ notifyCc: "a@x.vn, b@x.vn", emailSubject: "Khách hỏi giá", redirect: "/cam-on" });
+  await page.evaluate(() => (window as any).__ecx.store.select(["F1"], { editing: null }));
+  await insp(page).getByRole("radio", { name: "1/3 hàng" }).click();
+  await insp(page).getByRole("combobox", { name: "Trình duyệt tự điền" }).selectOption("given-name");
+  expect((await find(page, "formField")).attrs).toMatchObject({ width: "third", autocomplete: "given-name" });
+  const [a, b] = [await c.locator(".ecx-field").nth(0).boundingBox(), await c.locator(".ecx-form-blocks").boundingBox()];
+  expect(a!.width).toBeLessThan(b!.width / 2.5);
+});

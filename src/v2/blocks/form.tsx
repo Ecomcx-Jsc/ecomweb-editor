@@ -66,7 +66,7 @@ function FieldEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   const ph = String(a.placeholder ?? "");
   const check = kind === "checkbox" || kind === "consent";
   return (
-    <div {...merge(blockProps, cx("ecx-field", `is-${kind}`, a.width === "half" && "is-half", check && "is-check"))}>
+    <div {...merge(blockProps, cx("ecx-field", `is-${kind}`, (a.width === "half" || a.width === "third") && `is-${a.width}`, check && "is-check"))}>
       {check ? <label><input type="checkbox" disabled tabIndex={-1} /> <span>{label}{star}</span></label> : <label>{label}{star}</label>}
       {kind === "textarea" ? <textarea disabled tabIndex={-1} placeholder={ph} />
         : kind === "select" ? <select disabled tabIndex={-1}><option>{opts[0] ?? ph ?? "—"}</option></select>
