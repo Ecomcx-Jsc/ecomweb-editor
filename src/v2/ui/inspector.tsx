@@ -13,7 +13,6 @@ import { BackgroundControl } from "./background-panel";
 import { BlockStyleSections } from "./block-style-panel";
 import { PartsSections } from "./parts-panel";
 import { PresetBar } from "./preset-bar";
-import { partsFor } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
 import { styleGroups } from "./style-supports";
 import { ColorInput } from "./color-field";
@@ -47,7 +46,8 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const disabled = store.modeOf(first.id) === "disabled";
   const setAttrs = (a: Record<string, unknown>) => store.setAttrs(ids, a);
   const single = same && nodes.length === 1;
-  const hasParts = single && partsFor(blockControls(), first.type).length > 0;
+  // Phần thay hẳn Kiểu chữ / Màu chung (khối ghép) — khối chỉ có phần phụ (tiêu đề: chữ tô sáng, liên kết) vẫn giữ mục chung
+  const hasParts = single && blockControls().some((c) => c.partsOnly && c.parts && (c.blocks === "*" || c.blocks.includes(first.type)));
   const Custom = single ? type?.inspector : undefined;
   const styled = type?.supports?.style !== false && !store.isContentOnly(first.id);
   const bindable = type?.bindable ?? CORE_BINDABLE[first.type];
