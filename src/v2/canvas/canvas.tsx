@@ -380,6 +380,8 @@ function useCanvasKeys(doc: Document) {
       }
       if (mod && e.shiftKey && k === "d") { e.preventDefault(); store.duplicate(ids); return; }
       if (e.altKey && e.shiftKey && k === "z") { e.preventDefault(); store.remove(ids); return; }
+      // ⇧⌥⌘T / ⇧⌥⌘Y: chuyển khối lên / xuống (trượt về chỗ mới — move-animation)
+      if (mod && e.altKey && e.shiftKey && (e.code === "KeyT" || e.code === "KeyY")) { e.preventDefault(); store.moveBy(ids, e.code === "KeyT" ? -1 : 1); return; }
       if (mod && e.altKey && k === "t") { e.preventDefault(); insertSibling(store, ids[0], 0); return; }
       if (mod && e.altKey && k === "y") { e.preventDefault(); insertSibling(store, ids[ids.length - 1], 1); return; }
     };
