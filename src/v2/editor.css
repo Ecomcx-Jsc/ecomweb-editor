@@ -512,3 +512,43 @@ body.is-dragging .ecx-section-adder { display: none; }
 .ecx-icon-cell.is-active { border-color: var(--ecx-ed-accent); background: var(--ecx-ed-accent-soft); color: var(--ecx-ed-accent); }
 
 .ecx-check-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+
+/* Thư viện mẫu (pattern-library.tsx): hộp gần toàn màn hình, cột trái danh mục, lưới xem trước thật */
+.ecx-lib-open { gap: 6px; height: 32px; padding: 0 10px; font-weight: 500; }
+.ecx-lib-backdrop { z-index: 1000; }
+.ecx-lib { position: fixed; inset: 24px; display: grid; grid-template-columns: 240px 1fr; overflow: hidden; border-radius: 14px; background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); box-shadow: 0 24px 64px rgb(14 40 58 / .3); font: 14px/1.45 var(--ecx-ed-font); }
+.ecx-lib-side { display: flex; flex-direction: column; gap: 12px; padding: 16px; overflow: auto; border-right: 1px solid var(--ecx-ed-line); background: var(--ecx-ed-subtle); }
+.ecx-lib-side .ecx-tabs { margin: 0 -16px; }
+.ecx-lib-mode { display: flex; border: 1px solid var(--ecx-ed-line); border-radius: 8px; overflow: hidden; background: var(--ecx-ed-panel); }
+.ecx-lib-mode button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 34px; border: 0; background: none; color: var(--ecx-ed-fg); font: inherit; font-size: 13px; cursor: pointer; }
+.ecx-lib-mode button.is-active { background: var(--ecx-ed-accent); color: var(--ecx-ed-accent-fg); }
+.ecx-lib-cats { display: flex; flex-direction: column; gap: 1px; }
+.ecx-lib-cats button { padding: 7px 10px; border: 0; border-radius: 6px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ecx-lib-cats button:hover { background: var(--ecx-ed-hover); }
+.ecx-lib-cats button[aria-current] { background: var(--ecx-ed-panel); font-weight: 600; box-shadow: 0 1px 2px rgb(14 40 58 / .08); }
+.ecx-lib-scheme { margin-top: auto; display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
+.ecx-lib-scheme div { display: flex; gap: 8px; }
+.ecx-lib-scheme button { width: 26px; height: 26px; padding: 0; border: 2px solid var(--ecx-ed-panel); border-radius: 50%; box-shadow: 0 0 0 1px var(--ecx-ed-line); cursor: pointer; }
+.ecx-lib-scheme .is-light { background: #fff; } .ecx-lib-scheme .is-dark { background: #0f1b24; } .ecx-lib-scheme .is-brand { background: var(--ecx-ed-accent); }
+.ecx-lib-scheme button.is-active { box-shadow: 0 0 0 2px var(--ecx-ed-accent); }
+.ecx-lib-main { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
+.ecx-lib-bar { display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--ecx-ed-line); }
+.ecx-lib-search { display: flex; align-items: center; gap: 8px; width: min(320px, 50%); height: 36px; padding: 0 10px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; }
+.ecx-lib-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: inherit; font: inherit; }
+.ecx-lib-close { margin-left: auto; display: inline-grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: none; color: var(--ecx-ed-muted); cursor: pointer; }
+.ecx-lib-close:hover { background: var(--ecx-ed-hover); color: var(--ecx-ed-fg); }
+.ecx-lib-ai { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; padding: 14px 18px; border-bottom: 1px solid var(--ecx-ed-line); background: var(--ecx-ed-subtle); }
+.ecx-lib-ai label { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--ecx-ed-muted); }
+.ecx-lib-ai .is-wide { grid-column: 1 / -1; }
+.ecx-lib-ai .ecx-btn { align-self: end; justify-self: start; gap: 6px; }
+.ecx-lib-error { grid-column: 1 / -1; margin: 0; color: var(--ecx-ed-danger); }
+.ecx-lib-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; align-content: start; padding: 18px; overflow: auto; }
+.ecx-lib-grid.is-pages { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.ecx-lib-card { display: block; padding: 0; border: 1px solid var(--ecx-ed-line); border-radius: 10px; background: var(--ecx-ed-panel); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .1s linear, box-shadow .1s linear; }
+.ecx-lib-card:hover, .ecx-lib-card:focus-visible { border-color: var(--ecx-ed-accent); box-shadow: 0 6px 18px rgb(14 40 58 / .12); outline: none; }
+.ecx-lib-card-name { display: flex; justify-content: space-between; gap: 8px; padding: 9px 12px; border-top: 1px solid var(--ecx-ed-line); font-size: 13px; }
+.ecx-lib-card-name em { font-style: normal; color: var(--ecx-ed-muted); }
+.ecx-lib-preview { position: relative; overflow: hidden; border-radius: 9px 9px 0 0; background: #fff; pointer-events: none; }
+.ecx-lib-preview-inner { transform-origin: 0 0; }
+.ecx-lib-preview-inner .ecx-canvas-wrap, .ecx-lib-preview-inner .ecx-canvas { height: 100%; }
+@media (max-width: 720px) { .ecx-lib { inset: 0; border-radius: 0; grid-template-columns: 1fr; } .ecx-lib-side { display: none; } }

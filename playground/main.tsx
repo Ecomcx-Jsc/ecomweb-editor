@@ -74,6 +74,10 @@ const host: EditorHost = {
     menus: { primary: [{ title: "Trang chủ" }, { title: "Giới thiệu" }, { title: "Liên hệ" }] },
     post: { title: "Bài viết mẫu", date: "01/11/2026", author: "Admin", excerpt: "Tóm tắt bài viết mẫu.", ...(params.has("postCategory") ? { category: params.get("postCategory") || undefined } : {}) },
   },
+  // ?ai=1: AI giả lập — "custom" với mảng JSON thì trả mảng chữ hoa (thư viện mẫu), còn lại trả chữ hoa
+  ...(params.get("ai") ? { ai: {
+    async run(_task: string, text: string) { await new Promise((r) => setTimeout(r, 30)); try { const a = JSON.parse(text); if (Array.isArray(a)) return `Đây: ${JSON.stringify(a.map((x) => `AI ${String(x).toUpperCase()}`))}`; } catch { /* chữ thường */ } return text.toUpperCase(); },
+  } } : {}),
   // ?media=1: thư viện media giả lập (chọn / tải lên trả về ảnh mẫu)
   ...(params.get("media") ? { media: {
     async pick() { return [{ id: 7, url: `${location.origin}/sample.svg`, alt: "Ảnh thư viện", fileName: "sample.svg", mimeType: "image/svg+xml", width: 400, height: 200, webpUrl: `${location.origin}/sample.svg?f=webp`, sizes: { medium: { url: `${location.origin}/sample.svg?w=200`, width: 200, height: 100, webpUrl: `${location.origin}/sample.svg?w=200&f=webp` } } }]; },

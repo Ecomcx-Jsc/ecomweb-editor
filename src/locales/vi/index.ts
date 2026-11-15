@@ -26,5 +26,6 @@ import { patternLib } from "./pattern-lib";
 import { patterns } from "./patterns";
 import { shortcuts } from "./shortcuts";
 import { placeholders } from "./placeholders";
+import { library } from "./library";
 
-export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, presets, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };
+export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, presets, layout, legacyBasic, legacyDynamic, motion, library, patternLib, patterns, placeholders, shortcuts };

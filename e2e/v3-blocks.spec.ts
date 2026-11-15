@@ -497,3 +497,39 @@ test("form: Cc, tiêu đề email, chuyển trang; ô 1/3 hàng + tự điền",
   const [a, b] = [await c.locator(".ecx-field").nth(0).boundingBox(), await c.locator(".ecx-form-blocks").boundingBox()];
   expect(a!.width).toBeLessThan(b!.width / 2.5);
 });
+
+test.describe("thư viện mẫu", () => {
+  test("chèn mẫu theo danh mục; kiểu màu tối bọc mẫu trong nhóm nền tối; trang = nhiều mẫu", async ({ page }) => {
+    await open(page, "?doc=post");
+    const before = (await state(page)).docs.root.blocks.length;
+    await page.getByRole("button", { name: "Thư viện mẫu" }).click();
+    const lib = page.getByRole("dialog", { name: "Thư viện mẫu" });
+    await lib.getByRole("button", { name: "Bảng giá", exact: true }).click();
+    await expect(lib.locator(".ecx-lib-card")).toHaveCount(3);
+    await lib.getByRole("radio", { name: "Tối" }).click();
+    await lib.locator(".ecx-lib-card").first().click();
+    await expect(lib).toHaveCount(0);
+    const blocks = (await state(page)).docs.root.blocks;
+    expect(blocks.length).toBe(before + 1);
+    const g = blocks.find((b: any) => b.type === "group" && b.attrs.style?.color?.background === "#0f1b24");
+    expect(g?.content?.length).toBeGreaterThan(0);
+    await page.getByRole("button", { name: "Thư viện mẫu" }).click();
+    await lib.getByRole("tab", { name: "Trang" }).click();
+    await lib.locator(".ecx-lib-card[data-page=contact]").click();
+    expect((await state(page)).docs.root.blocks.length).toBeGreaterThan(before + 3);
+  });
+
+  test("Tạo bằng AI: viết lại chữ của mẫu đang xem, giữ bố cục", async ({ page }) => {
+    await open(page, "?doc=post&ai=1");
+    await page.getByRole("button", { name: "Thư viện mẫu" }).click();
+    const lib = page.getByRole("dialog", { name: "Thư viện mẫu" });
+    await lib.getByRole("radio", { name: "Tạo bằng AI" }).click();
+    await lib.getByRole("button", { name: "Hỏi đáp", exact: true }).click();
+    await lib.getByLabel("Tên doanh nghiệp").fill("Trà Cổ Thụ");
+    await lib.getByRole("button", { name: "Viết chữ cho các mẫu đang xem" }).click();
+    await expect(lib.getByRole("button", { name: "Viết chữ cho các mẫu đang xem" })).toBeEnabled();
+    await lib.locator(".ecx-lib-card").first().click();
+    const json = JSON.stringify((await state(page)).docs.root.blocks);
+    expect(json).toContain("AI ");
+  });
+});

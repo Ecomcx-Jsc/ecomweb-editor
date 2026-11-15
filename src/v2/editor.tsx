@@ -19,6 +19,7 @@ import { blocksFromDoc, docFromBlocks, type BNode } from "./core/model";
 import { BlockTypeRegistry } from "./core/registry";
 import { Inspector } from "./ui/inspector";
 import { ListView } from "./ui/list-view";
+import { PatternLibraryButton } from "./ui/pattern-library";
 import { PrefsStore, usePrefs, type PrefsStorage } from "./prefs";
 import { Breadcrumbs, CodeEditor, MoreMenu } from "./ui/options";
 import { EditorStore, type DocRecord } from "./core/store";
@@ -236,6 +237,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
           <ToolButton label={labels.undo} disabled={!store.canUndo} onClick={() => store.undo()}><Undo2 className="ecx-icon" /></ToolButton>
           <ToolButton label={labels.redo} disabled={!store.canRedo} onClick={() => store.redo()}><Redo2 className="ecx-icon" /></ToolButton>
           {!p.distractionFree && <ToolButton label={labels.listView} active={left === "list"} onClick={() => setLeft(left === "list" ? null : "list")}><ListTree className="ecx-icon" /></ToolButton>}
+          {!p.distractionFree && p.mode === "visual" && <PatternLibraryButton />}
           <FrameToggle />
           {p.mode === "visual" && <ZoomToggle />}
         </div>
