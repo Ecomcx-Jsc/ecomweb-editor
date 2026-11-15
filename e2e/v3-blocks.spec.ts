@@ -536,3 +536,22 @@ test.describe("thư viện mẫu", () => {
     expect(json).toContain("AI ");
   });
 });
+
+test("cấu trúc của khối chứa: thẻ HTML, z-index, thứ tự riêng trên điện thoại", async ({ page }) => {
+  const c = await open(page, "?doc=rich");
+  const col = await find(page, "column");
+  await page.evaluate((x) => (window as any).__ecx.store.select([x]), col.id);
+  await insp(page).getByRole("tab", { name: "Nâng cao" }).click();
+  await insp(page).getByRole("button", { name: "Cấu trúc" }).click();
+  const sec = insp(page).locator(".ecx-style-section", { hasText: "Cấu trúc" });
+  await sec.getByLabel("Thẻ HTML").selectOption("section");
+  await sec.getByLabel("Lớp xếp chồng (z-index)").fill("5");
+  await expect(c.locator(`[data-ecx-block="${col.id}"]`)).toHaveCSS("z-index", "5");
+  // Thứ tự theo khổ: chỉ đặt cho điện thoại
+  await sec.getByRole("button", { name: "Điện thoại", exact: true }).first().click();
+  await sec.getByLabel("Thứ tự trong khối cha").fill("-1");
+  const attrs = (await find(page, "column")).attrs;
+  expect(attrs.tagName).toBe("section");
+  expect(attrs.style).toMatchObject({ zIndex: 5, order: { mobile: -1 } });
+  await expect(c.locator(`[data-ecx-block="${col.id}"]`)).toHaveCSS("order", "-1");
+});

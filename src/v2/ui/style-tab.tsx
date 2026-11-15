@@ -17,13 +17,13 @@ import { useMsgs } from "../i18n";
  * chưa đặt cho khổ nhỏ thì hiện giá trị kế thừa từ khổ lớn hơn.
  */
 type Style = BlockStyle & Record<string, any>;
-const RESPONSIVE = new Set(["padding", "margin", "gap", "width", "maxWidth", "minHeight", "fontSize", "lineHeight", "letterSpacing", "textAlign"]);
+const RESPONSIVE = new Set(["padding", "margin", "gap", "width", "maxWidth", "minHeight", "fontSize", "lineHeight", "letterSpacing", "textAlign", "order"]);
 const SIZES = ["sm", "md", "lg", "xl", "2xl"];
 const SPACES = ["0", "xs", "sm", "md", "lg", "xl", "2xl"];
 const WEIGHTS = ["300", "400", "500", "600", "700", "800", "900"];
 const TYPO = ["fontFamily", "fontSize", "lineHeight", "letterSpacing", "fontWeight", "fontStyle", "textDecoration", "textTransform", "textAlign"];
 const SPACING = ["padding", "margin"];
-const STRUCTURE = ["gap", "width", "maxWidth", "minHeight", "aspectRatio"];
+const STRUCTURE = ["gap", "width", "maxWidth", "minHeight", "aspectRatio", "zIndex", "grow", "order"];
 type State = "normal" | "hover";
 
 /** Bậc preset theo cỡ tăng dần (theme có thể khai lộn thứ tự: lg trước md). Tên lạ giữ thứ tự khai, đứng sau. */
@@ -50,11 +50,13 @@ function ValueInput({ value, onCommit, check, placeholder, label, inherited }: {
  * `part`: "style" = biến thể, chữ, màu (tab Kiểu dáng); "advanced" = khoảng cách, viền, bố cục / hiệu ứng, hover, chuyển động, ẩn hiện
  * (tab Nâng cao — lớp chung của mọi khối như Advanced của Elementor); bỏ trống = tất cả. Ô Nền vẽ ở BackgroundControl.
  */
-export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange, part, lead, parts }: {
+export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange, part, lead, parts, structure }: {
   type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; onDeviceChange(d: Device): void;
   variants?: Array<{ name: string; label: string }>; variant?: string | null; onVariantChange?(v: string | null): void; part?: "style" | "advanced";
   /** Mục vẽ sau Chữ / Màu (mục riêng của khối, ô Nền). */
   lead?: ReactNode;
+  /** Ô đứng đầu mục Cấu trúc (vd thẻ HTML của khối chứa — là thuộc tính của khối, không nằm trong style). */
+  structure?: ReactNode;
   /** Khối chia phần: các phần đứng đầu; Kiểu chữ / Màu chung của cả khối chỉ hiện khi đã có giá trị (nội dung cũ). */
   parts?: boolean;
 }) {
@@ -200,8 +202,13 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
 
       {/* Cấu trúc: kích thước khối (rộng, rộng tối đa, cao tối thiểu, tỉ lệ khung), khe giữa khối con */}
       {inPart("spacing") && (groups.has("spacing") || has(STRUCTURE)) && <Section title={ct.structure} modified={has(STRUCTURE)} onReset={() => reset(STRUCTURE)} defaultOpen={has(STRUCTURE)}>
+        {structure}
         {(["width", "maxWidth", "minHeight", ...(container ? ["gap" as const] : [])] as const).map((k) =>
           row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}
+        {container && ([["zIndex", -1, 9999], ["grow", 0, 10], ["order", -10, 10]] as const).map(([k, min, max]) =>
+          row(k, ct[k], <input className="ecx-input" type="number" min={min} max={max} step={1} aria-label={ct[k]} value={get(k) ?? ""} placeholder={inherited(k)}
+            onChange={(e) => set(k, e.target.value === "" ? undefined : Number(e.target.value))} />))}
+        {container && <p className="ecx-field-help">{ct.orderHelp}</p>}
         {fxOk && row("aspectRatio", lt.ratio,
           <select className="ecx-input" aria-label={lt.ratio} value={style.aspectRatio ?? ""} onChange={(e) => set("aspectRatio", e.target.value || undefined)}>
             <option value="">—</option>

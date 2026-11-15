@@ -40,4 +40,5 @@ export const controls = {
   /** Tên biến thể kiểu khối của lõi (CORE_BLOCK_STYLES). */
   blockStyle: { stripes: "Stripes", rounded: "Rounded", circle: "Circle", plain: "Plain", dots: "Dots", wide: "Wide", pill: "Pill", card: "Card" },
   stateNormal: "Normal", stateHover: "Hover", structure: "Structure",
+  htmlTag: "HTML tag", zIndex: "Z-index", grow: "Flex grow", order: "Order in parent", orderHelp: "Order: switch device to reorder on mobile (lower numbers come first).",
 };

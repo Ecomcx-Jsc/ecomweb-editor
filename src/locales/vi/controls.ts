@@ -40,4 +40,5 @@ export const controls = {
   /** Tên biến thể kiểu khối của lõi (CORE_BLOCK_STYLES). */
   blockStyle: { stripes: "Kẻ sọc", rounded: "Bo góc", circle: "Tròn", plain: "Đơn giản", dots: "Chấm", wide: "Rộng", pill: "Viên thuốc", card: "Thẻ" },
   stateNormal: "Thường", stateHover: "Rê chuột", structure: "Cấu trúc",
+  htmlTag: "Thẻ HTML", zIndex: "Lớp xếp chồng (z-index)", grow: "Hệ số giãn (flex grow)", order: "Thứ tự trong khối cha", orderHelp: "Thứ tự: đổi khổ màn hình để đảo vị trí trên điện thoại (số nhỏ đứng trước).",
 };

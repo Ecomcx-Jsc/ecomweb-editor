@@ -1,5 +1,5 @@
 import type { Device } from "@ecomcx/ecomweb-content";
-import { CORE_BLOCK_STYLES, controlValue, optionValue } from "@ecomcx/ecomweb-content";
+import { CONTAINER_TAGS, CORE_BLOCK_STYLES, controlValue, optionValue } from "@ecomcx/ecomweb-content";
 import { Blocks, Info, LayoutPanelTop, Paintbrush, SlidersHorizontal } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { blockPanelsFor, onBlockPanelsChange, type BlockPanel } from "../../shared/panel-store";
@@ -9,7 +9,7 @@ import { AttrForm, Field, attrName, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { StyleTab } from "./style-tab";
 import { LayoutSection } from "./layout-panel";
-import { Section, SectionGroup } from "./style-controls";
+import { Row, Section, SectionGroup } from "./style-controls";
 import { BackgroundControl } from "./background-panel";
 import { BlockStyleSections } from "./block-style-panel";
 import { PartsSections } from "./parts-panel";
@@ -23,6 +23,8 @@ import { useMsgs } from "../i18n";
 /** Khối "khung" (như Container / Section của Elementor): ô Nền đặt ngay tab Cài đặt — chỗ người dùng tìm đầu tiên. */
 // Nền của Nhóm / Cột nằm ở tab Kiểu dáng như bộ khối lớn; ảnh bìa: nền là nội dung chính nên ở Cài đặt
 const BG_IN_SETTINGS = new Set(["cover"]);
+/** Khối chứa đổi được thẻ HTML (attrs.tagName). */
+const TAGGED = new Set(["group", "column", "columns"]);
 const BG_FIRST = new Set(["group", "column", "columns", "row", "stack", "grid"]);
 
 /**
@@ -97,7 +99,14 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             </div>
           ) : (
             <div className="ecx-panel">
-              {styled && <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="advanced" />}
+              {styled && <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="advanced"
+                structure={single && TAGGED.has(first.type) && (
+                  <Row label={t.htmlTag} onReset={first.attrs.tagName ? () => setAttrs({ tagName: undefined }) : undefined}>
+                    <select className="ecx-input" aria-label={t.htmlTag} value={String(first.attrs.tagName ?? "div")} onChange={(e) => setAttrs({ tagName: e.target.value === "div" ? undefined : e.target.value })}>
+                      {CONTAINER_TAGS.map((x) => <option key={x} value={x}>{x}</option>)}
+                    </select>
+                  </Row>
+                )} />}
               {nodes.length === 1 && (
                 <Section title={t.advanced} defaultOpen>
                   <Field label={attrName("anchor", labels.lang) ?? "anchor"}><input className="ecx-input" value={String(first.attrs.anchor ?? "")} onChange={(e) => setAttrs({ anchor: e.target.value.replace(/[^\w-]/g, "") || undefined })} /></Field>
