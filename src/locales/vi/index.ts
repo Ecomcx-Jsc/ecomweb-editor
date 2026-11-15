@@ -14,6 +14,7 @@ import { blocks } from "./blocks";
 import { controls } from "./controls";
 import { parts } from "./parts";
 import { columns } from "./columns";
+import { presets } from "./presets";
 import { hints } from "./hints";
 import { layout } from "./layout";
 import { legacyBasic } from "./legacy-basic";
@@ -26,4 +27,4 @@ import { patterns } from "./patterns";
 import { shortcuts } from "./shortcuts";
 import { placeholders } from "./placeholders";
 
-export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };
+export const vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, presets, layout, legacyBasic, legacyDynamic, motion, patternLib, patterns, placeholders, shortcuts };

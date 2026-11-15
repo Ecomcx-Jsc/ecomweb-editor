@@ -3,6 +3,7 @@ import type { EditorContextValue, DropTarget } from "../context";
 import type { InsertOption } from "../ui/inserter";
 import type { BNode } from "../core/model";
 import { canContain } from "../core/structure";
+import { freshWithDefaults } from "../core/block-presets";
 import { sectionOf } from "./block-list";
 
 /**
@@ -88,7 +89,7 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     ui.setDrag(null);
     if (!wasStarted || !target) return;
     if (src.create) {
-      const made = src.create();
+      const made = freshWithDefaults(src.create());
       const nodes = Array.isArray(made) ? made : [made];
       store.insert(target.docId, target.parentId, target.index, nodes);
       if (nodes.length > 1) store.select([nodes[0].id]);

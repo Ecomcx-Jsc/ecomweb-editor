@@ -45,6 +45,11 @@ export interface EditorHost {
   scope?: "template" | "content";
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
+  /**
+   * v3: kiểu đặt sẵn + mặc định khi chèn của từng loại khối (toàn website). `save` không có = người dùng không có quyền lưu (chỉ chọn kiểu).
+   * Dạng dữ liệu: core/block-presets BlockPresetMap.
+   */
+  blockPresets?: { load(): Promise<Record<string, unknown>>; save?(map: Record<string, unknown>): Promise<Record<string, unknown>> };
   /** Chữ "%khoá%" của plugin → chữ theo ngôn ngữ. */
   translate?(text: string): string;
   /**

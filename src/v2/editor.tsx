@@ -1,3 +1,4 @@
+import { ensurePresets } from "./core/block-presets";
 import type { RichNode } from "@ecomcx/ecomweb-content";
 import { normalizeContent } from "@ecomcx/ecomweb-content";
 import { ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight, ZoomOut } from "lucide-react";
@@ -106,6 +107,8 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
   }, []);
   // Khối của plugin (registerBlock) + mẫu có sẵn của lõi
   useEffect(() => syncPluginBlocks(registry), [registry]);
+  // Kiểu đặt sẵn / mặc định khi chèn: nạp ngay khi mở trình soạn (khối chèn đầu tiên đã nhận mặc định)
+  useEffect(() => ensurePresets(host.blockPresets?.load), [host]);
   useEffect(() => { registerCoreBindingSources(allLabels.lang); }, [allLabels.lang]);
   useEffect(() => { if (!registeredPatterns().some((p) => p.name.startsWith("core/"))) registerCorePatterns(allLabels.lang); }, [allLabels.lang]);
   const ctx: EditorContextValue = useMemo(() => ({ store, registry, host, labels: allLabels, ui, prefs }), [store, registry, host, allLabels, ui, prefs]);

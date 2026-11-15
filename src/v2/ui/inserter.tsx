@@ -1,3 +1,4 @@
+import { freshWithDefaults } from "../core/block-presets";
 import { leavesItem } from "../core/structure";
 import { blockDescription } from "./block-descriptions";
 import { Blocks, Sparkles } from "lucide-react";
@@ -75,7 +76,7 @@ export function applyInsert(ctx: ReturnType<typeof useEditor>, req: InserterRequ
     ui.openAiWrite?.({ blockId: req.mode === "slash" ? req.blockId : undefined, docId: req.docId, parentId: req.parentId ?? null, index: req.index ?? 0 });
     return;
   }
-  const node = opt.create();
+  const node = freshWithDefaults(opt.create());
   prefs.countInsert(opt.type);
   if (req.mode === "slash" && req.blockId) {
     const b = store.block(req.blockId);
@@ -258,7 +259,7 @@ export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; on
   const lastInserted = useRef<string | null>(null);
   const groups = query ? [["", results] as const] : [...CATEGORY_ORDER, ...new Set(results.map((r) => r.category).filter((c) => !CATEGORY_ORDER.includes(c)))].map((c) => [c, results.filter((r) => r.category === c)] as const).filter(([, l]) => l.length);
   const insert = (o: InsertOption) => {
-    const node = o.create();
+    const node = freshWithDefaults(o.create());
     ctx.prefs.countInsert(o.type);
     const cur = store.currentIds[store.currentIds.length - 1];
     // Đoạn trống đang chọn mà chính lần chèn trước vừa tạo thì giữ lại (chèn tiếp ra sau nó); đoạn trống của người dùng thì thay như WordPress

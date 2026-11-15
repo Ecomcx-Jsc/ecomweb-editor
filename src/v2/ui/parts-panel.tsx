@@ -49,25 +49,26 @@ export function PartsSections({ blockId, type, attrs, setAttrs, device }: { bloc
 function PartSection({ blockId, spec, title, value, onChange, device }: { blockId: string; name: string; spec: PartSpec; title: string; value: PartValue; onChange(v: PartValue | undefined): void; device: Device }) {
   const { ui } = useEditor();
   const t = useMsgs("parts") as Record<string, string>;
-  const [state, setState] = useState<"normal" | "hover">("normal");
+  const [state, setState] = useState<"normal" | "hover" | "active">("normal");
+  const states = (["normal", ...(spec.hover ? ["hover"] : []), ...(spec.active ? ["active"] : [])] as Array<"normal" | "hover" | "active">);
   const shown = !value.hidden;
-  const modified = !!(value.style || value.hover || value.hidden);
+  const modified = !!(value.style || value.hover || value.active || value.hidden);
   const toggle = spec.toggle ? (
     <input type="checkbox" role="switch" className="ecx-switch" checked={shown} title={t.show} aria-label={`${t.show}: ${title}`}
       onChange={() => onChange({ ...value, hidden: shown ? true : undefined })} />
   ) : undefined;
-  const key = state === "hover" ? "hover" : "style";
+  const key = state === "normal" ? "style" : state;
   const style = (value[key] ?? {}) as Style;
   const setStyle = (next: Style) => onChange({ ...value, [key]: normalizeStyle(next) });
   return (
     <Section title={title} head={toggle} modified={modified} onReset={() => onChange(value.hidden ? { hidden: true } : undefined)} defaultOpen={undefined}>
       {!shown ? <p className="ecx-muted">{t.hiddenNote}</p> : <>
-        {spec.hover && (
+        {states.length > 1 && (
           <div className="ecx-seg is-text ecx-state-tabs" role="tablist">
-            {(["normal", "hover"] as const).map((s) => <button key={s} type="button" role="tab" aria-selected={state === s} className={cx("ecx-seg-btn", state === s && "is-active")} onClick={() => setState(s)}>{t[s]}</button>)}
+            {states.map((s) => <button key={s} type="button" role="tab" aria-selected={state === s} className={cx("ecx-seg-btn", state === s && "is-active")} onClick={() => setState(s)}>{t[s]}</button>)}
           </div>
         )}
-        <PartControls props={spec.props} style={style} onChange={setStyle} device={device} hover={state === "hover"} target={() => partEl(ui.blockEl(blockId), spec)} />
+        <PartControls props={spec.props} style={style} onChange={setStyle} device={device} hover={state !== "normal"} target={() => partEl(ui.blockEl(blockId), spec)} />
       </>}
     </Section>
   );
