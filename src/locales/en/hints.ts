@@ -351,4 +351,12 @@ export const hints = {
   "form.emailSubject.help": "Empty: \"[Site] New submission: form name\".",
   "form.redirect.label": "Redirect after submit",
   "form.redirect.help": "E.g. /thank-you. Empty: show the thank-you message under the form.",
+  "icon.stroke.label": "Stroke width",
+  "icon.iconStyle.label": "Icon frame",
+  "icon.iconStyle.opt.plain": "None",
+  "icon.iconStyle.opt.circle": "Circle",
+  "icon.iconStyle.opt.square": "Square",
+  "icon.linkTarget.label": "Open link in",
+  "icon.linkTarget.opt._self": "Same tab",
+  "icon.linkTarget.opt._blank": "New tab",
 };

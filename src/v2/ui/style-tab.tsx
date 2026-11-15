@@ -216,7 +216,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
           </select>)}
       </Section>}
 
-      {inPart("border") && (groups.has("border") || fxOk || hoverOk || has(["border", "radius"])) && <Section title={t.style_border} modified={has(["border", "radius", "shadow"]) || !!(style.hover?.border || style.hover?.shadow || style.hover?.lift)}
+      {inPart("border") && (groups.has("border") || fxOk || has(["border", "radius"]) || !!(style.hover?.border || style.hover?.shadow || style.hover?.lift)) && <Section title={t.style_border} modified={has(["border", "radius", "shadow"]) || !!(style.hover?.border || style.hover?.shadow || style.hover?.lift)}
         onReset={() => commit({ ...style, border: undefined, radius: undefined, shadow: undefined, hover: style.hover && { ...style.hover, border: undefined, shadow: undefined, lift: undefined } })}
         defaultOpen={has(["border", "radius", "shadow"])}>
         {hoverOk && <StateTabs value={borderState} onChange={setBorderState} />}

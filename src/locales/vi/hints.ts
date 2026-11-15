@@ -351,4 +351,12 @@ export const hints = {
   "form.emailSubject.help": "Để trống: \"[Tên website] Bài gửi mới: tên form\".",
   "form.redirect.label": "Chuyển tới trang sau khi gửi",
   "form.redirect.help": "Vd /cam-on. Để trống: hiện lời cảm ơn ngay dưới form.",
+  "icon.stroke.label": "Độ dày nét",
+  "icon.iconStyle.label": "Khung icon",
+  "icon.iconStyle.opt.plain": "Không khung",
+  "icon.iconStyle.opt.circle": "Tròn",
+  "icon.iconStyle.opt.square": "Vuông",
+  "icon.linkTarget.label": "Mở liên kết",
+  "icon.linkTarget.opt._self": "Cùng tab",
+  "icon.linkTarget.opt._blank": "Tab mới",
 };

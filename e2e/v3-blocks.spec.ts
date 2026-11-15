@@ -555,3 +555,21 @@ test("cấu trúc của khối chứa: thẻ HTML, z-index, thứ tự riêng tr
   expect(attrs.style).toMatchObject({ zIndex: 5, order: { mobile: -1 } });
   await expect(c.locator(`[data-ecx-block="${col.id}"]`)).toHaveCSS("order", "-1");
 });
+
+test("icon: độ dày nét, khung tròn, liên kết (ô mở tab chỉ hiện khi có liên kết), màu khi rê chuột", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "ic1", type: "icon", attrs: { name: "heart", size: 40 } }]); s.select(["ic1"]); });
+  const i = insp(page);
+  await i.getByRole("radio", { name: "Tròn" }).click();
+  await expect(c.locator(".ecx-icon-shape.is-circle")).toHaveCSS("padding-top", "16px");
+  await i.getByRole("slider", { name: "Độ dày nét" }).fill("1");
+  await expect(c.locator(".ecx-icon-block svg")).toHaveAttribute("stroke-width", "1");
+  await expect(i.getByRole("radiogroup", { name: "Mở liên kết" })).toHaveCount(0);
+  await i.getByRole("textbox", { name: "Liên kết" }).fill("/lien-he");
+  await i.getByRole("radiogroup", { name: "Mở liên kết" }).getByRole("radio", { name: "Tab mới" }).click();
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await i.getByRole("tab", { name: "Rê chuột" }).click();
+  await expect(i.getByText("Chữ", { exact: true })).toBeVisible();
+  const attrs = (await find(page, "icon")).attrs;
+  expect(attrs).toMatchObject({ iconStyle: "circle", stroke: 1, href: "/lien-he", linkTarget: "_blank" });
+});
