@@ -32,14 +32,14 @@ test.describe("bảng cài đặt khối", () => {
     const c = await open(page, "?doc=loop");
     await page.getByRole("button", { name: "Cây khối" }).click();
     await page.locator(".ecx-list-row", { hasText: "Danh sách bài" }).first().click();
-    const cat = insp(page).getByLabel("Chuyên mục");
+    const cat = insp(page).getByLabel("Chuyên mục", { exact: true });
     await expect(cat.locator("option")).toHaveText(["— Chọn —", "Tin tức", "Sản phẩm", "Hướng dẫn"]);
     await cat.selectOption("tin-tuc");
     expect((await blockOf(page, "query")).attrs.category).toBe("tin-tuc");
     await expect(c.locator(".ecx-post-template > li.ecx-post")).toHaveCount(2);
     await expect(insp(page).getByRole("radio", { name: "Mới → cũ / Z → A" })).toBeVisible();
     await insp(page).getByLabel("Theo trang đang xem").check();
-    await expect(insp(page).getByLabel("Chuyên mục")).toHaveCount(0);
+    await expect(insp(page).getByLabel("Chuyên mục", { exact: true })).toHaveCount(0);
     await expect(insp(page).getByLabel("Loại bài")).toHaveCount(0);
   });
 
@@ -68,15 +68,17 @@ test.describe("bảng cài đặt khối", () => {
     await clickEnd(c, "Nội dung bài viết.");
     await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
     await expect(insp(page).locator("[class*='cms-ed']")).toHaveCount(0);
+    await insp(page).getByRole("button", { name: "Màu", exact: true }).click();
     const color = insp(page).locator(".ecx-style-section", { hasText: "Màu" }).first();
-    await color.getByRole("button", { name: "Chữ: accent" }).click().catch(async () => { await color.locator(".ecx-chip-swatch").nth(1).click(); });
+    await color.getByRole("button", { name: "Chữ Mặc định" }).click();
+    await color.getByRole("button", { name: "Chữ: accent" }).click();
     expect((await blockOf(page, "paragraph")).attrs.style?.color?.text).toBeTruthy();
     await color.getByRole("button", { name: "Đặt lại" }).click();
     expect((await blockOf(page, "paragraph")).attrs.style?.color).toBeUndefined();
     const typo = insp(page).locator(".ecx-style-section").first();
     await typo.getByRole("radio", { name: "lg" }).click();
-    await insp(page).getByRole("radio", { name: /Điện thoại|Mobile/ }).first().click();
-    await expect(typo.getByLabel(/Cỡ chữ.*tuỳ chỉnh|Cỡ chữ: /).first()).toHaveAttribute("placeholder", /lg/);
+    await typo.getByRole("button", { name: "Điện thoại", exact: true }).first().click();
+    await expect(typo.getByRole("spinbutton", { name: "Cỡ chữ: tuỳ chỉnh" })).toHaveAttribute("placeholder", /lg/);
     await typo.getByRole("radio", { name: "sm" }).click();
     expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "lg", mobile: "sm" });
   });

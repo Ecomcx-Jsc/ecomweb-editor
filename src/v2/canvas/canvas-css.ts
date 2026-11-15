@@ -139,8 +139,9 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-block.is-selected:has(> .ecx-pad-handles) { position: relative; }
 .ecx-pad-handles { position: absolute; inset: 0; pointer-events: none; z-index: 7; }
 .ecx-pad-handle { position: absolute; left: 0; width: min(40%, 320px); height: 12px; cursor: ns-resize; pointer-events: auto; touch-action: none; }
-.ecx-pad-handle.is-top { top: 0; }
-.ecx-pad-handle.is-bottom { bottom: 0; }
+/* vắt qua mép: khối không đệm thì tay nắm chỉ lấn 6px, không che chữ của khối con */
+.ecx-pad-handle.is-top { top: -6px; }
+.ecx-pad-handle.is-bottom { bottom: -6px; }
 .ecx-pad-handle::after { content: ""; position: absolute; left: 16px; width: 36px; height: 4px; border-radius: 3px; background: var(--ecx-ui); opacity: 0; transition: opacity .1s linear; }
 .ecx-pad-handle.is-top::after { top: 4px; }
 .ecx-pad-handle.is-bottom::after { bottom: 4px; }

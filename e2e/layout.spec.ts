@@ -113,17 +113,19 @@ test.describe("bố cục + hiệu ứng", () => {
     const insp = page.locator(".ecx-inspector");
     await insp.getByRole("tab", { name: "Nâng cao" }).click();
     // Khổ điện thoại trong bảng Nâng cao (bố cục) rồi đặt 1 cột
-    await insp.getByRole("radio", { name: /Điện thoại|Mobile/ }).first().click();
-    await insp.getByLabel("Số cột").selectOption("1");
+    await insp.getByRole("button", { name: "Bố cục", exact: true }).click();
+    const layout = insp.locator(".ecx-style-section", { hasText: "Bố cục" }).first();
+    await layout.getByRole("button", { name: "Điện thoại", exact: true }).first().click();
+    await layout.getByLabel("Số cột").selectOption("1");
     const g = await groupOf(page);
     expect(g.attrs.style.layout.columns).toEqual({ base: 3, mobile: 1 });
     const el = c.locator(`[data-ecx-block="${g.id}"]`);
     // Khổ dùng chung: chọn Điện thoại ở tab Kiểu dáng thì khung soạn cũng thu về khổ điện thoại → thấy ngay 1 cột
     await expect.poll(async () => (await el.evaluate((n) => getComputedStyle(n).gridTemplateColumns)).split(" ").length).toBe(1);
     // Và ngược lại: nút Máy tính trên thanh trên → khung soạn + tab Kiểu dáng về khổ máy tính
-    await page.getByRole("button", { name: "Máy tính", exact: true }).click();
+    await page.getByRole("group", { name: "Thiết bị" }).getByRole("button", { name: "Máy tính", exact: true }).click();
     await expect.poll(async () => (await el.evaluate((n) => getComputedStyle(n).gridTemplateColumns)).split(" ").length).toBe(3);
-    await expect(insp.getByRole("radio", { name: /Máy tính|Desktop/ }).first()).toHaveAttribute("aria-checked", "true");
+    await expect(layout.getByRole("button", { name: "Máy tính", exact: true }).first()).toHaveAttribute("aria-pressed", "true");
   });
 
   test("nền chuyển màu (preset theme + tuỳ chỉnh), bóng, nhấc lên khi rê chuột", async ({ page }) => {

@@ -25,7 +25,7 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
     const typo = insp(page).locator(".ecx-style-section").first();
     await typo.getByRole("radio", { name: "lg" }).click();
-    await insp(page).getByRole("radio", { name: /Điện thoại|Mobile/ }).first().click();
+    await insp(page).getByRole("button", { name: "Điện thoại", exact: true }).first().click();
     await typo.getByRole("radio", { name: "sm" }).click();
     expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "lg", mobile: "sm" });
     await typo.getByRole("button", { name: "Đặt lại" }).first().click();
@@ -83,12 +83,11 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
     await insp(page).getByRole("tab", { name: "Nâng cao" }).click();
-    const closed = insp(page).locator(".ecx-style-section-toggle[aria-expanded='false']");
-    for (let i = 0; i < 8 && (await closed.count()); i++) await closed.first().click();
-    const sp = insp(page).locator(".ecx-spacing").first();
-    await sp.getByRole("button", { name: /Chỉnh từng cạnh/ }).click();
-    await expect(sp.locator("input[type=range]")).toHaveCount(4);
-    await sp.locator("input[type=range]").nth(2).fill("2"); // cạnh dưới
+    const L = "Khoảng đệm (padding)";
+    await insp(page).getByRole("button", { name: `${L}: Chỉnh từng cạnh` }).click();
+    for (const side of ["trên", "phải", "dưới", "trái"]) await expect(insp(page).getByRole("button", { name: `${L} ${side}: –` })).toBeVisible();
+    await insp(page).getByRole("button", { name: `${L} dưới: –` }).click();
+    await insp(page).locator(".ecx-box4-pop").getByRole("radio", { name: "SM" }).click();
     const pad = (await blockOf(page, "paragraph")).attrs.style.padding;
     expect(Object.keys(pad.base)).toEqual(["bottom"]);
   });
@@ -155,11 +154,14 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
     await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
-    const color = insp(page).locator(".ecx-style-section", { hasText: "Màu" }).first();
-    await color.getByRole("button", { name: "Chữ: accent" }).click();
-    const sw = color.locator("label", { has: page.locator("input[aria-label='Chữ']") }).first();
-    await expect(sw).not.toHaveAttribute("data-empty", "");
-    expect(await sw.evaluate((e) => (e as HTMLElement).style.background)).toContain("242, 98, 81"); // #f26251
+    await insp(page).getByRole("button", { name: "Màu", exact: true }).click();
+    await insp(page).getByRole("button", { name: "Chữ Mặc định" }).click();
+    await insp(page).getByRole("button", { name: "Chữ: accent" }).click();
+    const btn = insp(page).getByRole("button", { name: "Chữ accent" });
+    await expect(btn).toBeVisible();
+    const dot = btn.locator(".ecx-color-dot");
+    await expect(dot).not.toHaveClass(/is-none/);
+    expect(await dot.evaluate((e) => (e as HTMLElement).style.background)).toContain("242, 98, 81"); // #f26251
   });
 
   test("chọn ảnh từ thư viện: ghi srcset + WebP để điện thoại không tải ảnh gốc", async ({ page }) => {

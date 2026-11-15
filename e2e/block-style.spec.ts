@@ -23,9 +23,9 @@ test.describe("kiểu dáng khối kiểu Elementor", () => {
     const panel = insp(page).locator(".ecx-style-section", { hasText: "Nền" }).first();
     await expect(panel.getByRole("radio", { name: "Ảnh" })).toBeVisible();
     await expect(panel.getByRole("radio", { name: "Chuyển màu" })).toBeVisible();
-    await expect(insp(page).locator(".ecx-chip-swatch").first()).toBeVisible();
     await shot(page, "group-background-settings");
-    await panel.locator(".ecx-chip-swatch").first().click();
+    await panel.getByRole("button", { name: "Màu #FEF3C7" }).click();
+    await panel.getByRole("dialog").getByRole("button").first().click(); // màu preset đầu tiên
     const g = await block(page, "g1");
     expect(g.attrs.background).toBeUndefined();
     expect(g.attrs.style.color.background).toBeTruthy();
@@ -41,6 +41,7 @@ test.describe("kiểu dáng khối kiểu Elementor", () => {
     await insert(page, [{ id: "l1", type: "bulletList", attrs: {}, content: [{ id: "li1", type: "listItem", attrs: {}, content: [p("lp1", "Một")] }, { id: "li2", type: "listItem", attrs: {}, content: [p("lp2", "Hai")] }] }]);
     await page.evaluate(() => (window as any).__ecx.store.select(["l1"]));
     await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
+    await insp(page).getByRole("button", { name: "Danh sách", exact: true }).click();
     const sec = insp(page).locator(".ecx-style-section", { hasText: "Danh sách" }).first();
     await sec.getByLabel("Kiểu dấu đầu dòng").selectOption("square");
     expect((await block(page, "l1")).attrs.listMarker).toBe("square");

@@ -109,7 +109,8 @@ export function SpacingControl({ label, value, onChange, steps, inherited, label
         </div>
       </Row>
       {open && (
-        <div className="ecx-box4-pop" role="dialog" aria-label={`${label} ${linked ? "" : labels[open]}`}>
+        // key: đổi cạnh thì ô số mới, không giữ số đã gõ của cạnh trước
+        <div key={open} className="ecx-box4-pop" role="dialog" aria-label={`${label} ${linked ? "" : labels[open]}`}>
           <div className="ecx-pop-title">{label}{linked ? "" : ` · ${labels[open]}`}</div>
           <div className="ecx-box4-steps" role="radiogroup" aria-label={label}>
             {steps.map((st) => (

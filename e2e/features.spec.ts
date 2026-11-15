@@ -31,7 +31,7 @@ test.describe("mẫu + khối plugin", () => {
     expect(block.content[0].inline[0].text).toBe("bên trong plugin");
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
-    await page.locator(".ecx-inspector").getByLabel("Mức").selectOption("warn");
+    await page.locator(".ecx-inspector").getByRole("radiogroup", { name: "Mức" }).getByRole("radio", { name: "warn" }).click();
     expect((await blockOf(page, "acme/notice")).attrs.level).toBe("warn");
     await expect(c.locator(".acme-notice.is-warn")).toBeVisible();
   });
@@ -39,7 +39,7 @@ test.describe("mẫu + khối plugin", () => {
   test("panel plugin (registerBlockPanel) hiện cho tiêu đề và lưu thuộc tính thêm", async ({ page }) => {
     const c = await open(page, "?doc=post&plugin=1");
     await clickEnd(c, "Tiêu đề bài");
-    await page.locator(".ecx-inspector").getByText("Acme SEO").isVisible();
+    await page.locator(".ecx-inspector").getByRole("button", { name: "Acme SEO" }).click(); // panel plugin gập sẵn
     await page.locator(".ecx-inspector").getByLabel("noindex").check();
     expect((await state(page)).docs.root.blocks[0].attrs.acmeNoindex).toBe(true);
   });

@@ -59,16 +59,14 @@ test.describe("trải nghiệm soạn", () => {
     await clickEnd(c, "Nội dung bài viết.");
     const insp = page.locator(".ecx-inspector");
     await insp.getByRole("tab", { name: "Nâng cao" }).click(); // khoảng cách: lớp chung của mọi khối (như Advanced của Elementor)
-    const pad = insp.locator(".ecx-spacing").first();
-    const slider = pad.locator("input[type=range]").first();
-    await slider.fill("4"); // -1 = không, 0 = "0", … 4 = "lg"
+    const L = "Khoảng đệm (padding)";
+    await insp.getByRole("button", { name: `${L} trên: –` }).click(); // ô 4 cạnh: đang liên kết thì đặt cả 4
+    await insp.locator(".ecx-box4-pop").getByRole("radio", { name: "LG" }).click();
     expect((await blocks(page))[1].attrs.style).toMatchObject({ padding: { base: "lg" } });
-    await pad.locator(".ecx-spacing-head .ecx-tool").click();
-    const rows = pad.locator(".ecx-step-row");
-    await expect(rows).toHaveCount(4); // trên, phải, dưới, trái
-    for (const i of [1, 3]) { // phải + trái: giá trị tuỳ chỉnh
-      await rows.nth(i).getByRole("button", { name: /giá trị tuỳ chỉnh/ }).click();
-      await rows.nth(i).locator(".ecx-unit-input input").fill("24");
+    await insp.getByRole("button", { name: `${L}: Chỉnh từng cạnh` }).click();
+    for (const side of ["phải", "trái"]) { // giá trị tuỳ chỉnh có đơn vị
+      await insp.getByRole("button", { name: `${L} ${side}: LG` }).click();
+      await insp.getByRole("spinbutton", { name: `${L}: Giá trị tuỳ chỉnh` }).fill("24");
     }
     expect((await blocks(page))[1].attrs.style).toMatchObject({ padding: { base: { top: "lg", bottom: "lg", left: "24px", right: "24px" } } });
   });

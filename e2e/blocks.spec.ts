@@ -341,7 +341,7 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     await clickEnd(c, "Tiêu đề bài");
     const insp = page.locator(".ecx-inspector");
     await expect(insp.locator(".ecx-block-card")).toContainText("Tiêu đề");
-    await insp.getByLabel("Cấp tiêu đề").selectOption("3");
+    await insp.getByRole("radiogroup", { name: "Cấp tiêu đề" }).getByRole("radio", { name: "H3" }).click();
     expect((await state(page)).docs.root.blocks[0].attrs.level).toBe(3);
     await insp.getByText("Nâng cao").click();
     await insp.getByLabel("Neo (id)").fill("gioi thieu!");
