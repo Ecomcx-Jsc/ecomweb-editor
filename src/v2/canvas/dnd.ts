@@ -36,7 +36,8 @@ export function startDragBlocks(ctx: EditorContextValue, e: ReactPointerEvent, c
 
 function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
   const { ui, store } = ctx;
-  const sx = e.clientX, sy = e.clientY;
+  // Nắm từ trong khung soạn (iframe) → đổi toạ độ về trang ngoài như lúc kéo
+  const { x: sx, y: sy } = toParent(ctx, e.nativeEvent);
   const handle = e.currentTarget as HTMLElement;
   let started = false;
   let scrollTimer = 0;

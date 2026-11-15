@@ -137,6 +137,9 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-col-handles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
 /* Dải kéo đệm trên / dưới của khối bố cục đang chọn */
 .ecx-block.is-selected:has(> .ecx-pad-handles) { position: relative; }
+/* Khối bố cục đang chọn: chỗ trống nắm được để kéo đổi chỗ; khối con / chữ giữ con trỏ thường */
+.ecx-block[data-ecx-grab] { cursor: grab; }
+.ecx-block[data-ecx-grab] .ecx-block, .ecx-block[data-ecx-grab] [data-ecx-rich] { cursor: auto; }
 .ecx-pad-handles { position: absolute; inset: 0; pointer-events: none; z-index: 7; }
 .ecx-pad-handle { position: absolute; left: 0; width: min(40%, 320px); height: 12px; cursor: ns-resize; pointer-events: auto; touch-action: none; }
 /* vắt qua mép: khối không đệm thì tay nắm chỉ lấn 6px, không che chữ của khối con */
@@ -146,6 +149,13 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-pad-handle.is-top::after { top: 4px; }
 .ecx-pad-handle.is-bottom::after { bottom: 4px; }
 .ecx-pad-handle:hover::after, .ecx-pad-handle.is-dragging::after { opacity: 1; }
+/* Vùng kéo đệm / lề của khối bố cục đang chọn: rộng hết khối, cao bằng giá trị thật — kéo ở đâu trong vùng cũng được */
+.ecx-pad-zone { position: absolute; left: 0; right: 0; cursor: ns-resize; pointer-events: auto; touch-action: none; }
+/* vạch kéo ở 1/4 bề rộng: giữa mép dưới là nút "+ Thêm section" */
+.ecx-pad-zone::after { content: ""; position: absolute; left: 25%; width: 36px; height: 4px; margin-left: -18px; border-radius: 3px; background: var(--ecx-ui); opacity: 0; transition: opacity .1s linear; }
+.ecx-pad-zone.is-top::after { top: calc(50% - 2px); }
+.ecx-pad-zone.is-bottom::after { bottom: calc(50% - 2px); }
+.ecx-pad-zone:hover::after, .ecx-pad-zone.is-dragging::after { opacity: 1; }
 .ecx-col-handle { position: absolute; width: 12px; margin-left: -6px; cursor: col-resize; pointer-events: auto; touch-action: none; }
 .ecx-col-handle.is-dragging::before, .ecx-col-handle.is-dragging::after { position: absolute; top: 8px; padding: 1px 6px; border-radius: 4px; background: var(--ecx-ui); color: #fff; font: 600 11px/1.5 system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
 .ecx-col-handle.is-dragging::before { content: attr(data-left); right: 14px; }

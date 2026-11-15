@@ -173,3 +173,49 @@ test.describe("v3: sửa lỗi bảng bên phải (báo cáo 13, mục 1)", () =
     await expect(c.locator('[data-ecx-block="g1"] a').first()).toHaveCSS("color", "rgb(242, 98, 81)");
   });
 });
+
+test.describe("v3: thao tác thẳng trên khung soạn", () => {
+  const addGroup = (page: Page) => page.evaluate(() => (window as any).__ecx.store.insert("root", null, 0, [{ id: "g1", type: "group", attrs: { style: { padding: { base: "24px" }, minHeight: { base: "220px" } } }, content: [{ id: "g1p", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Trong nhóm" }] }] }], { select: true }));
+  const drag = async (page: Page, x: number, y: number, dy: number) => {
+    await page.mouse.move(x, y); await page.mouse.down();
+    await page.mouse.move(x, y + dy / 2, { steps: 4 }); await page.mouse.move(x, y + dy, { steps: 4 }); await page.mouse.up();
+  };
+  const frameBox = async (page: Page, sel: string) => {
+    const f = (await page.locator("iframe[data-ecx-canvas]").boundingBox())!;
+    const b = (await page.frameLocator("iframe[data-ecx-canvas]").locator(sel).boundingBox())!;
+    return { ...b, fx: f.x, fy: f.y };
+  };
+
+  test("kéo ở bất kỳ đâu trong vùng đệm trên / lề dưới của khối đang chọn", async ({ page }) => {
+    await open(page, "?doc=post");
+    await addGroup(page);
+    await page.evaluate(() => (window as any).__ecx.store.select(["g1"]));
+    const z = await frameBox(page, '[data-ecx-block="g1"] [data-ecx-zone="padding-top"]');
+    expect(Math.round(z.height)).toBe(24); // vùng kéo cao đúng bằng đệm, rộng hết khối
+    const g = await frameBox(page, '[data-ecx-block="g1"]');
+    expect(Math.abs(z.width - g.width)).toBeLessThan(2);
+    await drag(page, z.x + z.width * 0.8, z.y + 12, 30); // gần mép phải: vẫn kéo được
+    expect((await find(page, "group")).attrs.style.padding.base).toMatchObject({ top: "54px" });
+    const m = await frameBox(page, '[data-ecx-block="g1"] [data-ecx-zone="margin-bottom"]');
+    await drag(page, m.x + m.width / 4, m.y + m.height / 2, 20); // lề có sẵn của luồng chữ + 20 (giữa mép là nút "+ Thêm section")
+    expect((await find(page, "group")).attrs.style.margin.base).toMatchObject({ bottom: `${Math.round(m.height) + 20}px` });
+  });
+
+  test("khối bố cục đang chọn: nắm chỗ trống kéo xuống cuối bài = đổi chỗ; bấm thường vẫn chỉ chọn", async ({ page }) => {
+    await open(page, "?doc=post");
+    await addGroup(page);
+    await page.evaluate(() => (window as any).__ecx.store.select(["g1"]));
+    await expect.poll(async () => (await frameBox(page, '[data-ecx-block="g1"]')).height).toBeGreaterThanOrEqual(220); // bố cục đã ổn
+    const g = await frameBox(page, '[data-ecx-block="g1"]');
+    const x = g.x + g.width / 2, y = g.y + g.height - 60; // dưới đoạn văn, trên vùng đệm dưới
+    await page.mouse.click(x, y);
+    expect((await state(page)).docs.root.blocks[0].id).toBe("g1");
+    const last = await frameBox(page, '[data-ecx-block]:last-child');
+    await page.mouse.move(x, y); await page.mouse.down();
+    for (let i = 1; i <= 10; i++) await page.mouse.move(x, y + ((last.y + last.height - 4) - y) * i / 10);
+    await page.mouse.up();
+    const ids = (await state(page)).docs.root.blocks.map((b: any) => b.id);
+    expect(ids[0]).not.toBe("g1");
+    expect(ids).toContain("g1");
+  });
+});

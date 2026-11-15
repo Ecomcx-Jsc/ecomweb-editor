@@ -3,6 +3,7 @@ import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
 import { useEditor, useEditorState } from "../context";
 import { hideSpacingViz, showSpacingViz } from "../canvas/spacing-viz";
 import type { BNode } from "../core/model";
+import { labelsLegacy } from "../../shared/labels";
 
 /** Thả tay nắm: focus về khung soạn để ⌘Z / Delete… thuộc về trình soạn ngay. */
 const focusCanvas = (el: HTMLElement) => el.ownerDocument.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true });
@@ -118,10 +119,6 @@ export function ImageHandle({ blockId }: { blockId: string }) {
     onPointerDown={start} onMouseDown={(e) => e.stopPropagation()} />;
 }
 
-/**
- * Dải kéo đệm trên / dưới của khối bố cục đang chọn (Nhóm, Bộ cột, Cột, Ảnh bìa): rê vào mép thì hiện dải, kéo lên / xuống đổi đệm
- * của khổ màn hình đang xem (lưu px, giữ các cạnh khác); khi kéo, vùng đệm được tô kèm số px — như ô Đệm ở bảng bên phải.
- */
 /** Kéo mép dưới để đổi chiều cao khối (Khoảng trống): ghi `attrs.height` = "NNpx". Dùng chung kiểu tay nắm của dải đệm. */
 export function HeightHandle({ blockId }: { blockId: string }) {
   const { store, ui, labels } = useEditor();
@@ -149,29 +146,46 @@ export function HeightHandle({ blockId }: { blockId: string }) {
   );
 }
 
+/**
+ * Vùng kéo đệm / lề trên, dưới của khối bố cục đang chọn (Nhóm, Bộ cột, Cột): vùng rộng hết khối, cao bằng giá trị thật; kéo đổi giá trị
+ * của khổ màn hình đang xem (lưu px, giữ các cạnh khác); rê / kéo thì vùng được tô kèm số px — như ô Đệm / Lề ở bảng bên phải.
+ */
 export function PaddingHandles({ blockId }: { blockId: string }) {
-  const { store, ui, labels } = useEditor();
-  const start = (side: "top" | "bottom", e: React.PointerEvent) => {
+  const { store, ui, labels: v2 } = useEditor();
+  const L = labelsLegacy(v2.lang);
+  const ref = useRef<HTMLSpanElement>(null);
+  // Cỡ thật (px) của đệm / lề trên, dưới: vùng kéo cao đúng bằng nó (tối thiểu 8px) — kéo ở bất kỳ đâu trong vùng
+  const [px, setPx] = useState({ pt: 0, pb: 0, mt: 0, mb: 0 });
+  useLayoutEffect(() => {
+    const el = ui.blockEl(blockId);
+    if (!el) return;
+    const cs = el.ownerDocument.defaultView!.getComputedStyle(el), n = (k: string) => Math.round(parseFloat(cs.getPropertyValue(k)) || 0);
+    const next = { pt: n("padding-top"), pb: n("padding-bottom"), mt: n("margin-top"), mb: n("margin-bottom") };
+    setPx((p) => (p.pt === next.pt && p.pb === next.pb && p.mt === next.mt && p.mb === next.mb ? p : next));
+  });
+  const start = (kind: "padding" | "margin", side: "top" | "bottom", e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const handle = e.currentTarget as HTMLElement;
     const el = ui.blockEl(blockId);
     if (!el) return;
-    const startPx = parseFloat(el.ownerDocument.defaultView!.getComputedStyle(el).getPropertyValue(`padding-${side}`)) || 0;
+    const startPx = parseFloat(el.ownerDocument.defaultView!.getComputedStyle(el).getPropertyValue(`${kind}-${side}`)) || 0;
     const y0 = e.clientY;
     const device = ui.device === "desktop" ? "base" : ui.device;
     handle.setPointerCapture(e.pointerId);
     handle.classList.add("is-dragging");
     const move = (ev: PointerEvent) => {
-      const px = Math.max(0, Math.round(startPx + ev.clientY - y0));
+      // Đệm dưới / lề dưới: kéo xuống là tăng; đệm trên: kéo xuống tăng; lề trên: kéo lên tăng
+      const d = ev.clientY - y0;
+      const px = Math.max(0, Math.round(startPx + (kind === "margin" && side === "top" ? -d : d)));
       const node = store.block(blockId);
       if (!node) return;
-      const style = (normalizeStyle(node.attrs.style) ?? {}) as BlockStyle & { padding?: Record<string, unknown> };
-      const cur = style.padding?.[device];
+      const style = (normalizeStyle(node.attrs.style) ?? {}) as BlockStyle & Record<"padding" | "margin", Record<string, unknown> | undefined>;
+      const cur = style[kind]?.[device];
       const sides = typeof cur === "object" && cur ? { ...(cur as Record<string, string>) } : typeof cur === "string" ? { top: cur, right: cur, bottom: cur, left: cur } : {};
       sides[side] = `${px}px`;
-      store.setAttrs([blockId], { style: normalizeStyle({ ...style, padding: { ...(style.padding ?? {}), [device]: sides } }) ?? undefined });
-      requestAnimationFrame(() => showSpacingViz(ui.blockEl(blockId), "padding", [side]));
+      store.setAttrs([blockId], { style: normalizeStyle({ ...style, [kind]: { ...(style[kind] ?? {}), [device]: sides } }) ?? undefined });
+      requestAnimationFrame(() => showSpacingViz(ui.blockEl(blockId), kind, [side]));
     };
     const up = () => {
       handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up);
@@ -180,12 +194,19 @@ export function PaddingHandles({ blockId }: { blockId: string }) {
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
   };
-  const show = (side: "top" | "bottom") => showSpacingViz(ui.blockEl(blockId), "padding", [side]);
+  const zones = [
+    ["padding", "top", { top: 0, height: Math.max(8, px.pt) }],
+    ["padding", "bottom", { bottom: 0, height: Math.max(8, px.pb) }],
+    ["margin", "top", { top: -Math.max(8, px.mt), height: Math.max(8, px.mt) }],
+    ["margin", "bottom", { bottom: -Math.max(8, px.mb), height: Math.max(8, px.mb) }],
+  ] as const;
   return (
-    <span className="ecx-pad-handles" contentEditable={false} aria-hidden="true">
-      {(["top", "bottom"] as const).map((side) => (
-        <span key={side} className={`ecx-pad-handle is-${side}`} title={labels.resize} onPointerDown={(e) => start(side, e)} onMouseDown={(e) => e.stopPropagation()}
-          onPointerEnter={() => show(side)} onPointerLeave={(e) => { if (!(e.currentTarget as HTMLElement).classList.contains("is-dragging")) hideSpacingViz(ui.canvasDoc); }} />
+    <span ref={ref} className="ecx-pad-handles" contentEditable={false} aria-hidden="true">
+      {zones.map(([kind, side, pos]) => (
+        <span key={kind + side} className={`ecx-pad-zone is-${kind} is-${side}`} style={pos} title={kind === "padding" ? L.style_padding : L.style_margin} data-ecx-zone={`${kind}-${side}`}
+          onPointerDown={(e) => start(kind, side, e)} onMouseDown={(e) => e.stopPropagation()}
+          onPointerEnter={() => showSpacingViz(ui.blockEl(blockId), kind, [side])}
+          onPointerLeave={(e) => { if (!(e.currentTarget as HTMLElement).classList.contains("is-dragging")) hideSpacingViz(ui.canvasDoc); }} />
       ))}
     </span>
   );

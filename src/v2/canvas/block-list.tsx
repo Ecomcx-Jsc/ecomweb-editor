@@ -1,8 +1,9 @@
 import { controlsCss, normalizeStyle, styleClass, widthClass } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
-import { Component, memo, useCallback, useContext, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type ReactElement, type ReactNode } from "react";
+import { Component, memo, useCallback, useContext, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode } from "react";
 import { DocScopeProvider, LoopPostContext, useDocScope, useEditor, useEditorState } from "../context";
 import { ServerBlock } from "./server-block";
+import { startDrag } from "./dnd";
 import { docIdOf, type NestedDocRef } from "../core/host";
 import { blocksFromDoc, makeBlock, type BNode } from "../core/model";
 import type { BlockEditProps, BlockProps } from "../core/registry";
@@ -22,7 +23,8 @@ export function sectionOf(store: ReturnType<typeof useEditor>["store"], el: HTML
 
 /** Props gắn vào phần tử gốc của khối: chọn, viền, kiểu dáng, neo. */
 export function useBlockProps(block: BNode, state: { selected: boolean; editing: boolean; mode: EditingMode }): BlockProps {
-  const { store, registry, ui } = useEditor();
+  const ctx = useEditor();
+  const { store, registry, ui } = ctx;
   const a = block.attrs;
   const style = a.style && typeof a.style === "object" ? normalizeStyle(a.style) : undefined;
   const type = registry.get(block.type);
@@ -60,6 +62,18 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     if (own.isContentEditable) own.ownerDocument.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true });
     else own.focus({ preventScroll: true });
   }, [block.id, store, ui]);
+  // Khối bố cục đang chọn: nắm chỗ trống (không phải chữ, ô nhập, khối con) rồi kéo = đổi chỗ như tay nắm ⠿ (bấm thường vẫn là bấm)
+  const grab = state.selected && type?.kind !== "text";
+  const onPointerDown = useCallback((e: PointerEvent<HTMLElement>) => {
+    const t = e.target as HTMLElement;
+    if (e.button !== 0 || e.shiftKey || e.metaKey || e.ctrlKey || ui.zoomOut) return;
+    if (t.closest("[data-ecx-block]")?.getAttribute("data-ecx-block") !== block.id) return;
+    // Chỉ xét trong khối (cả khung soạn là contenteditable)
+    const hit = t.closest("[data-ecx-rich], input, textarea, select, button, a, [contenteditable=true], .ecx-pad-handles, .ecx-col-handles, .ecx-image-handle");
+    if (hit && e.currentTarget.contains(hit)) return;
+    const ids = store.getState().selection.ids;
+    startDrag(ctx, e, ids.includes(block.id) ? ids : [block.id]);
+  }, [block.id, ctx, store, ui]);
   return {
     ref: null,
     "data-ecx-block": block.id,
@@ -78,6 +92,7 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
       typeof a.className === "string" && a.className,
     ),
     onMouseDown,
+    ...(grab ? { onPointerDown, "data-ecx-grab": "" } : {}),
   };
 }
 

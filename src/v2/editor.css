@@ -402,6 +402,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 /* Nút "+ Thêm section" giữa hai section cấp trên cùng */
 .ecx-section-adder { position: fixed; z-index: 30; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; border: 0; background: var(--ecx-ed-accent); color: var(--ecx-ed-accent-fg); box-shadow: var(--ecx-ed-shadow); cursor: pointer; }
 .ecx-section-adder:hover { background: var(--ecx-ed-accent-hover); }
+/* Đang kéo khối: nút không chen giữa đường kéo */
+body.is-dragging .ecx-section-adder { display: none; }
 .ecx-section-adder:focus-visible { outline: 2px solid var(--ecx-ed-accent); outline-offset: 2px; }
 .ecx-section-adder .ecx-icon { width: 16px; height: 16px; }
 .ecx-inserter-popover .ecx-tabs { margin-bottom: 6px; }
