@@ -28,6 +28,8 @@ export const placeholders = {
   buttonText: "Nhập chữ trên nút…",
   tabTitle: "Tên tab…",
   addTab: "Thêm tab",
+  moveTabLeft: "Dời tab đang mở sang trái",
+  moveTabRight: "Dời tab đang mở sang phải",
   addItem: "Thêm mục",
   addSlide: "Thêm slide",
   addImage: "Thêm ảnh",

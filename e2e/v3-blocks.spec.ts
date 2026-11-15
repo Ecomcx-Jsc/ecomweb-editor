@@ -273,3 +273,18 @@ test("thanh công cụ: căn dọc của bộ cột, căn các nút, liên kết
   expect((await find(page, "button")).attrs).toMatchObject({ href: "/lien-he", target: "_blank" });
   void c;
 });
+
+test("tab: thanh công cụ dời tab đang mở, thêm tab", async ({ page }) => {
+  await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "T", type: "tabs", attrs: {}, content: [
+    { id: "t1", type: "tab", attrs: { title: "Một" }, content: [{ id: "tp1", type: "paragraph", attrs: {}, inline: [] }] },
+    { id: "t2", type: "tab", attrs: { title: "Hai" }, content: [{ id: "tp2", type: "paragraph", attrs: {}, inline: [] }] }] }]); s.select(["T"]); });
+  const bar = page.locator(".ecx-toolbar");
+  await expect(bar.getByRole("button", { name: "Dời tab đang mở sang trái" })).toBeDisabled();
+  await bar.getByRole("button", { name: "Dời tab đang mở sang phải" }).click();
+  const titles = async () => (await find(page, "tabs")).content.map((t: any) => t.attrs.title);
+  expect(await titles()).toEqual(["Hai", "Một"]);
+  await expect(bar.getByRole("button", { name: "Dời tab đang mở sang phải" })).toBeDisabled(); // tab vừa dời vẫn đang mở, nằm cuối
+  await bar.getByRole("button", { name: "Thêm tab" }).click();
+  expect((await titles()).length).toBe(3);
+});

@@ -1,10 +1,10 @@
 import { blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
-import { ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import { useEffect, useSyncExternalStore, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
 import { withoutOverridden } from "./inline-style";
-import { makeBlock } from "../core/model";
+import { makeBlock, type BNode } from "../core/model";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
@@ -237,6 +237,29 @@ function TabsEdit({ block, blockProps, editable }: BlockEditProps) {
       </div>
       <InnerBlocks parent={block} />
     </div>
+  );
+}
+
+/** Thanh công cụ khi đang ở trong Tabs: dời tab đang mở sang trái / phải, thêm tab. */
+function TabsTools({ ancestor }: { ancestor: BNode; currentId: string }) {
+  const { store } = useEditor();
+  const tp = useMsgs("placeholders");
+  const open = useOpenTab(ancestor.id);
+  const tabs = (ancestor.content ?? []).filter((c) => c.type === "tab");
+  const cur = tabs[open];
+  const move = (dir: -1 | 1) => { if (!cur) return; store.moveBy([cur.id], dir); setOpenTab(ancestor.id, open + dir); };
+  const canEdit = store.canInsertInto(ancestor.id);
+  return (
+    <>
+      <ToolButton label={tp.moveTabLeft} disabled={!canEdit || open <= 0} onClick={() => move(-1)}><ChevronLeft className="ecx-icon" /></ToolButton>
+      <ToolButton label={tp.moveTabRight} disabled={!canEdit || open >= tabs.length - 1} onClick={() => move(1)}><ChevronRight className="ecx-icon" /></ToolButton>
+      <ToolButton label={tp.addTab} disabled={!canEdit} onClick={() => {
+        const loc = store.locate(ancestor.id);
+        if (!loc) return;
+        store.insert(loc.docId, ancestor.id, ancestor.content?.length ?? 0, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")])], { focus: false });
+        setOpenTab(ancestor.id, tabs.length);
+      }}><Plus className="ecx-icon" /></ToolButton>
+    </>
   );
 }
 
@@ -473,7 +496,7 @@ export function layoutBlocks(): BlockType[] {
     {
       name: "tabs", title: "Tabs", icon: PanelTop, category: "text", keywords: "tabs the tab chuyen doi noi dung", kind: "container", edit: TabsEdit,
       attributes: { tabsAlign: { type: "string", enum: ["flex-start", "center", "flex-end", "space-between"] }, initial: { type: "number", min: 1 } },
-      create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
+      create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "" }, [makeBlock("paragraph")])]), contextToolbar: TabsTools, supports: { style: true, anchor: true, className: true },
     },
     {
       name: "tab", title: "Tab", icon: PanelTop, category: "text", keywords: "tab", kind: "container", edit: TabEdit, hidden: true, structure: { parents: ["tabs"] },

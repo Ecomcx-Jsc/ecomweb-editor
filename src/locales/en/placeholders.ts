@@ -28,6 +28,8 @@ export const placeholders: typeof vi = {
   preformatted: "Text that keeps its spacing…",
   buttonText: "Add button text…",
   tabTitle: "Tab name…",
+  moveTabLeft: "Move open tab left",
+  moveTabRight: "Move open tab right",
   addTab: "Add tab",
   addItem: "Add item",
   addSlide: "Add slide",
