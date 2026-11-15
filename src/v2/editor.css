@@ -25,6 +25,8 @@
 .ecx-editor :focus-visible { outline: 2px solid var(--ecx-ed-accent); outline-offset: 1px; }
 .ecx-icon { width: 16px; height: 16px; flex: none; }
 .ecx-icon-sm { width: 14px; height: 14px; }
+/* Icon 2 lớp của khối (block-icons.tsx): đặc = màu nhấn, nền = màu nhấn nhạt */
+.ecx-duo { --ecx-ico-a: var(--ecx-ed-accent); --ecx-ico-b: color-mix(in srgb, var(--ecx-ed-accent) 22%, transparent); --ecx-ico-w: var(--ecx-ed-panel); }
 .ecx-muted { color: var(--ecx-ed-muted); margin: 0; font-size: 12px; }
 @keyframes ecx-pop { from { opacity: 0; transform: translateY(4px) scale(.98); } to { opacity: 1; transform: none; } }
 @keyframes ecx-slide-r { from { transform: translateX(-12px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -119,6 +121,7 @@
 .ecx-block-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 10px; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--ecx-ed-fg);
   font: inherit; font-size: 12px; line-height: 1.3; text-align: center; cursor: pointer; touch-action: none; user-select: none; transition: background-color .12s ease, border-color .12s ease; }
 .ecx-block-tile .ecx-icon { width: 22px; height: 22px; color: var(--ecx-ed-muted); }
+.ecx-block-tile .ecx-icon.ecx-duo { width: 28px; height: 28px; }
 .ecx-block-tile:hover { background: var(--ecx-ed-hover); border-color: var(--ecx-ed-line); }
 .ecx-block-tile:hover .ecx-icon { color: var(--ecx-ed-accent); }
 .ecx-pattern-card { display: flex; flex-direction: column; gap: 2px; width: 100%; margin-bottom: 6px; padding: 10px 12px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; background: var(--ecx-ed-panel);

@@ -1,3 +1,4 @@
+import { BLOCK_ICONS, columnsIcon } from "../ui/block-icons";
 import { CORE_NODES, coreControlsFor, type AttrSpec, type BlockAttrSpec } from "@ecomcx/ecomweb-content";
 import { messages } from "../../i18n";
 import type { V2Labels } from "../labels";
@@ -44,8 +45,10 @@ export function coreBlockTypes(labels: V2Labels): BlockType[] {
     const str = (v: unknown) => (typeof v === "string" ? v : undefined);
     const title = key ? String(labels[key]) : str(names[t.name]) ?? t.title;
     // Biến thể đứng riêng (Hàng ngang / Xếp dọc / Lưới) theo ngôn ngữ
-    const variations = t.variations?.map((v) => { const vt = str(names[`${t.name}/${v.name}`]); return vt ? { ...v, title: vt } : v; });
-    return { ...t, title, variations, description: t.description ?? blockDescription(t.name, labels.lang), attributes: withStyleAttrs(t) };
+    // Icon 2 lớp của bộ lõi (block-icons.tsx); biến thể dùng icon riêng nếu có, không thì icon của khối
+    const icon = BLOCK_ICONS[t.name] ?? t.icon;
+    const variations = t.variations?.map((v) => { const vt = str(names[`${t.name}/${v.name}`]); return { ...v, ...(vt ? { title: vt } : {}), icon: BLOCK_ICONS[v.name] ?? (t.name === "columns" ? columnsIcon(v.name) : undefined) ?? (BLOCK_ICONS[t.name] ? icon : v.icon) }; });
+    return { ...t, title, icon, variations, description: t.description ?? blockDescription(t.name, labels.lang), attributes: withStyleAttrs(t) };
   });
 }
 
