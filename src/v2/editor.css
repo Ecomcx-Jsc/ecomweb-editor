@@ -130,7 +130,7 @@
 .ecx-inspector.is-empty { padding-top: 24px; }
 .ecx-block-card { display: flex; gap: 10px; align-items: flex-start; }
 .ecx-card-icon { width: 32px; height: 32px; padding: 7px; border-radius: 8px; background: var(--ecx-ed-accent-soft); color: var(--ecx-ed-accent); }
-.ecx-block-card strong { display: block; font-size: 13px; font-weight: 600; margin: 1px 0 2px; }
+.ecx-block-card strong { display: block; font-size: 14px; font-weight: 600; margin: 0; }
 .ecx-tabs { display: flex; gap: 2px; margin: 0 -16px; padding: 0 16px; border-bottom: 1px solid var(--ecx-ed-line); }
 .ecx-tabs button { position: relative; flex: 1; height: 40px; border: 0; background: none; font: inherit; font-weight: 500; color: var(--ecx-ed-muted); cursor: pointer; }
 .ecx-tabs button:hover { color: var(--ecx-ed-fg); }
@@ -248,10 +248,53 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 /* Bố cục, nền & hiệu ứng, hover (tab Kiểu dáng) */
 .ecx-layout-panel { display: flex; flex-direction: column; border-top: 1px solid var(--ecx-ed-line); margin-top: 4px; }
 .ecx-style-section { border-bottom: 1px solid var(--ecx-ed-line); }
-.ecx-style-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 40px; }
-.ecx-style-section-toggle { display: flex; align-items: center; gap: 6px; flex: 1; height: 100%; padding: 0; border: 0; background: none; color: var(--ecx-ed-fg); font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
-.ecx-chevron { color: var(--ecx-ed-muted); transition: transform .15s var(--ecx-ed-ease); }
+.ecx-style-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; }
+.ecx-style-section-toggle { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ecx-ed-fg); font: inherit; font-weight: 600; cursor: pointer; text-align: left; transition: color .05s linear; }
+.ecx-style-section-toggle:hover { color: var(--ecx-ed-accent); }
+.ecx-style-section-title { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.ecx-style-section-title .ecx-dot { background: #e8890c; }
+/* Mục gập: một dòng tóm tắt bên phải tiêu đề (vd "Chưa có hiệu ứng") */
+.ecx-style-section-summary { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; font-weight: 400; font-size: 12px; color: var(--ecx-ed-muted); }
+.ecx-chevron { margin-left: auto; flex: none; color: var(--ecx-ed-muted); transition: transform .15s var(--ecx-ed-ease); }
 .ecx-chevron.is-open { transform: rotate(90deg); }
+/* Hàng điều khiển: nhãn · ↶ · (công cụ) · cụm khổ màn hình */
+.ecx-row-head { display: flex; align-items: center; gap: 4px; min-height: 20px; }
+.ecx-row-head .ecx-field-label { flex: none; }
+.ecx-row-tools { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+.ecx-row-reset { display: inline-grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 4px; background: none; color: #e8890c; cursor: pointer; }
+.ecx-row-reset:hover { background: var(--ecx-ed-subtle); }
+.ecx-row-reset .ecx-icon { width: 12px; height: 12px; }
+.ecx-row-devices { display: inline-flex; gap: 1px; }
+.ecx-row-devices button { display: inline-grid; place-items: center; width: 20px; height: 18px; padding: 0; border: 0; border-radius: 4px; background: none; color: var(--ecx-ed-faint, #a3adb7); cursor: pointer; transition: color .05s linear; }
+.ecx-row-devices button:hover { background: var(--ecx-ed-subtle); color: var(--ecx-ed-fg); }
+.ecx-row-devices button.is-active { color: var(--ecx-ed-accent); }
+.ecx-row-devices .ecx-icon { width: 13px; height: 13px; }
+/* Ô màu gọn + bảng màu */
+.ecx-color-field { position: relative; }
+.ecx-color-row-btn { display: flex; align-items: center; gap: 10px; width: 100%; height: 36px; padding: 0 10px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); font: inherit; cursor: pointer; text-align: left; transition: border-color .05s linear; }
+.ecx-color-row-btn:hover, .ecx-color-row-btn.is-open { border-color: var(--ecx-ed-accent); }
+.ecx-color-dot { flex: none; width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .12); position: relative; overflow: hidden; }
+.ecx-color-dot.is-none { background: var(--ecx-ed-panel); }
+.ecx-color-dot.is-none::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 45%, #e05252 45%, #e05252 55%, transparent 55%); }
+.ecx-color-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.ecx-color-value { flex: none; font-size: 12px; color: var(--ecx-ed-muted); }
+.ecx-color-pop { position: absolute; z-index: 20; top: calc(100% + 6px); right: 0; width: 248px; padding: 10px; border: 1px solid var(--ecx-ed-line); border-radius: 10px; background: var(--ecx-ed-panel); box-shadow: var(--ecx-ed-shadow); animation: ecx-pop .1s linear; }
+.ecx-pop-title { margin: 0 2px 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ecx-ed-muted); }
+.ecx-color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.ecx-color-cell { height: 28px; padding: 0; border: 1px solid rgb(0 0 0 / .1); border-radius: 7px; cursor: pointer; }
+.ecx-color-cell.is-active { outline: 2px solid var(--ecx-ed-accent); outline-offset: 2px; }
+.ecx-pop-hint { margin: 8px 2px 0; font-size: 11.5px; line-height: 1.4; color: var(--ecx-ed-muted); }
+.ecx-pop-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ecx-ed-line); }
+.ecx-pop-custom { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; }
+/* Mô tả khối: nút ⓘ + chú thích khi rê */
+.ecx-block-card { align-items: center; }
+.ecx-card-info { position: relative; display: inline-grid; place-items: center; width: 20px; height: 20px; margin-left: -4px; border-radius: 50%; color: var(--ecx-ed-muted); cursor: help; }
+.ecx-card-info .ecx-icon { width: 14px; height: 14px; }
+.ecx-card-tip { position: absolute; z-index: 30; top: calc(100% + 6px); left: -40px; width: 230px; padding: 8px 10px; border-radius: 8px; background: var(--ecx-ed-fg, #0f1e29); color: var(--ecx-ed-panel, #fff); font-size: 12px; font-weight: 400; line-height: 1.45; opacity: 0; pointer-events: none; transition: opacity .1s linear .3s; }
+.ecx-card-info:hover .ecx-card-tip, .ecx-card-info:focus .ecx-card-tip { opacity: 1; }
+/* Tab có icon */
+.ecx-inspector .ecx-tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: 54px; font-size: 12.5px; }
+.ecx-inspector .ecx-tabs button .ecx-icon { width: 17px; height: 17px; }
 .ecx-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ecx-ed-accent); }
 .ecx-link-btn { padding: 2px 4px; border: 0; background: none; color: var(--ecx-ed-accent); font: 500 12.5px var(--ecx-ed-font); cursor: pointer; border-radius: 4px; }
 .ecx-link-btn:hover { text-decoration: underline; }

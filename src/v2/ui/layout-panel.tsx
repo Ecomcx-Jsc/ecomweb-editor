@@ -137,13 +137,9 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
 
       {hover && <Section title={t.hover} defaultOpen={!!style.hover}>
         {(["text", "background"] as const).map((k) => (
-          <Row key={k} label={t[k]}>
-            <ColorInput label={t[k]} value={style.hover?.color?.[k]} onChange={(v) => set({ hover: { ...style.hover, color: { ...style.hover?.color, [k]: v } } })} />
-          </Row>
+          <ColorInput key={k} label={t[k]} value={style.hover?.color?.[k]} onChange={(v) => set({ hover: { ...style.hover, color: { ...style.hover?.color, [k]: v } } })} />
         ))}
-        <Row label={t.border}>
-          <ColorInput label={t.border} value={style.hover?.border?.color} onChange={(v) => set({ hover: { ...style.hover, border: v ? { color: v } : undefined } })} />
-        </Row>
+        <ColorInput label={t.border} value={style.hover?.border?.color} onChange={(v) => set({ hover: { ...style.hover, border: v ? { color: v } : undefined } })} />
         <Row label={t.shadow}>
           <select className="ecx-input" aria-label={`${t.hover} ${t.shadow}`} value={style.hover?.shadow ?? ""} onChange={(e) => set({ hover: { ...style.hover, shadow: e.target.value || undefined } })}>
             <option value="">—</option>{shadows.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}

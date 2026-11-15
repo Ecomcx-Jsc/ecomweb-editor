@@ -19,8 +19,8 @@ export interface BlockPanel {
   title: string;
   /** Loại khối áp dụng; bỏ trống hoặc "*" = mọi khối. */
   blocks?: string[] | "*";
-  /** Tab đặt panel: "block" (mặc định) hoặc "style" (tab Kiểu dáng). */
-  tab?: "block" | "style";
+  /** Tab đặt panel: "block" (mặc định, tab Cài đặt), "style" (tab Kiểu dáng) hoặc "advanced" (tab Nâng cao, editor ≥ 1.32). Panel hiện gập sẵn. */
+  tab?: "block" | "style" | "advanced";
   /** Thứ tự (nhỏ đứng trước, mặc định 10). */
   order?: number;
   /**
@@ -55,7 +55,7 @@ export function registerBlockPanel(panel: BlockPanel) {
 export function unregisterBlockPanel(id: string) { const had = panels.delete(id); if (had) changed(); return had; }
 
 /** Panel áp dụng cho một loại khối. */
-export const blockPanelsFor = (type: string, tab: "block" | "style" = "block") => snapshot.filter((p) => (p.blocks === undefined || p.blocks === "*" || p.blocks.includes(type)) && (p.tab ?? "block") === tab);
+export const blockPanelsFor = (type: string, tab: "block" | "style" | "advanced" = "block") => snapshot.filter((p) => (p.blocks === undefined || p.blocks === "*" || p.blocks.includes(type)) && (p.tab ?? "block") === tab);
 /** Ô điều khiển khai CSS: của khối lõi + của mọi panel (đầu vào của controlsCss — cùng hàm website dùng). */
 export const blockControls = () => controls;
 export const blockPanels = () => snapshot;

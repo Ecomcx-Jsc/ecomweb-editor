@@ -58,7 +58,7 @@ function ControlField({ name, spec, value, device, onChange }: { name: string; s
     onChange(!keys.length ? undefined : keys.length === 1 && keys[0] === "base" ? next.base : next);
   };
   const dev = spec.responsive ? device : undefined;
-  if (spec.type === "color") return <Row label={label} device={dev}><ColorInput label={label} value={typeof v === "string" ? v : undefined} onChange={set} /></Row>;
+  if (spec.type === "color") return dev ? <Row label={label} device={dev}><ColorInput label={label} value={typeof v === "string" ? v : undefined} onChange={set} /></Row> : <ColorInput label={label} value={typeof v === "string" ? v : undefined} onChange={set} />;
   if (spec.type === "length") return <Row label={label} device={dev}><UnitInput label={label} value={typeof v === "string" ? v : undefined} placeholder={typeof inherited === "string" ? inherited : undefined} units={["px", "rem", "em", "%"]} onChange={set} /></Row>;
   if (spec.type === "number") return (
     <Row label={`${label}${typeof v === "number" ? `: ${v}` : ""}`} device={dev}>

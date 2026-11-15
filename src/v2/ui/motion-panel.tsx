@@ -46,13 +46,14 @@ export function MotionPanel({ type, style: raw, onChange }: { type: string; styl
     if (preview) window.setTimeout(() => previewMotion(blockId ? ui.blockEl(blockId) : null, merged?.motion), 120);
   };
 
+  const ct = useMsgs("controls");
   const coreIn = MOTION_IN as readonly string[];
   const isPlugin = !!m.in && !coreIn.includes(m.in);
   const groups = new Map<string, typeof plugin>();
   for (const e of plugin) groups.set(e.group ?? t.plugin, [...(groups.get(e.group ?? t.plugin) ?? []), e]);
 
   return (
-    <Section title={t.title} defaultOpen={!!style.motion} modified={!!style.motion} onReset={() => onChange(normalizeStyle({ ...style, motion: undefined }) ?? null)}>
+    <Section title={t.title} defaultOpen={false} modified={!!style.motion} summary={m.in ? (t.in as Record<string, string>)[m.in] ?? m.in : ct.noMotion} onReset={() => onChange(normalizeStyle({ ...style, motion: undefined }) ?? null)}>
       <Row label={t.scroll}>
         <div className="ecx-chip-row" role="radiogroup" aria-label={t.scroll}>
           <button type="button" role="radio" aria-checked={!m.in} className={cx("ecx-chip", !m.in && "is-active")} onClick={() => set({ in: undefined, duration: undefined, delay: undefined, repeat: undefined, stagger: undefined })}>{t.none}</button>

@@ -78,9 +78,7 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
       </div>
       {state === "hover" ? (
         <>
-          <Row label={b.bg.hoverColor}>
-            <ColorInput label={b.bg.hoverColor} value={style.hover?.color?.background} onChange={(v) => commitStyle({ ...style, hover: { ...style.hover, color: { ...style.hover?.color, background: v } } })} />
-          </Row>
+          <ColorInput label={b.bg.hoverColor} value={style.hover?.color?.background} onChange={(v) => commitStyle({ ...style, hover: { ...style.hover, color: { ...style.hover?.color, background: v } } })} />
           <p className="ecx-muted">{b.bg.hoverNote}</p>
         </>
       ) : (
@@ -93,10 +91,10 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
             </div>
           </Row>
           {kind === "color" && (
-            <Row label={b.bg.color}>
+            <>
               <ColorInput label={b.bg.color} value={style.color?.background ?? legacy} onChange={setColor} />
               {legacy && !style.color?.background && <p className="ecx-muted">{b.bg.legacy}</p>}
-            </Row>
+            </>
           )}
           {kind === "gradient" && <Row label={b.bg.gradient}><GradientField value={style.gradient} onChange={(g) => commitStyle({ ...style, gradient: g })} /></Row>}
           {kind === "image" && (
@@ -137,9 +135,7 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
                   <label className="ecx-check"><input type="checkbox" checked={cover ? !!attrs.fixed : !!bg.fixed} onChange={(e) => (cover ? setAttrs({ fixed: e.target.checked || undefined }) : setBg({ fixed: e.target.checked || undefined }))} /> {t.fixed}</label>
                 </>
               )}
-              <Row label={t.overlay}>
-                <ColorInput label={t.overlay} value={overlay} onChange={setOverlay} />
-              </Row>
+              <ColorInput label={t.overlay} value={overlay} onChange={setOverlay} />
               {(overlay || (cover && attrs.src)) && (
                 <Row label={`${t.opacity}: ${opacity}%`}>
                   <input type="range" min={0} max={100} step={5} value={opacity} aria-label={t.opacity} onChange={(e) => setOpacity(Number(e.target.value))} />

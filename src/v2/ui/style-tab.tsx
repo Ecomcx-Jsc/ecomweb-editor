@@ -1,12 +1,12 @@
 import { normalizeStyle, type BlockStyle, type Device } from "@ecomcx/ecomweb-content";
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Monitor, Smartphone, Tablet } from "lucide-react";
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { labelsLegacy, type EditorLabels } from "../../shared/labels";
 import { useEditor } from "../context";
 import { ColorInput } from "./color-field";
 import { LayoutEffectsPanel } from "./layout-panel";
 import { MotionPanel } from "./motion-panel";
-import { Section, Seg, cx } from "./style-controls";
+import { Row, Section, Seg, cx } from "./style-controls";
 import { styleGroups, type StyleGroup } from "./style-supports";
 import { SpacingControl, UnitInput } from "./unit-controls";
 import { useMsgs } from "../i18n";
@@ -89,10 +89,12 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   };
   const has = (keys: string[]) => keys.some((k) => RESPONSIVE.has(k) && device !== "base" ? style[k]?.[device] !== undefined : style[k] !== undefined);
   const ok = (k: string) => (v: string) => !!normalizeStyle({ [k]: v });
-  const tag = (k: string) => RESPONSIVE.has(k) && device !== "base" ? <em className="ecx-device-tag">{t[`device_${device}` as keyof EditorLabels]}</em> : null;
-  const row = (k: string, label: string, control: ReactNode) => (
-    <div className="ecx-style-row" key={k}><span className="ecx-field-label">{label}{tag(k)}</span>{control}</div>
-  );
+  // Ô chuẩn: cụm khổ màn hình nếu ô chỉnh theo khổ; nút ↶ khi ô (ở khổ đang xem) đã có giá trị
+  const KEYS: Record<string, string[]> = { appearance: ["fontWeight", "fontStyle"], decoration: ["textDecoration"], transform: ["textTransform"], borderWidth: [], borderStyle: [], borderColor: [] };
+  const row = (k: string, label: string, control: ReactNode) => {
+    const keys = KEYS[k] ?? [k];
+    return <Row key={k} label={label} device={RESPONSIVE.has(k) ? device : undefined} onReset={keys.length && has(keys) ? () => reset(keys) : undefined}>{control}</Row>;
+  };
   // Nhóm khối hỗ trợ; nhóm đã có giá trị vẫn hiện để sửa / xoá (dữ liệu cũ, khối dán từ nơi khác)
   const groups = styleGroups(type, registry.get(type));
   const inPart = (g: StyleGroup) => !part || (part === "style") === ["typography", "color"].includes(g);
@@ -101,11 +103,6 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
 
   return (
     <div className="ecx-style-tab">
-      <div className="ecx-style-device">
-        <span className="ecx-field-label">{t.device}</span>
-        <Seg label={t.device} value={device} onChange={(d) => onDeviceChange(d ?? "base")}
-          options={[["base", Monitor, t.device_base], ["tablet", Tablet, t.device_tablet], ["mobile", Smartphone, t.device_mobile]]} />
-      </div>
 
       {part !== "advanced" && variants && variants.length > 0 && (
         <div className="ecx-style-row">
@@ -151,9 +148,9 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
       </Section>}
 
       {show("color", ["color"]) && <Section title={t.style_color} modified={has(["color"])} onReset={() => reset(["color"])}>
-        {row("text", t.style_text, <ColorInput label={t.style_text} value={style.color?.text} onChange={(v) => setGroup("color", "text", v)} />)}
+        <ColorInput label={t.style_text} value={style.color?.text} onChange={(v) => setGroup("color", "text", v)} />
         {/* Khối có ô Nền: màu nền sửa ở đó (một chỗ) */}
-        {(!groups.has("background") || part === undefined) && row("background", t.style_background, <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />)}
+        {(!groups.has("background") || part === undefined) && <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />}
       </Section>}
 
       {lead}
@@ -169,7 +166,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         {row("borderWidth", t.style_borderWidth, <UnitInput label={t.style_borderWidth} value={style.border?.width} max={20} units={["px", "em", "rem"]} onChange={(v) => setGroup("border", "width", v)} />)}
         {row("borderStyle", t.style_borderStyle, <Seg label={t.style_borderStyle} value={style.border?.style} onChange={(v) => setGroup("border", "style", v)}
           options={[["solid", "—", t.border_solid], ["dashed", "- -", t.border_dashed], ["dotted", "···", t.border_dotted]]} />)}
-        {row("borderColor", t.style_borderColor, <ColorInput label={t.style_borderColor} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />)}
+        <ColorInput label={t.style_borderColor} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />
         {row("radius", t.style_radius, <UnitInput label={t.style_radius} value={typeof style.radius === "string" ? style.radius : undefined} max={60} units={["px", "%", "em", "rem"]} onChange={(v) => set("radius", v)} />)}
       </Section>}
 

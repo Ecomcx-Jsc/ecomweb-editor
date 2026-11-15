@@ -1,5 +1,16 @@
 /** Text for controls in the Style / settings panels (collapse, reset, units, tabs). Keys derive from the English text. */
 export const controls = {
+  desktop: "Desktop",
+  device: "Screen size",
+  info: "About this block",
+  noColor: "Default",
+  siteColors: "Site colours",
+  customColor: "Custom colour",
+  clearColor: "Clear colour",
+  colorHint: "Pick a site colour: change the site palette and every page follows.",
+  linkSides: "All sides the same",
+  unlinkSides: "Edit each side",
+  noMotion: "No effect yet",
   tablet: "Tablet",
   mobile: "Mobile",
   modified: "modified",

@@ -151,7 +151,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
           case "textarea":
             return <Field key={k} label={label}><textarea className="ecx-input" rows={3} value={value == null ? "" : String(value)} onChange={(e) => set(e.target.value)} />{help}</Field>;
           case "color":
-            return <Field key={k} label={label} group><ColorInput label={label} value={value == null ? undefined : String(value)} onChange={(v) => set(v)} />{help}</Field>;
+            return <div key={k} className="ecx-field"><ColorInput label={label} value={value == null ? undefined : String(value)} onChange={(v) => set(v)} />{help}</div>;
           case "media":
             return (
               <Field key={k} label={label}>

@@ -1,5 +1,16 @@
 /** Chữ của các ô điều khiển trong bảng Kiểu dáng / cài đặt (thu mở mục, đặt lại, đơn vị, tab). Khoá sinh từ câu tiếng Anh. */
 export const controls = {
+  desktop: "Máy tính",
+  device: "Khổ màn hình",
+  info: "Giới thiệu khối",
+  noColor: "Mặc định",
+  siteColors: "Màu của website",
+  customColor: "Màu tự chọn",
+  clearColor: "Bỏ màu",
+  colorHint: "Chọn màu của website: đổi màu website là cả trang đổi theo.",
+  linkSides: "Bốn cạnh như nhau",
+  unlinkSides: "Chỉnh từng cạnh",
+  noMotion: "Chưa có hiệu ứng",
   tablet: "Máy tính bảng",
   mobile: "Điện thoại",
   modified: "đã chỉnh",

@@ -1,6 +1,6 @@
 import type { Device } from "@ecomcx/ecomweb-content";
 import { CORE_BLOCK_STYLES, controlValue, optionValue } from "@ecomcx/ecomweb-content";
-import { Blocks } from "lucide-react";
+import { Blocks, Info, LayoutPanelTop, Paintbrush, SlidersHorizontal } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { blockPanelsFor, onBlockPanelsChange, type BlockPanel } from "../../shared/panel-store";
 import { useEditor, useEditorState, useUiTick } from "../context";
@@ -8,6 +8,7 @@ import type { BNode } from "../core/model";
 import { AttrForm, Field, attrName, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { StyleTab } from "./style-tab";
+import { Section, SectionGroup } from "./style-controls";
 import { BackgroundControl } from "./background-panel";
 import { BlockStyleSections } from "./block-style-panel";
 import { styleGroups } from "./style-supports";
@@ -50,15 +51,18 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
     <div className="ecx-inspector">
       <div className="ecx-block-card">
         <Icon className="ecx-icon ecx-card-icon" />
-        <div><strong>{nodes.length > 1 ? `${nodes.length} ${labels.blocks}` : type?.title ?? first.type}</strong>{type?.description && nodes.length === 1 && <p className="ecx-muted">{type.description}</p>}</div>
+        <strong>{nodes.length > 1 ? `${nodes.length} ${labels.blocks}` : type?.title ?? first.type}</strong>
+        {/* Mô tả khối: nút ⓘ (rê / bấm) thay cho 2–3 dòng chữ chiếm chỗ đầu bảng */}
+        {type?.description && nodes.length === 1 && <span className="ecx-card-info" tabIndex={0} role="note" aria-label={type.description} title={type.description}><Info className="ecx-icon" /><span className="ecx-card-tip">{type.description}</span></span>}
       </div>
       {disabled ? <p className="ecx-muted">{labels.readOnly}</p> : (
         <>
           <div className="ecx-tabs" role="tablist">
-            <button type="button" role="tab" aria-selected={tab === "settings"} className={cx(tab === "settings" && "is-active")} onClick={() => setTab("settings")}>{labels.settings}</button>
-            {styled && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}>{t.styles}</button>}
-            {(styled || nodes.length === 1) && <button type="button" role="tab" aria-selected={tab === "advanced"} className={cx(tab === "advanced" && "is-active")} onClick={() => setTab("advanced")}>{t.advanced}</button>}
+            <button type="button" role="tab" aria-selected={tab === "settings"} className={cx(tab === "settings" && "is-active")} onClick={() => setTab("settings")}><LayoutPanelTop className="ecx-icon" />{labels.settings}</button>
+            {styled && <button type="button" role="tab" aria-selected={tab === "style"} className={cx(tab === "style" && "is-active")} onClick={() => setTab("style")}><Paintbrush className="ecx-icon" />{t.styles}</button>}
+            {(styled || nodes.length === 1) && <button type="button" role="tab" aria-selected={tab === "advanced"} className={cx(tab === "advanced" && "is-active")} onClick={() => setTab("advanced")}><SlidersHorizontal className="ecx-icon" />{t.advanced}</button>}
           </div>
+          <SectionGroup key={`${first.id}:${tab}`}>
           {tab === "settings" || (tab === "style" && !styled) ? (
             <div className="ecx-panel">
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
@@ -86,8 +90,10 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
                   <Field label={attrName("className", labels.lang) ?? "className"}><input className="ecx-input" value={String(first.attrs.className ?? "")} onChange={(e) => setAttrs({ className: e.target.value || undefined })} /></Field>
                 </div>
               )}
+              {nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} tab="advanced" />}
             </div>
           )}
+          </SectionGroup>
         </>
       )}
     </div>
@@ -95,7 +101,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
 }
 
 /** Panel của plugin (registerBlockPanel) cho loại khối đang chọn. */
-function PluginPanels({ type, attrs, setAttrs, tab = "block" }: { type: string; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void; tab?: "block" | "style" }) {
+function PluginPanels({ type, attrs, setAttrs, tab = "block" }: { type: string; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void; tab?: "block" | "style" | "advanced" }) {
   const { host } = useEditor();
   useSyncExternalStore(onBlockPanelsChange, () => blockPanelsFor(type, tab).length, () => 0);
   const panels = blockPanelsFor(type, tab);
@@ -103,10 +109,9 @@ function PluginPanels({ type, attrs, setAttrs, tab = "block" }: { type: string; 
   return (
     <>
       {panels.map((p) => (
-        <details key={p.id} className="ecx-advanced" open>
-          <summary>{host.translate ? host.translate(p.title) : p.title}</summary>
+        <Section key={p.id} title={host.translate ? host.translate(p.title) : p.title} defaultOpen={false}>
           {p.component ? <p.component type={type} attrs={attrs} setAttrs={setAttrs} /> : <ControlFields panel={p} attrs={attrs} setAttrs={setAttrs} />}
-        </details>
+        </Section>
       ))}
     </>
   );
