@@ -15,7 +15,7 @@ export const blockStyle = {
   attr: {
     textShadow: "Bóng chữ",
     listMarker: "Kiểu dấu đầu dòng", listMarkerColor: "Màu dấu", listGap: "Khoảng giữa các mục", listDivider: "Đường kẻ giữa các mục",
-    buttonColor: "Màu chữ", buttonBg: "Màu nền", buttonHoverColor: "Màu chữ", buttonHoverBg: "Màu nền", buttonSize: "Cỡ nút", buttonRadius: "Bo góc", buttonWeight: "Độ đậm chữ", buttonShadow: "Đổ bóng",
+    buttonColor: "Màu chữ", buttonBg: "Màu nền", buttonHoverColor: "Màu chữ", buttonHoverBg: "Màu nền", buttonWidth: "Rộng cố định", buttonIconColor: "Màu icon", buttonIconHoverColor: "Màu icon", buttonIconSize: "Cỡ icon", buttonSize: "Cỡ nút", buttonRadius: "Bo góc", buttonWeight: "Độ đậm chữ", buttonShadow: "Đổ bóng",
     imageWidth: "Chiều rộng", imageHeight: "Chiều cao", imageFit: "Cách phủ", imageRadius: "Bo góc", imageBorderWidth: "Độ dày viền", imageBorderColor: "Màu viền", imageShadow: "Đổ bóng",
     imageOpacity: "Độ trong", imageFilter: "Bộ lọc màu", imageHoverEffect: "Hiệu ứng", imageHoverOpacity: "Độ trong", imageHoverFilter: "Bộ lọc màu",
     tableBorderColor: "Màu viền ô", tableBorderWidth: "Độ dày viền ô", tableHeaderBg: "Nền hàng tiêu đề", tableHeaderColor: "Chữ hàng tiêu đề", tableStripe: "Màu hàng xen kẽ", tableCellPadding: "Khoảng đệm ô", tableAlign: "Căn chữ trong ô",
@@ -25,7 +25,7 @@ export const blockStyle = {
     hrStyle: "Kiểu", hrWeight: "Độ dày", hrColor: "Màu", hrWidth: "Chiều rộng", hrAlign: "Căn",
     iconBoxIconColor: "Màu icon", iconBoxIconSize: "Cỡ icon", iconBoxTitleColor: "Màu tiêu đề", iconBoxTextColor: "Màu mô tả",
     imageBoxRadius: "Bo góc ảnh", imageBoxTitleColor: "Màu tiêu đề", imageBoxTextColor: "Màu mô tả",
-    iconListGap: "Khoảng giữa các mục", iconListDivider: "Đường kẻ giữa các mục", iconListIconColor: "Màu icon", iconListIconSize: "Cỡ icon", iconListTextColor: "Màu chữ",
+    iconListGap: "Khoảng giữa các mục", iconListColumnGap: "Khe giữa các cột", iconListIconGap: "Khoảng icon – chữ", iconListDivider: "Đường kẻ giữa các mục", iconListIconColor: "Màu icon", iconListIconSize: "Cỡ icon", iconListTextColor: "Màu chữ",
     counterNumberColor: "Màu số", counterNumberSize: "Cỡ số", counterTitleColor: "Màu tiêu đề",
     testimonialBg: "Màu nền", testimonialBorderColor: "Màu viền", testimonialQuoteColor: "Màu lời chứng thực", testimonialNameColor: "Màu tên", testimonialRoleColor: "Màu chức danh",
     progressBarColor: "Màu thanh", progressTrackColor: "Màu rãnh", progressHeight: "Độ cao thanh", progressTitleColor: "Màu tiêu đề",

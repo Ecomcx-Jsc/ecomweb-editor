@@ -59,7 +59,7 @@ export const blocks = {
   option1: "Lựa chọn 1",
   option2: "Lựa chọn 2",
   widgetEmpty: "Thêm mục ở bảng cài đặt bên phải",
-  iconListItems: "Các mục (mỗi dòng một mục, thêm liên kết: chữ | /duong-dan)",
+  iconListItems: "Các mục", iconListText: "Chữ", iconListIcon: "Icon", iconListIconDefault: "Theo danh sách", iconListIconNone: "Không icon", iconListLink: "Liên kết", iconListRemove: "Xoá mục", iconListAdd: "Thêm mục",
   widget_number: "01",
   widget_buttonText: "Xem thêm",
   widget_title: "Tiêu đề",

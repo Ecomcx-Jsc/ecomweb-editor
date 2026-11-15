@@ -7,7 +7,7 @@ import { UnitInput } from "./unit-controls";
 
 type State = "normal" | "hover" | "active";
 /** Ô rời mà phần (attrs.parts) chưa thay được — luôn hiện ở khối đã chia phần. */
-const KEEP = new Set(["imageFit", "imageOpacity", "imageFilter", "imageHoverEffect", "imageHoverOpacity", "imageHoverFilter", "iconListGap", "iconListDivider", "tabsGap", "accGap", "buttonSize", "progressHeight"]);
+const KEEP = new Set(["imageFit", "imageOpacity", "imageFilter", "imageHoverEffect", "imageHoverOpacity", "imageHoverFilter", "iconListGap", "iconListColumnGap", "iconListIconGap", "iconListDivider", "tabsGap", "accGap", "buttonSize", "buttonWidth", "buttonIconColor", "buttonIconHoverColor", "buttonIconSize", "progressHeight"]);
 
 /**
  * Mục Kiểu dáng riêng của khối lõi (như tab Style của từng widget Elementor: Danh sách › khoảng cách, đường kẻ; Icon › màu, cỡ…).
@@ -28,7 +28,7 @@ export function BlockStyleSections({ type, attrs, setAttrs, device, legacyOnly }
   if (legacyOnly) for (const [k, list] of sections) {
     if (list.some(([n]) => attrs[n] !== undefined)) continue;
     const keep = list.filter(([n]) => KEEP.has(n));
-    if (keep.length) { sections.set(k, keep); reduced.add(k); } else sections.delete(k);
+    if (keep.length) { sections.set(k, keep); if (keep.length < list.length) reduced.add(k); } else sections.delete(k);
   }
   if (!sections.size) return null;
   return <>{[...sections].map(([key, list]) => <ControlSection key={key} title={`${(t.section as Record<string, string>)[key] ?? key}${reduced.has(key) ? ` · ${t.more}` : ""}`} list={list} attrs={attrs} setAttrs={setAttrs} device={device} />)}</>;

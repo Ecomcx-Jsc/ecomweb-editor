@@ -1,4 +1,4 @@
-import { CORE_NODES, ICON_NAMES, ICON_PATHS, widgetMarkup, type WidgetEl } from "@ecomcx/ecomweb-content";
+import { CORE_NODES, ICON_NAMES, ICON_PATHS, iconListClass, widgetMarkup, type WidgetEl } from "@ecomcx/ecomweb-content";
 import { BarChart3, Hash, Image as ImageIcon, ListChecks, Quote, Star } from "lucide-react";
 import { createElement, type CSSProperties, type ReactNode } from "react";
 import { makeBlock } from "../core/model";
@@ -6,7 +6,7 @@ import type { BlockEditProps, BlockType } from "../core/registry";
 import { useMsgs } from "../i18n";
 import { messages } from "../../i18n";
 import { RichText } from "../text/rich-text";
-import { Field } from "../ui/attr-form";
+import { Section } from "../ui/style-controls";
 import { MediaPick } from "./layout";
 import { useActiveWithin } from "./resize";
 import { AddItemButton, TextPlaceholder } from "../ui/placeholders";
@@ -59,9 +59,10 @@ function IconListEdit({ block, blockProps, setAttrs, editable }: BlockEditProps)
   const items: Array<{ text: string; href?: string; icon?: string }> = Array.isArray(block.attrs.items) ? block.attrs.items : [];
   const list = items.length || !editable ? items : [{ text: "" }];
   const save = (next: typeof items) => setAttrs({ items: next });
-  const icon = (name?: string) => <svg className="ecx-widget-icon" viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={ICON_PATHS[String(name ?? "")] ?? ICON_PATHS[String(block.attrs.icon ?? "check")] ?? ICON_PATHS.check} /></svg>;
+  const stroke = Math.min(4, Math.max(0.5, Number(block.attrs.stroke) || 2));
+  const icon = (name?: string) => name === "none" ? null : <svg className="ecx-widget-icon" viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={ICON_PATHS[String(name ?? "")] ?? ICON_PATHS[String(block.attrs.icon ?? "check")] ?? ICON_PATHS.check} /></svg>;
   return (
-    <ul {...blockProps} className={cx(blockProps.className, "ecx-icon-list", block.attrs.layout === "inline" && "is-inline")}>
+    <ul {...blockProps} className={cx(blockProps.className, iconListClass(block.attrs))}>
       {list.map((it, i) => (
         <li key={i}>{icon(it.icon)}{editable
           ? <TextPlaceholder value={it.text} placeholder={i === 0 ? tp.iconListItem : `${tp.addRow}…`} label={`${tp.addRow} ${i + 1}`} onChange={(v) => save(list.map((x, k) => (k === i ? { ...x, text: v } : x)))} />
@@ -72,16 +73,36 @@ function IconListEdit({ block, blockProps, setAttrs, editable }: BlockEditProps)
   );
 }
 
-/** Danh sách mục của Icon List: mỗi dòng một mục, "chữ | đường dẫn" (đường dẫn tuỳ chọn); dòng trống giữ khi đang gõ, website bỏ qua. Icon riêng từng mục: chỉ qua dữ liệu (AI / mẫu). */
+/** Các mục của Icon List: mỗi mục một hàng — chữ, icon riêng (theo danh sách / tên icon / không icon), liên kết; thêm / xoá mục. Dòng trống website bỏ qua. */
 function IconListInspector({ attrs, setAttrs }: BlockEditProps) {
   const t = useMsgs("blocks") as Record<string, string>;
+  const h = useMsgs("hints") as Record<string, string>;
   const items: Array<{ text: string; href?: string; icon?: string }> = Array.isArray(attrs.items) ? attrs.items : [];
-  const value = items.map((it) => (it.href ? `${it.text} | ${it.href}` : it.text)).join("\n");
-  const parse = (s: string) => s.split("\n").slice(0, 50).map((line, i) => {
-    const [text, href] = line.split("|").map((x) => x.trim());
-    return { ...(items[i]?.icon ? { icon: items[i].icon } : {}), text: text ?? "", ...(href ? { href } : {}) };
-  });
-  return <Field label={t.iconListItems}><textarea className="ecx-input" rows={6} value={value} data-icon-list-items onChange={(e) => setAttrs({ items: parse(e.target.value) })} /></Field>;
+  const patch = (i: number, p: Record<string, string | undefined>) => setAttrs({ items: items.map((x, k) => {
+    if (k !== i) return x;
+    const next: Record<string, unknown> = { ...x, ...p };
+    for (const key of Object.keys(next)) if (next[key] === undefined || (key !== "text" && next[key] === "")) delete next[key];
+    return next;
+  }) });
+  return (
+    <Section title={t.iconListItems} defaultOpen>
+      {items.map((it, i) => (
+        <div key={i} className="ecx-item-row" data-icon-list-item>
+          <input className="ecx-input" aria-label={`${t.iconListText} ${i + 1}`} placeholder={t.iconListText} value={it.text ?? ""} onChange={(e) => patch(i, { text: e.target.value })} />
+          <div className="ecx-item-row-sub">
+            <select className="ecx-input" aria-label={`${t.iconListIcon} ${i + 1}`} value={it.icon ?? ""} onChange={(e) => patch(i, { icon: e.target.value || undefined })}>
+              <option value="">{t.iconListIconDefault}</option>
+              <option value="none">{t.iconListIconNone}</option>
+              {ICON_NAMES.map((n) => <option key={n} value={n}>{h[`iconList.icon.opt.${n}`] ?? n}</option>)}
+            </select>
+            <input className="ecx-input" type="url" inputMode="url" aria-label={`${t.iconListLink} ${i + 1}`} placeholder={t.iconListLink} value={it.href ?? ""} onChange={(e) => patch(i, { href: e.target.value || undefined })} />
+            <button type="button" className="ecx-tool" aria-label={`${t.iconListRemove} ${i + 1}`} title={t.iconListRemove} onClick={() => setAttrs({ items: items.filter((_, k) => k !== i) })}>×</button>
+          </div>
+        </div>
+      ))}
+      {items.length < 50 && <button type="button" className="ecx-btn" onClick={() => setAttrs({ items: [...items, { text: "" }] })}>+ {t.iconListAdd}</button>}
+    </Section>
+  );
 }
 
 const spec = (name: string) => CORE_NODES[name]?.attrs;

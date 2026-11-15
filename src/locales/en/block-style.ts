@@ -14,7 +14,7 @@ export const blockStyle: (typeof vi)["blockStyle"] = {
   attr: {
     textShadow: "Text shadow",
     listMarker: "Marker type", listMarkerColor: "Marker color", listGap: "Space between", listDivider: "Divider",
-    buttonColor: "Text color", buttonBg: "Background color", buttonHoverColor: "Text color", buttonHoverBg: "Background color", buttonSize: "Size", buttonRadius: "Border radius", buttonWeight: "Font weight", buttonShadow: "Box shadow",
+    buttonColor: "Text color", buttonBg: "Background color", buttonHoverColor: "Text color", buttonHoverBg: "Background color", buttonWidth: "Fixed width", buttonIconColor: "Icon color", buttonIconHoverColor: "Icon color", buttonIconSize: "Icon size", buttonSize: "Size", buttonRadius: "Border radius", buttonWeight: "Font weight", buttonShadow: "Box shadow",
     imageWidth: "Width", imageHeight: "Height", imageFit: "Object fit", imageRadius: "Border radius", imageBorderWidth: "Border width", imageBorderColor: "Border color", imageShadow: "Box shadow",
     imageOpacity: "Opacity", imageFilter: "CSS filter", imageHoverEffect: "Hover animation", imageHoverOpacity: "Opacity", imageHoverFilter: "CSS filter",
     tableBorderColor: "Cell border color", tableBorderWidth: "Cell border width", tableHeaderBg: "Header background", tableHeaderColor: "Header text", tableStripe: "Striped rows", tableCellPadding: "Cell padding", tableAlign: "Cell alignment",
@@ -24,7 +24,7 @@ export const blockStyle: (typeof vi)["blockStyle"] = {
     hrStyle: "Style", hrWeight: "Weight", hrColor: "Color", hrWidth: "Width", hrAlign: "Alignment",
     iconBoxIconColor: "Icon color", iconBoxIconSize: "Icon size", iconBoxTitleColor: "Title color", iconBoxTextColor: "Description color",
     imageBoxRadius: "Image radius", imageBoxTitleColor: "Title color", imageBoxTextColor: "Description color",
-    iconListGap: "Space between", iconListDivider: "Divider", iconListIconColor: "Icon color", iconListIconSize: "Icon size", iconListTextColor: "Text color",
+    iconListGap: "Space between", iconListColumnGap: "Column gap", iconListIconGap: "Icon – text gap", iconListDivider: "Divider", iconListIconColor: "Icon color", iconListIconSize: "Icon size", iconListTextColor: "Text color",
     counterNumberColor: "Number color", counterNumberSize: "Number size", counterTitleColor: "Title color",
     testimonialBg: "Background color", testimonialBorderColor: "Border color", testimonialQuoteColor: "Quote color", testimonialNameColor: "Name color", testimonialRoleColor: "Role color",
     progressBarColor: "Bar color", progressTrackColor: "Track color", progressHeight: "Bar height", progressTitleColor: "Title color",

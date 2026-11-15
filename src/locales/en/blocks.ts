@@ -59,7 +59,7 @@ export const blocks = {
   option1: "Option 1",
   option2: "Option 2",
   widgetEmpty: "Add items in the settings panel",
-  iconListItems: "Items (one per line, add a link: text | /path)",
+  iconListItems: "Items", iconListText: "Text", iconListIcon: "Icon", iconListIconDefault: "List default", iconListIconNone: "No icon", iconListLink: "Link", iconListRemove: "Remove item", iconListAdd: "Add item",
   widget_number: "01",
   widget_buttonText: "Learn more",
   widget_title: "Title",

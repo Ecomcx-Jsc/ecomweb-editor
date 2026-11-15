@@ -98,9 +98,17 @@ function PartControls({ props, style, onChange, device, hover, target }: { props
   // Rê chuột: chỉ nhóm đổi được khi rê (màu, nền, viền, bóng)
   const p = hover ? props.filter((x) => ["color", "background", "border", "shadow"].includes(x)) : props;
   const labels = { vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: ct.linkSides, unlink: ct.unlinkSides };
+  // Gạch chân: đặt được cả ở trạng thái rê chuột (liên kết "không gạch, rê mới gạch")
+  const decoration = props.includes("typography") && (
+    <Row label={L.style_decoration} onReset={has("textDecoration") ? reset("textDecoration") : undefined}>
+      <Seg label={L.style_decoration} value={style.textDecoration} onChange={(v) => set("textDecoration", v)} options={[["none", "—", L.none], ["underline", "U̲", L.underlineText], ["line-through", "S̶", L.strikeText]]} />
+    </Row>
+  );
   return (
     <>
+      {hover && decoration}
       {p.includes("typography") && <>
+        {decoration}
         <Row label={t.fontSize} device={dev("fontSize")} onReset={has("fontSize") ? reset("fontSize") : undefined}>
           <Seg label={t.fontSize} value={get("fontSize")} onChange={(v) => set("fontSize", v)} options={sizes.map((v) => [v, v.toUpperCase(), v] as [string, string, string])} />
           <UnitInput label={t.fontSize} value={sizes.includes(get("fontSize")) ? undefined : get("fontSize")} units={["px", "rem", "em"]} max={96} onChange={(v) => set("fontSize", v)} />

@@ -573,3 +573,48 @@ test("icon: độ dày nét, khung tròn, liên kết (ô mở tab chỉ hiện 
   const attrs = (await find(page, "icon")).attrs;
   expect(attrs).toMatchObject({ iconStyle: "circle", stroke: 1, href: "/lien-he", linkTarget: "_blank" });
 });
+
+test("danh sách icon: 2 cột, khung tròn, sửa từng mục (chữ, không icon, liên kết), thêm / xoá mục", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "il1", type: "iconList", attrs: { items: [{ text: "Một" }, { text: "Hai" }] } }]); s.select(["il1"]); });
+  const i = insp(page), list = c.locator(".ecx-icon-list");
+  await i.getByRole("slider", { name: "Số cột" }).fill("2");
+  await expect(list).toHaveClass(/is-cols-2/);
+  await i.getByRole("radiogroup", { name: "Khung icon" }).getByRole("radio", { name: "Tròn" }).click();
+  await expect(list).toHaveClass(/has-icon-circle/);
+  await i.getByLabel("Icon 1").selectOption("none");
+  await expect(list.locator(".ecx-widget-icon")).toHaveCount(1);
+  await i.getByLabel("Liên kết 2").fill("/hai");
+  await i.getByRole("button", { name: "Thêm mục" }).click();
+  await i.getByLabel("Chữ 3").fill("Ba");
+  await i.getByRole("button", { name: "Xoá mục 2" }).click();
+  expect((await find(page, "iconList")).attrs).toMatchObject({ columns: 2, iconStyle: "circle", items: [{ text: "Một", icon: "none" }, { text: "Ba" }] });
+});
+
+test("nút: rộng cố định, màu icon thường / khi rê", async ({ page }) => {
+  const c = await open(page, "?doc=rich");
+  const btn = await find(page, "button");
+  await page.evaluate((x) => { const s = (window as any).__ecx.store; s.setAttrs([x], { icon: "arrowRight" }); s.select([x]); }, btn.id);
+  const i = insp(page);
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await i.getByRole("button", { name: /^Nút · tuỳ chọn khác/ }).click();
+  await i.getByRole("spinbutton", { name: /Rộng cố định/ }).fill("240");
+  await expect(c.locator(".ecx-button").first()).toHaveCSS("width", "240px");
+  await i.getByRole("button", { name: /^Icon/ }).click();
+  await expect(i.locator(".ecx-style-section", { hasText: "Màu icon" }).getByRole("tab", { name: "Rê chuột" })).toBeVisible();
+  expect((await find(page, "button")).attrs.buttonWidth).toBe("240px");
+});
+
+test("liên kết trong đoạn văn: không gạch chân, rê chuột mới gạch", async ({ page }) => {
+  await open(page, "?doc=post");
+  const para = await find(page, "paragraph");
+  await page.evaluate((x) => (window as any).__ecx.store.select([x]), para.id);
+  const i = insp(page);
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await i.getByRole("button", { name: "Liên kết", exact: true }).click();
+  const sec = i.locator(".ecx-style-section", { hasText: "Liên kết" }).last();
+  await sec.getByRole("radiogroup", { name: "Trang trí" }).getByRole("radio").first().click();
+  await sec.getByRole("tab", { name: "Rê chuột" }).click();
+  await sec.getByRole("radiogroup", { name: "Trang trí" }).getByRole("radio").nth(1).click();
+  expect((await find(page, "paragraph")).attrs.parts.link).toMatchObject({ style: { textDecoration: "none" }, hover: { textDecoration: "underline" } });
+});
