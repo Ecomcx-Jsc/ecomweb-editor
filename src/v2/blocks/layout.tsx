@@ -74,12 +74,38 @@ function GroupLayoutTools({ attrs, setAttrs, labels }: BlockEditProps) {
 }
 const groupWith = (layout?: BlockStyle["layout"], kids = 1) => makeBlock("group", layout ? { style: { layout } } : {}, Array.from({ length: kids }, () => makeBlock("paragraph")));
 
+/** Bố cục cột cho lưới chọn khi vừa chèn Bộ cột (0 = chia đều). */
+const COLUMN_LAYOUTS: number[][] = [[100], [0, 0], [67, 33], [33, 67], [0, 0, 0], [50, 25, 25], [25, 25, 50], [25, 50, 25], [20, 60, 20], [0, 0, 0, 0], [40, 20, 20, 20], [20, 20, 20, 40], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]];
+const layoutName = (w: number[]) => w.map((x) => (x || Math.round(100 / w.length))).join(" / ");
+
 function ColumnsEdit({ block, blockProps, editable, labels, selected }: BlockEditProps) {
   const { store } = useEditor();
   const t = useMsgs("blocks");
+  const tp = useMsgs("placeholders");
   const a = block.attrs;
   const active = useActiveWithin(block.id);
   const shell = blockShell("columns", a)!; // vỏ dùng chung với website (@ecomcx/ecomweb-content)
+  const pick = (widths: number[]) => {
+    const cols = widths.map((w) => makeBlock("column", w && widths.length > 1 ? { width: w } : {}, [makeBlock("paragraph")]));
+    const first = cols[0].content![0].id;
+    store.replace(block.id, [{ ...block, content: cols }], { select: { ids: [], editing: first }, caret: { id: first, offset: 0 } });
+  };
+  // Lệnh chèn "Bộ cột" tạo khối chưa có cột: hỏi bố cục ngay trên khung soạn (biến thể 50 / 50… đã có cột thì không hỏi)
+  if (editable && !block.content?.length) return (
+    <div {...merge(blockProps, "", undefined, block.attrs)} data-ecx-placeholder="columns">
+      <div className="ecx-media-placeholder ecx-ph-choose" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+        <p className="ecx-ph-title">{tp.chooseColumns}</p>
+        <div className="ecx-col-layouts">
+          {COLUMN_LAYOUTS.map((w) => (
+            <button key={w.join("-")} type="button" className="ecx-col-layout" aria-label={layoutName(w)} title={layoutName(w)} onClick={() => pick(w)}>
+              {w.map((x, i) => <span key={i} style={{ flexGrow: x || 1 }} />)}
+            </button>
+          ))}
+        </div>
+        <button type="button" className="ecx-ph-skip" onClick={() => pick([0, 0])}>{tp.skip}</button>
+      </div>
+    </div>
+  );
   return (
     <div {...merge(blockProps, shell.className!, shell.style as CSSProperties, block.attrs)}>
       <InnerBlocks parent={block} appender="none" />
@@ -400,7 +426,7 @@ export function layoutBlocks(): BlockType[] {
       name: "columns", title: "Cột", icon: Columns2, category: "design", keywords: "cot columns bo cuc layout", kind: "container", edit: ColumnsEdit,
       // Cài đặt vẽ ở ColumnsInspector (số cột, bố cục theo khổ, khe, căn dọc) — ô tự sinh ẩn
       attributes: { verticalAlign: { type: "string", enum: ["top", "center", "bottom", "stretch"], control: "hidden" }, stack: { type: "boolean", default: true, control: "hidden" } },
-      create: () => columns(0, 0), contextToolbar: ColumnsTools, inspector: ColumnsInspector,
+      create: () => columns(), contextToolbar: ColumnsTools, inspector: ColumnsInspector,
       variations: [
         { name: "50-50", title: "50 / 50", icon: Columns2, create: () => columns(0, 0) },
         { name: "33-33-33", title: "33 / 33 / 33", icon: Columns3, create: () => columns(0, 0, 0) },

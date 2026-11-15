@@ -210,7 +210,8 @@ test.describe("v3: thao tác thẳng trên khung soạn", () => {
     const x = g.x + g.width / 2, y = g.y + g.height - 60; // dưới đoạn văn, trên vùng đệm dưới
     await page.mouse.click(x, y);
     expect((await state(page)).docs.root.blocks[0].id).toBe("g1");
-    const last = await frameBox(page, '[data-ecx-block]:last-child');
+    const lastId = await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks.at(-1).id);
+    const last = await frameBox(page, `[data-ecx-block="${lastId}"]`);
     await page.mouse.move(x, y); await page.mouse.down();
     for (let i = 1; i <= 10; i++) await page.mouse.move(x, y + ((last.y + last.height - 4) - y) * i / 10);
     await page.mouse.up();
@@ -218,4 +219,30 @@ test.describe("v3: thao tác thẳng trên khung soạn", () => {
     expect(ids[0]).not.toBe("g1");
     expect(ids).toContain("g1");
   });
+});
+
+test("bộ cột vừa chèn: chọn bố cục ngay trên khung soạn; biến thể 50 / 50 không hỏi lại", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => (window as any).__ecx.store.insert("root", null, 0, [{ id: "R", type: "columns", attrs: {}, content: [] }]));
+  await c.getByRole("button", { name: "25 / 50 / 25" }).click();
+  const row = await find(page, "columns");
+  expect(row.content.map((x: any) => x.attrs.width)).toEqual([25, 50, 25]);
+  await expect(c.locator('[data-ecx-block="R"] > .ecx-column')).toHaveCount(3);
+  await expect(c.locator(".ecx-col-layouts")).toHaveCount(0);
+  await page.keyboard.type("Cột đầu");
+  expect((await find(page, "column")).content[0].inline[0].text).toBe("Cột đầu");
+});
+
+
+test("chép / dán kiểu dáng ngay trên thanh công cụ", async ({ page }) => {
+  await open(page, "?doc=post");
+  const ids = await page.evaluate(() => { const s = (window as any).__ecx.store; const b = s.getState().docs.root.blocks; s.setAttrs([b[1].id], { style: { color: { text: "accent" }, padding: { base: "lg" } } }); s.select([b[1].id]); return b.map((x: any) => x.id); });
+  const bar = page.locator(".ecx-toolbar");
+  await bar.getByRole("button", { name: "Chép / dán kiểu dáng" }).click();
+  await page.getByRole("menuitem", { name: "Chép kiểu dáng" }).click();
+  await page.evaluate((x) => (window as any).__ecx.store.select([x]), ids[2]);
+  await bar.getByRole("button", { name: "Chép / dán kiểu dáng" }).click();
+  await page.getByRole("menuitem", { name: "Dán kiểu dáng" }).click();
+  const b = (await state(page)).docs.root.blocks[2];
+  expect(b.attrs.style).toMatchObject({ color: { text: "accent" }, padding: { base: "lg" } });
 });

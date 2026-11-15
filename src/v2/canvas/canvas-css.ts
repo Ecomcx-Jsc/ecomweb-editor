@@ -249,6 +249,14 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-ph-choice:hover, .ecx-ph-choice:focus-visible { border-color: var(--ecx-ui); color: var(--ecx-ui); }
 .ecx-ph-choice .ecx-icon { width: 24px; height: 24px; }
 .ecx-ph-choose { align-items: center; text-align: center; }
+/* Lưới chọn bố cục cột khi vừa chèn Bộ cột: mỗi ô vẽ tỉ lệ các cột */
+.ecx-col-layouts { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; width: 100%; max-width: 640px; }
+.ecx-col-layout { display: flex; gap: 3px; height: 44px; padding: 6px; border: 1px solid #c9d0d7; border-radius: 6px; background: #fff; cursor: pointer; }
+.ecx-col-layout span { flex-basis: 0; border-radius: 2px; background: #c3ccd5; }
+.ecx-col-layout:hover, .ecx-col-layout:focus-visible { border-color: var(--ecx-ui); outline: none; }
+.ecx-col-layout:hover span, .ecx-col-layout:focus-visible span { background: var(--ecx-ui); }
+.ecx-ph-skip { border: 0; background: none; padding: 2px 4px; color: #4a5a68; font: 13px var(--ecx-ui-font); text-decoration: underline; cursor: pointer; }
+.ecx-ph-skip:hover { color: var(--ecx-ui); }
 /* Ô gõ của plugin / icon list: kế thừa phông + cỡ chữ của chỗ đặt ô */
 .ecx-ph-text { box-sizing: border-box; width: 100%; min-width: 4em; margin: 0; padding: 0 0 1px; border: 0; border-bottom: 1px dashed color-mix(in srgb, currentColor 35%, transparent); border-radius: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; line-height: inherit; resize: vertical; outline: none; field-sizing: content; }
 .ecx-ph-text::placeholder { color: inherit; opacity: .85; }

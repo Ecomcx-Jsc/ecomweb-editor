@@ -21,6 +21,7 @@ export const v2 = {
   group: "Group",
   ungroup: "Ungroup",
   copy: "Copy",
+  copyPasteStyle: "Copy / paste styles",
   copyStyle: "Copy style",
   pasteStyle: "Paste style",
   styleCopied: "Style copied",

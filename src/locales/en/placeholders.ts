@@ -38,6 +38,8 @@ export const placeholders: typeof vi = {
   languageAuto: "Auto-detect",
   startAt: "Start at",
   chooseLayout: "Choose a layout",
+  chooseColumns: "Choose a column layout",
+  skip: "Skip",
   layoutStack: "Stack",
   layoutRow: "Row",
   layoutGrid: "Grid",

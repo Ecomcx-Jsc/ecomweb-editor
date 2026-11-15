@@ -26,7 +26,8 @@ function withStyleAttrs(t: BlockType): BlockType["attributes"] {
   const ctl = Object.entries(coreControlsFor(t.name));
   if (!ctl.length) return t.attributes;
   const hidden = (s: AttrSpec): BlockAttrSpec => ({ ...s, control: "hidden" });
-  const base = t.attributes ?? Object.fromEntries(Object.entries(CORE_NODES[t.name]?.attrs ?? {}).map(([k, s]) => [k, hidden(s)]));
+  // Thuộc tính gốc (CORE_NODES, ẩn) + thuộc tính khối tự khai đè lên — khối khai vài ô riêng (vd tabs) không làm mất thuộc tính gốc
+  const base = { ...Object.fromEntries(Object.entries(CORE_NODES[t.name]?.attrs ?? {}).map(([k, s]) => [k, hidden(s)])), ...t.attributes };
   return {
     ...base,
     // thuộc tính khối tự khai (vd tabs.tabsAlign hiện ở Cài đặt) giữ nguyên

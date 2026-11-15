@@ -22,6 +22,7 @@ export const v2 = {
   ungroup: "Bỏ nhóm",
   copy: "Sao chép",
   copyStyle: "Chép kiểu dáng",
+  copyPasteStyle: "Chép / dán kiểu dáng",
   pasteStyle: "Dán kiểu dáng",
   styleCopied: "Đã chép kiểu dáng",
   blockMenu: "Thao tác với khối",

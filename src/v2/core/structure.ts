@@ -28,7 +28,8 @@ const RULES: Record<string, StructureRule> = {
   listItem: { parents: ["bulletList", "orderedList"], wrapSelfWith: "bulletList", required: p, firstChild: "paragraph" },
   taskList: { allowedChildren: ["taskItem"], wrapChildrenWith: "taskItem", removeWhenEmpty: true },
   taskItem: { parents: ["taskList"], wrapSelfWith: "taskList", required: p, firstChild: "paragraph" },
-  columns: { allowedChildren: ["column"], wrapChildrenWith: "column", removeWhenEmpty: true },
+  // Bộ cột rỗng (vừa chèn, chưa chọn bố cục) giữ lại như bảng rỗng: trình soạn hiện lưới chọn bố cục cột
+  columns: { allowedChildren: ["column"], wrapChildrenWith: "column" },
   column: { parents: ["columns"], wrapSelfWith: "columns" },
   buttons: { allowedChildren: ["button"], removeWhenEmpty: true },
   button: { parents: ["buttons"], wrapSelfWith: "buttons" },

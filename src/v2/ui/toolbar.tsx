@@ -250,6 +250,17 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
         {Extra && <div className="ecx-tool-group"><Extra {...editProps} /></div>}
         {(nodes.length === 1 || cellSel) && contextTools(loc.ancestors, first.id)}
         {nested && <div className="ecx-tool-group"><ToolButton label={labels.editOriginal} className="ecx-tool-wide" onClick={() => store.enterFocus(nested)}><PanelTop className="ecx-icon" /><span className="ecx-tool-text">{labels.editOriginal}</span></ToolButton></div>}
+        {/* Chép / dán kiểu dáng ngay trên thanh (như các bộ khối lớn) — vẫn còn trong menu ⋮ */}
+        {nodes.length === 1 && !type?.plain && (
+          <div className="ecx-tool-group">
+            <Dropdown label={labels.copyPasteStyle} trigger={<Paintbrush className="ecx-icon" />}>
+              {(close) => <>
+                <MenuItem icon={Paintbrush} label={labels.copyStyle} onClick={() => { close(); copyStyle(first.attrs); ui.announce(labels.styleCopied); }} />
+                {hasCopiedStyle() && ordered.every((id) => !store.isContentOnly(id) && store.modeOf(id) !== "disabled") && <MenuItem icon={ClipboardPaste} label={labels.pasteStyle} onClick={() => { close(); store.setAttrs(ordered, pastedStyle()!); }} />}
+              </>}
+            </Dropdown>
+          </div>
+        )}
         <div className="ecx-tool-group">
           <Dropdown label={labels.more} trigger={<MoreVertical className="ecx-icon" />}>
             {(close) => <BlockMenuItems ids={ids} close={close} onLock={() => setLockOpen(true)} />}

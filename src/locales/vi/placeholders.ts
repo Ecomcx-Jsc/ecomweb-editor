@@ -37,6 +37,8 @@ export const placeholders = {
   languageAuto: "Tự nhận",
   startAt: "Bắt đầu từ",
   chooseLayout: "Chọn kiểu bố cục",
+  chooseColumns: "Chọn bố cục cột",
+  skip: "Bỏ qua",
   layoutStack: "Xếp dọc",
   layoutRow: "Hàng ngang",
   layoutGrid: "Lưới",
