@@ -464,3 +464,20 @@ test("hộp icon: media số, khung tròn, icon bên phải, nút Xem thêm (ô 
   const [m, b] = [await box.locator(".ecx-icon-box-icon").boundingBox(), await box.locator(".ecx-icon-box-body").boundingBox()];
   expect(m!.x).toBeGreaterThan(b!.x); // số nằm bên phải
 });
+
+test("mục lục: khoảng cấp H3–H4, thu gọn, danh sách 2 cột không dấu", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
+    { id: "TOC", type: "tableOfContents", attrs: {} },
+    { id: "h2", type: "heading", attrs: { level: 2 }, inline: [{ type: "text", text: "Hai" }] },
+    { id: "h3", type: "heading", attrs: { level: 3 }, inline: [{ type: "text", text: "Ba" }] },
+    { id: "h4", type: "heading", attrs: { level: 4 }, inline: [{ type: "text", text: "Bốn" }] }], { focus: false }); s.select(["TOC"], { editing: null }); });
+  await insp(page).getByRole("combobox", { name: "Cấp nhỏ nhất" }).selectOption("3");
+  await insp(page).getByRole("combobox", { name: /Cấp tối đa/ }).selectOption("4");
+  await insp(page).getByRole("checkbox", { name: /Thu gọn được/ }).check();
+  await insp(page).getByRole("radiogroup", { name: "Kiểu danh sách" }).getByRole("radio", { name: "Không" }).click();
+  await insp(page).getByRole("radiogroup", { name: "Số cột" }).getByRole("radio", { name: "2" }).click();
+  const toc = c.locator(".ecx-toc");
+  await expect(toc.locator("details.ecx-toc-details > summary")).toBeVisible();
+  await expect(toc.locator("ul.ecx-toc-list.is-plain.has-cols-2 > li")).toHaveText(["Ba", "Bốn"]);
+});

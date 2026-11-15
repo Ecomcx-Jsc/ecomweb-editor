@@ -233,27 +233,35 @@ function GalleryInspector({ attrs, setAttrs }: BlockEditProps) {
 function TocEdit({ block, blockProps }: BlockEditProps) {
   const t = useMsgs("blocks");
   const tp = useMsgs("placeholders");
-  const max = Math.min(4, Math.max(2, Number(block.attrs.maxLevel) || 3));
+  const a = block.attrs;
+  const min = Math.min(6, Math.max(2, Number(a.minLevel) || 2));
+  const max = Math.min(6, Math.max(min, Number(a.maxLevel) || 3));
+  const title = String(a.title || t.contents);
+  const list = <TocItems minLevel={min} maxLevel={max} listStyle={String(a.listStyle ?? "numbers")} columns={Number(a.columns) || 1} empty={<p className="ecx-placeholder-hint ecx-ph-note" contentEditable={false}>{tp.tocHint.replace("{n}", String(max))}</p>} />;
+  // Khung soạn luôn mở danh sách (kể cả "bắt đầu thu gọn") để thấy được nội dung
   return (
-    <nav {...(blockProps as object)} className={cx(blockProps.className, "ecx-toc")}>
-      <p className="ecx-toc-title">{String(block.attrs.title || (t.contents))}</p>
-      <TocItems maxLevel={max} empty={<p className="ecx-placeholder-hint ecx-ph-note" contentEditable={false}>{tp.tocHint.replace("{n}", String(max))}</p>} />
+    <nav {...(blockProps as object)} className={cx(blockProps.className, "ecx-toc", a.smoothScroll === true && "is-smooth")}>
+      {a.collapsible === true
+        ? <details className="ecx-toc-details" open><summary className="ecx-toc-title" onClick={(e) => e.preventDefault()}>{title}</summary>{list}</details>
+        : <><p className="ecx-toc-title">{title}</p>{list}</>}
     </nav>
   );
 }
 
-/** Mục lục xem trước: tiêu đề của tài liệu đang soạn. */
-function TocItems({ maxLevel, empty }: { maxLevel: number; empty?: ReactNode }) {
+/** Mục lục xem trước: tiêu đề của tài liệu đang soạn (cùng lớp CSS với website). */
+function TocItems({ minLevel, maxLevel, listStyle, columns, empty }: { minLevel: number; maxLevel: number; listStyle: string; columns: number; empty?: ReactNode }) {
   const { store } = useEditor();
   const doc = store.getState().docs[store.activeDocId];
   const items: Array<{ level: number; text: string }> = [];
   const walk = (list: typeof doc.blocks) => list.forEach((b) => {
-    if (b.type === "heading" && Number(b.attrs.level) >= 2 && Number(b.attrs.level) <= maxLevel) items.push({ level: Number(b.attrs.level), text: (b.inline ?? []).map((n) => n.text ?? "").join("") });
+    if (b.type === "heading" && Number(b.attrs.level) >= minLevel && Number(b.attrs.level) <= maxLevel) items.push({ level: Number(b.attrs.level), text: (b.inline ?? []).map((n) => n.text ?? "").join("") });
     if (b.content) walk(b.content);
   });
   if (doc) walk(doc.blocks);
   if (!items.length && empty) return <>{empty}</>;
-  return <ol>{items.map((h, i) => <li key={i} style={h.level > 2 ? { marginLeft: `${h.level - 2}em` } : undefined}>{h.text || "…"}</li>)}</ol>;
+  const List = listStyle === "bullets" || listStyle === "none" ? "ul" : "ol";
+  const cols = Math.min(3, Math.max(1, columns));
+  return <List className={cx("ecx-toc-list", listStyle === "none" && "is-plain", cols > 1 && `has-cols-${cols}`)}>{items.map((h, i) => <li key={i} style={h.level > minLevel ? { marginLeft: `${h.level - minLevel}em` } : undefined}>{h.text || "…"}</li>)}</List>;
 }
 
 export function mediaBlocks(): BlockType[] {
@@ -272,6 +280,6 @@ export function mediaBlocks(): BlockType[] {
     { name: "embed", title: "Nhúng", icon: Globe, category: "embed", keywords: "nhung embed youtube vimeo tiktok facebook twitter x instagram spotify google map", kind: "atom", edit: EmbedEdit, attributes: { url: { type: "url" }, caption: { type: "string" } }, supports: { style: true, anchor: true }, summary: (a) => a.url },
     { name: "customHtml", title: "HTML tuỳ chỉnh", icon: Code2, category: "widgets", keywords: "html tuy chinh custom code", kind: "atom", edit: HtmlEdit, attributes: { html: { type: "string", control: "textarea" } } },
     { name: "socialLinks", title: "Mạng xã hội", icon: Share2, category: "widgets", keywords: "mang xa hoi social facebook zalo youtube tiktok", kind: "atom", edit: SocialEdit, inspector: SocialInspector, attributes: { links: { type: "json", default: [] }, size: { type: "string", enum: ["small", "medium", "large"], default: "medium" }, align: { type: "string", enum: ["left", "center", "right"] }, showLabels: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
-    { name: "tableOfContents", title: "Mục lục", icon: ListTree, category: "widgets", keywords: "muc luc table of contents toc", kind: "atom", edit: TocEdit, attributes: { title: { type: "string" }, maxLevel: { type: "integer", default: 3, min: 2, max: 4 } }, supports: { style: true, anchor: true } },
+    { name: "tableOfContents", title: "Mục lục", icon: ListTree, category: "widgets", keywords: "muc luc table of contents toc", kind: "atom", edit: TocEdit, attributes: { title: { type: "string" }, minLevel: { type: "integer", default: 2, min: 2, max: 6 }, maxLevel: { type: "integer", default: 3, min: 2, max: 6 }, collapsible: { type: "boolean", default: false }, startCollapsed: { type: "boolean", default: false }, listStyle: { type: "string", enum: ["numbers", "bullets", "none"], default: "numbers" }, columns: { type: "integer", default: 1, min: 1, max: 3 }, smoothScroll: { type: "boolean", default: false }, highlight: { type: "boolean", default: false } }, supports: { style: true, anchor: true } },
   ];
 }
