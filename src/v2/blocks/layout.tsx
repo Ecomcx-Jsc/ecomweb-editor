@@ -9,7 +9,7 @@ import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useEditor } from "../context";
 import { ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
-import { ColumnHandles, useActiveWithin } from "./resize";
+import { ColumnHandles, PaddingHandles, useActiveWithin } from "./resize";
 import { layoutFor, layoutKind } from "../ui/layout-panel";
 import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
 import { ToolButton } from "../ui/toolbar";
@@ -31,7 +31,7 @@ const shellProps = (bp: BlockEditProps["blockProps"], type: string, attrs: Recor
   return { ...merge(bp, sh.className ?? "", sh.style as CSSProperties, attrs), ...sh.attrs };
 };
 
-function GroupEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
+function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEditProps) {
   const tp = useMsgs("placeholders");
   const style: BlockStyle = normalizeStyle(block.attrs.style) ?? {};
   // Nhóm mới chèn (chưa chọn bố cục, chưa có nội dung): hỏi bố cục ngay trong khối như WordPress — đoạn văn bên trong vẫn gõ được ngay (gõ "/nhom" rồi gõ tiếp)
@@ -49,6 +49,7 @@ function GroupEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
         </div>
       )}
       <InnerBlocks parent={block} />
+      {selected && editable && <PaddingHandles blockId={block.id} />}
     </div>
   );
 }
@@ -69,7 +70,7 @@ function GroupLayoutTools({ attrs, setAttrs, labels }: BlockEditProps) {
 }
 const groupWith = (layout?: BlockStyle["layout"], kids = 1) => makeBlock("group", layout ? { style: { layout } } : {}, Array.from({ length: kids }, () => makeBlock("paragraph")));
 
-function ColumnsEdit({ block, blockProps, editable, labels }: BlockEditProps) {
+function ColumnsEdit({ block, blockProps, editable, labels, selected }: BlockEditProps) {
   const { store } = useEditor();
   const t = useMsgs("blocks");
   const a = block.attrs;
@@ -79,6 +80,7 @@ function ColumnsEdit({ block, blockProps, editable, labels }: BlockEditProps) {
     <div {...merge(blockProps, shell.className!, shell.style as CSSProperties, block.attrs)}>
       <InnerBlocks parent={block} appender="none" />
       {active && editable && block.content!.length > 1 && <ColumnHandles block={block} />}
+      {selected && editable && <PaddingHandles blockId={block.id} />}
       {active && editable && block.content!.length < 6 && store.canInsertInto(block.id) && (
         <button type="button" className="ecx-add-column" contentEditable={false} title={t.addColumn} aria-label={t.addColumn}
           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }} onClick={() => addColumnTo(store, block)}>+</button>
@@ -87,13 +89,14 @@ function ColumnsEdit({ block, blockProps, editable, labels }: BlockEditProps) {
   );
 }
 
-function ColumnEdit({ block, blockProps }: BlockEditProps) {
+function ColumnEdit({ block, blockProps, selected, editable }: BlockEditProps) {
   const { store } = useEditor();
   const parent = store.locate(block.id)?.parent;
   const shell = blockShell("column", block.attrs, parent ? { type: parent.type, attrs: parent.attrs } : undefined)!;
   return (
     <div {...merge(blockProps, shell.className!, shell.style as CSSProperties, block.attrs)}>
       <InnerBlocks parent={block} />
+      {selected && editable && <PaddingHandles blockId={block.id} />}
     </div>
   );
 }

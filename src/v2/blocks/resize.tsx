@@ -1,6 +1,11 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
 import { useEditor, useEditorState } from "../context";
+import { hideSpacingViz, showSpacingViz } from "../canvas/spacing-viz";
 import type { BNode } from "../core/model";
+
+/** Thả tay nắm: focus về khung soạn để ⌘Z / Delete… thuộc về trình soạn ngay. */
+const focusCanvas = (el: HTMLElement) => el.ownerDocument.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true });
 
 /** Khối hoặc khối con của nó đang được chọn / gõ (hiện tay nắm đổi cỡ). */
 export function useActiveWithin(id: string) {
@@ -55,7 +60,7 @@ export function ColumnHandles({ block }: { block: BNode }) {
         });
       });
     };
-    const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); store.breakMerge(); };
+    const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); store.breakMerge(); focusCanvas(handle); };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
   };
@@ -102,10 +107,56 @@ export function ImageHandle({ blockId }: { blockId: string }) {
       const w = Math.round(Math.min(max, Math.max(48, ev.clientX - r.left)));
       store.setAttrs([blockId], { width: w, height: Math.round(w * ratio) || undefined });
     };
-    const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); store.breakMerge(); };
+    const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); store.breakMerge(); focusCanvas(handle); };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
   };
   return <span ref={ref} className="ecx-image-handle" contentEditable={false} title={labels.resize} style={pos ? { left: pos.left - 7, top: pos.top - 7 } : { visibility: "hidden" }}
     onPointerDown={start} onMouseDown={(e) => e.stopPropagation()} />;
+}
+
+/**
+ * Dải kéo đệm trên / dưới của khối bố cục đang chọn (Nhóm, Bộ cột, Cột, Ảnh bìa): rê vào mép thì hiện dải, kéo lên / xuống đổi đệm
+ * của khổ màn hình đang xem (lưu px, giữ các cạnh khác); khi kéo, vùng đệm được tô kèm số px — như ô Đệm ở bảng bên phải.
+ */
+export function PaddingHandles({ blockId }: { blockId: string }) {
+  const { store, ui, labels } = useEditor();
+  const start = (side: "top" | "bottom", e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const handle = e.currentTarget as HTMLElement;
+    const el = ui.blockEl(blockId);
+    if (!el) return;
+    const startPx = parseFloat(el.ownerDocument.defaultView!.getComputedStyle(el).getPropertyValue(`padding-${side}`)) || 0;
+    const y0 = e.clientY;
+    const device = ui.device === "desktop" ? "base" : ui.device;
+    handle.setPointerCapture(e.pointerId);
+    handle.classList.add("is-dragging");
+    const move = (ev: PointerEvent) => {
+      const px = Math.max(0, Math.round(startPx + ev.clientY - y0));
+      const node = store.block(blockId);
+      if (!node) return;
+      const style = (normalizeStyle(node.attrs.style) ?? {}) as BlockStyle & { padding?: Record<string, unknown> };
+      const cur = style.padding?.[device];
+      const sides = typeof cur === "object" && cur ? { ...(cur as Record<string, string>) } : typeof cur === "string" ? { top: cur, right: cur, bottom: cur, left: cur } : {};
+      sides[side] = `${px}px`;
+      store.setAttrs([blockId], { style: normalizeStyle({ ...style, padding: { ...(style.padding ?? {}), [device]: sides } }) ?? undefined });
+      requestAnimationFrame(() => showSpacingViz(ui.blockEl(blockId), "padding", [side]));
+    };
+    const up = () => {
+      handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up);
+      handle.classList.remove("is-dragging"); hideSpacingViz(ui.canvasDoc); store.breakMerge(); focusCanvas(handle);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+  };
+  const show = (side: "top" | "bottom") => showSpacingViz(ui.blockEl(blockId), "padding", [side]);
+  return (
+    <span className="ecx-pad-handles" contentEditable={false} aria-hidden="true">
+      {(["top", "bottom"] as const).map((side) => (
+        <span key={side} className={`ecx-pad-handle is-${side}`} title={labels.resize} onPointerDown={(e) => start(side, e)} onMouseDown={(e) => e.stopPropagation()}
+          onPointerEnter={() => show(side)} onPointerLeave={(e) => { if (!(e.currentTarget as HTMLElement).classList.contains("is-dragging")) hideSpacingViz(ui.canvasDoc); }} />
+      ))}
+    </span>
+  );
 }

@@ -1,8 +1,10 @@
 import { normalizeStyle } from "@ecomcx/ecomweb-content";
-import { Link2, Link2Off, SlidersHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Link2, Link2Off } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useEditor } from "../context";
-import { cx } from "./style-controls";
+import { Row, cx } from "./style-controls";
+import type { Device } from "@ecomcx/ecomweb-content";
+import { hideSpacingViz, showSpacingViz, type Side, type SpacingKind } from "../canvas/spacing-viz";
 import { useMsgs } from "../i18n";
 
 /**
@@ -45,41 +47,39 @@ export function UnitInput({ value, onChange, label, max = 100, units = UNITS, sl
   );
 }
 
-/** Thanh kéo theo bậc preset + nút sang giá trị tuỳ chỉnh. */
-function StepSlider({ value, steps, onChange, label, sideIcon }: { value?: string; steps: string[]; onChange(v: string | undefined): void; label: string; sideIcon?: string }) {
-  const t = useMsgs("controls");
-  const isPreset = value === undefined || steps.includes(value);
-  const [custom, setCustom] = useState(!isPreset);
-  useEffect(() => { if (!isPreset) setCustom(true); }, [isPreset]);
-  const idx = value === undefined ? -1 : steps.indexOf(value);
-  return (
-    <div className="ecx-step-row">
-      {sideIcon && <span className={cx("ecx-side-icon", sideIcon)} aria-hidden="true" />}
-      {custom
-        ? <UnitInput label={label} value={isPreset ? undefined : value} onChange={onChange} max={120} />
-        : (
-          <div className="ecx-steps">
-            <input type="range" aria-label={label} min={-1} max={steps.length - 1} step={1} value={idx} aria-valuetext={idx < 0 ? "—" : steps[idx]}
-              onChange={(e) => { const i = Number(e.target.value); onChange(i < 0 ? undefined : steps[i]); }} />
-            <span className="ecx-step-value">{idx < 0 ? "—" : steps[idx].toUpperCase()}</span>
-          </div>
-        )}
-      <button type="button" className={cx("ecx-tool", custom && "is-active")} aria-pressed={custom} title={custom ? (t.usePresets) : (t.customValue)} aria-label={`${label}: ${custom ? (t.usePresets2) : (t.customValue2)}`}
-        onClick={() => { setCustom(!custom); if (custom && !isPreset) onChange(undefined); }}><SlidersHorizontal className="ecx-icon ecx-icon-sm" /></button>
-    </div>
-  );
-}
-
 type Box = string | Record<string, string> | undefined;
 const sidesOf = (v: Box): Record<string, string> => (typeof v === "object" && v ? v : v ? { top: v, right: v, bottom: v, left: v } : {});
+const SIDES: Side[] = ["top", "right", "bottom", "left"];
 
-/** Lề trong / ngoài: liên kết (một giá trị) hoặc dọc + ngang. */
-export function SpacingControl({ label, value, onChange, steps, inherited, labels }: {
+/**
+ * Đệm / lề bốn cạnh: 4 ô Trên · Phải · Dưới · Trái (vạch đậm ở đúng cạnh, hiện tên bậc hoặc số), xích = 4 cạnh như nhau.
+ * Rê chuột lên ô → khối đang chọn được tô vùng đệm (bên trong) / lề (bên ngoài) trên khung soạn. Bấm ô → bảng chọn bậc + giá trị tuỳ chỉnh.
+ */
+export function SpacingControl({ label, value, onChange, steps, inherited, labels, kind = "padding", device, onReset }: {
   label: string; value: Box; onChange(v: Box): void; steps: string[]; inherited?: string; labels: { vertical: string; horizontal: string; link: string; unlink: string; top: string; right: string; bottom: string; left: string };
+  kind?: SpacingKind; device?: Device; onReset?(): void;
 }) {
+  const { store, ui } = useEditor();
+  const t = useMsgs("controls");
   const sides = sidesOf(value);
   const [linked, setLinked] = useState(typeof value !== "object" || value === null || (sides.top === sides.bottom && sides.left === sides.right && sides.top === sides.left));
+  const [open, setOpen] = useState<Side | null>(null);
+  const hover = useRef<Side | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const ok = (v: string) => !!normalizeStyle({ padding: v });
+  const blockEl = () => { const s = store.getState().selection; const id = s.ids[0] ?? s.editing; return id ? ui.blockEl(id) : null; };
+  const names = () => Object.fromEntries(SIDES.map((s) => [s, sides[s] && steps.includes(sides[s]) ? sides[s].toUpperCase() : undefined])) as Partial<Record<Side, string>>;
+  const viz = (side: Side | null) => { if (!side) { hideSpacingViz(ui.canvasDoc); return; } showSpacingViz(blockEl(), kind, linked ? SIDES : [side], names()); };
+  // Giá trị đổi khi đang rê / đang mở bảng chọn: vẽ lại lớp tô sau khi khối nhận CSS mới
+  useEffect(() => { const s = open ?? hover.current; if (!s) return; const r = requestAnimationFrame(() => viz(s)); return () => cancelAnimationFrame(r); });
+  useEffect(() => () => hideSpacingViz(ui.canvasDoc), [ui]);
+  useEffect(() => {
+    if (!open) return;
+    const out = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) { setOpen(null); viz(hover.current); } };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(null); viz(null); } };
+    document.addEventListener("mousedown", out, true); document.addEventListener("keydown", esc, true);
+    return () => { document.removeEventListener("mousedown", out, true); document.removeEventListener("keydown", esc, true); };
+  });
   const set = (keys: string[], v: string | undefined) => {
     if (v !== undefined && !ok(v)) return;
     const next = { ...sides };
@@ -87,22 +87,37 @@ export function SpacingControl({ label, value, onChange, steps, inherited, label
     const vals = Object.values(next);
     onChange(!vals.length ? undefined : vals.length === 4 && vals.every((x) => x === vals[0]) ? vals[0] : next);
   };
+  const target = (side: Side) => (linked ? SIDES : [side]);
+  const shown = (v?: string) => (v === undefined ? "–" : steps.includes(v) ? (v === "0" ? "0" : v.toUpperCase()) : v);
+  const cur = open ? sides[open] : undefined;
   return (
-    <div className="ecx-spacing">
-      <div className="ecx-spacing-head">
-        <span className="ecx-field-label">{label}{inherited && <em className="ecx-inherit">{inherited}</em>}</span>
-        <button type="button" className="ecx-tool" aria-pressed={linked} title={linked ? labels.unlink : labels.link} aria-label={`${label}: ${linked ? labels.unlink : labels.link}`} onClick={() => setLinked(!linked)}>
-          {linked ? <Link2 className="ecx-icon ecx-icon-sm" /> : <Link2Off className="ecx-icon ecx-icon-sm" />}
-        </button>
-      </div>
-      {linked
-        ? <StepSlider label={label} steps={steps} value={typeof value === "string" ? value : sides.top} onChange={(v) => set(["top", "right", "bottom", "left"], v)} sideIcon="is-all" />
-        : <>
-            {/* Bỏ liên kết: bốn cạnh riêng (đặt lệch được, vd chỉ padding-bottom) */}
-            {(["top", "right", "bottom", "left"] as const).map((side) => (
-              <StepSlider key={side} label={`${label} ${labels[side]}`} steps={steps} value={sides[side]} onChange={(v) => set([side], v)} sideIcon={`is-${side}`} />
+    <div className="ecx-box4" ref={ref} onMouseLeave={() => { hover.current = null; if (!open) viz(null); }}>
+      <Row label={<>{label}{inherited && <em className="ecx-inherit">{inherited}</em>}</>} device={device} onReset={onReset}
+        extra={<button type="button" className={cx("ecx-link-toggle", linked && "is-on")} aria-pressed={linked} title={linked ? labels.unlink : labels.link} aria-label={`${label}: ${linked ? labels.unlink : labels.link}`}
+          onClick={() => setLinked(!linked)}>{linked ? <Link2 className="ecx-icon" /> : <Link2Off className="ecx-icon" />}</button>}>
+        <div className="ecx-box4-grid">
+          {SIDES.map((side) => (
+            <button key={side} type="button" className={cx("ecx-box4-cell", `is-${side}`, sides[side] !== undefined && "is-set", open && target(open).includes(side) && "is-open")}
+              aria-label={`${label} ${labels[side]}: ${shown(sides[side])}`} aria-haspopup="dialog" aria-expanded={open === side}
+              onMouseEnter={() => { hover.current = side; viz(side); }} onFocus={() => viz(side)} onBlur={() => { if (!open) viz(null); }}
+              onClick={() => setOpen(open === side ? null : side)}>
+              <small>{labels[side]}</small><b>{shown(sides[side])}</b>
+            </button>
+          ))}
+        </div>
+      </Row>
+      {open && (
+        <div className="ecx-box4-pop" role="dialog" aria-label={`${label} ${linked ? "" : labels[open]}`}>
+          <div className="ecx-pop-title">{label}{linked ? "" : ` · ${labels[open]}`}</div>
+          <div className="ecx-box4-steps" role="radiogroup" aria-label={label}>
+            {steps.map((st) => (
+              <button key={st} type="button" role="radio" aria-checked={cur === st} className={cx("ecx-chip", cur === st && "is-active")} onClick={() => set(target(open), st)}>{st === "0" ? "0" : st.toUpperCase()}</button>
             ))}
-          </>}
+          </div>
+          <UnitInput label={`${label}: ${t.customValue}`} value={cur && !steps.includes(cur) ? cur : undefined} max={160} onChange={(v) => set(target(open), v)} />
+          <div className="ecx-pop-foot"><button type="button" className="ecx-link-btn" onClick={() => set(target(open), undefined)}>{t.reset}</button><button type="button" className="ecx-link-btn" onClick={() => { setOpen(null); viz(null); }}>OK</button></div>
+        </div>
+      )}
     </div>
   );
 }

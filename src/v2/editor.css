@@ -406,3 +406,25 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-section-adder .ecx-icon { width: 16px; height: 16px; }
 .ecx-inserter-popover .ecx-tabs { margin-bottom: 6px; }
 .ecx-inserter-patterns { max-height: 320px; overflow-y: auto; }
+
+/* Đệm / lề 4 cạnh: vạch đậm ở đúng cạnh của mỗi ô; bảng chọn bậc */
+.ecx-box4 { position: relative; }
+.ecx-box4-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.ecx-box4-cell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 42px; padding: 0; border: 1px solid var(--ecx-ed-line); border-radius: 7px; background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); font: inherit; cursor: pointer; transition: border-color .05s linear; }
+.ecx-box4-cell small { font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ecx-ed-muted); }
+.ecx-box4-cell b { font-size: 12.5px; font-weight: 600; }
+.ecx-box4-cell::after { content: ""; position: absolute; background: var(--ecx-ed-line-strong, #c9d0d7); border-radius: 2px; }
+.ecx-box4-cell.is-top::after { top: -1px; left: 8px; right: 8px; height: 3px; }
+.ecx-box4-cell.is-bottom::after { bottom: -1px; left: 8px; right: 8px; height: 3px; }
+.ecx-box4-cell.is-left::after { left: -1px; top: 8px; bottom: 8px; width: 3px; }
+.ecx-box4-cell.is-right::after { right: -1px; top: 8px; bottom: 8px; width: 3px; }
+.ecx-box4-cell.is-set::after { background: var(--ecx-ed-accent); }
+.ecx-box4-cell:hover, .ecx-box4-cell.is-open { border-color: var(--ecx-ed-accent); }
+.ecx-link-toggle { display: inline-grid; place-items: center; width: 22px; height: 20px; padding: 0; border: 0; border-radius: 5px; background: none; color: var(--ecx-ed-muted); cursor: pointer; }
+.ecx-link-toggle.is-on { background: var(--ecx-ed-accent); color: var(--ecx-ed-accent-fg); }
+.ecx-link-toggle .ecx-icon { width: 13px; height: 13px; }
+.ecx-box4-pop { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 6px); display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid var(--ecx-ed-line); border-radius: 10px; background: var(--ecx-ed-panel); box-shadow: var(--ecx-ed-shadow); animation: ecx-pop .1s linear; }
+.ecx-box4-pop .ecx-pop-title { margin: 0; }
+.ecx-box4-steps { display: flex; flex-wrap: wrap; gap: 4px; }
+.ecx-box4-steps .ecx-chip { min-width: 36px; font-weight: 600; }
+.ecx-box4-pop .ecx-pop-foot { margin-top: 0; }

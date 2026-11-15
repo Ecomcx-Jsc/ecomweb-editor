@@ -117,6 +117,11 @@ span[data-ecx-rich][data-empty][data-placeholder] { display: inline-block; verti
 .ecx-drop-indicator { position: absolute; z-index: 50; background: var(--ecx-ui); border-radius: 2px; pointer-events: none; }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
 .ecx-block.is-dragging-source { opacity: .35; }
+/* Tô vùng đệm (trong) / lề (ngoài) khi rê ô Đệm / Lề ở bảng bên phải */
+.ecx-spacing-viz { position: fixed; z-index: 60; pointer-events: none; display: grid; place-items: center; overflow: hidden; background: rgb(74 163 120 / .22); box-shadow: inset 0 0 0 1px rgb(46 125 90 / .45); }
+.ecx-spacing-viz.is-margin { background: rgb(232 137 12 / .18); box-shadow: inset 0 0 0 1px rgb(184 104 0 / .45); }
+.ecx-spacing-viz span { padding: 1px 6px; border-radius: 4px; background: rgb(255 255 255 / .9); color: #1f6b47; font: 600 11px/1.4 system-ui, sans-serif; white-space: nowrap; }
+.ecx-spacing-viz.is-margin span { color: #8a4b00; }
 /* Khối chứa sắp nhận khối thả: nền + viền nhẹ, trễ 100ms để lướt chuột qua không nháy */
 .ecx-block.is-drop-parent { outline: 1px dashed color-mix(in srgb, var(--ecx-ui) 55%, transparent); outline-offset: 2px; box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(--ecx-ui) 6%, transparent); transition: outline-color .1s linear .1s, box-shadow .1s linear .1s; }
 @media (prefers-reduced-motion: reduce) { .ecx-block.is-drop-parent { transition: none; } }
@@ -130,6 +135,16 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 /* Theme thường tạo kiểu mọi ô nhập (textarea { border; padding } textarea:focus { outline }) — ô tiêu đề không được mang khung ô nhập */
 .ecx-doc-title .ecx-doc-title-input, .ecx-doc-title .ecx-doc-title-input:focus { border: 0; border-radius: 0; outline: none; box-shadow: none; padding: 0; background: transparent; min-height: 0; }
 .ecx-col-handles { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+/* Dải kéo đệm trên / dưới của khối bố cục đang chọn */
+.ecx-block.is-selected:has(> .ecx-pad-handles) { position: relative; }
+.ecx-pad-handles { position: absolute; inset: 0; pointer-events: none; z-index: 7; }
+.ecx-pad-handle { position: absolute; left: 0; width: min(40%, 320px); height: 12px; cursor: ns-resize; pointer-events: auto; touch-action: none; }
+.ecx-pad-handle.is-top { top: 0; }
+.ecx-pad-handle.is-bottom { bottom: 0; }
+.ecx-pad-handle::after { content: ""; position: absolute; left: 16px; width: 36px; height: 4px; border-radius: 3px; background: var(--ecx-ui); opacity: 0; transition: opacity .1s linear; }
+.ecx-pad-handle.is-top::after { top: 4px; }
+.ecx-pad-handle.is-bottom::after { bottom: 4px; }
+.ecx-pad-handle:hover::after, .ecx-pad-handle.is-dragging::after { opacity: 1; }
 .ecx-col-handle { position: absolute; width: 12px; margin-left: -6px; cursor: col-resize; pointer-events: auto; touch-action: none; }
 .ecx-col-handle::after { content: ""; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--ecx-ui); opacity: .35; border-radius: 1px; }
 .ecx-col-handle:hover::after { opacity: 1; }

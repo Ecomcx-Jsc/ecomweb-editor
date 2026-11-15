@@ -24,6 +24,10 @@ const WEIGHTS = ["300", "400", "500", "600", "700", "800", "900"];
 const TYPO = ["fontFamily", "fontSize", "lineHeight", "letterSpacing", "fontWeight", "fontStyle", "textDecoration", "textTransform", "textAlign"];
 const SPACING = ["padding", "margin", "gap", "width", "maxWidth", "minHeight"];
 
+/** Bậc preset theo cỡ tăng dần (theme có thể khai lộn thứ tự: lg trước md). Tên lạ giữ thứ tự khai, đứng sau. */
+const STEP_ORDER = ["0", "none", "3xs", "2xs", "xxs", "xs", "sm", "md", "base", "lg", "xl", "2xl", "xxl", "3xl", "4xl", "5xl", "6xl"];
+export const byStep = (keys: string[]) => [...keys].sort((a, b) => { const i = STEP_ORDER.indexOf(a), j = STEP_ORDER.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
+
 /** Ô giá trị (preset như `lg` hoặc `16px`, `1.5rem`…): lưu khi rời ô / Enter; sai thì viền đỏ, không lưu. */
 function ValueInput({ value, onCommit, check, placeholder, label, inherited }: { value?: string | number; onCommit(v: string | null): void; check(v: string): boolean; placeholder?: string; label: string; inherited?: string }) {
   const [text, setText] = useState(value == null ? "" : String(value));
@@ -54,8 +58,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   const t = labelsLegacy(labels.lang);
   const ct = useMsgs("controls");
   const presets = host.presets;
-  const sizes = presets?.fontSizes ? Object.keys(presets.fontSizes) : SIZES;
-  const spaces = presets?.spacing ? ["0", ...Object.keys(presets.spacing)] : SPACES;
+  const sizes = presets?.fontSizes ? byStep(Object.keys(presets.fontSizes)) : SIZES;
+  const spaces = presets?.spacing ? ["0", ...byStep(Object.keys(presets.spacing))] : SPACES;
   const fonts = presets?.fonts ? Object.keys(presets.fonts) : ["body", "heading", "mono"];
   const style: Style = (normalizeStyle(raw) ?? {}) as Style;
 
@@ -158,8 +162,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
       {show("spacing", SPACING) && <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
         more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>
           row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}</>}>
-        <SpacingControl label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
-        <SpacingControl label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
+        <SpacingControl kind="padding" device={device} onReset={has(["padding"]) ? () => reset(["padding"]) : undefined} label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
+        <SpacingControl kind="margin" device={device} onReset={has(["margin"]) ? () => reset(["margin"]) : undefined} label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
       </Section>}
 
       {show("border", ["border", "radius"]) && <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>

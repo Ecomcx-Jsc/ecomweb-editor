@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { movesToAnimate, orderMap } from "../src/v2/canvas/move-animation";
+import { byStep } from "../src/v2/ui/style-tab";
 
 const r = (left: number, top: number) => ({ left, top }) as DOMRect;
 
@@ -27,4 +28,8 @@ test("khối con đi theo khối cha: chỉ trượt phần chênh lệch, bằn
   const m = movesToAnimate(before, after, old, (id) => now[id], parent);
   // p trượt 100; y: tuyệt đối -80 → so với cha +20; x: tuyệt đối -140 → so với cha -40
   assert.deepEqual(Object.fromEntries(m), { p: { dx: 0, dy: -100 }, y: { dx: 0, dy: 20 }, x: { dx: 0, dy: -40 } });
+});
+
+test("bậc preset sắp theo cỡ, tên lạ đứng sau", () => {
+  assert.deepEqual(byStep(["lg", "md", "xl", "2xl", "sm", "hero"]), ["sm", "md", "lg", "xl", "2xl", "hero"]);
 });
