@@ -204,7 +204,9 @@ function AddChild({ block, label, make }: { block: BlockEditProps["block"]; labe
 
 function AccordionEdit({ block, blockProps, editable }: BlockEditProps) {
   const tp = useMsgs("placeholders");
-  return <div {...(merge(blockProps, "ecx-accordion") as object)}><InnerBlocks parent={block} />{editable && <AddChild block={block} label={tp.addItem} make={() => makeBlock("details", { summary: "" }, [makeBlock("paragraph")])} />}</div>;
+  const a = block.attrs;
+  const cls = cx("ecx-accordion", Number(a.columns) === 2 && "is-cols-2", `has-icon-${["plus", "none"].includes(String(a.icon)) ? a.icon : "arrow"}`, a.iconSide === "left" && "is-icon-left");
+  return <div {...(merge(blockProps, cls) as object)}><InnerBlocks parent={block} />{editable && <AddChild block={block} label={tp.addItem} make={() => makeBlock("details", { summary: "" }, [makeBlock("paragraph")])} />}</div>;
 }
 
 /** Thẻ đang mở của từng khối tabs trên khung soạn (không lưu vào nội dung — website luôn mở thẻ đầu). */
@@ -497,7 +499,7 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "accordion", title: "Accordion", icon: PanelTop, category: "text", keywords: "accordion faq hoi dap nhieu muc", kind: "container", edit: AccordionEdit,
-      attributes: { multiple: { type: "boolean", default: false } },
+      attributes: { multiple: { type: "boolean", default: false }, columns: { type: "number", enum: [1, 2], default: 1 }, icon: { type: "string", enum: ["arrow", "plus", "none"], default: "arrow" }, iconSide: { type: "string", enum: ["left", "right"], default: "right" }, titleTag: { type: "string", enum: ["div", "h2", "h3", "h4", "h5", "h6"], default: "div" }, faq: { type: "boolean", default: false } },
       create: () => makeBlock("accordion", {}, [makeBlock("details", { summary: "" }, [makeBlock("paragraph")]), makeBlock("details", { summary: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
     },
     {

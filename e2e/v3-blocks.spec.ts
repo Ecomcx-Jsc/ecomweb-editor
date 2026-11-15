@@ -290,13 +290,16 @@ test("tab: thanh công cụ dời tab đang mở, thêm tab", async ({ page }) =
 });
 
 test.describe("cột trái: cây khối, dàn ý, media", () => {
+  // Cột trái trượt vào (0.2s): tắt chuyển động để rê / bấm đúng chỗ
+  test.beforeEach(async ({ page }) => { await page.emulateMedia({ reducedMotion: "reduce" }); });
   test("dòng cây khối: nút ⋮ mở menu khối; đổi tên, ẩn, cắt", async ({ page }) => {
     await open(page, "?doc=post");
     await page.getByRole("button", { name: "Cây khối" }).first().click();
     const tree = page.getByRole("tree", { name: "Cây khối" });
     const row = tree.locator(".ecx-list-row").nth(1);
     await row.hover();
-    await row.getByRole("button", { name: "Tuỳ chọn" }).click();
+    // shortcut: Playwright đôi khi treo ở bước chờ "ổn định" của nút này dù nút đã hiện, đứng yên (đã đo) — bấm thẳng; nút vẫn được rê hiện như người dùng
+    await row.getByRole("button", { name: "Tuỳ chọn" }).click({ force: true });
     await page.getByRole("menuitem", { name: "Đổi tên" }).click();
     await page.getByRole("textbox", { name: "Đổi tên khối" }).fill("Mở bài");
     await page.getByRole("button", { name: "Lưu", exact: true }).last().click();
@@ -316,7 +319,7 @@ test.describe("cột trái: cây khối, dàn ý, media", () => {
     const text = await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks[1].inline?.map((n: any) => n.text ?? "").join("") ?? "");
     await tree.locator(".ecx-list-row").nth(1).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Cắt" }).click();
-    expect((await state(page)).docs.root.blocks.length).toBe(before - 1);
+    await expect.poll(async () => (await state(page)).docs.root.blocks.length).toBe(before - 1); // chép vào clipboard xong mới xoá
     expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(text);
   });
 
@@ -382,7 +385,23 @@ test("tabs: dọc, accordion trên điện thoại, icon + phụ đề của t�
   // điện thoại: tiêu đề tab 2 nằm giữa panel 1 và panel 2 (accordion)
   await page.getByRole("button", { name: "Điện thoại" }).first().click();
   await page.evaluate(() => (window as any).__ecx.store.select([]));
-  const t2 = await tabs.locator(".ecx-tab-button").nth(1).boundingBox();
-  const p1 = await tabs.locator(".ecx-tab-panel").first().boundingBox();
-  expect(t2!.y).toBeGreaterThan(p1!.y);
+  // khung soạn đổi khổ có chuyển động: chờ bố cục ổn định
+  await expect.poll(async () => { const t2 = await tabs.locator(".ecx-tab-button").nth(1).boundingBox(), p1 = await tabs.locator(".ecx-tab-panel").first().boundingBox(); return t2!.y > p1!.y; }).toBe(true);
+});
+
+test("accordion: 2 cột, icon dấu cộng bên trái, thẻ tiêu đề, FAQ", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "A", type: "accordion", attrs: {}, content: [
+    { id: "d1", type: "details", attrs: { summary: "Một" }, content: [{ id: "dp1", type: "paragraph", attrs: {}, inline: [] }] },
+    { id: "d2", type: "details", attrs: { summary: "Hai" }, content: [{ id: "dp2", type: "paragraph", attrs: {}, inline: [] }] }] }], { focus: false }); s.select(["A"], { editing: null }); });
+  await insp(page).getByRole("radio", { name: "2 cột" }).click();
+  await insp(page).getByRole("radio", { name: "Dấu cộng" }).click();
+  await insp(page).getByRole("radiogroup", { name: "Vị trí icon" }).getByRole("radio", { name: "Trái" }).click();
+  await insp(page).getByRole("radio", { name: "h3" }).click();
+  await insp(page).getByRole("checkbox", { name: /FAQ Schema/ }).check();
+  expect((await find(page, "accordion")).attrs).toMatchObject({ columns: 2, icon: "plus", iconSide: "left", titleTag: "h3", faq: true });
+  const acc = c.locator(".ecx-accordion.is-cols-2.has-icon-plus.is-icon-left");
+  const [a, b] = [await acc.locator(".ecx-details").nth(0).boundingBox(), await acc.locator(".ecx-details").nth(1).boundingBox()];
+  expect(Math.abs(a!.y - b!.y)).toBeLessThan(2); // cùng hàng
+  expect(b!.x).toBeGreaterThan(a!.x + a!.width / 2);
 });

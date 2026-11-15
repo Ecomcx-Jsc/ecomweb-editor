@@ -38,7 +38,7 @@ test.describe("bảng cài đặt khối", () => {
     expect((await blockOf(page, "query")).attrs.category).toBe("tin-tuc");
     await expect(c.locator(".ecx-post-template > li.ecx-post")).toHaveCount(2);
     await expect(insp(page).getByRole("radio", { name: "Mới → cũ / Z → A" })).toBeVisible();
-    await insp(page).getByLabel("Theo trang đang xem").check();
+    await insp(page).getByRole("checkbox", { name: "Theo trang đang xem" }).check();
     await expect(insp(page).getByLabel("Chuyên mục", { exact: true })).toHaveCount(0);
     await expect(insp(page).getByLabel("Loại bài")).toHaveCount(0);
   });
