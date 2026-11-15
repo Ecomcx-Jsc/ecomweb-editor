@@ -447,3 +447,20 @@ test("đếm ngược: khung soạn chạy như website; một dòng, ẩn giây
   await expect(cd.locator(".ecx-countdown-h small")).toHaveText("tiếng");
   await expect(cd.locator(".ecx-countdown-post")).toHaveText("nữa là hết");
 });
+
+test("hộp icon: media số, khung tròn, icon bên phải, nút Xem thêm (ô chỉ hiện khi cần)", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "I", type: "iconBox", attrs: { icon: "star", title: "Bước một", text: "" } }], { focus: false }); s.select(["I"], { editing: null }); });
+  await expect(insp(page).getByRole("textbox", { name: "Số hiển thị" })).toHaveCount(0);
+  await insp(page).getByRole("radio", { name: "Số" }).click();
+  await insp(page).getByRole("textbox", { name: "Số hiển thị" }).fill("01");
+  await insp(page).getByRole("radio", { name: "Tròn" }).click();
+  await insp(page).getByRole("radio", { name: "Bên phải" }).click();
+  await insp(page).getByRole("radio", { name: /Xem thêm/ }).click();
+  await insp(page).getByRole("textbox", { name: "Chữ trên nút" }).fill("Chi tiết");
+  const box = c.locator(".ecx-icon-box.is-right");
+  await expect(box.locator(".ecx-icon-box-icon.is-number.is-circle")).toHaveText("01");
+  await expect(box.locator(".ecx-icon-box-more")).toHaveText("Chi tiết");
+  const [m, b] = [await box.locator(".ecx-icon-box-icon").boundingBox(), await box.locator(".ecx-icon-box-body").boundingBox()];
+  expect(m!.x).toBeGreaterThan(b!.x); // số nằm bên phải
+});
