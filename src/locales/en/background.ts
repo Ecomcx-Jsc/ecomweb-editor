@@ -19,4 +19,5 @@ export const background = {
   fixed: "Fixed while scrolling (parallax, desktop only)",
   overlay: "Overlay",
   opacity: "Overlay strength",
+  overlayTitle: "Background overlay",
 };

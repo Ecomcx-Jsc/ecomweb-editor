@@ -51,6 +51,18 @@ export function Row({ label, children, device, onReset, extra }: { label: ReactN
   );
 }
 
+/** Công tắc trạng thái ngay trong một mục (Thường / Rê chuột), như bảng của các bộ khối lớn. */
+export function StateTabs({ value, onChange }: { value: "normal" | "hover"; onChange(v: "normal" | "hover"): void }) {
+  const t = useMsgs("controls");
+  return (
+    <div role="tablist" className="ecx-seg is-text ecx-state-tabs">
+      {(["normal", "hover"] as const).map((v) => (
+        <button key={v} type="button" role="tab" aria-selected={value === v} className={cx("ecx-seg-btn", value === v && "is-active")} onClick={() => onChange(v)}>{v === "normal" ? t.stateNormal : t.stateHover}</button>
+      ))}
+    </div>
+  );
+}
+
 /** Đếm thứ tự mục trong một bảng: mục đầu mở sẵn, còn lại gập (như bảng của các bộ khối lớn: thấy hết tên mục trong một màn hình). */
 const SectionIndex = createContext<{ n: number } | null>(null);
 export function SectionGroup({ children }: { children: ReactNode }) {

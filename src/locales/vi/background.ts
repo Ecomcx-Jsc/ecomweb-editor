@@ -19,4 +19,5 @@ export const background = {
   fixed: "Cố định khi cuộn (parallax, chỉ trên máy tính)",
   overlay: "Lớp phủ",
   opacity: "Độ đậm lớp phủ",
+  overlayTitle: "Lớp phủ nền",
 };

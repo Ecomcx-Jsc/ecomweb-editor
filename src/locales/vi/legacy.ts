@@ -26,7 +26,7 @@ export const legacy = {
   resizeColumns: "Kéo để đổi độ rộng cột", dragPadding: "Kéo để đổi khoảng đệm",
   style_typography: "Kiểu chữ", style_fontFamily: "Phông chữ", style_fontSize: "Cỡ chữ", style_appearance: "Giao diện", style_lineHeight: "Giãn dòng",
   style_letterSpacing: "Giãn cách ký tự", style_decoration: "Trang trí", style_transform: "Viết hoa chữ cái", style_textAlign: "Căn chữ",
-  style_color: "Màu", style_text: "Chữ", style_textGradient: "Chữ chuyển màu", style_link: "Màu liên kết", style_linkHover: "Liên kết khi rê", style_background: "Nền", style_spacing: "Kích thước & khoảng cách", style_padding: "Khoảng đệm (padding)",
+  style_color: "Màu", style_text: "Chữ", style_textGradient: "Chữ chuyển màu", style_link: "Màu liên kết", style_linkHover: "Liên kết khi rê", style_background: "Nền", style_spacing: "Khoảng cách", style_padding: "Khoảng đệm (padding)",
   style_margin: "Lề ngoài (margin)", style_gap: "Khoảng cách giữa khối con", style_width: "Chiều rộng", style_maxWidth: "Rộng tối đa", style_minHeight: "Cao tối thiểu",
   style_border: "Viền & bo góc", style_borderWidth: "Độ dày viền", style_borderStyle: "Kiểu viền", style_borderColor: "Màu viền", style_radius: "Bo góc",
   style_visibility: "Hiển thị", style_hide: "Ẩn theo khổ màn hình", hide_desktop: "Ẩn trên máy tính", hide_tablet: "Ẩn trên máy tính bảng", hide_mobile: "Ẩn trên điện thoại",

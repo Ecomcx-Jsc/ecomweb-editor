@@ -4,7 +4,7 @@ import { useEditor } from "../context";
 import { useMsgs } from "../i18n";
 import { ColorInput } from "./color-field";
 import { GradientField } from "./layout-panel";
-import { Row, Section, Seg, cx } from "./style-controls";
+import { Row, Section, Seg, StateTabs, cx } from "./style-controls";
 
 /** Điểm lấy nét chọn nhanh: lưới 3×3 (trên-trái … dưới-phải). */
 const POSITIONS = ["0% 0%", "50% 0%", "100% 0%", "0% 50%", "50% 50%", "100% 50%", "0% 100%", "50% 100%", "100% 100%"];
@@ -69,13 +69,20 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
     commitStyle(next, { ...(legacy ? { background: undefined } : {}), ...(cover ? { src: undefined, mediaId: undefined, overlay: undefined, opacity: undefined, fixed: undefined, focal: undefined } : {}) });
   };
 
+  const overlayFields = (
+    <>
+      <ColorInput label={t.overlay} value={overlay} onChange={setOverlay} />
+      {(overlay || (cover && attrs.src)) && (
+        <Row label={`${t.opacity}: ${opacity}%`}>
+          <input type="range" min={0} max={100} step={5} value={opacity} aria-label={t.opacity} onChange={(e) => setOpacity(Number(e.target.value))} />
+        </Row>
+      )}
+    </>
+  );
   return (
+    <>
     <Section title={b.bg.title} modified={modified} onReset={reset}>
-      <div role="tablist" className="ecx-seg is-text ecx-state-tabs">
-        {(["normal", "hover"] as const).map((s) => (
-          <button key={s} type="button" role="tab" aria-selected={state === s} className={cx("ecx-seg-btn", state === s && "is-active")} onClick={() => setState(s)}>{b[s]}</button>
-        ))}
-      </div>
+      <StateTabs value={state} onChange={setState} />
       {state === "hover" ? (
         <>
           <ColorInput label={b.bg.hoverColor} value={style.hover?.color?.background} onChange={(v) => commitStyle({ ...style, hover: { ...style.hover, color: { ...style.hover?.color, background: v } } })} />
@@ -135,16 +142,14 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
                   <label className="ecx-check"><input type="checkbox" checked={cover ? !!attrs.fixed : !!bg.fixed} onChange={(e) => (cover ? setAttrs({ fixed: e.target.checked || undefined }) : setBg({ fixed: e.target.checked || undefined }))} /> {t.fixed}</label>
                 </>
               )}
-              <ColorInput label={t.overlay} value={overlay} onChange={setOverlay} />
-              {(overlay || (cover && attrs.src)) && (
-                <Row label={`${t.opacity}: ${opacity}%`}>
-                  <input type="range" min={0} max={100} step={5} value={opacity} aria-label={t.opacity} onChange={(e) => setOpacity(Number(e.target.value))} />
-                </Row>
-              )}
+              {cover && overlayFields}
             </>
           )}
         </>
       )}
     </Section>
+    {/* Lớp phủ nền: mục riêng (phủ lên màu / chuyển màu / ảnh), như bộ khối lớn */}
+    {!cover && <Section title={t.overlayTitle} modified={!!overlay} onReset={() => setOverlay(undefined)} defaultOpen={!!overlay}>{overlayFields}</Section>}
+    </>
   );
 }

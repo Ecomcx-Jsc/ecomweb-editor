@@ -3,7 +3,6 @@ import { AlignCenterVertical, AlignEndVertical, AlignStartVertical, ArrowDown, A
 import { useState } from "react";
 import { useEditor } from "../context";
 import { useMsgs } from "../i18n";
-import { ColorInput } from "./color-field";
 import { Row, Section, Seg, cx } from "./style-controls";
 
 /**
@@ -11,7 +10,7 @@ import { Row, Section, Seg, cx } from "./style-controls";
  * Giá trị theo khổ (hướng, căn, số cột) sửa theo khổ đang chọn ở bảng Kiểu dáng (`device`).
  */
 /** Khối chứa (có khối con) mới có mục Bố cục. */
-const CONTAINERS = new Set(["group", "column", "cover", "blockquote", "callout", "details", "query", "postTemplate", "mediaText"]);
+const CONTAINERS = new Set(["group", "cover", "blockquote", "callout", "details", "query", "postTemplate", "mediaText"]);
 
 type Kind = "flow" | "row" | "stack" | "grid";
 export const layoutKind = (l?: BlockLayout): Kind => (!l ? "flow" : l.type === "grid" ? "grid" : l.direction?.base === "column" ? "stack" : "row");
@@ -53,13 +52,8 @@ export function GradientField({ value, onChange }: { value?: string; onChange(g:
   );
 }
 
-/** `gradient` = false khi khối đã có ô Nền (chuyển màu sửa ở đó, không lặp lại ở Hiệu ứng). */
-export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects = true, hover = true, gradient = true, only }: {
-  type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; effects?: boolean; hover?: boolean; gradient?: boolean;
-  /** Chia như bộ khối lớn: "style" = Nền & hiệu ứng + Khi rê chuột (tab Kiểu dáng); "advanced" = Bố cục + Ghim khi cuộn (tab Nâng cao). Không đặt = tất cả. */
-  only?: "style" | "advanced";
-}) {
-  const { labels, host } = useEditor();
+/** Mục Bố cục của khối chứa (tab Cài đặt): nhóm / hàng ngang / xếp dọc / lưới, hướng, căn, số cột — theo khổ đang chọn. */
+export function LayoutSection({ type, style: raw, onChange, device }: { type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device }) {
   const t = useMsgs("layout");
   const style: BlockStyle = normalizeStyle(raw) ?? {};
   const set = (patch: Partial<BlockStyle>) => {
@@ -77,11 +71,8 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
     return Object.keys(next).length ? next : undefined;
   };
 
-  const shadows = ["sm", "md", "lg", "xl", ...Object.keys(host.presets?.shadows ?? {}).filter((s) => !["sm", "md", "lg", "xl"].includes(s))];
-
+  if (!CONTAINERS.has(type)) return null;
   return (
-    <div className="ecx-layout-panel">
-      {only !== "style" && CONTAINERS.has(type) && (
         <Section title={t.layout}>
           <Row label={t.type}>
             <Seg<Kind> label={t.type} value={kind} onChange={(k) => set({ layout: layoutFor(k ?? "flow", l) })}
@@ -120,41 +111,5 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
             )}
           </>}
         </Section>
-      )}
-
-      {effects && only === "advanced" && <Section title={t.sticky} defaultOpen={!!style.position}>
-        <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set({ position: e.target.checked ? { type: "sticky" } : undefined })} /> {t.sticky}</label>
-      </Section>}
-      {effects && only !== "advanced" && <Section title={t.effects} defaultOpen={!!(style.gradient || style.shadow || style.aspectRatio || (!only && style.position))}>
-        {gradient && <Row label={t.gradient}><GradientField value={style.gradient} onChange={(g) => set({ gradient: g })} /></Row>}
-        <Row label={t.shadow}>
-          <select className="ecx-input" aria-label={t.shadow} value={style.shadow ?? ""} onChange={(e) => set({ shadow: e.target.value || undefined })}>
-            <option value="">—</option><option value="none">{t.none}</option>
-            {shadows.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}
-          </select>
-        </Row>
-        <Row label={t.ratio}>
-          <select className="ecx-input" aria-label={t.ratio} value={style.aspectRatio ?? ""} onChange={(e) => set({ aspectRatio: e.target.value || undefined })}>
-            <option value="">—</option>
-            {["1/1", "4/3", "3/2", "16/9", "21/9", "3/4", "2/3", "9/16"].map((r) => <option key={r} value={r}>{r.replace("/", ":")}</option>)}
-          </select>
-        </Row>
-        {!only && <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set({ position: e.target.checked ? { type: "sticky" } : undefined })} /> {t.sticky}</label>}
-      </Section>}
-
-      {hover && only !== "advanced" && <Section title={t.hover} defaultOpen={!!style.hover}>
-        {(["text", "background"] as const).map((k) => (
-          <ColorInput key={k} label={t[k]} value={style.hover?.color?.[k]} onChange={(v) => set({ hover: { ...style.hover, color: { ...style.hover?.color, [k]: v } } })} />
-        ))}
-        <ColorInput label={t.border} value={style.hover?.border?.color} onChange={(v) => set({ hover: { ...style.hover, border: v ? { color: v } : undefined } })} />
-        <Row label={t.shadow}>
-          <select className="ecx-input" aria-label={`${t.hover} ${t.shadow}`} value={style.hover?.shadow ?? ""} onChange={(e) => set({ hover: { ...style.hover, shadow: e.target.value || undefined } })}>
-            <option value="">—</option>{shadows.map((s) => <option key={s} value={s}>{s.toUpperCase()}</option>)}
-          </select>
-        </Row>
-        <label className="ecx-check"><input type="checkbox" checked={!!style.hover?.lift} onChange={(e) => set({ hover: { ...style.hover, lift: e.target.checked || undefined } })} /> {t.lift}</label>
-      </Section>}
-    </div>
   );
 }
-

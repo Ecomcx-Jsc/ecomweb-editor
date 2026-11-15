@@ -7,4 +7,6 @@ export const columns = {
   innerGap: "Gap between blocks", verticalReverse: "Vertical, reversed", horizontalReverse: "Horizontal, reversed", around: "Space around", evenly: "Space evenly",
   textAlign: "Text alignment", maxWidth: "Max width", rowMaxWidth: "Row max width", overlayLink: "Link whole column", newTab: "Open in new tab", linkLabel: "Link name (for screen readers)",
   overlayNote: "With this link set, nothing else inside the column is clickable on the website.",
+  secLayout: "Layout", secFlex: "Flex settings", secMaxWidth: "Content max width",
+  linkUrl: "URL",
 };

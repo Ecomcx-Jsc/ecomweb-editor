@@ -8,6 +8,7 @@ import type { BNode } from "../core/model";
 import { AttrForm, Field, attrName, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { StyleTab } from "./style-tab";
+import { LayoutSection } from "./layout-panel";
 import { Section, SectionGroup } from "./style-controls";
 import { BackgroundControl } from "./background-panel";
 import { BlockStyleSections } from "./block-style-panel";
@@ -75,6 +76,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             <div className="ecx-panel">
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
               {styled && single && BG_IN_SETTINGS.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
+              {styled && single && <LayoutSection type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} />}
               {Custom && <Custom block={first} attrs={first.attrs} setAttrs={setAttrs} blockProps={null as never} selected editable labels={labels} />}
               {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} />}
               {nodes.length === 1 && bindable?.length && <BindingsPanel block={first} bindable={bindable} onChange={(b) => setAttrs({ bindings: b })} />}
@@ -97,10 +99,10 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             <div className="ecx-panel">
               {styled && <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="advanced" />}
               {nodes.length === 1 && (
-                <div className="ecx-form">
+                <Section title={t.advanced} defaultOpen>
                   <Field label={attrName("anchor", labels.lang) ?? "anchor"}><input className="ecx-input" value={String(first.attrs.anchor ?? "")} onChange={(e) => setAttrs({ anchor: e.target.value.replace(/[^\w-]/g, "") || undefined })} /></Field>
                   <Field label={attrName("className", labels.lang) ?? "className"}><input className="ecx-input" value={String(first.attrs.className ?? "")} onChange={(e) => setAttrs({ className: e.target.value || undefined })} /></Field>
-                </div>
+                </Section>
               )}
               {nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} tab="advanced" />}
             </div>

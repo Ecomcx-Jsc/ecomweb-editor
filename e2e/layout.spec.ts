@@ -111,9 +111,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
-    await insp.getByRole("tab", { name: "Nâng cao" }).click();
-    // Khổ điện thoại trong bảng Nâng cao (bố cục) rồi đặt 1 cột
-    await insp.getByRole("button", { name: "Bố cục", exact: true }).click();
+    // Bố cục của khối chứa nằm ở tab Cài đặt: chọn khổ điện thoại rồi đặt 1 cột
     const layout = insp.locator(".ecx-style-section", { hasText: "Bố cục" }).first();
     await layout.getByRole("button", { name: "Điện thoại", exact: true }).first().click();
     await layout.getByLabel("Số cột").selectOption("1");
@@ -147,12 +145,13 @@ test.describe("bố cục + hiệu ứng", () => {
     await insp.getByRole("button", { name: "Tuỳ chỉnh", exact: true }).click();
     g = await groupOf(page);
     expect(g.attrs.style.gradient).toMatch(/^linear-gradient\(135deg, #1a597b 0%, #f26251 100%\)$/);
-    // Nền & hiệu ứng cũng ở tab Kiểu dáng (như bộ khối lớn)
-    await insp.getByRole("button", { name: "Nền & hiệu ứng" }).click();
-    await insp.getByLabel("Đổ bóng").first().selectOption("md");
+    // Đổ bóng nằm trong mục Viền & bo góc; trạng thái rê chuột là công tắc ngay trong mục
+    await insp.getByRole("button", { name: "Viền & bo góc" }).click();
+    const border = insp.locator(".ecx-style-section", { hasText: "Viền & bo góc" });
+    await border.getByLabel("Đổ bóng").selectOption("md");
     await expect.poll(() => el.evaluate((n) => getComputedStyle(n).boxShadow)).not.toBe("none");
-    await insp.getByRole("button", { name: "Khi rê chuột" }).click();
-    await insp.getByLabel("Nhấc lên").check();
+    await border.getByRole("tab", { name: "Rê chuột" }).click();
+    await border.getByLabel("Nhấc lên").check();
     g = await groupOf(page);
     expect(g.attrs.style.hover).toEqual({ lift: true });
     await el.hover();

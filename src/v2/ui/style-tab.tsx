@@ -4,9 +4,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { labelsLegacy, type EditorLabels } from "../../shared/labels";
 import { useEditor } from "../context";
 import { ColorInput } from "./color-field";
-import { GradientField, LayoutEffectsPanel } from "./layout-panel";
+import { GradientField } from "./layout-panel";
 import { MotionPanel } from "./motion-panel";
-import { Row, Section, Seg, cx } from "./style-controls";
+import { Row, Section, Seg, StateTabs, cx } from "./style-controls";
 import { styleGroups, type StyleGroup } from "./style-supports";
 import { FourInput, SpacingControl, UnitInput } from "./unit-controls";
 import { useMsgs } from "../i18n";
@@ -22,7 +22,9 @@ const SIZES = ["sm", "md", "lg", "xl", "2xl"];
 const SPACES = ["0", "xs", "sm", "md", "lg", "xl", "2xl"];
 const WEIGHTS = ["300", "400", "500", "600", "700", "800", "900"];
 const TYPO = ["fontFamily", "fontSize", "lineHeight", "letterSpacing", "fontWeight", "fontStyle", "textDecoration", "textTransform", "textAlign"];
-const SPACING = ["padding", "margin", "gap", "width", "maxWidth", "minHeight"];
+const SPACING = ["padding", "margin"];
+const STRUCTURE = ["gap", "width", "maxWidth", "minHeight", "aspectRatio"];
+type State = "normal" | "hover";
 
 /** Bậc preset theo cỡ tăng dần (theme có thể khai lộn thứ tự: lg trước md). Tên lạ giữ thứ tự khai, đứng sau. */
 const STEP_ORDER = ["0", "none", "3xs", "2xs", "xxs", "xs", "sm", "md", "base", "lg", "xl", "2xl", "xxl", "3xl", "4xl", "5xl", "6xl"];
@@ -59,6 +61,9 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   const { host, labels, registry } = useEditor();
   const t = labelsLegacy(labels.lang);
   const ct = useMsgs("controls");
+  const lt = useMsgs("layout");
+  const [colorState, setColorState] = useState<State>("normal");
+  const [borderState, setBorderState] = useState<State>("normal");
   const presets = host.presets;
   const sizes = presets?.fontSizes ? byStep(Object.keys(presets.fontSizes)) : SIZES;
   const spaces = presets?.spacing ? ["0", ...byStep(Object.keys(presets.spacing))] : SPACES;
@@ -104,8 +109,20 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   // Nhóm khối hỗ trợ; nhóm đã có giá trị vẫn hiện để sửa / xoá (dữ liệu cũ, khối dán từ nơi khác)
   const groups = styleGroups(type, registry.get(type));
   // Như bộ khối lớn: Kiểu dáng = chữ, màu, viền, nền & hiệu ứng, khi rê chuột; Nâng cao = khoảng cách, bố cục, ghim, chuyển động, hiển thị
-  const inPart = (g: StyleGroup) => !part || (part === "style") === ["typography", "color", "border", "effects", "hover"].includes(g);
+  const inPart = (g: StyleGroup) => !part || (part === "style") === ["typography", "color", "border"].includes(g);
   const show = (g: StyleGroup, keys: string[]) => inPart(g) && ((groups.has(g) && !(parts && (g === "typography" || g === "color"))) || keys.some((k) => style[k] !== undefined));
+  const container = registry.get(type)?.kind === "container";
+  // Trạng thái rê chuột nằm ngay trong mục Màu / Viền (công tắc Thường · Rê chuột), không còn mục "Khi rê chuột" riêng
+  const hoverOk = groups.has("hover") || style.hover !== undefined;
+  const fxOk = groups.has("effects") || ["gradient", "shadow", "aspectRatio", "position"].some((k) => style[k] !== undefined);
+  const setHover = (patch: NonNullable<BlockStyle["hover"]>) => set("hover", { ...style.hover, ...patch });
+  const shadows = ["sm", "md", "lg", "xl", ...Object.keys(presets?.shadows ?? {}).filter((x) => !["sm", "md", "lg", "xl"].includes(x))];
+  const shadowSelect = (value: string | undefined, onPick: (v: string | undefined) => void, label: string, none = true) => (
+    <select className="ecx-input" aria-label={label} value={value ?? ""} onChange={(e) => onPick(e.target.value || undefined)}>
+      <option value="">—</option>{none && <option value="none">{lt.none}</option>}
+      {shadows.map((x) => <option key={x} value={x}>{x.toUpperCase()}</option>)}
+    </select>
+  );
   const appearance = `${style.fontWeight ?? ""}${style.fontStyle === "italic" ? "i" : ""}`;
 
   return (
@@ -156,37 +173,65 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
           options={[["left", AlignLeft, t.alignLeft], ["center", AlignCenter, t.alignCenter], ["right", AlignRight, t.alignRight], ["justify", AlignJustify, t.alignJustify]]} />)}
       </Section>}
 
-      {show("color", ["color", "textGradient", "link"]) && <Section title={t.style_color} modified={has(["color", "textGradient", "link"])} onReset={() => reset(["color", "textGradient", "link"])}>
-        <ColorInput label={t.style_text} value={style.color?.text} onChange={(v) => setGroup("color", "text", v)} />
-        {/* Khối có ô Nền: màu nền sửa ở đó (một chỗ) */}
-        {(!groups.has("background") || part === undefined) && <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />}
-        <Row label={t.style_textGradient} onReset={has(["textGradient"]) ? () => reset(["textGradient"]) : undefined}><GradientField value={style.textGradient} onChange={(v) => set("textGradient", v)} /></Row>
-        {/* Khối chứa: màu liên kết của nội dung bên trong (Đoạn / Tiêu đề có mục Liên kết riêng) */}
-        {registry.get(type)?.kind === "container" && <>
-          <ColorInput label={t.style_link} value={style.link?.color} onChange={(v) => setGroup("link", "color", v)} />
-          <ColorInput label={t.style_linkHover} value={style.link?.hover} onChange={(v) => setGroup("link", "hover", v)} />
+      {show("color", ["color", "textGradient", "link"]) && <Section title={t.style_color} modified={has(["color", "textGradient", "link"]) || !!style.hover?.color} onReset={() => commit({ ...style, color: undefined, textGradient: undefined, link: undefined, hover: style.hover && { ...style.hover, color: undefined } })}>
+        {hoverOk && <StateTabs value={colorState} onChange={setColorState} />}
+        {hoverOk && colorState === "hover" ? <>
+          <ColorInput label={t.style_text} value={style.hover?.color?.text} onChange={(v) => setHover({ color: { ...style.hover?.color, text: v } })} />
+          {!groups.has("background") && <ColorInput label={t.style_background} value={style.hover?.color?.background} onChange={(v) => setHover({ color: { ...style.hover?.color, background: v } })} />}
+          {container && <ColorInput label={t.style_linkHover} value={style.link?.hover} onChange={(v) => setGroup("link", "hover", v)} />}
+        </> : <>
+          <ColorInput label={t.style_text} value={style.color?.text} onChange={(v) => setGroup("color", "text", v)} />
+          {/* Khối có ô Nền: màu nền / nền chuyển màu sửa ở đó (một chỗ) */}
+          {!groups.has("background") && <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />}
+          {!groups.has("background") && fxOk && <Row label={lt.gradient} onReset={has(["gradient"]) ? () => reset(["gradient"]) : undefined}><GradientField value={style.gradient} onChange={(v) => set("gradient", v)} /></Row>}
+          <Row label={t.style_textGradient} onReset={has(["textGradient"]) ? () => reset(["textGradient"]) : undefined}><GradientField value={style.textGradient} onChange={(v) => set("textGradient", v)} /></Row>
+          {/* Khối chứa: màu liên kết của nội dung bên trong (Đoạn / Tiêu đề có mục Liên kết riêng) */}
+          {container && <ColorInput label={t.style_link} value={style.link?.color} onChange={(v) => setGroup("link", "color", v)} />}
+          {container && !hoverOk && <ColorInput label={t.style_linkHover} value={style.link?.hover} onChange={(v) => setGroup("link", "hover", v)} />}
         </>}
       </Section>}
 
       {!parts && lead}
 
-      {show("spacing", SPACING) && <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)} moreOpen={has(["gap", "width", "maxWidth", "minHeight"])}
-        more={<>{(["gap", "width", "maxWidth", "minHeight"] as const).map((k) =>
-          row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}</>}>
+      {show("spacing", SPACING) && <Section title={t.style_spacing} modified={has(SPACING)} onReset={() => reset(SPACING)}>
         <SpacingControl kind="padding" device={device} onReset={has(["padding"]) ? () => reset(["padding"]) : undefined} label={t.style_padding} steps={spaces} value={get("padding")} inherited={inherited("padding")} onChange={(v) => set("padding", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
         <SpacingControl kind="margin" device={device} onReset={has(["margin"]) ? () => reset(["margin"]) : undefined} label={t.style_margin} steps={spaces} value={get("margin")} inherited={inherited("margin")} onChange={(v) => set("margin", v)} labels={{ vertical: ct.vertical, horizontal: ct.horizontal, top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft, link: t.linkSides, unlink: t.unlinkSides }} />
       </Section>}
 
-      {show("border", ["border", "radius"]) && <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>
-        <FourInput label={t.style_borderWidth} keys={["top", "right", "bottom", "left"]} keyLabels={{ top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft }} value={style.border?.width} max={20} units={["px", "em", "rem"]} onChange={(v) => setGroup("border", "width", v)} />
-        {row("borderStyle", t.style_borderStyle, <Seg label={t.style_borderStyle} value={style.border?.style} onChange={(v) => setGroup("border", "style", v)}
-          options={[["solid", "—", t.border_solid], ["dashed", "- -", t.border_dashed], ["dotted", "···", t.border_dotted]]} />)}
-        <ColorInput label={t.style_borderColor} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />
-        <FourInput label={t.style_radius} corners keys={["topLeft", "topRight", "bottomRight", "bottomLeft"]} keyLabels={{ topLeft: ct.cornerTopLeft, topRight: ct.cornerTopRight, bottomRight: ct.cornerBottomRight, bottomLeft: ct.cornerBottomLeft }} value={style.radius} max={60} units={["px", "%", "em", "rem"]} onReset={has(["radius"]) ? () => reset(["radius"]) : undefined} onChange={(v) => set("radius", v)} />
+      {/* Cấu trúc: kích thước khối (rộng, rộng tối đa, cao tối thiểu, tỉ lệ khung), khe giữa khối con */}
+      {inPart("spacing") && (groups.has("spacing") || has(STRUCTURE)) && <Section title={ct.structure} modified={has(STRUCTURE)} onReset={() => reset(STRUCTURE)} defaultOpen={has(STRUCTURE)}>
+        {(["width", "maxWidth", "minHeight", ...(container ? ["gap" as const] : [])] as const).map((k) =>
+          row(k, t[`style_${k}`], <ValueInput label={t[`style_${k}`]} value={get(k)} inherited={inherited(k)} check={ok(k)} placeholder={k === "gap" ? "md, 24px" : "100%, 640px, 60vh"} onCommit={(v) => set(k, v)} />))}
+        {fxOk && row("aspectRatio", lt.ratio,
+          <select className="ecx-input" aria-label={lt.ratio} value={style.aspectRatio ?? ""} onChange={(e) => set("aspectRatio", e.target.value || undefined)}>
+            <option value="">—</option>
+            {["1/1", "4/3", "3/2", "16/9", "21/9", "3/4", "2/3", "9/16"].map((r) => <option key={r} value={r}>{r.replace("/", ":")}</option>)}
+          </select>)}
       </Section>}
 
-      <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device} only={part}
-        effects={(groups.has("effects") || ["gradient", "shadow", "aspectRatio", "position"].some((k) => style[k] !== undefined))} hover={show("hover", ["hover"])} gradient={!groups.has("background")} />
+      {inPart("border") && (groups.has("border") || fxOk || hoverOk || has(["border", "radius"])) && <Section title={t.style_border} modified={has(["border", "radius", "shadow"]) || !!(style.hover?.border || style.hover?.shadow || style.hover?.lift)}
+        onReset={() => commit({ ...style, border: undefined, radius: undefined, shadow: undefined, hover: style.hover && { ...style.hover, border: undefined, shadow: undefined, lift: undefined } })}
+        defaultOpen={has(["border", "radius", "shadow"])}>
+        {hoverOk && <StateTabs value={borderState} onChange={setBorderState} />}
+        {hoverOk && borderState === "hover" ? <>
+          <ColorInput label={t.style_borderColor} value={style.hover?.border?.color} onChange={(v) => setHover({ border: v ? { color: v } : undefined })} />
+          <Row label={lt.shadow}>{shadowSelect(style.hover?.shadow, (v) => setHover({ shadow: v }), `${lt.hover} ${lt.shadow}`, false)}</Row>
+          <label className="ecx-check"><input type="checkbox" checked={!!style.hover?.lift} onChange={(e) => setHover({ lift: e.target.checked || undefined })} /> {lt.lift}</label>
+        </> : <>
+          {(groups.has("border") || has(["border", "radius"])) && <>
+            <FourInput label={t.style_borderWidth} keys={["top", "right", "bottom", "left"]} keyLabels={{ top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft }} value={style.border?.width} max={20} units={["px", "em", "rem"]} onChange={(v) => setGroup("border", "width", v)} />
+            {row("borderStyle", t.style_borderStyle, <Seg label={t.style_borderStyle} value={style.border?.style} onChange={(v) => setGroup("border", "style", v)}
+              options={[["solid", "—", t.border_solid], ["dashed", "- -", t.border_dashed], ["dotted", "···", t.border_dotted]]} />)}
+            <ColorInput label={t.style_borderColor} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />
+            <FourInput label={t.style_radius} corners keys={["topLeft", "topRight", "bottomRight", "bottomLeft"]} keyLabels={{ topLeft: ct.cornerTopLeft, topRight: ct.cornerTopRight, bottomRight: ct.cornerBottomRight, bottomLeft: ct.cornerBottomLeft }} value={style.radius} max={60} units={["px", "%", "em", "rem"]} onReset={has(["radius"]) ? () => reset(["radius"]) : undefined} onChange={(v) => set("radius", v)} />
+          </>}
+          {fxOk && row("shadow", lt.shadow, shadowSelect(style.shadow, (v) => set("shadow", v), lt.shadow))}
+        </>}
+      </Section>}
+
+      {part === "advanced" && fxOk && <Section title={lt.sticky} modified={!!style.position} defaultOpen={!!style.position}>
+        <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set("position", e.target.checked ? { type: "sticky" } : undefined)} /> {lt.sticky}</label>
+      </Section>}
 
       {show("motion", ["motion"]) && <MotionPanel type={type} style={raw} onChange={onChange} />}
 

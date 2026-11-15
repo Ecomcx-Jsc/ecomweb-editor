@@ -59,12 +59,14 @@ test("cột: hướng đảo, dàn đều quanh, căn chữ, rộng tối đa, l
   await expect(col).toHaveCSS("justify-content", "space-around");
   await insp(page).getByRole("radiogroup", { name: "Căn chữ" }).getByRole("radio", { name: "Giữa" }).click();
   await expect(col).toHaveCSS("text-align", "center");
+  await insp(page).getByRole("button", { name: "Liên kết cả cột" }).click();
   await insp(page).getByLabel("Liên kết cả cột").fill("/gioi-thieu");
   await insp(page).getByRole("switch", { name: "Mở tab mới" }).check();
   const attrs = (await find(page, "column")).attrs;
   expect(attrs).toMatchObject({ href: "/gioi-thieu", linkTarget: "_blank" });
   // Bộ cột: rộng tối đa → hàng hẹp lại và nằm giữa
   await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+  await insp(page).getByRole("button", { name: "Rộng tối đa của nội dung" }).click();
   await insp(page).getByRole("spinbutton", { name: /Rộng tối đa của hàng/ }).fill("400");
   const row = c.locator(".ecx-columns").first();
   await expect(row).toHaveCSS("max-width", "400px");
@@ -110,6 +112,7 @@ test.describe("v3: sửa lỗi bảng bên phải (báo cáo 13, mục 1)", () =
     await open(page, "?doc=rich");
     const col = await find(page, "column"), row = await find(page, "columns");
     await page.evaluate((x) => (window as any).__ecx.store.select([x]), col.id);
+    await insp(page).getByRole("button", { name: "Liên kết cả cột" }).click();
     await expect(insp(page).getByLabel("Liên kết cả cột")).toBeVisible();
     await expect(insp(page).getByText(/linkTarget|linkLabel/)).toHaveCount(0);
     await page.evaluate((x) => (window as any).__ecx.store.select([x]), row.id);

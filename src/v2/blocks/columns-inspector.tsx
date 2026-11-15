@@ -5,7 +5,7 @@ import { useEditor } from "../context";
 import type { BNode } from "../core/model";
 import type { BlockEditProps } from "../core/registry";
 import { useMsgs } from "../i18n";
-import { Row, Seg, cx } from "../ui/style-controls";
+import { Row, Section, Seg, cx } from "../ui/style-controls";
 import { byStep } from "../ui/style-tab";
 import { UnitInput } from "../ui/unit-controls";
 import { makeBlock } from "../core/model";
@@ -94,7 +94,8 @@ export function ColumnsInspector({ block, attrs, setAttrs }: BlockEditProps) {
   const setRowMax = (v: string | undefined) => setAttrs({ style: normalizeStyle({ ...rowStyle, maxWidth: mapDevice(rowStyle.maxWidth as Responsive<string>, device, v), ...(v && !rowStyle.margin ? { margin: { base: { left: "auto", right: "auto" } } } : {}) }) ?? undefined });
 
   return (
-    <div className="ecx-form">
+    <>
+    <Section title={t.secLayout} defaultOpen>
       <Row label={t.count}>
         <div className="ecx-stepper">
           <button type="button" aria-label={t.fewer} disabled={n <= 1} onClick={() => setCount(n - 1)}>−</button>
@@ -123,14 +124,17 @@ export function ColumnsInspector({ block, attrs, setAttrs }: BlockEditProps) {
           <UnitInput label={`${k === "columnsGap" ? t.gap : t.rowGap}: px`} value={gap(k) && !spaces.includes(gap(k)!) ? gap(k) : undefined} units={["px", "rem", "%"]} max={160} onChange={(v) => setGap(k, v)} />
         </Row>
       ))}
-      <Row label={t.rowMaxWidth} device={device} onReset={rowMax ? () => setRowMax(undefined) : undefined}>
-        <UnitInput label={t.rowMaxWidth} value={rowMax} units={["px", "rem", "%"]} max={1600} onChange={setRowMax} />
-      </Row>
       <Row label={t.valign}>
         <Seg label={t.valign} value={valign} onChange={(v) => setAttrs({ verticalAlign: v === "top" ? undefined : v })}
           options={[["top", AlignStartHorizontal, t.top], ["center", AlignCenterHorizontal, t.middle], ["bottom", AlignEndHorizontal, t.bottom], ["stretch", StretchHorizontal, t.stretch]]} />
       </Row>
-    </div>
+    </Section>
+    <Section title={t.secMaxWidth} modified={!!rowMax} defaultOpen={!!rowMax}>
+      <Row label={t.rowMaxWidth} device={device} onReset={rowMax ? () => setRowMax(undefined) : undefined}>
+        <UnitInput label={t.rowMaxWidth} value={rowMax} units={["px", "rem", "%"]} max={1600} onChange={setRowMax} />
+      </Row>
+    </Section>
+    </>
   );
 }
 
@@ -152,8 +156,10 @@ export function ColumnInspector({ attrs, setAttrs }: BlockEditProps) {
   const setResp = (k: "textAlign" | "maxWidth", v: string | undefined) => setAttrs({ style: normalizeStyle({ ...style, [k]: mapDevice(style[k] as Responsive<string>, device, v) }) ?? undefined });
   const href = typeof attrs.href === "string" ? attrs.href : "";
   const gap = atDevice<string>(style.gap as Responsive<string>, device);
+  const setGap = (v: string | undefined) => setAttrs({ style: normalizeStyle({ ...style, gap: mapDevice(style.gap as Responsive<string>, device, v), ...(v === undefined ? {} : { layout }) }) ?? undefined });
   return (
-    <div className="ecx-form">
+    <>
+    <Section title={t.secFlex} defaultOpen>
       <Row label={t.direction} device={device} onReset={field("direction") && device !== "base" ? () => setField("direction", undefined) : undefined}>
         <Seg label={t.direction} value={field("direction") ?? (device === "base" ? "column" : undefined)} onChange={(v) => setField("direction", v ?? "column")}
           options={[["column", ArrowDown, t.vertical], ["row", ArrowRight, t.horizontal], ["column-reverse", ArrowUp, t.verticalReverse], ["row-reverse", ArrowLeft, t.horizontalReverse]]} />
@@ -171,19 +177,24 @@ export function ColumnInspector({ attrs, setAttrs }: BlockEditProps) {
             ? [["start", AlignStartHorizontal, t.top], ["center", AlignCenterHorizontal, t.middle], ["end", AlignEndHorizontal, t.bottom], ...spread]
             : [["start", AlignStartHorizontal, t.top], ["center", AlignCenterHorizontal, t.middle], ["end", AlignEndHorizontal, t.bottom], ["stretch", StretchHorizontal, t.fill]]} />
       </Row>
-      <Row label={t.innerGap} device={device} onReset={gap !== undefined ? () => setAttrs({ style: normalizeStyle({ ...style, gap: mapDevice(style.gap as Responsive<string>, device, undefined) }) }) : undefined}>
-        <Seg label={t.innerGap} value={gap} onChange={(v) => setAttrs({ style: normalizeStyle({ ...style, gap: mapDevice(style.gap as Responsive<string>, device, v), layout }) })}
+      <Row label={t.innerGap} device={device} onReset={gap !== undefined ? () => setGap(undefined) : undefined}>
+        <Seg label={t.innerGap} value={spaces.includes(gap ?? "") ? gap : undefined} onChange={setGap}
           options={spaces.map((s) => [s, s === "0" ? "0" : s.toUpperCase(), s] as [string, string, string])} />
+        <UnitInput label={`${t.innerGap}: px`} value={gap && !spaces.includes(gap) ? gap : undefined} units={["px", "rem", "em"]} max={160} onChange={setGap} />
       </Row>
       <Row label={t.textAlign} device={device} onReset={resp("textAlign") ? () => setResp("textAlign", undefined) : undefined}>
         <Seg label={t.textAlign} value={resp("textAlign")} onChange={(v) => setResp("textAlign", v)}
           options={[["left", AlignLeft, t.left], ["center", AlignCenter, t.center], ["right", AlignRight, t.right]]} />
       </Row>
+    </Section>
+    <Section title={t.secMaxWidth} modified={!!resp("maxWidth")} defaultOpen={!!resp("maxWidth")}>
       <Row label={t.maxWidth} device={device} onReset={resp("maxWidth") ? () => setResp("maxWidth", undefined) : undefined}>
         <UnitInput label={t.maxWidth} value={resp("maxWidth")} units={["px", "rem", "%"]} max={1600} onChange={(v) => setResp("maxWidth", v)} />
       </Row>
-      {/* Liên kết phủ cả cột (cả cột thành một vùng bấm) */}
-      <Row label={t.overlayLink}>
+    </Section>
+    {/* Liên kết phủ cả cột (cả cột thành một vùng bấm) */}
+    <Section title={t.overlayLink} modified={!!href} defaultOpen={!!href}>
+      <Row label={t.linkUrl}>
         <input className="ecx-input" type="url" inputMode="url" aria-label={t.overlayLink} placeholder="https://… / /duong-dan" value={href} onChange={(e) => setAttrs({ href: e.target.value || undefined })} />
         {href && <>
           <p className="ecx-field-help">{t.overlayNote}</p>
@@ -191,6 +202,7 @@ export function ColumnInspector({ attrs, setAttrs }: BlockEditProps) {
           <input className="ecx-input" aria-label={t.linkLabel} placeholder={t.linkLabel} value={typeof attrs.linkLabel === "string" ? attrs.linkLabel : ""} onChange={(e) => setAttrs({ linkLabel: e.target.value || undefined })} />
         </>}
       </Row>
-    </div>
+    </Section>
+    </>
   );
 }
