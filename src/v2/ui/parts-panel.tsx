@@ -2,6 +2,7 @@ import { normalizeParts, normalizeStyle, partsFor, type BlockStyle, type Device,
 import { AlignCenter, AlignLeft, AlignRight } from "lucide-react";
 import { useState } from "react";
 import { blockControls } from "../../shared/panel-store";
+import { labelsLegacy } from "../../shared/labels";
 import { useEditor } from "../context";
 import { useMsgs } from "../i18n";
 import { ColorInput } from "./color-field";
@@ -10,7 +11,7 @@ import { byStep } from "./style-tab";
 import { SpacingControl, UnitInput } from "./unit-controls";
 
 type Style = BlockStyle & Record<string, any>;
-const RESPONSIVE = new Set(["padding", "margin", "fontSize", "lineHeight", "textAlign", "width", "minHeight"]);
+const RESPONSIVE = new Set(["padding", "margin", "fontSize", "lineHeight", "letterSpacing", "textAlign", "width", "minHeight"]);
 const WEIGHTS = ["400", "500", "600", "700", "800"];
 const SHADOWS = ["sm", "md", "lg", "xl"];
 
@@ -76,7 +77,9 @@ function PartSection({ blockId, spec, title, value, onChange, device }: { blockI
 
 /** Ô của một phần theo nhóm thuộc tính khai (typography, color, background, border, radius, shadow, padding, margin, size, iconSize). */
 function PartControls({ props, style, onChange, device, hover, target }: { props: readonly PartProp[]; style: Style; onChange(s: Style): void; device: Device; hover: boolean; target(): HTMLElement | null }) {
-  const { host } = useEditor();
+  const { host, labels: v2 } = useEditor();
+  const L = labelsLegacy(v2.lang);
+  const fonts = host.presets?.fonts ? Object.keys(host.presets.fonts) : ["body", "heading", "mono"];
   const t = useMsgs("parts") as Record<string, string>;
   const ct = useMsgs("controls");
   const sizes = host.presets?.fontSizes ? byStep(Object.keys(host.presets.fontSizes)) : ["sm", "md", "lg", "xl", "2xl"];
@@ -107,15 +110,33 @@ function PartControls({ props, style, onChange, device, hover, target }: { props
         <Row label={t.align} device={dev("textAlign")} onReset={has("textAlign") ? reset("textAlign") : undefined}>
           <Seg label={t.align} value={get("textAlign")} onChange={(v) => set("textAlign", v)} options={[["left", AlignLeft, t.left], ["center", AlignCenter, t.center], ["right", AlignRight, t.right]]} />
         </Row>
+        <Row label={L.style_lineHeight} device={dev("lineHeight")} onReset={has("lineHeight") ? reset("lineHeight") : undefined}>
+          <input className="ecx-input" type="number" min={0.8} max={3} step={0.05} placeholder="1.5" aria-label={L.style_lineHeight} value={get("lineHeight") ?? ""} onChange={(e) => set("lineHeight", e.target.value === "" ? undefined : Number(e.target.value))} />
+        </Row>
+        <Row label={L.style_transform} onReset={has("textTransform") ? reset("textTransform") : undefined}>
+          <Seg label={L.style_transform} value={style.textTransform} onChange={(v) => set("textTransform", v)} options={[["none", "—", L.none], ["uppercase", "AB", L.upper], ["lowercase", "ab", L.lower], ["capitalize", "Ab", L.capitalize]]} />
+        </Row>
+        <Row label={L.style_fontFamily} onReset={has("fontFamily") ? reset("fontFamily") : undefined}>
+          <select className="ecx-input" value={style.fontFamily ?? ""} aria-label={L.style_fontFamily} onChange={(e) => set("fontFamily", e.target.value || undefined)}>
+            <option value="">{L.default}</option>
+            {fonts.map((f) => <option key={f} value={f}>{(L as unknown as Record<string, string>)[`font_${f}`] ?? f}</option>)}
+          </select>
+        </Row>
+        <Row label={L.style_letterSpacing} device={dev("letterSpacing")} onReset={has("letterSpacing") ? reset("letterSpacing") : undefined}>
+          <UnitInput label={L.style_letterSpacing} value={get("letterSpacing")} units={["px", "em"]} max={10} onChange={(v) => set("letterSpacing", v)} />
+        </Row>
       </>}
       {p.includes("iconSize") && <Row label={t.iconSize} device={dev("fontSize")} onReset={has("fontSize") ? reset("fontSize") : undefined}>
         <UnitInput label={t.iconSize} value={get("fontSize")} units={["px", "rem", "em"]} max={160} onChange={(v) => set("fontSize", v)} />
       </Row>}
-      {p.includes("color") && <ColorInput label={t.color} value={style.color?.text} onChange={(v) => set("color", { ...style.color, text: v })} />}
+      {p.includes("color") && <ColorInput label={props.includes("iconSize") ? t.iconColor : t.color} value={style.color?.text} onChange={(v) => set("color", { ...style.color, text: v })} />}
       {p.includes("background") && <ColorInput label={t.background} value={style.color?.background} onChange={(v) => set("color", { ...style.color, background: v })} />}
       {p.includes("border") && <>
         <Row label={t.borderWidth} onReset={style.border?.width ? () => set("border", { ...style.border, width: undefined }) : undefined}>
           <UnitInput label={t.borderWidth} value={style.border?.width} units={["px"]} max={20} onChange={(v) => set("border", { style: "solid", ...style.border, width: v })} />
+        </Row>
+        <Row label={L.style_borderStyle} onReset={style.border?.style && style.border.style !== "solid" ? () => set("border", { ...style.border, style: "solid" }) : undefined}>
+          <Seg label={L.style_borderStyle} value={style.border?.style} onChange={(v) => set("border", { ...style.border, style: v })} options={[["solid", "—", L.border_solid], ["dashed", "- -", L.border_dashed], ["dotted", "···", L.border_dotted]]} />
         </Row>
         <ColorInput label={t.borderColor} value={style.border?.color} onChange={(v) => set("border", { ...style.border, color: v })} />
       </>}

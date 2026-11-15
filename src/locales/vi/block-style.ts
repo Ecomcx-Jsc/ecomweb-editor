@@ -21,7 +21,7 @@ export const blockStyle = {
     tableBorderColor: "Màu viền ô", tableBorderWidth: "Độ dày viền ô", tableHeaderBg: "Nền hàng tiêu đề", tableHeaderColor: "Chữ hàng tiêu đề", tableStripe: "Màu hàng xen kẽ", tableCellPadding: "Khoảng đệm ô", tableAlign: "Căn chữ trong ô",
     tabsTitleColor: "Màu tiêu đề", tabsTitleBg: "Nền tiêu đề", tabsActiveColor: "Màu tiêu đề", tabsActiveBg: "Nền tiêu đề", tabsAccent: "Gạch chân", tabsBorderColor: "Màu đường kẻ", tabsGap: "Khoảng giữa tiêu đề", tabsContentPadding: "Khoảng đệm nội dung",
     accTitleColor: "Màu tiêu đề", accTitleBg: "Nền tiêu đề", accActiveColor: "Màu tiêu đề", accBorderColor: "Màu viền", accGap: "Khoảng giữa các mục", accPadding: "Khoảng đệm",
-    columnsGap: "Khoảng giữa các cột", columnsDirection: "Hướng xếp",
+    columnsGap: "Khoảng giữa các cột", columnsDirection: "Hướng xếp", tabsAlign: "Căn tiêu đề tab",
     hrStyle: "Kiểu", hrWeight: "Độ dày", hrColor: "Màu", hrWidth: "Chiều rộng", hrAlign: "Căn",
     iconBoxIconColor: "Màu icon", iconBoxIconSize: "Cỡ icon", iconBoxTitleColor: "Màu tiêu đề", iconBoxTextColor: "Màu mô tả",
     imageBoxRadius: "Bo góc ảnh", imageBoxTitleColor: "Màu tiêu đề", imageBoxTextColor: "Màu mô tả",
@@ -38,6 +38,7 @@ export const blockStyle = {
     cover: "Phủ kín", contain: "Vừa khung",
     grayscale: "Đen trắng", sepia: "Màu cũ", blur: "Làm mờ", bright: "Sáng hơn", dim: "Tối hơn", saturate: "Rực hơn",
     zoom: "Phóng to", lift: "Nhấc lên", tilt: "Nghiêng",
+    "flex-start": "Trái", "flex-end": "Phải", "space-between": "Dàn đều",
     start: "Đầu", center: "Giữa", end: "Cuối",
     row: "Ngang", "row-reverse": "Ngang, đảo thứ tự", column: "Xếp dọc", "column-reverse": "Xếp dọc, đảo thứ tự",
     solid: "Liền", dashed: "Gạch", dotted: "Chấm", double: "Đôi",
@@ -54,5 +55,6 @@ export const blockStyle = {
     hoverNote: "Rê chuột chỉ đổi màu nền; ảnh / chuyển màu giữ nguyên.",
     legacy: "Màu nền cũ của nhóm — chọn màu khác để chuyển sang kiểu dáng mới.",
   },
+  more: "tuỳ chọn khác",
   tabTitle: "Tab {n}",
 };

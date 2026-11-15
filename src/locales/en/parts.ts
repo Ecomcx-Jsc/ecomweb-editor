@@ -7,6 +7,6 @@ export const parts = {
   highlight: "Highlight", link: "Link", active: "Open / active",
   show: "Show this part", hiddenNote: "Hidden — switch on to show and edit.", normal: "Normal", hover: "Hover",
   fontSize: "Font size", weight: "Weight", align: "Alignment", left: "Left", center: "Centre", right: "Right", iconSize: "Icon size",
-  color: "Text colour", background: "Background", borderWidth: "Border width", borderColor: "Border colour", radius: "Radius", shadow: "Shadow", none: "None",
+  color: "Text colour", iconColor: "Icon colour", background: "Background", borderWidth: "Border width", borderColor: "Border colour", radius: "Radius", shadow: "Shadow", none: "None",
   width: "Width", height: "Height", padding: "Padding", margin: "Margin",
 };

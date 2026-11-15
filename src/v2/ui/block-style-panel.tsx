@@ -6,6 +6,8 @@ import { Row, Section, cx } from "./style-controls";
 import { UnitInput } from "./unit-controls";
 
 type State = "normal" | "hover" | "active";
+/** Ô rời mà phần (attrs.parts) chưa thay được — luôn hiện ở khối đã chia phần. */
+const KEEP = new Set(["imageFit", "imageOpacity", "imageFilter", "imageHoverEffect", "imageHoverOpacity", "imageHoverFilter", "iconListGap", "iconListDivider", "tabsGap", "accGap", "buttonSize", "progressHeight"]);
 
 /**
  * Mục Kiểu dáng riêng của khối lõi (như tab Style của từng widget Elementor: Danh sách › khoảng cách, đường kẻ; Icon › màu, cỡ…).
@@ -17,12 +19,19 @@ export function BlockStyleSections({ type, attrs, setAttrs, device, legacyOnly }
   const t = useMsgs("blockStyle");
   const sections = new Map<string, Array<[string, ControlSpec]>>();
   for (const [name, spec] of Object.entries(coreControlsFor(type))) {
+    if (name === "tabsAlign") continue; // sửa ở tab Cài đặt
     const k = spec.section ?? "text";
     sections.set(k, [...(sections.get(k) ?? []), [name, spec]]);
   }
-  if (legacyOnly) for (const [k, list] of sections) if (!list.some(([n]) => attrs[n] !== undefined)) sections.delete(k);
+  const reduced = new Set<string>(); // mục chỉ còn ô phần chưa thay: tên "… · tuỳ chọn khác" để khỏi trùng tên phần
+  sections.delete("columns"); // khe cột / khe hàng / hướng xếp: đã có ở tab Cài đặt (ColumnsInspector)
+  if (legacyOnly) for (const [k, list] of sections) {
+    if (list.some(([n]) => attrs[n] !== undefined)) continue;
+    const keep = list.filter(([n]) => KEEP.has(n));
+    if (keep.length) { sections.set(k, keep); reduced.add(k); } else sections.delete(k);
+  }
   if (!sections.size) return null;
-  return <>{[...sections].map(([key, list]) => <ControlSection key={key} title={(t.section as Record<string, string>)[key] ?? key} list={list} attrs={attrs} setAttrs={setAttrs} device={device} />)}</>;
+  return <>{[...sections].map(([key, list]) => <ControlSection key={key} title={`${(t.section as Record<string, string>)[key] ?? key}${reduced.has(key) ? ` · ${t.more}` : ""}`} list={list} attrs={attrs} setAttrs={setAttrs} device={device} />)}</>;
 }
 
 function ControlSection({ title, list, attrs, setAttrs, device }: { title: string; list: Array<[string, ControlSpec]>; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void; device: Device }) {

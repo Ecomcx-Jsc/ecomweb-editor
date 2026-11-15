@@ -29,7 +29,8 @@ function withStyleAttrs(t: BlockType): BlockType["attributes"] {
   const base = t.attributes ?? Object.fromEntries(Object.entries(CORE_NODES[t.name]?.attrs ?? {}).map(([k, s]) => [k, hidden(s)]));
   return {
     ...base,
-    ...Object.fromEntries(ctl.map(([k, s]) => [k, hidden(s.type === "number"
+    // thuộc tính khối tự khai (vd tabs.tabsAlign hiện ở Cài đặt) giữ nguyên
+    ...Object.fromEntries(ctl.filter(([k]) => !base?.[k]).map(([k, s]) => [k, hidden(s.type === "number"
       ? { type: "number", min: s.min, max: s.max }
       : { type: "string", ...(s.type === "enum" ? { enum: s.options?.map((o) => (typeof o === "string" ? o : o.value)) } : {}) })])),
   };

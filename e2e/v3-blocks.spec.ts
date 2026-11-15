@@ -71,3 +71,65 @@ test("cột: hướng đảo, dàn đều quanh, căn chữ, rộng tối đa, l
   const [box, parent] = await row.evaluate((el) => [el.getBoundingClientRect(), el.parentElement!.getBoundingClientRect()].map((r) => [r.left, r.right]));
   expect(Math.abs((box[0] - parent[0]) - (parent[1] - box[1]))).toBeLessThan(2);
 });
+
+test.describe("v3: sửa lỗi bảng bên phải (báo cáo 13, mục 1)", () => {
+  const insert = async (page: Page, slash: string, type: string) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type(slash);
+    await page.keyboard.press("Enter");
+    const id = (await find(page, type)).id;
+    await page.evaluate((x) => (window as any).__ecx.store.select([x]), id);
+    return c;
+  };
+  const tab = (page: Page, name: string) => insp(page).locator(".ecx-tabs").getByRole("tab", { name }).click();
+
+  test("tab: có cài đặt — căn tiêu đề tab, tab mở đầu tiên", async ({ page }) => {
+    const c = await insert(page, "/tabs", "tabs");
+    await insp(page).getByRole("radiogroup", { name: "Căn tiêu đề tab" }).getByRole("radio", { name: "Giữa" }).click();
+    await expect(c.locator(".ecx-tabs [role=tablist]")).toHaveCSS("justify-content", "center");
+    await insp(page).getByLabel("Tab mở đầu tiên (số thứ tự)").fill("2");
+    expect((await find(page, "tabs")).attrs.initial).toBe(2);
+    // ô rời mà phần chưa thay: khoảng giữa tiêu đề tab vẫn còn ở Kiểu dáng
+    await tab(page, "Kiểu dáng");
+    await insp(page).getByRole("button", { name: "Tabs · tuỳ chọn khác" }).click();
+    await expect(insp(page).getByText("Khoảng giữa tiêu đề")).toHaveCount(1);
+  });
+
+  test("accordion: nhãn tiếng Việt, còn ô khoảng giữa các mục; cột không lộ nhãn thô", async ({ page }) => {
+    await insert(page, "/accordion", "accordion");
+    await expect(insp(page).getByText("Mở nhiều mục cùng lúc")).toBeVisible();
+    await expect(insp(page).getByText("multiple", { exact: true })).toHaveCount(0);
+    await tab(page, "Kiểu dáng");
+    await insp(page).getByRole("button", { name: "Accordion · tuỳ chọn khác" }).click();
+    await expect(insp(page).getByText("Khoảng giữa các mục")).toHaveCount(1);
+  });
+
+  test("cột và bộ cột: không nhãn thô, không ô trùng", async ({ page }) => {
+    await open(page, "?doc=rich");
+    const col = await find(page, "column"), row = await find(page, "columns");
+    await page.evaluate((x) => (window as any).__ecx.store.select([x]), col.id);
+    await expect(insp(page).getByLabel("Liên kết cả cột")).toBeVisible();
+    await expect(insp(page).getByText(/linkTarget|linkLabel/)).toHaveCount(0);
+    await page.evaluate((x) => (window as any).__ecx.store.select([x]), row.id);
+    await tab(page, "Kiểu dáng");
+    await expect(insp(page).getByText(/columnsRowGap|Khoảng giữa các cột/)).toHaveCount(0);
+  });
+
+  test("phần của khối: chữ đủ giãn dòng, hoa/thường, phông, giãn chữ; kiểu viền", async ({ page }) => {
+    const c = await open(page, "?doc=rich");
+    const btn = await find(page, "button");
+    await page.evaluate((x) => (window as any).__ecx.store.select([x]), btn.id);
+    await tab(page, "Kiểu dáng");
+    const i = insp(page);
+    if (await i.getByRole("radiogroup", { name: "Viết hoa chữ cái" }).count() === 0) await i.getByRole("button", { name: "Nút", exact: true }).click();
+    await i.getByRole("radiogroup", { name: "Viết hoa chữ cái" }).getByRole("radio").nth(1).click();
+    await i.getByLabel("Giãn dòng").fill("2");
+    const a = c.locator("a.ecx-button").first();
+    await expect(a).toHaveCSS("text-transform", "uppercase");
+    expect((await find(page, "button")).attrs.parts.button.style).toMatchObject({ textTransform: "uppercase", lineHeight: { base: 2 } });
+    await i.getByRole("button", { name: "Nút · tuỳ chọn khác" }).click();
+    await expect(i.getByText("Cỡ nút")).toHaveCount(1);
+  });
+});

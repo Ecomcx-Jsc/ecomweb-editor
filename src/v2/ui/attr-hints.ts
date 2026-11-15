@@ -47,6 +47,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "button.iconPosition": { control: "segmented", options: ["left", "right"], when: (a) => !!a.icon },
   "button.width": { control: "segmented", options: ["auto", "full"] },
   "button.ariaLabel": { help: true },
+  "tabs.tabsAlign": { control: "segmented", options: ["flex-start", "center", "flex-end", "space-between"] },
   "*.textAlign": { control: "segmented", options: [...ALIGN, "justify"] },
   "*.mime": { control: "hidden" },
   "video.name": { control: "hidden" },

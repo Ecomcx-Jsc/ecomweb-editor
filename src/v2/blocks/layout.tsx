@@ -407,7 +407,7 @@ export function layoutBlocks(): BlockType[] {
       ],
       supports: { style: true, anchor: true, className: true },
     },
-    { name: "column", title: "Cột", icon: RectangleHorizontal, kind: "container", edit: ColumnEdit, inspector: ColumnInspector, hidden: true, attributes: { width: { type: "number", min: 1, max: 100, control: "hidden" }, href: { type: "url" }, linkTarget: { type: "string", enum: ["_self", "_blank"] }, linkLabel: { type: "string" } }, create: () => col(), supports: { style: true } },
+    { name: "column", title: "Cột", icon: RectangleHorizontal, kind: "container", edit: ColumnEdit, inspector: ColumnInspector, hidden: true, attributes: { width: { type: "number", min: 1, max: 100, control: "hidden" }, href: { type: "url", control: "hidden" }, linkTarget: { type: "string", enum: ["_self", "_blank"], control: "hidden" }, linkLabel: { type: "string", control: "hidden" } }, create: () => col(), supports: { style: true } },
     {
       name: "buttons", title: "Nút", icon: MousePointerClick, category: "design", keywords: "nut button cta lien ket", kind: "container", edit: ButtonsEdit,
       attributes: { align: { type: "string", enum: ["left", "center", "right", "space-between"] } },
@@ -443,6 +443,7 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "tabs", title: "Tabs", icon: PanelTop, category: "text", keywords: "tabs the tab chuyen doi noi dung", kind: "container", edit: TabsEdit,
+      attributes: { tabsAlign: { type: "string", enum: ["flex-start", "center", "flex-end", "space-between"] }, initial: { type: "number", min: 1 } },
       create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
     },
     {

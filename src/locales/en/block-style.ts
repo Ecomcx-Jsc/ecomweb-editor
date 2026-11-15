@@ -20,7 +20,7 @@ export const blockStyle: (typeof vi)["blockStyle"] = {
     tableBorderColor: "Cell border color", tableBorderWidth: "Cell border width", tableHeaderBg: "Header background", tableHeaderColor: "Header text", tableStripe: "Striped rows", tableCellPadding: "Cell padding", tableAlign: "Cell alignment",
     tabsTitleColor: "Title color", tabsTitleBg: "Title background", tabsActiveColor: "Title color", tabsActiveBg: "Title background", tabsAccent: "Underline", tabsBorderColor: "Divider color", tabsGap: "Space between titles", tabsContentPadding: "Content padding",
     accTitleColor: "Title color", accTitleBg: "Title background", accActiveColor: "Title color", accBorderColor: "Border color", accGap: "Space between", accPadding: "Padding",
-    columnsGap: "Columns gap", columnsDirection: "Direction",
+    columnsGap: "Columns gap", columnsDirection: "Direction", tabsAlign: "Tab title alignment",
     hrStyle: "Style", hrWeight: "Weight", hrColor: "Color", hrWidth: "Width", hrAlign: "Alignment",
     iconBoxIconColor: "Icon color", iconBoxIconSize: "Icon size", iconBoxTitleColor: "Title color", iconBoxTextColor: "Description color",
     imageBoxRadius: "Image radius", imageBoxTitleColor: "Title color", imageBoxTextColor: "Description color",
@@ -36,6 +36,7 @@ export const blockStyle: (typeof vi)["blockStyle"] = {
     cover: "Cover", contain: "Contain",
     grayscale: "Grayscale", sepia: "Sepia", blur: "Blur", bright: "Brighter", dim: "Darker", saturate: "Saturate",
     zoom: "Zoom", lift: "Lift", tilt: "Tilt",
+    "flex-start": "Left", "flex-end": "Right", "space-between": "Spread",
     start: "Start", center: "Center", end: "End",
     row: "Row", "row-reverse": "Row, reversed", column: "Stacked", "column-reverse": "Stacked, reversed",
     solid: "Solid", dashed: "Dashed", dotted: "Dotted", double: "Double",
@@ -51,5 +52,6 @@ export const blockStyle: (typeof vi)["blockStyle"] = {
     hoverNote: "Hover only changes the background color; image / gradient stay.",
     legacy: "Old group background color — pick another color to move it to the new style.",
   },
+  more: "more options",
   tabTitle: "Tab {n}",
 };
