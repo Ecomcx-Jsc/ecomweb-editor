@@ -49,9 +49,12 @@ export function ColumnHandles({ block }: { block: BNode }) {
     const pair = widths[i] + widths[i + 1];
     const handle = e.currentTarget as HTMLElement;
     handle.setPointerCapture(e.pointerId);
+    handle.classList.add("is-dragging");
     const move = (ev: PointerEvent) => {
       const ratio = Math.min(0.9, Math.max(0.1, (ev.clientX - a.left) / (b.right - a.left)));
       const wa = Math.round(pair * ratio), wb = Math.round(pair - pair * ratio);
+      // Nhãn % hai bên tay nắm khi đang kéo
+      handle.dataset.left = `${wa}%`; handle.dataset.right = `${wb}%`;
       const ids = cols.map((c) => c.id);
       store.batch(() => {
         widths.forEach((w, k) => {
@@ -60,7 +63,7 @@ export function ColumnHandles({ block }: { block: BNode }) {
         });
       });
     };
-    const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); store.breakMerge(); focusCanvas(handle); };
+    const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); handle.classList.remove("is-dragging"); store.breakMerge(); focusCanvas(handle); };
     handle.addEventListener("pointermove", move);
     handle.addEventListener("pointerup", up);
   };
