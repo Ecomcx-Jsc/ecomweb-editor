@@ -1,7 +1,10 @@
 import { freshWithDefaults } from "../core/block-presets";
 import { leavesItem } from "../core/structure";
 import { blockDescription } from "./block-descriptions";
-import { Blocks, Sparkles } from "lucide-react";
+import { Blocks, Sparkles, X } from "lucide-react";
+import { mediaAttrs } from "./media-actions";
+import { cx } from "./attr-form";
+import type { MediaItem } from "../../shared/types";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { norm } from "../../shared/util";
 import { useEditor, useUiTick, type InserterRequest } from "../context";
@@ -248,7 +251,7 @@ export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; on
     return () => { document.removeEventListener("keydown", onKey); frameDoc?.removeEventListener("keydown", onKey); };
   }, [onClose, ctx.ui]);
   const [query, setQuery] = useState("");
-  const [tab, setTab] = useState<"blocks" | "patterns">("blocks");
+  const [tab, setTab] = useState<"blocks" | "patterns" | "media">("blocks");
   const [hover, setHover] = useState<{ o: InsertOption; rect: DOMRect; y: number } | null>(null);
   const results = rankOptions(options, query);
   const catLabel: Record<string, string> = { text: labels.catText, media: labels.catMedia, design: labels.catDesign, widgets: labels.catWidgets, theme: labels.catTheme, embed: labels.catEmbed };
@@ -285,12 +288,17 @@ export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; on
           <p>{hover.o.description ?? blockDescription(hover.o.type, labels.lang) ?? ""}</p>
         </div>
       )}
-      <div className="ecx-tabs" role="tablist">
+      <div className="ecx-tabs">
+        <div className="ecx-tablist" role="tablist">
         <button type="button" role="tab" aria-selected={tab === "blocks"} className={tab === "blocks" ? "is-active" : undefined} onClick={() => setTab("blocks")}>{labels.blocks}</button>
         <button type="button" role="tab" aria-selected={tab === "patterns"} className={tab === "patterns" ? "is-active" : undefined} onClick={() => setTab("patterns")}>{labels.patterns}</button>
+        {ctx.host.media?.list && <button type="button" role="tab" aria-selected={tab === "media"} className={tab === "media" ? "is-active" : undefined} onClick={() => setTab("media")}>{labels.mediaTab}</button>}
+        </div>
+        {onClose && <button type="button" className="ecx-left-close" aria-label={labels.close} title={labels.close} onClick={onClose}><X className="ecx-icon" /></button>}
       </div>
-      <input className="ecx-search" placeholder={labels.search} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={labels.search} />
-      {tab === "patterns" ? <PatternList query={query} onInserted={onInserted} /> : <>
+      <input className="ecx-search" placeholder={tab === "media" ? labels.searchMedia : labels.search} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={tab === "media" ? labels.searchMedia : labels.search} />
+      {tab === "media" ? <MediaList query={query} onPick={(kind, m) => insert({ key: kind, title: kind, keywords: "", category: "media", type: kind, create: () => makeBlock(kind, { ...ctx.registry.create(kind).attrs, ...mediaAttrs(kind, [m]) }) })} />
+      : tab === "patterns" ? <PatternList query={query} onInserted={onInserted} /> : <>
       {mostUsed.length > 0 && (
         <section data-section="most-used">
           <h3 className="ecx-panel-heading">{labels.mostUsedTitle}</h3>
@@ -320,6 +328,41 @@ export function InserterPanel({ onInserted, onClose }: { onInserted?(): void; on
       {!results.length && <p className="ecx-muted">{labels.noResults}</p>}
       </>}
     </div>
+  );
+}
+
+type MediaTabKind = "image" | "video" | "audio";
+/** Tab Media: tệp mới nhất của thư viện theo loại; bấm = chèn khối Ảnh / Video / Âm thanh sau khối đang chọn. */
+function MediaList({ query, onPick }: { query: string; onPick(kind: MediaTabKind, m: MediaItem): void }) {
+  const { host, labels } = useEditor();
+  const [kind, setKind] = useState<MediaTabKind>("image");
+  const [items, setItems] = useState<MediaItem[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let live = true;
+    setItems(null); setFailed(false);
+    // Gõ tìm: chờ ngừng gõ rồi mới hỏi thư viện
+    const t = setTimeout(() => {
+      host.media!.list!({ kind, search: query.trim() || undefined }).then((l) => { if (live) setItems(l); }, () => { if (live) setFailed(true); });
+    }, query ? 250 : 0);
+    return () => { live = false; clearTimeout(t); };
+  }, [host.media, kind, query]);
+  const kinds: Array<[MediaTabKind, string]> = [["image", labels.image], ["video", "Video"], ["audio", labels.audio]];
+  return (
+    <>
+      <div className="ecx-seg is-text ecx-media-kinds" role="radiogroup" aria-label={labels.mediaTab}>
+        {kinds.map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={kind === k} className={cx("ecx-seg-btn", kind === k && "is-active")} onClick={() => setKind(k)}>{l}</button>)}
+      </div>
+      {failed ? <p className="ecx-muted">{labels.loadFailed}</p> : !items ? <p className="ecx-muted">{labels.loading}</p> : !items.length ? <p className="ecx-muted">{labels.noResults}</p> : (
+        <div className={cx("ecx-media-grid", kind !== "image" && "is-files")}>
+          {items.map((m) => (
+            <button key={m.id} type="button" className="ecx-media-item" title={m.title || m.fileName} onClick={() => onPick(kind, m)}>
+              {kind === "image" ? <img src={m.sizes?.thumbnail?.url ?? m.sizes?.medium?.url ?? m.url} alt={m.alt || m.fileName} loading="lazy" /> : <span>{m.title || m.fileName}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
   );
 }
 

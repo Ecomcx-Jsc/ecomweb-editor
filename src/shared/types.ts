@@ -30,6 +30,8 @@ export interface MediaProvider {
   get?(id: MediaItem["id"]): Promise<MediaItem | null>;
   /** Tải tệp lên thư viện media (nút "Tải lên", kéo thả tệp vào khối). Không có → chỉ chọn từ thư viện / URL. */
   upload?(files: File[]): Promise<MediaItem[]>;
+  /** Tệp mới nhất trong thư viện (tab Media của bảng chèn khối). Không có → không hiện tab. */
+  list?(options: { kind: "image" | "video" | "audio"; search?: string }): Promise<MediaItem[]>;
 }
 
 /** Nội dung lưu trữ: danh sách khối (sẵn sàng cho page builder). */

@@ -108,7 +108,8 @@ export function ColumnsInspector({ block, attrs, setAttrs }: BlockEditProps) {
           {device === "base"
             ? (LAYOUTS[n] ?? [Array(n).fill(100 / n)]).map((w) => <Thumb key={w.join("-")} widths={w} active={same(widths, w) || (equalOf(w) && equalOf(widths))} title={w.map((x) => `${x}%`).join(" / ")} onClick={() => setWidths(w)} />)
             : <>
-                <Thumb widths={widths} active={!dir} title={t.inherit} onClick={() => setDir(undefined)} />
+                {/* Bộ cột tự xuống dòng khi hẹp (mặc định): trên điện thoại "mặc định" thực ra là xếp dọc → vẽ đúng như khung soạn */}
+                <Thumb widths={widths} stack={device === "mobile" && attrs.stack !== false ? "column" : undefined} active={!dir} title={device === "mobile" && attrs.stack !== false ? t.autoStack : t.inherit} onClick={() => setDir(undefined)} />
                 <Thumb widths={widths} stack="column" active={dir === "column"} title={t.stack} onClick={() => setDir("column")} />
                 <Thumb widths={widths} stack="column-reverse" active={dir === "column-reverse"} title={t.stackReverse} onClick={() => setDir("column-reverse")} />
               </>}

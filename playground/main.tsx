@@ -77,6 +77,11 @@ const host: EditorHost = {
   // ?media=1: thư viện media giả lập (chọn / tải lên trả về ảnh mẫu)
   ...(params.get("media") ? { media: {
     async pick() { return [{ id: 7, url: `${location.origin}/sample.svg`, alt: "Ảnh thư viện", fileName: "sample.svg", mimeType: "image/svg+xml", width: 400, height: 200, webpUrl: `${location.origin}/sample.svg?f=webp`, sizes: { medium: { url: `${location.origin}/sample.svg?w=200`, width: 200, height: 100, webpUrl: `${location.origin}/sample.svg?w=200&f=webp` } } }]; },
+    async list({ kind, search }: { kind: string; search?: string }) {
+      const all = kind === "image" ? [1, 2, 3].map((i) => ({ id: 20 + i, url: `${location.origin}/sample.svg?n=${i}`, alt: `Ảnh mẫu ${i}`, fileName: `anh-${i}.svg`, mimeType: "image/svg+xml", width: 400, height: 200 }))
+        : kind === "video" ? [{ id: 30, url: `${location.origin}/clip.mp4`, fileName: "clip.mp4", mimeType: "video/mp4" }] : [];
+      return all.filter((m) => !search || m.fileName.includes(search));
+    },
     async upload(files: File[]) { uploads.push(...files.map((f) => f.name)); return files.map((f, i) => ({ id: 100 + i, url: `${location.origin}/sample.svg`, alt: f.name.replace(/\.[^.]+$/, ""), fileName: f.name, mimeType: f.type, width: 400, height: 200 })); },
   } } : {}),
   choices(kind, args) {

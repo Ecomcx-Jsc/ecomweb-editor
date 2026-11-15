@@ -1,3 +1,5 @@
+import type { BNode } from "../core/model";
+import type { EditorStore } from "../core/store";
 /** Chép / dán kiểu dáng (chỉ `attrs.style`) + vị trí menu chuột phải. */
 
 // shortcut: chỉ nhớ trong phiên (bộ nhớ của trang admin, giữ khi chuyển bài trong SPA), mất khi tải lại — cần chép giữa tab thì chuyển sang localStorage.
@@ -17,3 +19,23 @@ export function menuPosition(x: number, y: number, w: number, h: number, vw: num
   const top = y + h > vh - 8 ? y - h : y;
   return { left: Math.round(Math.max(8, Math.min(left, vw - 8 - w))), top: Math.round(Math.max(8, Math.min(top, vh - 8 - h))) };
 }
+
+const ALL_DEVICES = ["desktop", "tablet", "mobile"] as const;
+/** Khối ẩn hẳn (mọi khổ màn hình) — dùng chung `style.hide` của ô "Ẩn trên thiết bị". */
+export const isHidden = (b: BNode) => { const h = (b.attrs.style as { hide?: string[] } | undefined)?.hide; return !!h && ALL_DEVICES.every((d) => h.includes(d)); };
+/** Ẩn / hiện các khối: ẩn = ẩn mọi khổ; hiện = bỏ hết ẩn (cả ẩn theo từng khổ). */
+export function toggleHidden(store: EditorStore, ids: string[]) {
+  const first = store.block(ids[0]);
+  if (!first) return;
+  const hide = !isHidden(first);
+  store.batch(() => {
+    for (const id of ids) {
+      const b = store.block(id);
+      if (!b) continue;
+      const { hide: _drop, ...rest } = (b.attrs.style as Record<string, unknown> | undefined) ?? {};
+      const style = hide ? { ...rest, hide: [...ALL_DEVICES] } : rest;
+      store.setAttrs([id], { style: Object.keys(style).length ? style : undefined });
+    }
+  });
+}
+

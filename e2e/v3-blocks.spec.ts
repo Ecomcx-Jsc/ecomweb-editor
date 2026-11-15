@@ -288,3 +288,64 @@ test("tab: thanh công cụ dời tab đang mở, thêm tab", async ({ page }) =
   await bar.getByRole("button", { name: "Thêm tab" }).click();
   expect((await titles()).length).toBe(3);
 });
+
+test.describe("cột trái: cây khối, dàn ý, media", () => {
+  test("dòng cây khối: nút ⋮ mở menu khối; đổi tên, ẩn, cắt", async ({ page }) => {
+    await open(page, "?doc=post");
+    await page.getByRole("button", { name: "Cây khối" }).first().click();
+    const tree = page.getByRole("tree", { name: "Cây khối" });
+    const row = tree.locator(".ecx-list-row").nth(1);
+    await row.hover();
+    await row.getByRole("button", { name: "Tuỳ chọn" }).click();
+    await page.getByRole("menuitem", { name: "Đổi tên" }).click();
+    await page.getByRole("textbox", { name: "Đổi tên khối" }).fill("Mở bài");
+    await page.getByRole("button", { name: "Lưu", exact: true }).last().click();
+    await expect(tree.locator(".ecx-list-row").nth(1)).toHaveText(/^Mở bài/);
+    await expect(page.locator(".ecx-block-card strong")).toHaveText("Mở bài");
+    // chuột phải trên dòng = cùng menu; Ẩn → cả 3 khổ
+    await tree.locator(".ecx-list-row").nth(1).click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Ẩn" }).click();
+    const b = (await state(page)).docs.root.blocks[1];
+    expect(b.attrs.customName).toBe("Mở bài");
+    expect(b.attrs.style.hide).toEqual(["desktop", "tablet", "mobile"]);
+    await expect(tree.locator(".ecx-list-row").nth(1).getByLabel("Đang ẩn")).toBeVisible();
+    await tree.locator(".ecx-list-row").nth(1).click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Hiện lại" }).click();
+    expect((await state(page)).docs.root.blocks[1].attrs.style?.hide).toBeUndefined();
+    const before = (await state(page)).docs.root.blocks.length;
+    const text = await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks[1].inline?.map((n: any) => n.text ?? "").join("") ?? "");
+    await tree.locator(".ecx-list-row").nth(1).click({ button: "right" });
+    await page.getByRole("menuitem", { name: "Cắt" }).click();
+    expect((await state(page)).docs.root.blocks.length).toBe(before - 1);
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(text);
+  });
+
+  test("tab Dàn ý: số chữ, tiêu đề theo cấp, báo nhảy cấp; đóng cột trái", async ({ page }) => {
+    await open(page, "?doc=post");
+    await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
+      { id: "h1", type: "heading", attrs: { level: 2 }, inline: [{ type: "text", text: "Mục lớn" }] },
+      { id: "h2", type: "heading", attrs: { level: 4 }, inline: [{ type: "text", text: "Mục nhảy" }] }]); });
+    await page.getByRole("button", { name: "Cây khối" }).first().click();
+    await page.getByRole("tab", { name: "Dàn ý" }).click();
+    const o = page.locator(".ecx-outline");
+    await expect(o.getByRole("button", { name: /H2\s*Mục lớn/ })).toBeVisible();
+    await expect(o.getByRole("button", { name: /Mục nhảy.*nhảy cấp/ })).toBeVisible();
+    await o.getByRole("button", { name: /Mục nhảy/ }).click();
+    expect((await state(page)).selection.ids).toEqual(["h2"]);
+    await page.locator(".ecx-left").getByRole("button", { name: "Đóng" }).click();
+    await expect(page.locator(".ecx-left")).toHaveCount(0);
+  });
+
+  test("bảng chèn: tab Media chèn ảnh từ thư viện; nút đóng", async ({ page }) => {
+    await open(page, "?doc=post&media=1");
+    await page.getByRole("button", { name: "Thêm khối" }).first().click();
+    await page.getByRole("tab", { name: "Media" }).click();
+    await page.getByRole("button", { name: "Ảnh mẫu 2" }).click();
+    const img = (await state(page)).docs.root.blocks.find((b: any) => b.type === "image");
+    expect(img.attrs).toMatchObject({ mediaId: 22, alt: "Ảnh mẫu 2" });
+    await page.getByRole("radio", { name: "Video" }).click();
+    await expect(page.getByRole("button", { name: "clip.mp4" })).toBeVisible();
+    await page.locator(".ecx-inserter-panel").getByRole("button", { name: "Đóng" }).click();
+    await expect(page.locator(".ecx-inserter-panel")).toHaveCount(0);
+  });
+});

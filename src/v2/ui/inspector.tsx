@@ -56,7 +56,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
     <div className="ecx-inspector">
       <div className="ecx-block-card">
         <Icon className="ecx-icon ecx-card-icon" />
-        <strong>{nodes.length > 1 ? `${nodes.length} ${labels.blocks}` : type?.title ?? first.type}</strong>
+        <strong>{nodes.length > 1 ? `${nodes.length} ${labels.blocks}` : (typeof first.attrs.customName === "string" && first.attrs.customName) || (type?.title ?? first.type)}</strong>
         {/* Mô tả khối: nút ⓘ (rê / bấm) thay cho 2–3 dòng chữ chiếm chỗ đầu bảng */}
         {type?.description && nodes.length === 1 && <span className="ecx-card-info" tabIndex={0} role="note" aria-label={type.description} title={type.description}><Info className="ecx-icon" /><span className="ecx-card-tip">{type.description}</span></span>}
       </div>

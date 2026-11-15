@@ -1,7 +1,7 @@
 import { WIDE_BLOCKS } from "@ecomcx/ecomweb-content";
 import { clearCells, mergeRange, selectedCellRect } from "../core/tables";
 import { AiTools } from "./ai";
-import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter, Paintbrush, ClipboardPaste } from "lucide-react";
+import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter, Paintbrush, ClipboardPaste, Scissors, PenLine, Eye, EyeOff } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
@@ -19,7 +19,7 @@ import type { BlockTransform } from "../core/registry";
 import { insertSibling, richViews } from "../text/rich-text";
 import { canContain } from "../core/structure";
 import { blockActionsFor } from "../../shared/panel-store";
-import { copyStyle, hasCopiedStyle, menuPosition, pastedStyle } from "./block-menu";
+import { copyStyle, hasCopiedStyle, isHidden, menuPosition, pastedStyle, toggleHidden } from "./block-menu";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 
@@ -90,7 +90,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const sel = useEditorState((s) => s.selection);
   useEditorState((s) => s.revision);
   const [link, setLink] = useState<string | null>(null);
-  const [lockOpen, setLockOpen] = useState(false);
+  const [dialog, setDialog] = useState<"lock" | "rename" | null>(null);
   useEffect(() => { ui.openLink = (key) => setLink(key); return () => { ui.openLink = null; }; }, [ui]);
 
   const ids = sel.ids.length ? sel.ids : sel.editing ? [sel.editing] : [];
@@ -208,7 +208,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
               <ToolButton label={labels.moveDown} onClick={() => store.moveBy(ordered, 1)}><ChevronDown className="ecx-icon ecx-icon-sm" /></ToolButton>
             </div>
           </>}
-          {isLocked && <ToolButton label={labels.locked} onClick={() => setLockOpen(true)} className="ecx-lock-badge"><Lock className="ecx-icon" /></ToolButton>}
+          {isLocked && <ToolButton label={labels.locked} onClick={() => setDialog("lock")} className="ecx-lock-badge"><Lock className="ecx-icon" /></ToolButton>}
         </div>
         {sameType && type?.variations?.some((v) => v.attrs && v.isActive) && (
           <div className="ecx-tool-group">
@@ -263,11 +263,12 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
         )}
         <div className="ecx-tool-group">
           <Dropdown label={labels.more} trigger={<MoreVertical className="ecx-icon" />}>
-            {(close) => <BlockMenuItems ids={ids} close={close} onLock={() => setLockOpen(true)} />}
+            {(close) => <BlockMenuItems ids={ids} close={close} onDialog={setDialog} />}
           </Dropdown>
         </div>
       </div>
-      {lockOpen && <LockDialog block={first} onClose={() => setLockOpen(false)} />}
+      {dialog === "lock" && <LockDialog block={first} onClose={() => setDialog(null)} />}
+      {dialog === "rename" && <RenameDialog block={first} onClose={() => setDialog(null)} />}
       {link && view && (() => {
         const anchor = fixed ? document.querySelector(".ecx-toolbar.is-fixed")?.getBoundingClientRect() : null;
         return <LinkPopover viewKey={link} top={anchor ? anchor.bottom + 4 : top + height + 4} left={anchor ? anchor.left : left} onClose={() => setLink(null)} />;
@@ -319,7 +320,7 @@ function MarkTools({ view, onLink }: { view: EditorView; onLink(): void }) {
 }
 
 /** Mục của menu ⋮ trên thanh công cụ khối — dùng chung với menu chuột phải (BlockContextMenu). */
-function BlockMenuItems({ ids, close, onLock }: { ids: string[]; close(): void; onLock(): void }) {
+export function BlockMenuItems({ ids, close, onDialog }: { ids: string[]; close(): void; onDialog(kind: "lock" | "rename"): void }) {
   const ctx = useEditor();
   const { store, ui, labels } = ctx;
   const nodes = ids.map((id) => store.block(id)).filter(Boolean) as BNode[];
@@ -333,11 +334,13 @@ function BlockMenuItems({ ids, close, onLock }: { ids: string[]; close(): void; 
   const insertable = store.canInsertInto(parent?.id ?? null);
   const canGroup = canContain(parent?.type ?? null, "group");
   const styleEditable = ordered.every((id) => !store.isContentOnly(id) && store.modeOf(id) !== "disabled");
+  const hidden = isHidden(first);
   const copy = async () => {
     const s = serializeBlocks(ordered.map((id) => store.block(id)!));
     try {
       await navigator.clipboard.write([new ClipboardItem({ "text/plain": new Blob([s.text], { type: "text/plain" }), "text/html": new Blob([s.html], { type: "text/html" }) })]);
-    } catch { /* trình duyệt chặn ghi clipboard: người dùng vẫn chép được bằng Ctrl+C */ }
+      return true;
+    } catch { return false; /* trình duyệt chặn ghi clipboard: người dùng vẫn chép được bằng Ctrl+C */ }
   };
   /** Tạo mẫu từ các khối đang chọn; mẫu đồng bộ → thay khối bằng tham chiếu tới mẫu. */
   const createPattern = async () => {
@@ -357,7 +360,8 @@ function BlockMenuItems({ ids, close, onLock }: { ids: string[]; close(): void; 
         <MenuItem icon={ArrowUpToLine} label={labels.insertBefore} shortcut={`${mod}⌥T`} onClick={() => { close(); insertSibling(store, ordered[0], 0); }} />
         <MenuItem icon={ArrowDownToLine} label={labels.insertAfter} shortcut={`${mod}⌥Y`} onClick={() => { close(); insertSibling(store, ordered[ordered.length - 1], 1); }} />
       </>}
-      <MenuItem icon={Copy} label={labels.copy} onClick={() => { close(); void copy(); }} />
+      <MenuItem icon={Copy} label={labels.copy} shortcut={`${mod}C`} onClick={() => { close(); void copy(); }} />
+      {removable && <MenuItem icon={Scissors} label={labels.cut} shortcut={`${mod}X`} onClick={() => { close(); void copy().then((ok) => { if (ok) store.remove(ordered); }); /* chép không được thì không xoá */ }} />}
       <MenuItem icon={Paintbrush} label={labels.copyStyle} onClick={() => { close(); copyStyle(first.attrs); ui.announce(labels.styleCopied); }} />
       {hasCopiedStyle() && styleEditable && <MenuItem icon={ClipboardPaste} label={labels.pasteStyle} onClick={() => { close(); store.setAttrs(ordered, pastedStyle()!); }} />}
       {ctx.host.createPattern && <MenuItem icon={Shapes} label={labels.createPattern} onClick={() => { close(); void createPattern(); }} />}
@@ -370,7 +374,9 @@ function BlockMenuItems({ ids, close, onLock }: { ids: string[]; close(): void; 
       ))}
       {canGroup && removable && movable && insertable && <MenuItem icon={GroupIcon} label={labels.group} onClick={() => { close(); store.wrap(ordered, "group"); }} />}
       {nodes.length === 1 && first.content && first.type === "group" && removable && <MenuItem icon={Ungroup} label={labels.ungroup} onClick={() => { close(); store.unwrap(first.id); }} />}
-      {nodes.length === 1 && !store.isContentOnly(first.id) && <MenuItem icon={Lock} label={labels.lock} onClick={() => { close(); onLock(); }} />}
+      {nodes.length === 1 && !store.isContentOnly(first.id) && <MenuItem icon={Lock} label={labels.lock} onClick={() => { close(); onDialog("lock"); }} />}
+      {nodes.length === 1 && <MenuItem icon={PenLine} label={labels.rename} onClick={() => { close(); onDialog("rename"); }} />}
+      {styleEditable && <MenuItem icon={hidden ? Eye : EyeOff} label={hidden ? labels.show : labels.hide} onClick={() => { close(); toggleHidden(store, ordered); }} />}
       {removable && <MenuItem icon={Trash2} label={labels.remove} shortcut="⇧⌥Z" danger onClick={() => { close(); store.remove(ordered); }} />}
     </>
   );
@@ -386,7 +392,7 @@ export function BlockContextMenu() {
   const at = ui.contextMenu;
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-  const [lock, setLock] = useState<BNode | null>(null);
+  const [dlg, setDlg] = useState<{ kind: "lock" | "rename"; block: BNode } | null>(null);
   // refocus: bàn phím quay về khối (Esc / Tab) hoặc khung soạn (chọn mục xong — khối có thể đã bị xoá / thay)
   const close = (refocus?: "block" | "canvas") => {
     const id = ui.contextMenu?.ids[0];
@@ -429,10 +435,11 @@ export function BlockContextMenu() {
             else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close("block"); }
             else if (e.key === "Tab") { e.preventDefault(); close("block"); }
           }}>
-          <BlockMenuItems ids={at.ids} close={() => close("canvas")} onLock={() => setLock(store.block(at.ids[0]) ?? null)} />
+          <BlockMenuItems ids={at.ids} close={() => close("canvas")} onDialog={(kind) => { const b = store.block(at.ids[0]); if (b) setDlg({ kind, block: b }); }} />
         </div>
       )}
-      {lock && <LockDialog block={lock} onClose={() => setLock(null)} />}
+      {dlg?.kind === "lock" && <LockDialog block={dlg.block} onClose={() => setDlg(null)} />}
+      {dlg?.kind === "rename" && <RenameDialog block={dlg.block} onClose={() => setDlg(null)} />}
     </>
   );
 }
@@ -549,6 +556,27 @@ function LockDialog({ block, onClose }: { block: BNode; onClose(): void }) {
           </>}
           <div className="ecx-popover-actions"><button type="button" className="ecx-btn ecx-btn-primary" onClick={onClose}>{labels.apply2}</button></div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** Đổi tên khối (chỉ trong trình soạn: cây khối, bảng cài đặt, đường dẫn khối). Để trống = tên mặc định. */
+function RenameDialog({ block, onClose }: { block: BNode; onClose(): void }) {
+  const { store, labels, registry } = useEditor();
+  const [name, setName] = useState(typeof block.attrs.customName === "string" ? block.attrs.customName : "");
+  const save = () => { store.setAttrs([block.id], { customName: name.trim().slice(0, 80) || undefined }); onClose(); };
+  return (
+    <div className="ecx-modal-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown={(e) => { if (e.key === "Escape") onClose(); else trapTab(e); }}>
+      <div className="ecx-modal" role="dialog" aria-modal="true" aria-label={labels.renameTitle}>
+        <header className="ecx-modal-header"><h2>{labels.renameTitle}</h2></header>
+        <form className="ecx-lock-body" onSubmit={(e) => { e.preventDefault(); save(); }}>
+          <input className="ecx-input" value={name} maxLength={80} placeholder={registry.get(block.type)?.title ?? block.type} aria-label={labels.renameTitle} autoFocus onChange={(e) => setName(e.target.value)} />
+          <div className="ecx-popover-actions">
+            <button type="button" className="ecx-btn" onClick={onClose}>{labels.cancel}</button>
+            <button type="submit" className="ecx-btn ecx-btn-primary">{labels.save}</button>
+          </div>
+        </form>
       </div>
     </div>
   );
