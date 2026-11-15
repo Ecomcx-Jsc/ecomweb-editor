@@ -13,7 +13,7 @@ type L = Record<string, string>;
 // Khối dựng sẵn dùng lại
 // ---------------------------------------------------------------------------
 type Node = Record<string, unknown>;
-const GRADIENT = "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)";
+const GRADIENT = "linear-gradient(135deg, #1a597b 0%, #0f3447 100%)";
 const WHITE_BTN = (s: string) => ({ type: "button", attrs: { text: s, href: "#", variant: "primary", style: { color: { background: "#ffffff", text: "#1e3a8a" } } } });
 const GHOST_BTN = (s: string) => ({ type: "button", attrs: { text: s, href: "#", variant: "outline", style: { color: { text: "#ffffff" }, border: { color: "#ffffff" } } } });
 const center = { textAlign: { base: "center" } };

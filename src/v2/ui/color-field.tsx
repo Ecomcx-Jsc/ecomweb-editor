@@ -6,7 +6,7 @@ import { useMsgs } from "../i18n";
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 
 // Theme không khai màu thì website dùng các màu mặc định này (core CSS) — vẫn cho chọn, như bản soạn cũ (shared/style-panel.tsx COLORS)
-const DEFAULT_COLORS = { primary: "#2563eb", muted: "#6b7280", surface: "#f4f4f5", white: "#ffffff", black: "#111111" };
+const DEFAULT_COLORS = { primary: "#1a597b", muted: "#5d6a75", surface: "#f3f4f6", white: "#ffffff", black: "#111111" };
 
 export function useSiteColors(): Record<string, string> {
   const { host } = useEditor();
