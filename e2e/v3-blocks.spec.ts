@@ -132,4 +132,23 @@ test.describe("v3: sửa lỗi bảng bên phải (báo cáo 13, mục 1)", () =
     await i.getByRole("button", { name: "Nút · tuỳ chọn khác" }).click();
     await expect(i.getByText("Cỡ nút")).toHaveCount(1);
   });
+
+  test("phần của khối: viền từng cạnh, bo từng góc", async ({ page }) => {
+    const c = await open(page, "?doc=rich");
+    await page.evaluate((x) => (window as any).__ecx.store.select([x]), (await find(page, "button")).id);
+    await tab(page, "Kiểu dáng");
+    const i = insp(page);
+    if (await i.getByLabel("Độ dày viền: Chỉnh từng cạnh").count() === 0) await i.getByRole("button", { name: "Nút", exact: true }).click();
+    await i.getByLabel("Độ dày viền: Chỉnh từng cạnh").click();
+    await i.getByRole("spinbutton", { name: "Độ dày viền dưới" }).fill("3");
+    await i.getByLabel("Bo góc: Chỉnh từng góc").click();
+    await i.getByRole("spinbutton", { name: "Bo góc trên trái" }).fill("12");
+    const st = (await find(page, "button")).attrs.parts.button.style;
+    expect(st).toMatchObject({ border: { width: { bottom: "3px" } }, radius: { topLeft: "12px" } });
+    const a = c.locator("a.ecx-button").first();
+    await expect(a).toHaveCSS("border-bottom-width", "3px");
+    await expect(a).toHaveCSS("border-top-width", "0px");
+    await expect(a).toHaveCSS("border-top-left-radius", "12px");
+    await expect(a).toHaveCSS("border-bottom-right-radius", "0px");
+  });
 });

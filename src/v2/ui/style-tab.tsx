@@ -8,7 +8,7 @@ import { LayoutEffectsPanel } from "./layout-panel";
 import { MotionPanel } from "./motion-panel";
 import { Row, Section, Seg, cx } from "./style-controls";
 import { styleGroups, type StyleGroup } from "./style-supports";
-import { SpacingControl, UnitInput } from "./unit-controls";
+import { FourInput, SpacingControl, UnitInput } from "./unit-controls";
 import { useMsgs } from "../i18n";
 
 /**
@@ -171,11 +171,11 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
       </Section>}
 
       {show("border", ["border", "radius"]) && <Section title={t.style_border} modified={has(["border", "radius"])} onReset={() => reset(["border", "radius"])} defaultOpen={has(["border", "radius"])}>
-        {row("borderWidth", t.style_borderWidth, <UnitInput label={t.style_borderWidth} value={style.border?.width} max={20} units={["px", "em", "rem"]} onChange={(v) => setGroup("border", "width", v)} />)}
+        <FourInput label={t.style_borderWidth} keys={["top", "right", "bottom", "left"]} keyLabels={{ top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft }} value={style.border?.width} max={20} units={["px", "em", "rem"]} onChange={(v) => setGroup("border", "width", v)} />
         {row("borderStyle", t.style_borderStyle, <Seg label={t.style_borderStyle} value={style.border?.style} onChange={(v) => setGroup("border", "style", v)}
           options={[["solid", "—", t.border_solid], ["dashed", "- -", t.border_dashed], ["dotted", "···", t.border_dotted]]} />)}
         <ColorInput label={t.style_borderColor} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />
-        {row("radius", t.style_radius, <UnitInput label={t.style_radius} value={typeof style.radius === "string" ? style.radius : undefined} max={60} units={["px", "%", "em", "rem"]} onChange={(v) => set("radius", v)} />)}
+        <FourInput label={t.style_radius} corners keys={["topLeft", "topRight", "bottomRight", "bottomLeft"]} keyLabels={{ topLeft: ct.cornerTopLeft, topRight: ct.cornerTopRight, bottomRight: ct.cornerBottomRight, bottomLeft: ct.cornerBottomLeft }} value={style.radius} max={60} units={["px", "%", "em", "rem"]} onReset={has(["radius"]) ? () => reset(["radius"]) : undefined} onChange={(v) => set("radius", v)} />
       </Section>}
 
       {part !== "style" && <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device}

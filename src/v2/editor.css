@@ -410,6 +410,9 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 /* Đệm / lề 4 cạnh: vạch đậm ở đúng cạnh của mỗi ô; bảng chọn bậc */
 .ecx-box4 { position: relative; }
 .ecx-box4-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.ecx-four { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 8px; }
+.ecx-four-cell { display: grid; gap: 2px; min-width: 0; }
+.ecx-four-cell small { font-size: 11px; color: var(--ecx-ed-muted); }
 .ecx-box4-cell { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; height: 42px; padding: 0; border: 1px solid var(--ecx-ed-line); border-radius: 7px; background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); font: inherit; cursor: pointer; transition: border-color .05s linear; }
 .ecx-box4-cell small { font-size: 9.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--ecx-ed-muted); }
 .ecx-box4-cell b { font-size: 12.5px; font-weight: 600; }

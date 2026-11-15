@@ -1,4 +1,5 @@
-import { blockShell, buttonIcon, buttonWrapShell, colorCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
+import { blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
+import { blockControls } from "../../shared/panel-store";
 import { ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import { useEffect, useSyncExternalStore, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
@@ -29,7 +30,9 @@ const merge = (bp: BlockEditProps["blockProps"], className: string, style?: CSSP
 /** Props của vỏ khối lấy từ markup dùng chung với website: thẻ-class-style-thuộc tính cố định + props của canvas (id, chọn khối). */
 const shellProps = (bp: BlockEditProps["blockProps"], type: string, attrs: Record<string, unknown>, parent?: { type: string; attrs?: Record<string, unknown> }) => {
   const sh = blockShell(type, attrs, parent)!;
-  return { ...merge(bp, sh.className ?? "", sh.style as CSSProperties, attrs), ...sh.attrs };
+  // Phần nhắm chính thẻ khối (vd phần "Nút" = chính <a>) cũng gỡ inline trùng như attrs.style (khớp website)
+  const self = controlsCss(blockControls(), type, attrs)?.self;
+  return { ...merge(bp, sh.className ?? "", sh.style as CSSProperties, self ? { style: { ...self, ...(normalizeStyle(attrs.style) ?? {}) } } : attrs), ...sh.attrs };
 };
 
 function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEditProps) {

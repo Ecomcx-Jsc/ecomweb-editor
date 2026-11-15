@@ -29,6 +29,12 @@ export const controls = {
   sideRight: "right",
   sideBottom: "bottom",
   sideLeft: "left",
+  unlinkCorners: "Edit each corner",
+  linkCorners: "All corners the same",
+  cornerTopLeft: "top left",
+  cornerTopRight: "top right",
+  cornerBottomRight: "bottom right",
+  cornerBottomLeft: "bottom left",
   styles: "Styles",
   advanced: "Advanced",
   /** Tên biến thể kiểu khối của lõi (CORE_BLOCK_STYLES). */

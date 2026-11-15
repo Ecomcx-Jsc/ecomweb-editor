@@ -8,7 +8,7 @@ import { useMsgs } from "../i18n";
 import { ColorInput } from "./color-field";
 import { Row, Section, Seg, cx } from "./style-controls";
 import { byStep } from "./style-tab";
-import { SpacingControl, UnitInput } from "./unit-controls";
+import { FourInput, SpacingControl, UnitInput } from "./unit-controls";
 
 type Style = BlockStyle & Record<string, any>;
 const RESPONSIVE = new Set(["padding", "margin", "fontSize", "lineHeight", "letterSpacing", "textAlign", "width", "minHeight"]);
@@ -132,17 +132,13 @@ function PartControls({ props, style, onChange, device, hover, target }: { props
       {p.includes("color") && <ColorInput label={props.includes("iconSize") ? t.iconColor : t.color} value={style.color?.text} onChange={(v) => set("color", { ...style.color, text: v })} />}
       {p.includes("background") && <ColorInput label={t.background} value={style.color?.background} onChange={(v) => set("color", { ...style.color, background: v })} />}
       {p.includes("border") && <>
-        <Row label={t.borderWidth} onReset={style.border?.width ? () => set("border", { ...style.border, width: undefined }) : undefined}>
-          <UnitInput label={t.borderWidth} value={style.border?.width} units={["px"]} max={20} onChange={(v) => set("border", { style: "solid", ...style.border, width: v })} />
-        </Row>
+        <FourInput label={t.borderWidth} keys={["top", "right", "bottom", "left"]} keyLabels={{ top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft }} value={style.border?.width} units={["px"]} max={20} onReset={style.border?.width ? () => set("border", { ...style.border, width: undefined }) : undefined} onChange={(v) => set("border", { style: "solid", ...style.border, width: v })} />
         <Row label={L.style_borderStyle} onReset={style.border?.style && style.border.style !== "solid" ? () => set("border", { ...style.border, style: "solid" }) : undefined}>
           <Seg label={L.style_borderStyle} value={style.border?.style} onChange={(v) => set("border", { ...style.border, style: v })} options={[["solid", "—", L.border_solid], ["dashed", "- -", L.border_dashed], ["dotted", "···", L.border_dotted]]} />
         </Row>
         <ColorInput label={t.borderColor} value={style.border?.color} onChange={(v) => set("border", { ...style.border, color: v })} />
       </>}
-      {p.includes("radius") && <Row label={t.radius} onReset={has("radius") ? reset("radius") : undefined}>
-        <UnitInput label={t.radius} value={typeof style.radius === "string" ? style.radius : undefined} units={["px", "%", "rem"]} max={80} onChange={(v) => set("radius", v)} />
-      </Row>}
+      {p.includes("radius") && <FourInput label={t.radius} corners keys={["topLeft", "topRight", "bottomRight", "bottomLeft"]} keyLabels={{ topLeft: ct.cornerTopLeft, topRight: ct.cornerTopRight, bottomRight: ct.cornerBottomRight, bottomLeft: ct.cornerBottomLeft }} value={style.radius} units={["px", "%", "rem"]} max={80} onReset={has("radius") ? reset("radius") : undefined} onChange={(v) => set("radius", v)} />}
       {p.includes("shadow") && <Row label={t.shadow} onReset={has("shadow") ? reset("shadow") : undefined}>
         <Seg label={t.shadow} value={style.shadow} onChange={(v) => set("shadow", v)} options={[["none", "0", t.none], ...SHADOWS.map((s) => [s, s.toUpperCase(), s] as [string, string, string])]} />
       </Row>}

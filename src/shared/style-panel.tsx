@@ -256,12 +256,12 @@ export function StylePanel({ style: raw, onChange, t, device, onDeviceChange, pr
 
       <Panel title={t.style_border} section="border" t={t} visible={visible} setVisible={setVisible} onReset={() => reset(["border", "radius"])}>
         {shows("border", "border") && <>
-          {row("borderWidth", t.style_borderWidth, <ValueInput label={t.style_borderWidth} value={style.border?.width} check={ok("radius")} placeholder="1px" onCommit={(v) => setGroup("border", "width", v ?? undefined)} />)}
+          {row("borderWidth", t.style_borderWidth, <ValueInput label={t.style_borderWidth} value={typeof style.border?.width === "string" ? style.border.width : undefined} check={ok("radius")} placeholder="1px" onCommit={(v) => setGroup("border", "width", v ?? undefined)} />)}
           {row("borderStyle", t.style_borderStyle, <Seg label={t.style_borderStyle} value={style.border?.style} onChange={(v) => setGroup("border", "style", v)}
             options={[["solid", "—", t.border_solid], ["dashed", "- -", t.border_dashed], ["dotted", "···", t.border_dotted]]} />)}
           {row("borderColor", t.style_borderColor, <ColorField colors={colors} label={t.style_borderColor} t={t} value={style.border?.color} onChange={(v) => setGroup("border", "color", v)} />)}
         </>}
-        {shows("border", "radius") && row("radius", t.style_radius, <ValueInput label={t.style_radius} value={style.radius} check={ok("radius")} placeholder="8px" onCommit={(v) => set("radius", v ?? undefined)} />)}
+        {shows("border", "radius") && row("radius", t.style_radius, <ValueInput label={t.style_radius} value={typeof style.radius === "string" ? style.radius : undefined} check={ok("radius")} placeholder="8px" onCommit={(v) => set("radius", v ?? undefined)} />)}
       </Panel>
 
       <Panel title={t.style_visibility} section="visibility" t={t} visible={visible} setVisible={setVisible} onReset={() => reset(["hide"])}>

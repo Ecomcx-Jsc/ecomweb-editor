@@ -47,6 +47,37 @@ export function UnitInput({ value, onChange, label, max = 100, units = UNITS, sl
   );
 }
 
+/**
+ * Một giá trị cho cả 4 (cạnh viền / góc bo), hoặc tách từng cái: xích bật = một ô, tắt = 4 ô nhỏ.
+ * Giá trị: chuỗi (cả 4) hoặc `{ [khoá]: chuỗi }`; 4 ô bằng nhau thì gộp lại thành chuỗi.
+ */
+export function FourInput({ label, value, keys, keyLabels, units, max, onChange, onReset, corners }: {
+  /** Góc bo (nhãn "từng góc") thay cho cạnh. */
+  corners?: boolean; label: string; value?: string | Partial<Record<string, string>>; keys: readonly string[]; keyLabels: Record<string, string>;
+  units?: string[]; max?: number; onChange(v: string | Record<string, string> | undefined): void; onReset?(): void;
+}) {
+  const t = useMsgs("controls");
+  const [linked, setLinked] = useState(typeof value !== "object" || !value);
+  const each = (typeof value === "object" && value ? value : value ? Object.fromEntries(keys.map((k) => [k, value])) : {}) as Record<string, string>;
+  const setOne = (k: string, v: string | undefined) => {
+    const next = { ...each }; if (v === undefined) delete next[k]; else next[k] = v;
+    const vals = keys.map((x) => next[x]);
+    onChange(!Object.keys(next).length ? undefined : vals.every((x) => x !== undefined && x === vals[0]) ? vals[0] : next);
+  };
+  return (
+    <Row label={label} onReset={onReset}
+      extra={<button type="button" className={cx("ecx-link-toggle", linked && "is-on")} aria-pressed={!linked} title={linked ? (corners ? t.unlinkCorners : t.unlinkSides) : (corners ? t.linkCorners : t.linkSides)} aria-label={`${label}: ${corners ? t.unlinkCorners : t.unlinkSides}`}
+        onClick={() => { if (!linked && typeof value === "object") onChange(each[keys[0]]); setLinked(!linked); }}>{linked ? <Link2 className="ecx-icon" /> : <Link2Off className="ecx-icon" />}</button>}>
+      {linked
+        ? <UnitInput label={label} value={typeof value === "string" ? value : undefined} placeholder={typeof value === "object" ? "—" : undefined} units={units} max={max} onChange={onChange} />
+        : <div className="ecx-four">{keys.map((k) => (
+          <label key={k} className="ecx-four-cell"><small>{keyLabels[k]}</small>
+            <UnitInput label={`${label} ${keyLabels[k]}`} value={each[k]} units={units} max={max} slider={false} onChange={(v) => setOne(k, v)} /></label>
+        ))}</div>}
+    </Row>
+  );
+}
+
 type Box = string | Record<string, string> | undefined;
 const sidesOf = (v: Box): Record<string, string> => (typeof v === "object" && v ? v : v ? { top: v, right: v, bottom: v, left: v } : {});
 const SIDES: Side[] = ["top", "right", "bottom", "left"];
