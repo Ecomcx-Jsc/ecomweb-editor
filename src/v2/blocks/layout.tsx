@@ -147,9 +147,10 @@ function ButtonEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   // Website: nút đứng riêng nằm trong đoạn <p class="ecx-buttons"> (căn lề); trong khối "buttons" thì là chính thẻ <a>
   const link = (
     <a {...shellProps(inGroup ? blockProps : ({} as BlockEditProps["blockProps"]), "button", a)} onClick={(e) => e.preventDefault()}>
-      {icon && a.iconPosition !== "right" && icon}
-      {bound.bound ? <BoundText preview={bound} /> : <RichText blockId={block.id} field="text" tagName="span" value={String(a.text ?? "")} onChange={(v) => setAttrs({ text: v })} placeholder={tp.buttonText} placeholderAlways editable={editable} />}
-      {icon && a.iconPosition === "right" && icon}
+      {icon && (a.iconPosition !== "right" || a.iconOnly === true) && icon}
+      {/* Chỉ icon: chữ sửa ở ô "Chữ" bên phải (thành nhãn cho trình đọc màn hình) */}
+      {icon && a.iconOnly === true ? null : bound.bound ? <BoundText preview={bound} /> : <RichText blockId={block.id} field="text" tagName="span" value={String(a.text ?? "")} onChange={(v) => setAttrs({ text: v })} placeholder={tp.buttonText} placeholderAlways editable={editable} />}
+      {icon && a.iconPosition === "right" && a.iconOnly !== true && icon}
     </a>
   );
   if (inGroup) return link;
@@ -471,14 +472,15 @@ export function layoutBlocks(): BlockType[] {
     { name: "column", title: "Cột", icon: RectangleHorizontal, kind: "container", edit: ColumnEdit, inspector: ColumnInspector, hidden: true, attributes: { width: { type: "number", min: 1, max: 100, control: "hidden" }, href: { type: "url", control: "hidden" }, linkTarget: { type: "string", enum: ["_self", "_blank"], control: "hidden" }, linkLabel: { type: "string", control: "hidden" } }, create: () => col(), supports: { style: true } },
     {
       name: "buttons", title: "Nút", icon: MousePointerClick, category: "design", keywords: "nut button cta lien ket", kind: "container", edit: ButtonsEdit,
-      attributes: { align: { type: "string", enum: ["left", "center", "right", "space-between"] } },
+      attributes: { align: { type: "string", enum: ["left", "center", "right", "space-between"] }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" } },
       create: () => makeBlock("buttons", {}, [makeBlock("button", { variant: "primary" })]), contextToolbar: ButtonsTools,
       supports: { style: true, anchor: true, className: true },
     },
     {
       name: "button", title: "Nút", icon: MousePointerClick, kind: "atom", edit: ButtonEdit, hidden: true,
       attributes: { text: { type: "string" }, href: { type: "url" }, target: { type: "string", enum: ["_self", "_blank"] }, rel: { type: "string" }, variant: { type: "string", enum: ["primary", "secondary", "outline"], default: "primary" },
-        icon: { type: "string" }, iconPosition: { type: "string", enum: ["left", "right"] }, width: { type: "string", enum: ["auto", "full"] }, ariaLabel: { type: "string" } },
+        icon: { type: "string" }, iconPosition: { type: "string", enum: ["left", "right"] }, width: { type: "string", enum: ["auto", "full"] }, ariaLabel: { type: "string" },
+        iconOnly: { type: "boolean", default: false }, iconReveal: { type: "boolean", default: false } },
       create: (attrs) => makeBlock("button", { variant: "primary", ...attrs }), toolbar: ButtonLinkTool,
       supports: { style: true, className: true }, summary: (a) => a.text,
     },

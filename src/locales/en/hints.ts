@@ -269,4 +269,9 @@ export const hints = {
   "accordion.titleTag.help": "Use h2–h6 when item titles belong to the page outline (SEO); div otherwise.",
   "accordion.faq.label": "Mark as FAQ (FAQ Schema)",
   "accordion.faq.help": "Google may show the questions and answers right in search results.",
+  "buttons.orientation.label": "Button direction",
+  "buttons.orientation.opt.horizontal": "Horizontal",
+  "buttons.orientation.opt.vertical": "Vertical",
+  "button.iconOnly.label": "Icon only (text becomes the screen reader label)",
+  "button.iconReveal.label": "Show icon on hover only",
 };

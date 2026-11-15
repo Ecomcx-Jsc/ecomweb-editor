@@ -405,3 +405,19 @@ test("accordion: 2 cột, icon dấu cộng bên trái, thẻ tiêu đề, FAQ",
   expect(Math.abs(a!.y - b!.y)).toBeLessThan(2); // cùng hàng
   expect(b!.x).toBeGreaterThan(a!.x + a!.width / 2);
 });
+
+test("nút: chỉ icon, icon hiện khi rê (chỉ hiện ô khi nút có icon); nhóm nút xếp dọc", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "G", type: "buttons", attrs: {}, content: [
+    { id: "B1", type: "button", attrs: { text: "Một", variant: "primary" } }, { id: "B2", type: "button", attrs: { text: "Hai", variant: "primary" } }] }], { focus: false }); s.select(["B1"], { editing: null }); });
+  await expect(insp(page).getByRole("checkbox", { name: /Chỉ hiện icon/ })).toHaveCount(0);
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["B1"], { icon: "star" }));
+  await insp(page).getByRole("checkbox", { name: /Chỉ hiện icon/ }).check();
+  await expect(c.locator(".ecx-button.is-icon-only")).toBeVisible();
+  await expect(c.locator(".ecx-button.is-icon-only")).not.toContainText("Một");
+  await expect(insp(page).getByRole("checkbox", { name: "Icon chỉ hiện khi rê chuột" })).toHaveCount(0);
+  await page.evaluate(() => (window as any).__ecx.store.select(["G"], { editing: null }));
+  await insp(page).getByRole("radio", { name: "Dọc" }).click();
+  const [a, b] = [await c.locator(".ecx-buttons-group .ecx-button").nth(0).boundingBox(), await c.locator(".ecx-buttons-group .ecx-button").nth(1).boundingBox()];
+  expect(b!.y).toBeGreaterThan(a!.y + a!.height - 1);
+});

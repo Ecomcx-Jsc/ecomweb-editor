@@ -269,4 +269,9 @@ export const hints = {
   "accordion.titleTag.help": "Chọn h2–h6 khi tiêu đề mục là một phần dàn ý trang (SEO); thường để div.",
   "accordion.faq.label": "Đánh dấu là Câu hỏi thường gặp (FAQ Schema)",
   "accordion.faq.help": "Google có thể hiện câu hỏi – trả lời ngay trong kết quả tìm kiếm.",
+  "buttons.orientation.label": "Hướng xếp nút",
+  "buttons.orientation.opt.horizontal": "Ngang",
+  "buttons.orientation.opt.vertical": "Dọc",
+  "button.iconOnly.label": "Chỉ hiện icon (chữ thành nhãn cho trình đọc màn hình)",
+  "button.iconReveal.label": "Icon chỉ hiện khi rê chuột",
 };
