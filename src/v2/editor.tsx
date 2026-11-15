@@ -237,7 +237,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
           <ToolButton label={labels.undo} disabled={!store.canUndo} onClick={() => store.undo()}><Undo2 className="ecx-icon" /></ToolButton>
           <ToolButton label={labels.redo} disabled={!store.canRedo} onClick={() => store.redo()}><Redo2 className="ecx-icon" /></ToolButton>
           {!p.distractionFree && <ToolButton label={labels.listView} active={left === "list"} onClick={() => setLeft(left === "list" ? null : "list")}><ListTree className="ecx-icon" /></ToolButton>}
-          {!p.distractionFree && p.mode === "visual" && <PatternLibraryButton />}
+          {!p.distractionFree && p.mode === "visual" && <PatternLibraryButton renderPreview={(value) => <EditorProvider value={value} kind="pattern-preview" registry={ctx.registry} labels={ctx.labels} host={{ ...ctx.host, documents: undefined, ai: undefined }}><Canvas /></EditorProvider>} />}
           <FrameToggle />
           {p.mode === "visual" && <ZoomToggle />}
         </div>

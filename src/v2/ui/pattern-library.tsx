@@ -1,13 +1,11 @@
 import { LayoutTemplate, Search, Sparkles, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { norm } from "../../shared/util";
 import { labelsLegacy } from "../../shared/labels";
-import { Canvas } from "../canvas/canvas";
 import { useEditor } from "../context";
 import { fromRich, type BNode } from "../core/model";
 import { onPatternsChange, registeredPatterns, type Pattern } from "../core/patterns";
 import { patternNodes } from "../../shared/patterns";
-import { EditorProvider } from "../editor";
 import { useMsgs } from "../i18n";
 import { cx } from "./attr-form";
 
@@ -63,9 +61,11 @@ const BIZ_KEY = "ecx-pattern-ai";
 const loadBiz = (): Business => { try { return { name: "", industry: "", about: "", tone: "friendly", ...JSON.parse(localStorage.getItem(BIZ_KEY) ?? "{}") }; } catch { return { name: "", industry: "", about: "", tone: "friendly" }; } };
 
 // ---------------------------------------------------------------------------------------------------- xem trước
+/** Vẽ nội dung (định dạng lưu) bằng khung soạn ở chế độ chỉ xem — tầng editor truyền xuống (ui không import editor). */
+export type RenderPreview = (value: { version: number; blocks: unknown[] }) => ReactNode;
+
 /** Xem trước thật: vẽ mẫu bằng chính khung soạn (chỉ xem), rộng 1200px rồi thu nhỏ vừa thẻ; chỉ vẽ khi thẻ cuộn tới. */
-function Preview({ nodes, height }: { nodes: RichNode[]; height: number }) {
-  const ctx = useEditor();
+function Preview({ nodes, height, render }: { nodes: RichNode[]; height: number; render: RenderPreview }) {
   const box = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(false);
   const [scale, setScale] = useState(0.25);
@@ -83,9 +83,7 @@ function Preview({ nodes, height }: { nodes: RichNode[]; height: number }) {
     <div ref={box} className="ecx-lib-preview" style={{ height }} aria-hidden="true">
       {seen && (
         <div className="ecx-lib-preview-inner" style={{ width: 1200, transform: `scale(${scale})`, height: height / scale }}>
-          <EditorProvider value={value} kind="pattern-preview" registry={ctx.registry} labels={ctx.labels} host={{ ...ctx.host, documents: undefined, ai: undefined }} frame={undefined}>
-            <Canvas />
-          </EditorProvider>
+          {render(value)}
         </div>
       )}
     </div>
@@ -93,18 +91,18 @@ function Preview({ nodes, height }: { nodes: RichNode[]; height: number }) {
 }
 
 // ---------------------------------------------------------------------------------------------------- hộp thư viện
-export function PatternLibraryButton() {
+export function PatternLibraryButton({ renderPreview }: { renderPreview: RenderPreview }) {
   const t = useMsgs("library");
   const [open, setOpen] = useState(false);
   return (
     <>
       <button type="button" className="ecx-btn ecx-lib-open" onClick={() => setOpen(true)} aria-haspopup="dialog"><LayoutTemplate className="ecx-icon" />{t.open}</button>
-      {open && <PatternLibrary onClose={() => setOpen(false)} />}
+      {open && <PatternLibrary renderPreview={renderPreview} onClose={() => setOpen(false)} />}
     </>
   );
 }
 
-export function PatternLibrary({ onClose }: { onClose(): void }) {
+export function PatternLibrary({ onClose, renderPreview }: { onClose(): void; renderPreview: RenderPreview }) {
   const ctx = useEditor();
   const { store, labels, host } = ctx;
   const t = useMsgs("library") as Record<string, string>;
@@ -208,14 +206,14 @@ export function PatternLibrary({ onClose }: { onClose(): void }) {
           <div className={cx("ecx-lib-grid", tab === "pages" && "is-pages")}>
             {tab === "patterns" ? patterns.map((p) => (
               <div key={p.name} role="button" tabIndex={0} className="ecx-lib-card" data-pattern={p.name} aria-label={p.title} onClick={() => insert(nodesOf(p))} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insert(nodesOf(p)); } }}>
-                <Preview nodes={withScheme(nodesOf(p), scheme)} height={200} />
+                <Preview nodes={withScheme(nodesOf(p), scheme)} height={200} render={renderPreview} />
                 <span className="ecx-lib-card-name">{p.title}<em>{catName(p.category)}</em></span>
               </div>
             )) : pages.map((pg) => {
               const nodes = pg.list.flatMap(nodesOf);
               return (
                 <div key={pg.id} role="button" tabIndex={0} className="ecx-lib-card" data-page={pg.id} aria-label={t[`page_${pg.id}`] ?? pg.id} onClick={() => insert(nodes)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); insert(nodes); } }}>
-                  <Preview nodes={withScheme(nodes, scheme)} height={420} />
+                  <Preview nodes={withScheme(nodes, scheme)} height={420} render={renderPreview} />
                   <span className="ecx-lib-card-name">{t[`page_${pg.id}`] ?? pg.id}<em>{pg.list.length} {t.sections}</em></span>
                 </div>
               );
