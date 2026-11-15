@@ -151,4 +151,25 @@ test.describe("v3: sửa lỗi bảng bên phải (báo cáo 13, mục 1)", () =
     await expect(a).toHaveCSS("border-top-left-radius", "12px");
     await expect(a).toHaveCSS("border-bottom-right-radius", "0px");
   });
+
+  test("chữ chuyển màu ở phần; màu liên kết + khi rê ở khối chứa", async ({ page }) => {
+    const c = await open(page, "?doc=rich");
+    await page.evaluate((x) => (window as any).__ecx.store.select([x]), (await find(page, "button")).id);
+    await tab(page, "Kiểu dáng");
+    const i = insp(page);
+    const row = i.locator(".ecx-style-row", { hasText: "Chữ chuyển màu" }).first();
+    if (await row.count() === 0) await i.getByRole("button", { name: "Nút", exact: true }).click();
+    await row.locator(".ecx-chip-swatch").last().click(); // tuỳ chỉnh: hai màu
+    expect((await find(page, "button")).attrs.parts.button.style.textGradient).toMatch(/^linear-gradient\(/);
+    await expect(c.locator("a.ecx-button").first()).toHaveCSS("background-clip", "text");
+    // Nhóm: màu liên kết của nội dung bên trong
+    await page.evaluate(() => (window as any).__ecx.store.insert("root", null, 0, [{ id: "g1", type: "group", attrs: {}, content: [{ id: "g1p", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "xem", marks: [{ type: "link", attrs: { href: "/x" } }] }] }] }], { select: true }));
+    await page.evaluate(() => (window as any).__ecx.store.select(["g1"]));
+    await tab(page, "Kiểu dáng");
+    await i.getByRole("button", { name: "Màu", exact: true }).click();
+    await i.getByRole("button", { name: /^Màu liên kết/ }).click();
+    await i.getByRole("button", { name: "Màu liên kết: accent" }).click();
+    expect((await find(page, "group")).attrs.style.link).toEqual({ color: "accent" });
+    await expect(c.locator('[data-ecx-block="g1"] a').first()).toHaveCSS("color", "rgb(242, 98, 81)");
+  });
 });

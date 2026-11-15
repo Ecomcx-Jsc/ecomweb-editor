@@ -26,7 +26,7 @@ export const legacy = {
   resizeColumns: "Drag to resize columns", dragPadding: "Drag to change padding",
   style_typography: "Typography", style_fontFamily: "Font", style_fontSize: "Font size", style_appearance: "Appearance", style_lineHeight: "Line height",
   style_letterSpacing: "Letter spacing", style_decoration: "Decoration", style_transform: "Letter case", style_textAlign: "Text align",
-  style_color: "Color", style_text: "Text", style_background: "Background", style_spacing: "Dimensions & spacing", style_padding: "Padding",
+  style_color: "Color", style_text: "Text", style_textGradient: "Text gradient", style_link: "Link color", style_linkHover: "Link hover color", style_background: "Background", style_spacing: "Dimensions & spacing", style_padding: "Padding",
   style_margin: "Margin", style_gap: "Block spacing", style_width: "Width", style_maxWidth: "Max width", style_minHeight: "Min height",
   style_border: "Border & radius", style_borderWidth: "Border width", style_borderStyle: "Border style", style_borderColor: "Border color", style_radius: "Radius",
   style_visibility: "Visibility", style_hide: "Hide per device", hide_desktop: "Hide on desktop", hide_tablet: "Hide on tablet", hide_mobile: "Hide on mobile",

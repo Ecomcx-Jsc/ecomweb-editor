@@ -6,6 +6,7 @@ import { labelsLegacy } from "../../shared/labels";
 import { useEditor } from "../context";
 import { useMsgs } from "../i18n";
 import { ColorInput } from "./color-field";
+import { GradientField } from "./layout-panel";
 import { Row, Section, Seg, cx } from "./style-controls";
 import { byStep } from "./style-tab";
 import { FourInput, SpacingControl, UnitInput } from "./unit-controls";
@@ -130,7 +131,9 @@ function PartControls({ props, style, onChange, device, hover, target }: { props
         <UnitInput label={t.iconSize} value={get("fontSize")} units={["px", "rem", "em"]} max={160} onChange={(v) => set("fontSize", v)} />
       </Row>}
       {p.includes("color") && <ColorInput label={props.includes("iconSize") ? t.iconColor : t.color} value={style.color?.text} onChange={(v) => set("color", { ...style.color, text: v })} />}
+      {p.includes("color") && !hover && <Row label={t.textGradient} onReset={has("textGradient") ? reset("textGradient") : undefined}><GradientField value={style.textGradient} onChange={(v) => set("textGradient", v)} /></Row>}
       {p.includes("background") && <ColorInput label={t.background} value={style.color?.background} onChange={(v) => set("color", { ...style.color, background: v })} />}
+      {p.includes("background") && !hover && <Row label={t.gradient} onReset={has("gradient") ? reset("gradient") : undefined}><GradientField value={style.gradient} onChange={(v) => set("gradient", v)} /></Row>}
       {p.includes("border") && <>
         <FourInput label={t.borderWidth} keys={["top", "right", "bottom", "left"]} keyLabels={{ top: ct.sideTop, right: ct.sideRight, bottom: ct.sideBottom, left: ct.sideLeft }} value={style.border?.width} units={["px"]} max={20} onReset={style.border?.width ? () => set("border", { ...style.border, width: undefined }) : undefined} onChange={(v) => set("border", { style: "solid", ...style.border, width: v })} />
         <Row label={L.style_borderStyle} onReset={style.border?.style && style.border.style !== "solid" ? () => set("border", { ...style.border, style: "solid" }) : undefined}>

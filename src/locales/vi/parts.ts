@@ -7,6 +7,6 @@ export const parts = {
   highlight: "Chữ tô sáng", link: "Liên kết", active: "Đang mở / chọn",
   show: "Hiện phần này", hiddenNote: "Đang ẩn — bật công tắc để hiện và chỉnh.", normal: "Thường", hover: "Rê chuột",
   fontSize: "Cỡ chữ", weight: "Độ đậm", align: "Căn chữ", left: "Trái", center: "Giữa", right: "Phải", iconSize: "Cỡ icon",
-  color: "Màu chữ", iconColor: "Màu icon", background: "Nền", borderWidth: "Độ dày viền", borderColor: "Màu viền", radius: "Bo góc", shadow: "Bóng", none: "Không",
+  color: "Màu chữ", iconColor: "Màu icon", background: "Nền", textGradient: "Chữ chuyển màu", gradient: "Nền chuyển màu", borderWidth: "Độ dày viền", borderColor: "Màu viền", radius: "Bo góc", shadow: "Bóng", none: "Không",
   width: "Rộng", height: "Cao", padding: "Đệm", margin: "Lề",
 };

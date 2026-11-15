@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { labelsLegacy, type EditorLabels } from "../../shared/labels";
 import { useEditor } from "../context";
 import { ColorInput } from "./color-field";
-import { LayoutEffectsPanel } from "./layout-panel";
+import { GradientField, LayoutEffectsPanel } from "./layout-panel";
 import { MotionPanel } from "./motion-panel";
 import { Row, Section, Seg, cx } from "./style-controls";
 import { styleGroups, type StyleGroup } from "./style-supports";
@@ -81,7 +81,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
     } else next[k] = v === "" ? undefined : v;
     commit(next);
   };
-  const setGroup = (k: "color" | "border", sub: string, v: unknown) => set(k, { ...(style[k] ?? {}), [sub]: v });
+  const setGroup = (k: "color" | "border" | "link", sub: string, v: unknown) => set(k, { ...(style[k] ?? {}), [sub]: v });
   // Khoá theo khổ (cỡ chữ, khoảng cách…): chỉ bỏ giá trị của khổ đang chọn, không xoá các khổ khác
   const reset = (keys: string[]) => {
     const next: Style = { ...style };
@@ -155,10 +155,16 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
           options={[["left", AlignLeft, t.alignLeft], ["center", AlignCenter, t.alignCenter], ["right", AlignRight, t.alignRight], ["justify", AlignJustify, t.alignJustify]]} />)}
       </Section>}
 
-      {show("color", ["color"]) && <Section title={t.style_color} modified={has(["color"])} onReset={() => reset(["color"])}>
+      {show("color", ["color", "textGradient", "link"]) && <Section title={t.style_color} modified={has(["color", "textGradient", "link"])} onReset={() => reset(["color", "textGradient", "link"])}>
         <ColorInput label={t.style_text} value={style.color?.text} onChange={(v) => setGroup("color", "text", v)} />
         {/* Khối có ô Nền: màu nền sửa ở đó (một chỗ) */}
         {(!groups.has("background") || part === undefined) && <ColorInput label={t.style_background} value={style.color?.background} onChange={(v) => setGroup("color", "background", v)} />}
+        <Row label={t.style_textGradient} onReset={has(["textGradient"]) ? () => reset(["textGradient"]) : undefined}><GradientField value={style.textGradient} onChange={(v) => set("textGradient", v)} /></Row>
+        {/* Khối chứa: màu liên kết của nội dung bên trong (Đoạn / Tiêu đề có mục Liên kết riêng) */}
+        {registry.get(type)?.kind === "container" && <>
+          <ColorInput label={t.style_link} value={style.link?.color} onChange={(v) => setGroup("link", "color", v)} />
+          <ColorInput label={t.style_linkHover} value={style.link?.hover} onChange={(v) => setGroup("link", "hover", v)} />
+        </>}
       </Section>}
 
       {!parts && lead}

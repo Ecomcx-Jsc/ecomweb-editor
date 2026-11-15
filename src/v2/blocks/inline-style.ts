@@ -23,7 +23,7 @@ export function withoutOverridden(inline: CSSProperties, rawStyle: unknown): CSS
   if (style.fontWeight) drop.add("fontWeight");
   if (style.textAlign) drop.add("textAlign");
   if (style.color?.text) drop.add("color");
-  if (style.color?.background) { drop.add("background"); drop.add("backgroundColor"); }
+  if (style.color?.background || style.gradient || style.textGradient) { drop.add("background"); drop.add("backgroundColor"); }
   if (style.border) SIDES.forEach((x) => drop.add(`border${x}`));
   if (style.radius) drop.add("borderRadius");
   return Object.fromEntries(Object.entries(inline).filter(([k]) => !drop.has(k))) as CSSProperties;
