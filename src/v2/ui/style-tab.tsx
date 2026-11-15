@@ -103,7 +103,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   };
   // Nhóm khối hỗ trợ; nhóm đã có giá trị vẫn hiện để sửa / xoá (dữ liệu cũ, khối dán từ nơi khác)
   const groups = styleGroups(type, registry.get(type));
-  const inPart = (g: StyleGroup) => !part || (part === "style") === ["typography", "color"].includes(g);
+  // Như bộ khối lớn: Kiểu dáng = chữ, màu, viền, nền & hiệu ứng, khi rê chuột; Nâng cao = khoảng cách, bố cục, ghim, chuyển động, hiển thị
+  const inPart = (g: StyleGroup) => !part || (part === "style") === ["typography", "color", "border", "effects", "hover"].includes(g);
   const show = (g: StyleGroup, keys: string[]) => inPart(g) && ((groups.has(g) && !(parts && (g === "typography" || g === "color"))) || keys.some((k) => style[k] !== undefined));
   const appearance = `${style.fontWeight ?? ""}${style.fontStyle === "italic" ? "i" : ""}`;
 
@@ -184,8 +185,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         <FourInput label={t.style_radius} corners keys={["topLeft", "topRight", "bottomRight", "bottomLeft"]} keyLabels={{ topLeft: ct.cornerTopLeft, topRight: ct.cornerTopRight, bottomRight: ct.cornerBottomRight, bottomLeft: ct.cornerBottomLeft }} value={style.radius} max={60} units={["px", "%", "em", "rem"]} onReset={has(["radius"]) ? () => reset(["radius"]) : undefined} onChange={(v) => set("radius", v)} />
       </Section>}
 
-      {part !== "style" && <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device}
-        effects={show("effects", ["gradient", "shadow", "aspectRatio", "position"])} hover={show("hover", ["hover"])} gradient={!groups.has("background")} />}
+      <LayoutEffectsPanel type={type} style={raw} onChange={onChange} device={device} only={part}
+        effects={(groups.has("effects") || ["gradient", "shadow", "aspectRatio", "position"].some((k) => style[k] !== undefined))} hover={show("hover", ["hover"])} gradient={!groups.has("background")} />
 
       {show("motion", ["motion"]) && <MotionPanel type={type} style={raw} onChange={onChange} />}
 

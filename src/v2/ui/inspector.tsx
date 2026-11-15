@@ -20,7 +20,9 @@ import { UnitInput } from "./unit-controls";
 import { useMsgs } from "../i18n";
 
 /** Khối "khung" (như Container / Section của Elementor): ô Nền đặt ngay tab Cài đặt — chỗ người dùng tìm đầu tiên. */
-const BG_IN_SETTINGS = new Set(["group", "column", "cover"]);
+// Nền của Nhóm / Cột nằm ở tab Kiểu dáng như bộ khối lớn; ảnh bìa: nền là nội dung chính nên ở Cài đặt
+const BG_IN_SETTINGS = new Set(["cover"]);
+const BG_FIRST = new Set(["group", "column", "columns", "row", "stack", "grid"]);
 
 /**
  * Bảng cài đặt của khối đang chọn (như Elementor): thẻ khối, tab Cài đặt (nội dung: form + phần riêng của khối), tab Kiểu dáng
@@ -79,13 +81,15 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             </div>
           ) : tab === "style" ? (
             <div className="ecx-panel">
+              {/* Khối chứa: Nền là mục đầu của tab Kiểu dáng (như bộ khối lớn) */}
+              {single && BG_FIRST.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
               <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="style"
                 variants={variants.length ? variants : undefined} variant={(first.attrs.blockStyle as string) ?? null} onVariantChange={(v) => setAttrs({ blockStyle: v ?? undefined })}
                 parts={hasParts}
                 lead={single && <>
                   <PartsSections blockId={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />
                   <BlockStyleSections type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} legacyOnly={hasParts} />
-                  {!BG_IN_SETTINGS.has(first.type) && (styleGroups(first.type, type).has("background") || !!(first.attrs.style as { background?: unknown } | undefined)?.background) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
+                  {!BG_IN_SETTINGS.has(first.type) && !BG_FIRST.has(first.type) && (styleGroups(first.type, type).has("background") || !!(first.attrs.style as { background?: unknown } | undefined)?.background) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
                 </>} />
               {single && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} tab="style" />}
             </div>

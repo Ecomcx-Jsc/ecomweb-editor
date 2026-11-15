@@ -54,7 +54,11 @@ export function GradientField({ value, onChange }: { value?: string; onChange(g:
 }
 
 /** `gradient` = false khi khối đã có ô Nền (chuyển màu sửa ở đó, không lặp lại ở Hiệu ứng). */
-export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects = true, hover = true, gradient = true }: { type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; effects?: boolean; hover?: boolean; gradient?: boolean }) {
+export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects = true, hover = true, gradient = true, only }: {
+  type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; effects?: boolean; hover?: boolean; gradient?: boolean;
+  /** Chia như bộ khối lớn: "style" = Nền & hiệu ứng + Khi rê chuột (tab Kiểu dáng); "advanced" = Bố cục + Ghim khi cuộn (tab Nâng cao). Không đặt = tất cả. */
+  only?: "style" | "advanced";
+}) {
   const { labels, host } = useEditor();
   const t = useMsgs("layout");
   const style: BlockStyle = normalizeStyle(raw) ?? {};
@@ -77,7 +81,7 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
 
   return (
     <div className="ecx-layout-panel">
-      {CONTAINERS.has(type) && (
+      {only !== "style" && CONTAINERS.has(type) && (
         <Section title={t.layout}>
           <Row label={t.type}>
             <Seg<Kind> label={t.type} value={kind} onChange={(k) => set({ layout: layoutFor(k ?? "flow", l) })}
@@ -118,7 +122,10 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
         </Section>
       )}
 
-      {effects && <Section title={t.effects} defaultOpen={!!(style.gradient || style.shadow || style.aspectRatio || style.position)}>
+      {effects && only === "advanced" && <Section title={t.sticky} defaultOpen={!!style.position}>
+        <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set({ position: e.target.checked ? { type: "sticky" } : undefined })} /> {t.sticky}</label>
+      </Section>}
+      {effects && only !== "advanced" && <Section title={t.effects} defaultOpen={!!(style.gradient || style.shadow || style.aspectRatio || (!only && style.position))}>
         {gradient && <Row label={t.gradient}><GradientField value={style.gradient} onChange={(g) => set({ gradient: g })} /></Row>}
         <Row label={t.shadow}>
           <select className="ecx-input" aria-label={t.shadow} value={style.shadow ?? ""} onChange={(e) => set({ shadow: e.target.value || undefined })}>
@@ -132,10 +139,10 @@ export function LayoutEffectsPanel({ type, style: raw, onChange, device, effects
             {["1/1", "4/3", "3/2", "16/9", "21/9", "3/4", "2/3", "9/16"].map((r) => <option key={r} value={r}>{r.replace("/", ":")}</option>)}
           </select>
         </Row>
-        <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set({ position: e.target.checked ? { type: "sticky" } : undefined })} /> {t.sticky}</label>
+        {!only && <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set({ position: e.target.checked ? { type: "sticky" } : undefined })} /> {t.sticky}</label>}
       </Section>}
 
-      {hover && <Section title={t.hover} defaultOpen={!!style.hover}>
+      {hover && only !== "advanced" && <Section title={t.hover} defaultOpen={!!style.hover}>
         {(["text", "background"] as const).map((k) => (
           <ColorInput key={k} label={t[k]} value={style.hover?.color?.[k]} onChange={(v) => set({ hover: { ...style.hover, color: { ...style.hover?.color, [k]: v } } })} />
         ))}

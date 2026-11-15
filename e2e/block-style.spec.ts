@@ -16,10 +16,11 @@ const shot = async (page: Page, name: string) => { if (process.env.ECX_SHOTS) aw
 const insp = (page: Page) => page.locator(".ecx-inspector");
 
 test.describe("kiểu dáng khối kiểu Elementor", () => {
-  test("nhóm: ô Nền ngay tab Cài đặt (Màu | Chuyển màu | Ảnh), màu nền cũ được chuyển sang style", async ({ page }) => {
+  test("nhóm: ô Nền ở tab Kiểu dáng (Màu | Chuyển màu | Ảnh), màu nền cũ được chuyển sang style", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await insert(page, [{ id: "g1", type: "group", attrs: { background: "#fef3c7" }, content: [p("g1p", "Trong nhóm")] }]);
     await page.evaluate(() => (window as any).__ecx.store.select(["g1"]));
+    await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
     const panel = insp(page).locator(".ecx-style-section", { hasText: "Nền" }).first();
     await expect(panel.getByRole("radio", { name: "Ảnh" })).toBeVisible();
     await expect(panel.getByRole("radio", { name: "Chuyển màu" })).toBeVisible();

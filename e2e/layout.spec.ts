@@ -136,7 +136,8 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
-    // Nhóm: ô Nền ở tab Cài đặt — loại Chuyển màu
+    // Nhóm: ô Nền ở tab Kiểu dáng — loại Chuyển màu
+    await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
     await insp.getByRole("radio", { name: "Chuyển màu" }).click();
     await insp.getByRole("button", { name: "brand" }).click();
     let g = await groupOf(page);
@@ -146,7 +147,8 @@ test.describe("bố cục + hiệu ứng", () => {
     await insp.getByRole("button", { name: "Tuỳ chỉnh", exact: true }).click();
     g = await groupOf(page);
     expect(g.attrs.style.gradient).toMatch(/^linear-gradient\(135deg, #1a597b 0%, #f26251 100%\)$/);
-    await insp.getByRole("tab", { name: "Nâng cao" }).click(); // mục Nền & hiệu ứng tự mở (khối đã có chuyển màu)
+    // Nền & hiệu ứng cũng ở tab Kiểu dáng (như bộ khối lớn)
+    await insp.getByRole("button", { name: "Nền & hiệu ứng" }).click();
     await insp.getByLabel("Đổ bóng").first().selectOption("md");
     await expect.poll(() => el.evaluate((n) => getComputedStyle(n).boxShadow)).not.toBe("none");
     await insp.getByRole("button", { name: "Khi rê chuột" }).click();
