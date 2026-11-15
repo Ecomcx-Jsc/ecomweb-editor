@@ -53,7 +53,17 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     }
     const target = unlocked(store, findTarget(ctx, x, y, src));
     ui.setDrag({ ids: src.ids, newType: src.newType, x, y, target });
+    markParent(target?.parentId ?? null);
     autoScroll(ctx, y);
+  };
+  // Khối chứa sắp nhận khối thả (cột, nhóm…) báo nền nhẹ (CSS trễ 100ms: lướt qua không nháy)
+  let parentEl: HTMLElement | null = null;
+  const markParent = (id: string | null) => {
+    const el = id ? ui.blockEl(id) : null;
+    if (el === parentEl) return;
+    parentEl?.classList.remove("is-drop-parent");
+    el?.classList.add("is-drop-parent");
+    parentEl = el;
   };
   const cleanup = () => {
     document.removeEventListener("pointermove", move);
@@ -67,6 +77,7 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     document.body.classList.remove("is-dragging");
     ui.canvasDoc?.body.classList.remove("is-dragging");
     for (const id of src.ids) ui.blockEl(id)?.classList.remove("is-dragging-source");
+    markParent(null);
     clearInterval(scrollTimer);
     try { handle.releasePointerCapture(pointerId); } catch { /* không giữ */ }
   };

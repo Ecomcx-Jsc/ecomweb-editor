@@ -117,6 +117,9 @@ span[data-ecx-rich][data-empty][data-placeholder] { display: inline-block; verti
 .ecx-drop-indicator { position: absolute; z-index: 50; background: var(--ecx-ui); border-radius: 2px; pointer-events: none; }
 body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select: none !important; }
 .ecx-block.is-dragging-source { opacity: .35; }
+/* Khối chứa sắp nhận khối thả: nền + viền nhẹ, trễ 100ms để lướt chuột qua không nháy */
+.ecx-block.is-drop-parent { outline: 1px dashed color-mix(in srgb, var(--ecx-ui) 55%, transparent); outline-offset: 2px; box-shadow: inset 0 0 0 100vmax color-mix(in srgb, var(--ecx-ui) 6%, transparent); transition: outline-color .1s linear .1s, box-shadow .1s linear .1s; }
+@media (prefers-reduced-motion: reduce) { .ecx-block.is-drop-parent { transition: none; } }
 
 /* Làm nổi khối đang sửa: các khối cấp cao nhất khác mờ đi */
 .is-spotlight > .ecx-block:not(.is-selected):not(.is-editing):not(:has(.is-selected, .is-editing)) { opacity: .3; transition: opacity .2s ease; }

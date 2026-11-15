@@ -13,6 +13,7 @@ import { wrapperNodes } from "./wrapper-props";
 import { makeBlock, type BNode } from "../core/model";
 import { flatten, topLevelOrdered } from "../core/ops";
 import { useTableRangeSelect } from "./table-select";
+import { useMoveAnimation } from "./move-animation";
 import { clearCells, deleteRow, selectedCellRect, tableContext } from "../core/tables";
 import { insertSibling, now, richViews } from "../text/rich-text";
 
@@ -114,6 +115,7 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   useCanvasStyles(doc);
   useCanvasKeys(doc);
   useCanvasEvents(doc);
+  useMoveAnimation(doc);
   useTableRangeSelect(doc);
   const hasRange = useRangeHighlight(doc);
   return (
