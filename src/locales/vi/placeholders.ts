@@ -96,4 +96,5 @@ export const placeholders = {
   serverEmpty: "Website chưa vẽ gì cho khối này ở trang mẫu",
   otherSettings: "Kiểu hiển thị và thuộc tính khác: thanh bên › Khối.",
   openSettings: "Mở cài đặt",
+  cdDays: "ngày", cdHours: "giờ", cdMinutes: "phút", cdSeconds: "giây",
 };

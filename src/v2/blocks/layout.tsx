@@ -1,7 +1,7 @@
-import { ICON_NAMES, ICON_PATHS, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
+import { ICON_NAMES, ICON_PATHS, countdownParts, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
 import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
-import { useEffect, useSyncExternalStore, type CSSProperties } from "react";
+import { useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
 import { withoutOverridden } from "./inline-style";
 import { makeBlock, type BNode } from "../core/model";
@@ -330,7 +330,25 @@ function CountdownEdit({ block, blockProps, setAttrs, editable, labels }: BlockE
       {!valid && <p className="ecx-placeholder-hint">{labels.countdownNoTarget}</p>}
     </div>
   );
-  return <div {...(merge(blockProps, "ecx-countdown", { textAlign: "center" }) as object)}>{a.label ? <p style={{ margin: 0 }}>{String(a.label)}</p> : null}<strong>{String(a.target)}</strong></div>;
+  return <CountdownPreview block={block} blockProps={blockProps} />;
+}
+
+/** Đếm ngược chạy thật như website (cùng countdownParts + markup), nhãn đơn vị theo ngôn ngữ trình soạn. */
+function CountdownPreview({ block, blockProps }: Pick<BlockEditProps, "block" | "blockProps">) {
+  const a = block.attrs;
+  const tp = useMsgs("placeholders");
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
+  const left = Math.max(0, Date.parse(String(a.target)) - now);
+  const cls = cx("ecx-countdown", a.layout === "inline" && "is-inline", a.divider === true && "has-divider");
+  if (left === 0 && a.expiredText) return <div {...(merge(blockProps, "ecx-countdown is-expired") as object)}>{String(a.expiredText)}</div>;
+  return (
+    <div {...(merge(blockProps, cls) as object)} role="timer">
+      {a.label ? <p className="ecx-countdown-label">{String(a.label)}</p> : null}
+      <div className="ecx-countdown-parts">{countdownParts(a, left, { d: tp.cdDays, h: tp.cdHours, m: tp.cdMinutes, s: tp.cdSeconds }).map((p) => <span key={p.u} className={`ecx-countdown-${p.u}`}><strong>{p.value}</strong><small>{p.label}</small></span>)}</div>
+      {a.postText ? <p className="ecx-countdown-post">{String(a.postText)}</p> : null}
+    </div>
+  );
 }
 
 /** Sao xám → bấm vào sao để chấm ngay trên khối. */
@@ -524,7 +542,7 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "countdown", title: "Đếm ngược", icon: Square, category: "design", keywords: "dem nguoc countdown khuyen mai sale", kind: "atom", edit: CountdownEdit,
-      attributes: { target: { type: "string" }, label: { type: "string" }, expiredText: { type: "string" } }, supports: { style: true, anchor: true, className: true },
+      attributes: { target: { type: "string" }, label: { type: "string" }, postText: { type: "string" }, expiredText: { type: "string" }, layout: { type: "string", enum: ["block", "inline"], default: "block" }, divider: { type: "boolean", default: false }, pad: { type: "boolean", default: true }, showDays: { type: "boolean", default: true }, showSeconds: { type: "boolean", default: true }, daysLabel: { type: "string" }, hoursLabel: { type: "string" }, minutesLabel: { type: "string" }, secondsLabel: { type: "string" } }, supports: { style: true, anchor: true, className: true },
     },
     {
       name: "rating", title: "Đánh giá sao", icon: Square, category: "design", keywords: "danh gia sao rating review", kind: "atom", edit: RatingEdit,

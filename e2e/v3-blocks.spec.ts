@@ -421,3 +421,29 @@ test("nút: chỉ icon, icon hiện khi rê (chỉ hiện ô khi nút có icon);
   const [a, b] = [await c.locator(".ecx-buttons-group .ecx-button").nth(0).boundingBox(), await c.locator(".ecx-buttons-group .ecx-button").nth(1).boundingBox()];
   expect(b!.y).toBeGreaterThan(a!.y + a!.height - 1);
 });
+
+test("thanh tiến độ: giá trị / tối đa, hậu tố, chữ trong thanh", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "P", type: "progressBar", attrs: { label: "Đơn hàng", value: 30 } }], { focus: false }); s.select(["P"], { editing: null }); });
+  await insp(page).getByRole("spinbutton", { name: "Giá trị tối đa" }).fill("60");
+  await insp(page).getByRole("textbox", { name: "Hậu tố của số" }).fill(" đơn");
+  await insp(page).getByRole("radio", { name: "Trong thanh" }).click();
+  const bar = c.locator(".ecx-progress.is-text-inside");
+  await expect(bar.locator(".ecx-progress-value")).toHaveText("30 đơn");
+  await expect(bar.locator(".ecx-progress-bar")).toHaveAttribute("style", /width: 50%/);
+  await expect(bar.locator("[role=progressbar]")).toHaveAttribute("aria-valuemax", "60");
+});
+
+test("đếm ngược: khung soạn chạy như website; một dòng, ẩn giây, nhãn riêng, chữ sau", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; const t = new Date(Date.now() + ((26 * 3600) + 120) * 1000).toISOString(); s.insert("root", null, 0, [{ id: "C", type: "countdown", attrs: { target: t, label: "Còn" } }], { focus: false }); s.select([]); });
+  const cd = c.locator(".ecx-countdown");
+  await expect(cd.locator(".ecx-countdown-d strong")).toHaveText("01");
+  await expect(cd.locator(".ecx-countdown-d small")).toHaveText("ngày");
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["C"], { layout: "inline", showSeconds: false, showDays: false, hoursLabel: "tiếng", postText: "nữa là hết" }));
+  await expect(c.locator(".ecx-countdown.is-inline")).toBeVisible();
+  await expect(cd.locator(".ecx-countdown-s")).toHaveCount(0);
+  await expect(cd.locator(".ecx-countdown-h strong")).toHaveText("26");
+  await expect(cd.locator(".ecx-countdown-h small")).toHaveText("tiếng");
+  await expect(cd.locator(".ecx-countdown-post")).toHaveText("nữa là hết");
+});
