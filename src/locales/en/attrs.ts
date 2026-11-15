@@ -91,4 +91,9 @@ export const attrs = {
   suffix: "Suffix",
   duration: "Duration (ms)",
   showValue: "Show percentage",
+  slidesPerView: "Slides per view",
+  max: "Maximum",
+  display: "Display",
+  depth: "Levels shown",
+  limit: "Maximum items",
 };

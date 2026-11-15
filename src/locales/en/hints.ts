@@ -249,4 +249,10 @@ export const hints = {
   "iconList.layout.opt.list": "Vertical",
   "iconList.layout.opt.inline": "Inline",
   "progressBar.value.label": "Percent",
+  "tabs.orientation.label": "Tab layout",
+  "tabs.orientation.opt.horizontal": "Horizontal",
+  "tabs.orientation.opt.vertical": "Vertical",
+  "tabs.mobileAccordion.label": "Accordion on phones",
+  "tab.subtitle.label": "Subtitle",
+  "tab.icon.label": "Tab icon",
 };

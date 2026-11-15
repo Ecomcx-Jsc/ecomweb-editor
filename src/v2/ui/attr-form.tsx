@@ -1,4 +1,5 @@
 import type { BlockAttrSpec } from "@ecomcx/ecomweb-content";
+import { RotateCcw } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useEditor } from "../context";
 import type { Choice, ChoiceKind } from "../core/host";
@@ -90,9 +91,26 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
     .map(([k, s]) => [k, s, hintOf(type.name, k)] as const)
     .filter(([k, s, h]) => !HIDDEN_ATTRS.has(k) && controlOf(s) !== "hidden" && h.control !== "hidden" && (!h.when || h.when(attrs)));
   if (!entries.length) return null;
+  const resetLabel = String(messages("controls", lang).reset ?? "Reset");
   return (
     <div className="ecx-form">
       {entries.map(([k, spec, hint]) => {
+        const node = field(k, spec, hint);
+        // Ô đã đổi khác mặc định: nút ↶ về mặc định (như ô của tab Kiểu dáng)
+        const v = attrs[k];
+        if (v === undefined || v === null || v === "" || JSON.stringify(v) === JSON.stringify(spec.default) || !node) return node;
+        const label = hintText(hint, "label", lang) ?? attrLabel(k, spec, lang, translate);
+        return (
+          <div key={k} className="ecx-field-wrap">
+            {node}
+            <button type="button" className="ecx-row-reset ecx-field-reset" title={resetLabel} aria-label={`${resetLabel}: ${label}`} onClick={() => onChange({ [k]: undefined })}><RotateCcw className="ecx-icon" /></button>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  function field(k: string, spec: BlockAttrSpec, hint: AttrHint) {
         const label = hintText(hint, "label", lang) ?? attrLabel(k, spec, lang, translate);
         const value = attrs[k] ?? spec.default;
         const set = (v: unknown) => onChange({ [k]: v === "" || v === spec.default ? undefined : v });
@@ -173,7 +191,5 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
           default:
             return <Field key={k} label={label}><input className="ecx-input" type={controlOf(spec) === "url" ? "url" : "text"} value={value == null ? "" : String(value)} onChange={(e) => set(e.target.value)} />{help}</Field>;
         }
-      })}
-    </div>
-  );
+  }
 }

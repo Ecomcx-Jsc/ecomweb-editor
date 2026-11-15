@@ -202,7 +202,7 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-canvas-root .ecx-table table { width: 100%; border-collapse: collapse; }
 .ecx-canvas-root .ecx-table :is(td, th) { min-width: 3em; height: 2.5em; outline: 1px dashed color-mix(in srgb, currentColor 22%, transparent); outline-offset: -1px; }
 /* Tabs: thanh tiêu đề luôn thấy và bấm được (thẻ đang ẩn: display none inline) */
-.ecx-canvas-root .ecx-tabs-list { display: flex; flex-wrap: wrap; min-height: 2.5em; }
+.ecx-canvas-root .ecx-tabs-list { min-height: 2.5em; }
 .ecx-canvas-root .ecx-tab-button { cursor: pointer; }
 .ecx-canvas-root .ecx-tab-button [data-ecx-rich] { display: inline-block; min-width: 3em; }
 .ecx-btn-ghost { background: none; border-color: transparent; }

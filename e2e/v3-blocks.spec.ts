@@ -349,3 +349,40 @@ test.describe("cột trái: cây khối, dàn ý, media", () => {
     await expect(page.locator(".ecx-inserter-panel")).toHaveCount(0);
   });
 });
+
+test("tab Cài đặt: ô đã đổi có nút ↶ về mặc định", async ({ page }) => {
+  await open(page, "?doc=post");
+  const id = await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "H", type: "heading", attrs: { level: 3 }, inline: [{ type: "text", text: "Đầu" }] }]); s.select(["H"], { editing: null }); return "H"; });
+  const reset = insp(page).getByRole("button", { name: "Đặt lại: Cấp tiêu đề" });
+  await reset.click();
+  expect((await find(page, "heading")).attrs.level ?? 2).toBe(2);
+  await expect(reset).toHaveCount(0);
+  void id;
+});
+
+test("tabs: dọc, accordion trên điện thoại, icon + phụ đề của từng tab", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "T", type: "tabs", attrs: {}, content: [
+    { id: "t1", type: "tab", attrs: { title: "Một" }, content: [{ id: "tp1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "nội dung một" }] }] },
+    { id: "t2", type: "tab", attrs: { title: "Hai" }, content: [{ id: "tp2", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "nội dung hai" }] }] }] }], { focus: false }); s.select(["T"], { editing: null }); });
+  await insp(page).getByRole("radio", { name: "Dọc" }).click();
+  await insp(page).getByRole("checkbox", { name: "Thành accordion trên điện thoại" }).check();
+  expect((await find(page, "tabs")).attrs).toMatchObject({ orientation: "vertical", mobileAccordion: true });
+  const tabs = c.locator(".ecx-tabs.is-vertical.has-mobile-accordion");
+  await expect(tabs).toBeVisible();
+  // thanh tiêu đề bên trái nội dung
+  const list = await tabs.locator(".ecx-tabs-list").boundingBox(), panel = await tabs.locator(".ecx-tab-panel").first().boundingBox();
+  expect(list!.x + list!.width).toBeLessThanOrEqual(panel!.x + 1);
+  // phụ đề + icon của tab: sửa trên khối tab
+  await page.evaluate(() => (window as any).__ecx.store.select(["t1"], { editing: null }));
+  await insp(page).getByLabel("Phụ đề").fill("Giới thiệu nhanh");
+  await expect(tabs.locator(".ecx-tab-subtitle")).toHaveText("Giới thiệu nhanh");
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["t1"], { icon: "star" }));
+  await expect(tabs.locator(".ecx-tab-icon")).toHaveCount(1);
+  // điện thoại: tiêu đề tab 2 nằm giữa panel 1 và panel 2 (accordion)
+  await page.getByRole("button", { name: "Điện thoại" }).first().click();
+  await page.evaluate(() => (window as any).__ecx.store.select([]));
+  const t2 = await tabs.locator(".ecx-tab-button").nth(1).boundingBox();
+  const p1 = await tabs.locator(".ecx-tab-panel").first().boundingBox();
+  expect(t2!.y).toBeGreaterThan(p1!.y);
+});

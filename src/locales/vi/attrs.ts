@@ -91,4 +91,9 @@ export const attrs = {
   suffix: "Hậu tố",
   duration: "Thời gian chạy (ms)",
   showValue: "Hiện phần trăm",
+  slidesPerView: "Số thẻ mỗi khung",
+  max: "Giá trị tối đa",
+  display: "Kiểu hiển thị",
+  depth: "Số cấp hiện",
+  limit: "Số mục tối đa",
 };

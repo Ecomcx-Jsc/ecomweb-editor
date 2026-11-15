@@ -44,6 +44,10 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   // v3: chọn icon bằng lưới có ô tìm (mọi khối có thuộc tính icon); nút: icon trái / phải, rộng hết khung, nhãn trình đọc màn hình
   "*.icon": { control: "icon" },
   "button.icon": { control: "icon", allowNone: true },
+  "tab.icon": { control: "icon", allowNone: true, label: true },
+  "tab.subtitle": { label: true },
+  "tabs.orientation": { control: "segmented", label: true },
+  "tabs.mobileAccordion": { label: true },
   "button.iconPosition": { control: "segmented", options: ["left", "right"], when: (a) => !!a.icon },
   "button.width": { control: "segmented", options: ["auto", "full"] },
   "button.ariaLabel": { help: true },

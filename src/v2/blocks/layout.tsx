@@ -1,4 +1,4 @@
-import { blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
+import { ICON_NAMES, ICON_PATHS, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
 import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import { useEffect, useSyncExternalStore, type CSSProperties } from "react";
@@ -220,13 +220,20 @@ function TabsEdit({ block, blockProps, editable }: BlockEditProps) {
   const active = useOpenTab(block.id);
   const tabs = (block.content ?? []).filter((c) => c.type === "tab");
   return (
-    <div {...(merge(blockProps, "ecx-tabs") as object)}>
-      <div role="tablist" className="ecx-tabs-list">
-        {tabs.map((tab, i) => (
-          <div key={tab.id} role="tab" aria-selected={i === active} tabIndex={-1} className={cx("ecx-tab-button", i === active && "is-active")} onMouseDown={() => setOpenTab(block.id, i)}>
-            <RichText blockId={tab.id} field="title" tagName="span" value={String(tab.attrs.title ?? "")} onChange={(v) => store.setAttrs([tab.id], { title: v })} placeholder={tp.tabTitle} placeholderAlways editable={editable} />
-          </div>
-        ))}
+    <div {...(merge(blockProps, cx("ecx-tabs", block.attrs.orientation === "vertical" && "is-vertical", block.attrs.mobileAccordion === true && "has-mobile-accordion")) as object)}>
+      <div role="tablist" className="ecx-tabs-list" aria-orientation={block.attrs.orientation === "vertical" ? "vertical" : undefined}>
+        {tabs.map((tab, i) => {
+          const icon = ICON_PATHS[String(tab.attrs.icon ?? "")];
+          return (
+            <div key={tab.id} role="tab" aria-selected={i === active} tabIndex={-1} className={cx("ecx-tab-button", i === active && "is-active")} style={{ "--i": i } as CSSProperties} onMouseDown={() => setOpenTab(block.id, i)}>
+              {icon && <svg className="ecx-tab-icon" viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={icon} /></svg>}
+              <span className="ecx-tab-label">
+                <RichText blockId={tab.id} field="title" tagName="span" value={String(tab.attrs.title ?? "")} onChange={(v) => store.setAttrs([tab.id], { title: v })} placeholder={tp.tabTitle} placeholderAlways editable={editable} />
+                {!!tab.attrs.subtitle && <small className="ecx-tab-subtitle">{String(tab.attrs.subtitle)}</small>}
+              </span>
+            </div>
+          );
+        })}
         {/* Nút thêm tab nằm ngay trên hàng tab */}
         {editable && store.canInsertInto(block.id) && <AddItemButton label={tp.addTab} onClick={() => {
           const loc = store.locate(block.id);
@@ -273,7 +280,7 @@ function TabEdit({ block, blockProps }: BlockEditProps) {
   // Chọn khối nằm trong thẻ đang ẩn (danh sách khối, tìm kiếm…) → mở thẻ đó
   useEffect(() => { if (within && !open && parentId) setOpenTab(parentId, index); }, [within, open, parentId, index]);
   return (
-    <div {...(merge(blockProps, "ecx-tab ecx-tab-panel", open ? undefined : { display: "none" }) as object)} role="tabpanel">
+    <div {...(merge(blockProps, "ecx-tab ecx-tab-panel", { "--i": index, ...(open ? {} : { display: "none" }) } as CSSProperties) as object)} role="tabpanel">
       <InnerBlocks parent={block} />
     </div>
   );
@@ -495,12 +502,12 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "tabs", title: "Tabs", icon: PanelTop, category: "text", keywords: "tabs the tab chuyen doi noi dung", kind: "container", edit: TabsEdit,
-      attributes: { tabsAlign: { type: "string", enum: ["flex-start", "center", "flex-end", "space-between"] }, initial: { type: "number", min: 1 } },
+      attributes: { tabsAlign: { type: "string", enum: ["flex-start", "center", "flex-end", "space-between"] }, initial: { type: "number", min: 1 }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" }, mobileAccordion: { type: "boolean", default: false } },
       create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "" }, [makeBlock("paragraph")])]), contextToolbar: TabsTools, supports: { style: true, anchor: true, className: true },
     },
     {
       name: "tab", title: "Tab", icon: PanelTop, category: "text", keywords: "tab", kind: "container", edit: TabEdit, hidden: true, structure: { parents: ["tabs"] },
-      attributes: { title: { type: "string" } }, create: () => makeBlock("tab", { title: "" }, [makeBlock("paragraph")]),
+      attributes: { title: { type: "string" }, icon: { type: "string", enum: ICON_NAMES }, subtitle: { type: "string" } }, supports: { anchor: true }, create: () => makeBlock("tab", { title: "" }, [makeBlock("paragraph")]),
     },
     {
       name: "carousel", title: "Carousel", icon: Columns3, category: "design", keywords: "carousel slider slide truot anh", kind: "container", edit: CarouselEdit,

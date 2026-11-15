@@ -249,4 +249,10 @@ export const hints = {
   "iconList.layout.opt.list": "Dọc",
   "iconList.layout.opt.inline": "Hàng ngang",
   "progressBar.value.label": "Phần trăm",
+  "tabs.orientation.label": "Bố cục tab",
+  "tabs.orientation.opt.horizontal": "Ngang",
+  "tabs.orientation.opt.vertical": "Dọc",
+  "tabs.mobileAccordion.label": "Thành accordion trên điện thoại",
+  "tab.subtitle.label": "Phụ đề",
+  "tab.icon.label": "Icon của tab",
 };
