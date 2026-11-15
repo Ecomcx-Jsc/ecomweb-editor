@@ -144,6 +144,8 @@
 select.ecx-input { padding-right: 6px; }
 .ecx-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .ecx-check input { accent-color: var(--ecx-ed-accent); width: 15px; height: 15px; }
+/* Ô nhập nhỏ trong menu của thanh công cụ (vd liên kết của nút) */
+.ecx-tool-form { display: grid; gap: 8px; width: 280px; padding: 8px; }
 .ecx-color-row { display: flex; gap: 6px; align-items: center; }
 .ecx-color-row input[type="color"] { width: 32px; height: 32px; padding: 2px; border: 1px solid var(--ecx-ed-line); border-radius: 6px; background: var(--ecx-ed-panel); }
 .ecx-advanced { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--ecx-ed-line); padding-top: 10px; }

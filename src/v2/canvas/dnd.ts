@@ -106,7 +106,8 @@ function begin(ctx: EditorContextValue, e: ReactPointerEvent, src: Source) {
     ui.setDrag(null);
   };
   // Kéo bị huỷ (mất con trỏ, đổi cửa sổ) → bỏ kéo, không để nhãn kéo kẹt trên màn hình
-  const cancel = () => { cleanup(); ui.setDrag(null); };
+  // (focus chuyển vào khung soạn — nắm khối ngay trong iframe — cũng làm trang ngoài "blur": không phải huỷ)
+  const cancel = (ev?: Event) => { if (ev?.type === "blur" && document.activeElement === ui.canvasFrame) return; cleanup(); ui.setDrag(null); };
   document.addEventListener("pointercancel", cancel);
   window.addEventListener("blur", cancel);
   document.addEventListener("pointermove", move);

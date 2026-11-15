@@ -9,7 +9,7 @@ import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useEditor } from "../context";
-import { ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
+import { ButtonLinkTool, ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
 import { ColumnHandles, HeightHandle, PaddingHandles, useActiveWithin } from "./resize";
 import { ColumnInspector, ColumnsInspector } from "./columns-inspector";
 import { layoutFor, layoutKind } from "../ui/layout-panel";
@@ -447,7 +447,7 @@ export function layoutBlocks(): BlockType[] {
       name: "button", title: "Nút", icon: MousePointerClick, kind: "atom", edit: ButtonEdit, hidden: true,
       attributes: { text: { type: "string" }, href: { type: "url" }, target: { type: "string", enum: ["_self", "_blank"] }, rel: { type: "string" }, variant: { type: "string", enum: ["primary", "secondary", "outline"], default: "primary" },
         icon: { type: "string" }, iconPosition: { type: "string", enum: ["left", "right"] }, width: { type: "string", enum: ["auto", "full"] }, ariaLabel: { type: "string" } },
-      create: (attrs) => makeBlock("button", { variant: "primary", ...attrs }),
+      create: (attrs) => makeBlock("button", { variant: "primary", ...attrs }), toolbar: ButtonLinkTool,
       supports: { style: true, className: true }, summary: (a) => a.text,
     },
     {

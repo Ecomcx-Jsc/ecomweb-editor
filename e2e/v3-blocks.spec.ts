@@ -205,12 +205,15 @@ test.describe("v3: thao tác thẳng trên khung soạn", () => {
     await open(page, "?doc=post");
     await addGroup(page);
     await page.evaluate(() => (window as any).__ecx.store.select(["g1"]));
-    await expect.poll(async () => (await frameBox(page, '[data-ecx-block="g1"]')).height).toBeGreaterThanOrEqual(220); // bố cục đã ổn
+    await expect.poll(async () => (await frameBox(page, '[data-ecx-block="g1"]')).height).toBeGreaterThanOrEqual(220);
+    // chờ hiệu ứng dời khối (khi chèn nhóm) chạy xong: lúc đang chạy, mép khối lướt qua con trỏ làm hiện nút "+ Thêm section"
+    const lastId = await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks.at(-1).id);
+    let prev = -1;
+    await expect.poll(async () => { const y = (await frameBox(page, `[data-ecx-block="${lastId}"]`)).y; const same = Math.abs(y - prev) < 0.5; prev = y; return same; }, { intervals: [150] }).toBe(true);
     const g = await frameBox(page, '[data-ecx-block="g1"]');
     const x = g.x + g.width / 2, y = g.y + g.height - 60; // dưới đoạn văn, trên vùng đệm dưới
     await page.mouse.click(x, y);
     expect((await state(page)).docs.root.blocks[0].id).toBe("g1");
-    const lastId = await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks.at(-1).id);
     const last = await frameBox(page, `[data-ecx-block="${lastId}"]`);
     await page.mouse.move(x, y); await page.mouse.down();
     for (let i = 1; i <= 10; i++) await page.mouse.move(x, y + ((last.y + last.height - 4) - y) * i / 10);
@@ -245,4 +248,28 @@ test("chép / dán kiểu dáng ngay trên thanh công cụ", async ({ page }) =
   await page.getByRole("menuitem", { name: "Dán kiểu dáng" }).click();
   const b = (await state(page)).docs.root.blocks[2];
   expect(b.attrs.style).toMatchObject({ color: { text: "accent" }, padding: { base: "lg" } });
+});
+
+test("thanh công cụ: căn dọc của bộ cột, căn các nút, liên kết của nút", async ({ page }) => {
+  const c = await open(page, "?doc=rich");
+  const bar = page.locator(".ecx-toolbar");
+  const row = await find(page, "columns");
+  await page.evaluate((x) => (window as any).__ecx.store.select([x]), row.id);
+  await bar.getByRole("button", { name: "Căn dọc" }).click();
+  await page.getByRole("menuitem", { name: /Giữa/ }).click();
+  expect((await find(page, "columns")).attrs.verticalAlign).toBe("center");
+  const btn = await find(page, "button");
+  await page.evaluate((x) => (window as any).__ecx.store.select([x]), btn.id);
+  await bar.getByRole("button", { name: "Căn các nút" }).click();
+  await page.getByRole("menuitem", { name: /Căn giữa/ }).click();
+  expect((await find(page, "buttons")).attrs.align).toBe("center");
+  await bar.getByRole("button", { name: "Liên kết của nút" }).click();
+  const input = page.getByRole("textbox", { name: "Liên kết của nút" });
+  await input.fill("javascript:alert(1)");
+  await expect(page.getByRole("button", { name: "Áp dụng" })).toBeDisabled();
+  await input.fill("/lien-he");
+  await page.getByRole("checkbox", { name: "Mở tab mới" }).check();
+  await page.getByRole("button", { name: "Áp dụng" }).click();
+  expect((await find(page, "button")).attrs).toMatchObject({ href: "/lien-he", target: "_blank" });
+  void c;
 });
