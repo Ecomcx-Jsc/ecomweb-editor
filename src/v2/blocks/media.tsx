@@ -243,7 +243,7 @@ function TocEdit({ block, blockProps }: BlockEditProps) {
     <nav {...(blockProps as object)} className={cx(blockProps.className, "ecx-toc", a.smoothScroll === true && "is-smooth")}>
       {a.collapsible === true
         ? <details className="ecx-toc-details" open><summary className="ecx-toc-title" onClick={(e) => e.preventDefault()}>{title}</summary>{list}</details>
-        : <><p className="ecx-toc-title">{title}</p>{list}</>}
+        : <>{a.showTitle !== false && <p className="ecx-toc-title">{title}</p>}{list}</>}
     </nav>
   );
 }
@@ -280,6 +280,6 @@ export function mediaBlocks(): BlockType[] {
     { name: "embed", title: "Nhúng", icon: Globe, category: "embed", keywords: "nhung embed youtube vimeo tiktok facebook twitter x instagram spotify google map", kind: "atom", edit: EmbedEdit, attributes: { url: { type: "url" }, caption: { type: "string" } }, supports: { style: true, anchor: true }, summary: (a) => a.url },
     { name: "customHtml", title: "HTML tuỳ chỉnh", icon: Code2, category: "widgets", keywords: "html tuy chinh custom code", kind: "atom", edit: HtmlEdit, attributes: { html: { type: "string", control: "textarea" } } },
     { name: "socialLinks", title: "Mạng xã hội", icon: Share2, category: "widgets", keywords: "mang xa hoi social facebook zalo youtube tiktok", kind: "atom", edit: SocialEdit, inspector: SocialInspector, attributes: { links: { type: "json", default: [] }, size: { type: "string", enum: ["small", "medium", "large"], default: "medium" }, align: { type: "string", enum: ["left", "center", "right"] }, showLabels: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
-    { name: "tableOfContents", title: "Mục lục", icon: ListTree, category: "widgets", keywords: "muc luc table of contents toc", kind: "atom", edit: TocEdit, attributes: { title: { type: "string" }, minLevel: { type: "integer", default: 2, min: 2, max: 6 }, maxLevel: { type: "integer", default: 3, min: 2, max: 6 }, collapsible: { type: "boolean", default: false }, startCollapsed: { type: "boolean", default: false }, listStyle: { type: "string", enum: ["numbers", "bullets", "none"], default: "numbers" }, columns: { type: "integer", default: 1, min: 1, max: 3 }, smoothScroll: { type: "boolean", default: false }, highlight: { type: "boolean", default: false } }, supports: { style: true, anchor: true } },
+    { name: "tableOfContents", title: "Mục lục", icon: ListTree, category: "widgets", keywords: "muc luc table of contents toc", kind: "atom", edit: TocEdit, attributes: { title: { type: "string" }, minLevel: { type: "integer", default: 2, min: 2, max: 6 }, maxLevel: { type: "integer", default: 3, min: 2, max: 6 }, collapsible: { type: "boolean", default: false }, startCollapsed: { type: "boolean", default: false }, listStyle: { type: "string", enum: ["numbers", "bullets", "none"], default: "numbers" }, columns: { type: "integer", default: 1, min: 1, max: 3 }, smoothScroll: { type: "boolean", default: false }, highlight: { type: "boolean", default: false }, showTitle: { type: "boolean", default: true } }, supports: { style: true, anchor: true } },
   ];
 }

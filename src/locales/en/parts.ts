@@ -1,7 +1,7 @@
 /** Block parts (content 1.26 PartSpec) and their controls. */
 export const parts = {
   box: "Box", icon: "Icon", title: "Title", text: "Description", image: "Image", quote: "Quote", avatar: "Avatar", name: "Name", role: "Role",
-  quoteMark: "Quote mark", rating: "Star rating", number: "Number", label: "Label", track: "Track", bar: "Bar", item: "Item",
+  quoteMark: "Quote mark", rating: "Star rating", input: "Input", number: "Number", label: "Label", track: "Track", bar: "Bar", item: "Item",
   paneTitle: "Pane title", paneContent: "Pane content", tabList: "Tab bar", tab: "Tab button", panel: "Tab content", button: "Button", caption: "Caption",
   tableHead: "Header cells", tableCell: "Cells", unitBox: "Time box", unitLabel: "Unit label", content: "Content area",
   highlight: "Highlight", link: "Link", active: "Open / active",

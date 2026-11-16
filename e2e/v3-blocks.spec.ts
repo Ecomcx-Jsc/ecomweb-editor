@@ -752,3 +752,43 @@ test("tab: vị trí icon (trên / phải), chỉ hiện icon ẩn chữ của t
   await expect(i.getByText("Rộng tiêu đề tab")).toBeVisible();
   await expect(i.getByText("Cao tối thiểu nội dung")).toBeVisible();
 });
+
+test("mục lục: công tắc Hiện tiêu đề; bật thu gọn được thì công tắc ẩn và tiêu đề luôn hiện", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
+    { id: "TOC", type: "tableOfContents", attrs: { title: "Trong bài này" } },
+    { id: "h2", type: "heading", attrs: { level: 2 }, inline: [{ type: "text", text: "Giới thiệu" }] }], { focus: false }); s.select(["TOC"], { editing: null }); });
+  const title = c.locator(".ecx-toc .ecx-toc-title");
+  await expect(title).toHaveText("Trong bài này");
+  await insp(page).getByRole("checkbox", { name: "Hiện tiêu đề" }).uncheck();
+  await expect(title).toHaveCount(0);
+  await expect(c.locator(".ecx-toc .ecx-toc-list")).toContainText("Giới thiệu"); // danh sách vẫn còn
+  await insp(page).getByRole("checkbox", { name: /Thu gọn được/ }).check();
+  await expect(insp(page).getByRole("checkbox", { name: "Hiện tiêu đề" })).toHaveCount(0);
+  await expect(title).toHaveText("Trong bài này");
+  expect(await find(page, "tableOfContents")).toMatchObject({ attrs: { showTitle: false, collapsible: true } });
+});
+
+test("tìm kiếm: nút icon kính lúp có nhãn đọc màn hình; phần Ô nhập / Nút đổi kiểu thật; màu chữ gợi ý và rộng tối đa ở Kiểu dáng", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "S", type: "search", attrs: { buttonText: "Tìm" } }], { focus: false }); s.select(["S"], { editing: null }); });
+  const i = insp(page);
+  await expect(c.locator("form.search-form button")).toHaveText("Tìm");
+  await i.getByRole("radiogroup", { name: "Kiểu nút" }).getByRole("radio", { name: "Icon kính lúp" }).click();
+  const btn = c.locator("form.search-form button");
+  await expect(btn).toHaveAttribute("aria-label", "Tìm");
+  await expect(btn.locator("svg")).toBeVisible();
+  await expect(btn).toHaveText("");
+  // Phần Ô nhập / Nút: ghi thẳng giá trị rồi kiểm CSS tính ra (khung soạn dùng cùng controlsCss với website)
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["S"], { searchPlaceholderColor: "#5d6a75", searchMaxWidth: { base: "20rem" },
+    parts: { input: { style: { color: { background: "#f3f4f6" }, border: { color: "#1a597b" } } }, button: { style: { color: { background: "#f26251" } } } } }));
+  await expect(c.locator("form.search-form input")).toHaveCSS("background-color", "rgb(243, 244, 246)");
+  await expect(btn).toHaveCSS("background-color", "rgb(242, 98, 81)");
+  expect(await c.locator("form.search-form input").evaluate((e) => getComputedStyle(e, "::placeholder").color)).toBe("rgb(93, 106, 117)");
+  expect(Math.round((await c.locator("form.search-form").boundingBox())!.width)).toBeLessThanOrEqual(320);
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await expect(i.getByRole("button", { name: /^Ô nhập/ })).toBeVisible();
+  await expect(i.getByRole("button", { name: /^Nút/ })).toBeVisible();
+  await expect(i.getByText("Màu chữ gợi ý")).toBeVisible();
+  await expect(i.getByText("Rộng tối đa của ô tìm")).toBeVisible();
+});

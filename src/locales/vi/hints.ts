@@ -418,4 +418,8 @@ export const hints = {
   "tabs.iconPosition.opt.top": "Trên",
   "tabs.iconOnly.label": "Chỉ hiện icon",
   "tabs.iconOnly.help": "Chữ của tab có icon được ẩn (vẫn dành cho trình đọc màn hình); tab không có icon vẫn hiện chữ",
+  "tableOfContents.showTitle.label": "Hiện tiêu đề",
+  "search.buttonStyle.label": "Kiểu nút",
+  "search.buttonStyle.opt.text": "Chữ",
+  "search.buttonStyle.opt.icon": "Icon kính lúp",
 };

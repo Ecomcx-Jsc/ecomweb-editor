@@ -21,7 +21,7 @@ export const blockStyle = {
     tableBorderColor: "Màu viền ô", tableBorderWidth: "Độ dày viền ô", tableHeaderBg: "Nền hàng tiêu đề", tableHeaderColor: "Chữ hàng tiêu đề", tableStripe: "Màu hàng xen kẽ", tableCellPadding: "Khoảng đệm ô", tableAlign: "Căn chữ trong ô",
     tabsTitleColor: "Màu tiêu đề", tabsTitleBg: "Nền tiêu đề", tabsActiveColor: "Màu tiêu đề", tabsActiveBg: "Nền tiêu đề", tabsAccent: "Gạch chân", tabsBorderColor: "Màu đường kẻ", tabsGap: "Khoảng giữa tiêu đề", tabsContentPadding: "Khoảng đệm nội dung",
     accTitleColor: "Màu tiêu đề", accTitleBg: "Nền tiêu đề", accActiveColor: "Màu tiêu đề", accBorderColor: "Màu viền", accGap: "Khoảng giữa các mục", accPadding: "Khoảng đệm",
-    columnsGap: "Khoảng giữa các cột", columnsDirection: "Hướng xếp", tabsTitleWidth: "Rộng tiêu đề tab", tabsPanelMinHeight: "Cao tối thiểu nội dung", tabsAlign: "Căn tiêu đề tab",
+    columnsGap: "Khoảng giữa các cột", columnsDirection: "Hướng xếp", tabsTitleWidth: "Rộng tiêu đề tab", tabsPanelMinHeight: "Cao tối thiểu nội dung", searchPlaceholderColor: "Màu chữ gợi ý", searchMaxWidth: "Rộng tối đa của ô tìm", tabsAlign: "Căn tiêu đề tab",
     hrStyle: "Kiểu", hrWeight: "Độ dày", hrColor: "Màu", hrWidth: "Chiều rộng", hrAlign: "Căn",
     iconBoxIconColor: "Màu icon", iconBoxIconSize: "Cỡ icon", iconBoxImageWidth: "Rộng ảnh", iconBoxTitleColor: "Màu tiêu đề", iconBoxTextColor: "Màu mô tả",
     imageBoxRadius: "Bo góc ảnh", imageBoxTitleColor: "Màu tiêu đề", imageBoxTextColor: "Màu mô tả",

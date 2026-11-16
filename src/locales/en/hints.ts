@@ -418,4 +418,8 @@ export const hints = {
   "tabs.iconPosition.opt.top": "Top",
   "tabs.iconOnly.label": "Icon only",
   "tabs.iconOnly.help": "Hides the label of tabs that have an icon (kept for screen readers); tabs without an icon still show text",
+  "tableOfContents.showTitle.label": "Show title",
+  "search.buttonStyle.label": "Button style",
+  "search.buttonStyle.opt.text": "Text",
+  "search.buttonStyle.opt.icon": "Magnifier icon",
 };

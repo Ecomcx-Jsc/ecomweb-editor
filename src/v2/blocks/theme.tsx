@@ -1,6 +1,6 @@
 import { Star, AlignLeft, ArrowLeftRight, CalendarDays, ChevronsRight, Heading1, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { ICON_PATHS } from "@ecomcx/ecomweb-content";
+import { ICON_PATHS, SEARCH_ICON_PATH } from "@ecomcx/ecomweb-content";
 import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
 import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
 import type { DynamicPost, QueryArgs } from "../core/host";
@@ -105,7 +105,10 @@ function NavigationEdit({ block, blockProps, selected }: BlockEditProps) {
 function SearchEdit({ block, blockProps }: BlockEditProps) {
   const t = useMsgs("blocks");
   const pos = String(block.attrs.buttonPosition ?? "right");
-  const button = <button type="button" tabIndex={-1}>{String(block.attrs.buttonText || t.searchButton)}</button>;
+  const label = String(block.attrs.buttonText || t.searchButton);
+  const button = block.attrs.buttonStyle === "icon"
+    ? <button type="button" tabIndex={-1} aria-label={label} title={label}><svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={SEARCH_ICON_PATH} /></svg></button>
+    : <button type="button" tabIndex={-1}>{label}</button>;
   return (
     <div {...merge(blockProps, "ecx-search")}>
       <form role="search" onSubmit={(e) => e.preventDefault()} style={pos === "below" ? { display: "flex", flexDirection: "column", gap: 8 } : undefined}
@@ -456,7 +459,7 @@ export function themeBlocks(): BlockType[] {
     { name: "siteLogo", title: "Logo", icon: ImageIcon, category: theme, keywords: "logo", kind: "atom", edit: SiteLogoEdit, attributes: { width: { type: "number", default: 120 }, link: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     { name: "siteTagline", title: "Khẩu hiệu", icon: Type, category: theme, keywords: "khau hieu tagline mo ta", kind: "atom", edit: SiteTaglineEdit, attributes: { textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "navigation", title: "Menu", icon: Menu, category: theme, keywords: "menu dieu huong navigation", kind: "atom", edit: NavigationEdit, attributes: { location: { type: "string", default: "primary" }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" }, mobile: { type: "boolean", default: true }, overlayMenu: { type: "string", enum: ["never", "mobile", "always"], default: "mobile" } }, supports: { style: true, className: true }, summary: (a) => a.location },
-    { name: "search", title: "Tìm kiếm", icon: Search, category: theme, keywords: "tim kiem search", kind: "atom", edit: SearchEdit, attributes: { placeholder: { type: "string" }, buttonText: { type: "string" }, postType: { type: "string" }, showLabel: { type: "boolean", default: false }, buttonPosition: { type: "string", enum: ["right", "left", "below"], default: "right" } }, supports: { style: true, className: true } },
+    { name: "search", title: "Tìm kiếm", icon: Search, category: theme, keywords: "tim kiem search", kind: "atom", edit: SearchEdit, attributes: { placeholder: { type: "string" }, buttonText: { type: "string" }, postType: { type: "string" }, showLabel: { type: "boolean", default: false }, buttonPosition: { type: "string", enum: ["right", "left", "below"], default: "right" }, buttonStyle: { type: "string", enum: ["text", "icon"], default: "text" } }, supports: { style: true, className: true } },
     { name: "languageSwitcher", title: "Chọn ngôn ngữ", icon: Globe2, category: theme, keywords: "ngon ngu language", kind: "atom", edit: LanguageEdit, attributes: { display: { type: "string", enum: ["inline", "dropdown"], default: "inline" } }, supports: { style: true, className: true } },
     { name: "copyright", title: "Bản quyền", icon: Copyright, category: theme, keywords: "ban quyen copyright", kind: "atom", edit: CopyrightEdit, attributes: { text: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "postTitle", title: "Tiêu đề bài", icon: Type, category: theme, keywords: "tieu de bai post title", kind: "atom", edit: PostTitleEdit, attributes: { level: { type: "integer", default: 1, min: 1, max: 6 }, link: { type: "boolean", default: false }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
