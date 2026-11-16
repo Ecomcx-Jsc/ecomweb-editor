@@ -94,6 +94,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "accordion.iconSide": { control: "segmented", label: true, options: ["left", "right"] },
   "accordion.titleTag": { control: "segmented", label: true, help: true },
   "accordion.faq": { label: true, help: true },
+  "accordion.startOpen": { control: "segmented", label: true, help: true, options: ["none", "first", "all"] },
   "button.iconPosition": { control: "segmented", options: ["left", "right"], when: (a) => !!a.icon },
   "button.width": { control: "segmented", options: ["auto", "full"] },
   "button.ariaLabel": { help: true },

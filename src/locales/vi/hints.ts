@@ -407,4 +407,9 @@ export const hints = {
   "progressBar.easing.opt.ease-in-out": "Chậm ở hai đầu",
   "progressBar.ariaLabel.label": "Nhãn cho trình đọc màn hình",
   "progressBar.ariaLabel.help": "Trống = dùng nhãn của thanh",
+  "accordion.startOpen.label": "Mở sẵn khi tải trang",
+  "accordion.startOpen.help": "Mục nào đã tự bật \"Mở sẵn\" thì giữ nguyên. Nhóm \"mở một mục\" chỉ mở được mục đầu.",
+  "accordion.startOpen.opt.none": "Đóng hết",
+  "accordion.startOpen.opt.first": "Mục đầu",
+  "accordion.startOpen.opt.all": "Tất cả",
 };

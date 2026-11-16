@@ -407,4 +407,9 @@ export const hints = {
   "progressBar.easing.opt.ease-in-out": "Ease in and out",
   "progressBar.ariaLabel.label": "Screen reader label",
   "progressBar.ariaLabel.help": "Empty = use the bar label",
+  "accordion.startOpen.label": "Open on page load",
+  "accordion.startOpen.help": "Panes with their own \"Open\" switch are left as set. A one-at-a-time group can only open the first.",
+  "accordion.startOpen.opt.none": "All closed",
+  "accordion.startOpen.opt.first": "First",
+  "accordion.startOpen.opt.all": "All",
 };

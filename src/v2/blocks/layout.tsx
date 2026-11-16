@@ -519,7 +519,7 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "accordion", title: "Accordion", icon: PanelTop, category: "text", keywords: "accordion faq hoi dap nhieu muc", kind: "container", edit: AccordionEdit,
-      attributes: { multiple: { type: "boolean", default: false }, columns: { type: "number", enum: [1, 2], default: 1 }, icon: { type: "string", enum: ["arrow", "plus", "none"], default: "arrow" }, iconSide: { type: "string", enum: ["left", "right"], default: "right" }, titleTag: { type: "string", enum: ["div", "h2", "h3", "h4", "h5", "h6"], default: "div" }, faq: { type: "boolean", default: false } },
+      attributes: { multiple: { type: "boolean", default: false }, columns: { type: "number", enum: [1, 2], default: 1 }, icon: { type: "string", enum: ["arrow", "plus", "none"], default: "arrow" }, iconSide: { type: "string", enum: ["left", "right"], default: "right" }, titleTag: { type: "string", enum: ["div", "h2", "h3", "h4", "h5", "h6"], default: "div" }, startOpen: { type: "string", enum: ["none", "first", "all"], default: "none" }, faq: { type: "boolean", default: false } },
       create: () => makeBlock("accordion", {}, [makeBlock("details", { summary: "" }, [makeBlock("paragraph")]), makeBlock("details", { summary: "" }, [makeBlock("paragraph")])]), supports: { style: true, anchor: true, className: true },
     },
     {

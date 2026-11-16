@@ -703,3 +703,24 @@ test("bộ đếm: số chữ thập phân và thẻ tiêu đề; thanh tiến �
   await insp(page).getByRole("textbox", { name: "Nhãn cho trình đọc màn hình" }).fill("Tiến độ đơn hàng");
   await expect(bar.locator("[role=progressbar]")).toHaveAttribute("aria-label", "Tiến độ đơn hàng");
 });
+
+test("accordion: chọn mở sẵn (ô hiện ở Cài đặt, lưu vào khối); phần Icon ở Kiểu dáng đổi màu icon thường và khi đang mở", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  const pane = (id: string, t: string) => ({ id, type: "details", attrs: { summary: t }, content: [{ id: `${id}p`, type: "paragraph", attrs: {}, inline: [{ type: "text", text: `Nội dung ${t}` }] }] });
+  await page.evaluate((ps) => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "A", type: "accordion", attrs: {}, content: ps }], { focus: false }); s.select(["A"], { editing: null }); }, [pane("d1", "Một"), pane("d2", "Hai")]);
+  const i = insp(page);
+  const grp = i.getByRole("radiogroup", { name: "Mở sẵn khi tải trang" });
+  await grp.getByRole("radio", { name: "Mục đầu" }).click();
+  expect((await find(page, "accordion")).attrs.startOpen).toBe("first");
+  await grp.getByRole("radio", { name: "Tất cả" }).click();
+  expect((await find(page, "accordion")).attrs.startOpen).toBe("all");
+  // Phần Icon: màu thường và màu khi đang mở
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["A"], { parts: { icon: { style: { color: { text: "#f26251" } }, active: { color: { text: "#1a597b" } } } } }));
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await expect(i.getByRole("button", { name: /^Icon/ })).toBeVisible();
+  // Khung soạn luôn mở hết mục → icon ở trạng thái "đang mở"
+  const color = () => c.locator(".ecx-accordion > details > summary").first().evaluate((e) => getComputedStyle(e, "::after").borderTopColor);
+  await expect.poll(color).toBe("rgb(26, 89, 123)");
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["A"], { parts: { icon: { style: { color: { text: "#f26251" } } } } }));
+  await expect.poll(color).toBe("rgb(242, 98, 81)");
+});
