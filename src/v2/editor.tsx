@@ -185,7 +185,8 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
   const p = usePrefs(ctx.prefs);
   const [left, setLeft] = useState<"inserter" | "list" | null>(() => (ctx.prefs.get().showListView ? "list" : null));
   useEffect(() => { ctx.ui.browseAll = () => setLeft("inserter"); return () => { ctx.ui.browseAll = null; }; }, [ctx.ui]);
-  const [right, setRight] = useState(true);
+  // Điện thoại: bảng bên phải mở đè lên canvas nên mặc định đóng (mở bằng nút ở thanh trên)
+  const [right, setRight] = useState(() => typeof window === "undefined" || window.innerWidth > 640);
   // Khổ ban đầu do ứng dụng chọn; sau đó dùng chung qua ui.device (DeviceSwitcher, tab Kiểu dáng)
   useEffect(() => { if (defaultDevice) ctx.ui.setDevice(defaultDevice); }, [ctx.ui, defaultDevice]);
   const [saving, setSaving] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -256,7 +257,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
       {error && <div className="ecx-notice is-error" role="alert">{error}</div>}
       {p.fixedToolbar && p.mode === "visual" && <div className="ecx-fixed-toolbar"><BlockToolbar placement="fixed" /></div>}
       <div className="ecx-body">
-        {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel onClose={() => setLeft(null)} /> : <ListView onClose={() => setLeft(null)} />}</aside>}
+        {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel onClose={() => setLeft(null)} onInserted={() => { /* Điện thoại: bảng đè lên canvas nên chèn xong thì đóng để tiếp tục soạn */ if (window.innerWidth <= 640) setLeft(null); }} /> : <ListView onClose={() => setLeft(null)} />}</aside>}
         <main className="ecx-main">{p.mode === "code" ? <CodeEditor /> : <Canvas before={canvasBefore} />}</main>
         {right && !p.distractionFree && <aside className="ecx-right"><Inspector blockStyles={blockStyles} /></aside>}
       </div>

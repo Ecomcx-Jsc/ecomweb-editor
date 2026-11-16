@@ -36,7 +36,7 @@
 .ecx-topbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 52px; padding: 0 10px; border-bottom: 1px solid var(--ecx-ed-line); background: var(--ecx-ed-panel); flex: none; }
 .ecx-topbar-start, .ecx-topbar-end { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .ecx-topbar .ecx-tool-group { gap: 2px; padding: 2px; border-radius: 8px; background: var(--ecx-ed-subtle); }
-.ecx-body { display: flex; flex: 1; min-height: 0; position: relative; }
+.ecx-body { display: flex; flex: 1; min-height: 0; position: relative; overflow-x: clip; } /* bảng bên trượt vào (translateX) không làm trang tràn ngang lúc đầu */
 .ecx-left { width: 300px; flex: none; border-right: 1px solid var(--ecx-ed-line); overflow: auto; background: var(--ecx-ed-panel); animation: ecx-slide-r .2s var(--ecx-ed-ease); }
 .ecx-right { width: 296px; flex: none; border-left: 1px solid var(--ecx-ed-line); overflow: auto; background: var(--ecx-ed-panel); animation: ecx-slide-l .2s var(--ecx-ed-ease); }
 .ecx-main { flex: 1; min-width: 0; display: flex; background: var(--ecx-ed-bg); }
@@ -50,6 +50,20 @@
 @media (max-width: 960px) {
   .ecx-right, .ecx-left { position: absolute; top: 0; bottom: 0; z-index: 20; box-shadow: var(--ecx-ed-shadow); }
   .ecx-right { right: 0; } .ecx-left { left: 0; }
+}
+/* Điện thoại: thanh trên cuộn ngang (không tràn trang, không chồng nút), bảng hai bên rộng tối đa 92% màn hình */
+@media (max-width: 640px) {
+  .ecx-topbar { padding: 0 6px; gap: 6px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; justify-content: flex-start; }
+  .ecx-topbar::-webkit-scrollbar { display: none; }
+  .ecx-topbar-start, .ecx-topbar-end { flex: none; }
+  .ecx-topbar-end { margin-left: auto; }
+  .ecx-topbar-start > :first-child { white-space: nowrap; }
+  .ecx-right, .ecx-left { width: min(92vw, 340px); }
+  /* Rút gọn để nút Lưu luôn thấy: bỏ nhóm đổi khổ (trên điện thoại xem thử bằng chính màn hình) và chữ của nút Thư viện mẫu */
+  .ecx-topbar .ecx-tool-group[aria-label] { display: none; }
+  .ecx-topbar .ecx-lib-open { font-size: 0; gap: 0; padding: 0 8px; }
+  .ecx-topbar .ecx-lib-open svg { font-size: 14px; }
+  .ecx-topbar-end { position: sticky; right: 0; background: var(--ecx-ed-panel); padding-left: 6px; }
 }
 
 /* Nút */

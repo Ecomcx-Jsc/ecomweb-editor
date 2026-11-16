@@ -12,6 +12,14 @@ export default defineConfig({
     { name: "chromium", testIgnore: /perf\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 }, permissions: ["clipboard-read", "clipboard-write"] } },
     { name: "firefox", testIgnore: /perf\.spec/, use: { ...devices["Desktop Firefox"], viewport: { width: 1440, height: 900 } } },
     { name: "webkit", testIgnore: /perf\.spec/, use: { ...devices["Desktop Safari"], viewport: { width: 1440, height: 900 } } },
+    // Ma trận thiết bị (17/11): vỏ trình soạn phải dùng được ở mọi khổ — chỉ chạy devices.spec (bộ kiểm riêng cho khổ màn hình)
+    { name: "phone-safari", testMatch: /devices\.spec/, use: { ...devices["iPhone 14"] } },
+    { name: "phone-chrome", testMatch: /devices\.spec/, use: { ...devices["Pixel 7"] } },
+    { name: "tablet-safari", testMatch: /devices\.spec/, use: { ...devices["iPad Mini"] } },
+    { name: "tablet-chrome", testMatch: /devices\.spec/, use: { ...devices["Galaxy Tab S4"] } },
+    { name: "laptop-small", testMatch: /devices\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 720 } } },
+    { name: "full-hd", testMatch: /devices\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 1920, height: 1080 } } },
+    { name: "ultrawide", testMatch: /devices\.spec/, use: { ...devices["Desktop Chrome"], viewport: { width: 2560, height: 1080 } } },
     // Đo hiệu năng: chạy một mình sau khi các test khác xong (chạy chung thì tranh CPU, số đo sai)
     { name: "perf", testMatch: /perf\.spec/, dependencies: ["chromium", "firefox", "webkit"], use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],

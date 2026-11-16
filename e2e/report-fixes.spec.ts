@@ -26,7 +26,10 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     const typo = insp(page).locator(".ecx-style-section").first();
     await typo.getByRole("radio", { name: "lg" }).click();
     await insp(page).getByRole("button", { name: "Điện thoại", exact: true }).first().click();
-    await typo.getByRole("radio", { name: "sm" }).click();
+    // Đổi khổ vẽ lại bảng phải trong ~300ms (khung soạn đổi cỡ liên tục): chờ đứng yên rồi mới bấm (WebKit chạy song song hay bấm trượt lúc này)
+    const sm = typo.getByRole("radio", { name: "sm" });
+    await expect(async () => { const a = (await sm.boundingBox())!; await page.waitForTimeout(150); expect((await sm.boundingBox())!.y).toBe(a.y); }).toPass();
+    await sm.click();
     expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "lg", mobile: "sm" });
     await typo.getByRole("button", { name: "Đặt lại" }).first().click();
     expect((await blockOf(page, "paragraph")).attrs.style.fontSize).toEqual({ base: "lg" });

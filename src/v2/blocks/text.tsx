@@ -10,9 +10,14 @@ import { useActiveWithin } from "./resize";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useMsgs } from "../i18n";
 import { useEditor } from "../context";
+import { withoutOverridden } from "./inline-style";
 
 // Căn chữ lấy từ vỏ dùng chung với website: căn trái không in style (trước đây canvas in thừa)
-const align = (a: Record<string, unknown>, type = "paragraph"): CSSProperties | undefined => blockShell(type, a)?.style as CSSProperties | undefined;
+// Căn chữ của thuộc tính (Cài đặt) mà Kiểu dáng › Căn chữ đã đặt thì bỏ phần inline — giống renderer website (inline luôn thắng class kiểu dáng)
+const align = (a: Record<string, unknown>, type = "paragraph"): CSSProperties | undefined => {
+  const st = blockShell(type, a)?.style as CSSProperties | undefined;
+  return st && a.style ? withoutOverridden(st, a.style) : st;
+};
 /** Class + chú thích của icon cạnh chữ (cùng vỏ với website). */
 const iconProps = (a: Record<string, unknown>, type = "paragraph") => { const sh = blockShell(type, a); return { className: sh?.className, title: sh?.attrs?.title }; };
 const HEADING_ICONS = [Heading1, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6];
@@ -180,7 +185,7 @@ export function textBlocks(): BlockType[] {
     },
     {
       name: "codeBlock", title: "Mã nguồn", icon: SquareCode, category: "text", keywords: "ma code nguon", kind: "text", edit: CodeEdit, multiline: true, plain: true,
-      attributes: { language: { type: "string", label: "Ngôn ngữ" } },
+      attributes: { language: { type: "string" } }, // nhãn lấy từ locales/*/attrs.ts (language) theo ngôn ngữ đang dùng
       transforms: [{ to: "paragraph", convert: (b) => textsOf(b).map((i) => makeBlock("paragraph", {}, inlineText(i))) }, { to: "preformatted", convert: toTextBlocks("preformatted") }],
     },
     {

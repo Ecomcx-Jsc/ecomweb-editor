@@ -295,12 +295,14 @@ test("tab: thanh công cụ dời tab đang mở, thêm tab", async ({ page }) =
 test.describe("cột trái: cây khối, dàn ý, media", () => {
   // Cột trái trượt vào (0.2s): tắt chuyển động để rê / bấm đúng chỗ
   test.beforeEach(async ({ page }) => { await page.emulateMedia({ reducedMotion: "reduce" }); });
-  test("dòng cây khối: nút ⋮ mở menu khối; đổi tên, ẩn, cắt", async ({ page }) => {
+  test("dòng cây khối: nút ⋮ mở menu khối; đổi tên, ẩn, cắt", async ({ page, browserName }) => {
     await open(page, "?doc=post");
     await page.getByRole("button", { name: "Cây khối" }).first().click();
     const tree = page.getByRole("tree", { name: "Cây khối" });
     const row = tree.locator(".ecx-list-row").nth(1);
-    await row.hover();
+    // Ngăn Cây khối trượt ra: chờ đứng yên (Firefox treo ở bước "ổn định" của hover nếu rê khi đang trượt)
+    await expect(async () => { const a = (await row.boundingBox())!; await page.waitForTimeout(150); expect((await row.boundingBox())!.x).toBe(a.x); }).toPass();
+    await row.hover({ force: true });
     // shortcut: Playwright đôi khi treo ở bước chờ "ổn định" của nút này dù nút đã hiện, đứng yên (đã đo) — bấm thẳng; nút vẫn được rê hiện như người dùng
     await row.getByRole("button", { name: "Tuỳ chọn" }).click({ force: true });
     await page.getByRole("menuitem", { name: "Đổi tên" }).click();
@@ -323,7 +325,8 @@ test.describe("cột trái: cây khối, dàn ý, media", () => {
     await tree.locator(".ecx-list-row").nth(1).click({ button: "right" });
     await page.getByRole("menuitem", { name: "Cắt" }).click();
     await expect.poll(async () => (await state(page)).docs.root.blocks.length).toBe(before - 1); // chép vào clipboard xong mới xoá
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(text);
+    // Đọc clipboard của trang chỉ cấp quyền được trong Chromium (Firefox / WebKit từ chối trong trình duyệt tự động); xoá khối đã kiểm ở trên
+    if (browserName === "chromium") expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(text);
   });
 
   test("tab Dàn ý: số chữ, tiêu đề theo cấp, báo nhảy cấp; đóng cột trái", async ({ page }) => {
@@ -777,7 +780,7 @@ test("mục lục: công tắc Hiện tiêu đề; bật thu gọn được thì
   expect(await find(page, "tableOfContents")).toMatchObject({ attrs: { showTitle: false, collapsible: true } });
 });
 
-test("tìm kiếm: nút icon kính lúp có nhãn đọc màn hình; phần Ô nhập / Nút đổi kiểu thật; màu chữ gợi ý và rộng tối đa ở Kiểu dáng", async ({ page }) => {
+test("tìm kiếm: nút icon kính lúp có nhãn đọc màn hình; phần Ô nhập / Nút đổi kiểu thật; màu chữ gợi ý và rộng tối đa ở Kiểu dáng", async ({ page, browserName }) => {
   const c = await open(page, "?doc=post");
   await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "S", type: "search", attrs: { buttonText: "Tìm" } }], { focus: false }); s.select(["S"], { editing: null }); });
   const i = insp(page);
@@ -792,7 +795,8 @@ test("tìm kiếm: nút icon kính lúp có nhãn đọc màn hình; phần Ô n
     parts: { input: { style: { color: { background: "#f3f4f6" }, border: { color: "#1a597b" } } }, button: { style: { color: { background: "#f26251" } } } } }));
   await expect(c.locator("form.search-form input")).toHaveCSS("background-color", "rgb(243, 244, 246)");
   await expect(btn).toHaveCSS("background-color", "rgb(242, 98, 81)");
-  expect(await c.locator("form.search-form input").evaluate((e) => getComputedStyle(e, "::placeholder").color)).toBe("rgb(93, 106, 117)");
+  // WebKit không trả màu của ::placeholder qua getComputedStyle (luôn trả màu chữ của ô); luật CSS vẫn có hiệu lực thật
+  if (browserName !== "webkit") expect(await c.locator("form.search-form input").evaluate((e) => getComputedStyle(e, "::placeholder").color)).toBe("rgb(93, 106, 117)");
   expect(Math.round((await c.locator("form.search-form").boundingBox())!.width)).toBeLessThanOrEqual(320);
   await i.getByRole("tab", { name: "Kiểu dáng" }).click();
   await expect(i.getByRole("button", { name: /^Ô nhập/ })).toBeVisible();

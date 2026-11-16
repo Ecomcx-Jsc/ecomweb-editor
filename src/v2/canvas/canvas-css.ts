@@ -67,7 +67,7 @@ span[data-ecx-rich][data-empty][data-placeholder] { display: inline-block; verti
 .ecx-button [data-ecx-rich][data-empty][data-placeholder]::before { opacity: .8; font-style: normal; left: 0; right: 0; text-align: center; } /* chữ gợi ý trên nền màu nút: sáng vừa đủ tương phản, không nghiêng */
 .ecx-button span[data-ecx-rich][data-empty][data-placeholder] { min-width: calc(var(--ecx-ph, 0) * .75em); } /* chữ đậm của nút rộng hơn chữ thường: chừa chỗ để gợi ý không bị cắt */
 [data-ecx-rich][data-empty][data-placeholder] { flex: 1 1 8em; } /* trong hàng ngang (flex): ô trống không co về 0px (gợi ý là ::before absolute) */
-[data-ecx-rich][data-empty][data-placeholder]::before { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+[data-ecx-rich][data-empty][data-placeholder]::before { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; left: 0; right: 0; } /* bám hai mép của ô (căn giữa / cỡ chữ lớn: không tràn ra ngoài khối) */
 .ProseMirror-hideselection *::selection { background: transparent; }
 .ProseMirror-selectednode { outline: 2px solid var(--ecx-ui); }
 .ecx-inline-atom { padding: 0 .25em; border-radius: 4px; background: var(--ecx-ui-soft); font-size: .85em; }

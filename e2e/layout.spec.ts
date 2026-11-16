@@ -225,7 +225,7 @@ test.describe("bố cục + hiệu ứng", () => {
     const b2 = (await h2.boundingBox())!;
     await page.mouse.move(b2.x + b2.width / 2, b2.y + b2.height / 2);
     await page.mouse.down();
-    await page.mouse.move(b2.x + 2000, b2.y + b2.height / 2, { steps: 5 });
+    await page.mouse.move(b2.x + 420, b2.y + b2.height / 2, { steps: 8 }); // trong khung nhìn: Firefox không phát pointermove khi chuột ra ngoài cửa sổ
     await page.mouse.up();
     expect((await groupOf(page)).attrs.contentWidth).toBeUndefined();
   });
