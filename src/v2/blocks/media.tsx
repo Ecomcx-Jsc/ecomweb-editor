@@ -50,7 +50,7 @@ function GalleryEdit({ block, blockProps, setAttrs, editable, selected }: BlockE
   const cols = Math.min(6, Math.max(1, Number(block.attrs.columns) || 3));
   const add = (items: MediaItem[]) => setAttrs({ images: [...images, ...((mediaAttrs("gallery", items).images ?? []) as typeof images)] });
   return (
-    <figure {...blockProps} className={cx(blockProps.className, blockShell("gallery", block.attrs)!.className)} style={{ ...(blockProps.style ?? {}), ...(blockShell("gallery", block.attrs)!.style as CSSProperties) }}>
+    <figure {...blockProps} className={cx(blockProps.className, blockShell("gallery", block.attrs)!.className, (block.attrs.layout === "masonry" || block.attrs.imageCrop === false) && "is-natural")} style={{ ...(blockProps.style ?? {}), ...(blockShell("gallery", block.attrs)!.style as CSSProperties) }}>
       {images.map((im, i) => <figure key={i} className="ecx-gallery-item cms-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={block.attrs.layout === "masonry" || block.attrs.imageCrop === false ? { width: "100%", height: "auto", display: "block" } : { width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" }} /></figure>)}
       {/* Có ảnh rồi vẫn còn ô "+" cuối lưới để thêm tiếp (chỉ khi đang chọn: website không có ô này) */}
       {editable && selected && <MediaPlaceholder kind="gallery" compact title={tp.addImage} icon={Plus} className="ecx-gallery-add" onSelect={add} />}

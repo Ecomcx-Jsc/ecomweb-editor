@@ -873,3 +873,14 @@ test("bản đồ: gõ địa chỉ ngay trên khối ra khung Google Maps; mứ
   await page.getByRole("button", { name: "Thêm khối" }).first().click();
   await expect(page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="map"]').first()).toBeVisible();
 });
+
+test("thư viện ảnh: không cắt ảnh (ảnh ngang giữ tỉ lệ) thì ô thêm ảnh không phình thành ô vuông khổng lồ", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "G", type: "gallery", attrs: { columns: 2, imageCrop: false, images: [{ src: "/sample.svg", alt: "a", width: 900, height: 60 }] } }], { focus: false }); s.select(["G"], { editing: null }); });
+  await expect(c.locator("figure.ecx-gallery.is-natural")).toBeVisible();
+  const add = c.locator(".ecx-gallery-add");
+  await expect(add).toBeVisible();
+  expect(Math.round((await add.boundingBox())!.height)).toBeLessThan(200);
+  const img = (await c.locator(".ecx-gallery-item img").boundingBox())!;
+  expect(img.width / img.height).toBeGreaterThan(1.5); // giữ tỉ lệ ngang, không bị ép thành ô vuông
+});

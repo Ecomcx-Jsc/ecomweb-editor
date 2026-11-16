@@ -274,6 +274,9 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-ph-list-add .ecx-add-item { margin-top: 2px; }
 .ecx-gallery-add { grid-column: auto; min-height: 0; aspect-ratio: 1; }
 .ecx-gallery-add .ecx-placeholder-hint { display: none; }
+/* Ảnh giữ tỉ lệ (không cắt / masonry): ô "+" không còn là ô vuông khổng lồ, ảnh không bị kéo giãn theo hàng */
+.ecx-gallery.is-natural { align-items: start; }
+.ecx-gallery.is-natural .ecx-gallery-add { aspect-ratio: auto; min-height: 7rem; }
 /* Mã nguồn: chọn ngôn ngữ trên khối; danh sách số: số bắt đầu */
 .ecx-ph-corner { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin: 0 0 6px; font: 12px var(--ecx-ui-font); white-space: normal; }
 .ecx-ph-corner > label, .ecx-ph-corner > span { background: #fff; color: #33414d; border-radius: 4px; padding: 1px 6px; }
