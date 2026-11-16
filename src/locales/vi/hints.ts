@@ -425,4 +425,8 @@ export const hints = {
   "gallery.layout.label": "Kiểu xếp",
   "gallery.layout.opt.grid": "Lưới đều",
   "gallery.layout.opt.masonry": "Masonry",
+  "form.inputSize.label": "Cỡ ô nhập",
+  "form.inputSize.opt.sm": "Nhỏ",
+  "form.inputSize.opt.md": "Vừa",
+  "form.inputSize.opt.lg": "Lớn",
 };

@@ -815,3 +815,32 @@ test("thư viện ảnh: kiểu masonry (ảnh giữ tỉ lệ, chia cột), kho
   await page.evaluate(() => (window as any).__ecx.store.setAttrs(["G"], { galleryGap: undefined }));
   await expect(g).toHaveCSS("column-gap", "8px");
 });
+
+test("form: cỡ ô nhập S / M / L đổi chiều cao ô thật; phần Ô nhập / Dấu * / Báo lỗi / Nút ở Kiểu dáng đổi màu thật", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "F", type: "form", attrs: { formId: "f_test01" }, content: [
+    { id: "f1", type: "formField", attrs: { kind: "text", name: "name", label: "Họ tên", required: true } },
+    { id: "f2", type: "formField", attrs: { kind: "email", name: "email", label: "Email", help: "Không công khai" } }] }], { focus: false }); s.select(["F"], { editing: null }); });
+  const input = c.locator(".ecx-form-blocks .ecx-field input").first();
+  const h = async () => Math.round((await input.boundingBox())!.height);
+  const md = await h();
+  const size = insp(page).getByRole("radiogroup", { name: "Cỡ ô nhập" });
+  await size.getByRole("radio", { name: "Lớn" }).click();
+  await expect(c.locator(".ecx-form-blocks.is-size-lg")).toBeVisible();
+  const lg = await h(); expect(lg).toBeGreaterThan(md);
+  await size.getByRole("radio", { name: "Nhỏ" }).click();
+  const sm = await h(); expect(sm).toBeLessThan(md);
+  await size.getByRole("radio", { name: "Vừa" }).click();
+  await expect(c.locator(".ecx-form-blocks.is-size-sm, .ecx-form-blocks.is-size-lg")).toHaveCount(0);
+  expect(await h()).toBe(md);
+  // Các phần của form (ghi thẳng giá trị; khung soạn dùng cùng controlsCss với website)
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["F"], { parts: {
+    input: { style: { color: { background: "#f3f4f6" } }, hover: { border: { color: "#1a597b" } } },
+    required: { style: { color: { text: "#f26251" } } },
+    button: { style: { color: { background: "#0f1e29" } } } } }));
+  await expect(input).toHaveCSS("background-color", "rgb(243, 244, 246)");
+  await expect(c.locator(".ecx-field-required").first()).toHaveCSS("color", "rgb(242, 98, 81)");
+  await expect(c.locator(".ecx-form-actions .ecx-button")).toHaveCSS("background-color", "rgb(15, 30, 41)");
+  await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
+  for (const part of ["Nhãn", "Ô nhập", "Dấu \\* bắt buộc", "Gợi ý dưới ô", "Báo lỗi", "Báo thành công", "Nút"]) await expect(insp(page).getByRole("button", { name: new RegExp(`^${part}`) })).toBeVisible();
+});

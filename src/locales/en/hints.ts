@@ -425,4 +425,8 @@ export const hints = {
   "gallery.layout.label": "Layout",
   "gallery.layout.opt.grid": "Even grid",
   "gallery.layout.opt.masonry": "Masonry",
+  "form.inputSize.label": "Input size",
+  "form.inputSize.opt.sm": "Small",
+  "form.inputSize.opt.md": "Medium",
+  "form.inputSize.opt.lg": "Large",
 };
