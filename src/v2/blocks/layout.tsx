@@ -1,4 +1,4 @@
-import { ICON_NAMES, ICON_PATHS, countdownParts, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue } from "@ecomcx/ecomweb-content";
+import { ICON_NAMES, ICON_PATHS, countdownParts, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue, tabsClass } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
 import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
@@ -223,7 +223,7 @@ function TabsEdit({ block, blockProps, editable }: BlockEditProps) {
   const active = useOpenTab(block.id);
   const tabs = (block.content ?? []).filter((c) => c.type === "tab");
   return (
-    <div {...(merge(blockProps, cx("ecx-tabs", block.attrs.orientation === "vertical" && "is-vertical", block.attrs.mobileAccordion === true && "has-mobile-accordion")) as object)}>
+    <div {...(merge(blockProps, tabsClass(block.attrs)) as object)}>
       <div role="tablist" className="ecx-tabs-list" aria-orientation={block.attrs.orientation === "vertical" ? "vertical" : undefined}>
         {tabs.map((tab, i) => {
           const icon = ICON_PATHS[String(tab.attrs.icon ?? "")];
@@ -524,7 +524,7 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "tabs", title: "Tabs", icon: PanelTop, category: "text", keywords: "tabs the tab chuyen doi noi dung", kind: "container", edit: TabsEdit,
-      attributes: { tabsAlign: { type: "string", enum: ["flex-start", "center", "flex-end", "space-between"] }, initial: { type: "number", min: 1 }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" }, mobileAccordion: { type: "boolean", default: false } },
+      attributes: { tabsAlign: { type: "string", enum: ["flex-start", "center", "flex-end", "space-between"] }, initial: { type: "number", min: 1 }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" }, mobileAccordion: { type: "boolean", default: false }, iconPosition: { type: "string", enum: ["left", "right", "top"], default: "left" }, iconOnly: { type: "boolean", default: false } },
       create: () => makeBlock("tabs", {}, [makeBlock("tab", { title: "" }, [makeBlock("paragraph")]), makeBlock("tab", { title: "" }, [makeBlock("paragraph")])]), contextToolbar: TabsTools, supports: { style: true, anchor: true, className: true },
     },
     {

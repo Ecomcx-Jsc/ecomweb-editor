@@ -412,4 +412,10 @@ export const hints = {
   "accordion.startOpen.opt.none": "All closed",
   "accordion.startOpen.opt.first": "First",
   "accordion.startOpen.opt.all": "All",
+  "tabs.iconPosition.label": "Icon position",
+  "tabs.iconPosition.opt.left": "Left",
+  "tabs.iconPosition.opt.right": "Right",
+  "tabs.iconPosition.opt.top": "Top",
+  "tabs.iconOnly.label": "Icon only",
+  "tabs.iconOnly.help": "Hides the label of tabs that have an icon (kept for screen readers); tabs without an icon still show text",
 };

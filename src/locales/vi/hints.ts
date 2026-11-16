@@ -412,4 +412,10 @@ export const hints = {
   "accordion.startOpen.opt.none": "Đóng hết",
   "accordion.startOpen.opt.first": "Mục đầu",
   "accordion.startOpen.opt.all": "Tất cả",
+  "tabs.iconPosition.label": "Vị trí icon",
+  "tabs.iconPosition.opt.left": "Trái",
+  "tabs.iconPosition.opt.right": "Phải",
+  "tabs.iconPosition.opt.top": "Trên",
+  "tabs.iconOnly.label": "Chỉ hiện icon",
+  "tabs.iconOnly.help": "Chữ của tab có icon được ẩn (vẫn dành cho trình đọc màn hình); tab không có icon vẫn hiện chữ",
 };

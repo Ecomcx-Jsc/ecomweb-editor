@@ -48,6 +48,8 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "tab.subtitle": { label: true },
   "tabs.orientation": { control: "segmented", label: true, options: ["horizontal", "vertical"] },
   "tabs.mobileAccordion": { label: true },
+  "tabs.iconPosition": { control: "segmented", label: true, options: ["left", "right", "top"] },
+  "tabs.iconOnly": { label: true, help: true },
   "buttons.orientation": { control: "segmented", label: true, options: ["horizontal", "vertical"] },
   "button.iconOnly": { label: true, when: (a) => !!a.icon },
   "button.iconReveal": { label: true, when: (a) => !!a.icon && a.iconOnly !== true },

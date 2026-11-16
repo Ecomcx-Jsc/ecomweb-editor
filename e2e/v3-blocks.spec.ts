@@ -724,3 +724,31 @@ test("accordion: chọn mở sẵn (ô hiện ở Cài đặt, lưu vào khối)
   await page.evaluate(() => (window as any).__ecx.store.setAttrs(["A"], { parts: { icon: { style: { color: { text: "#f26251" } } } } }));
   await expect.poll(color).toBe("rgb(242, 98, 81)");
 });
+
+test("tab: vị trí icon (trên / phải), chỉ hiện icon ẩn chữ của tab có icon; rộng tiêu đề và cao tối thiểu nội dung ở Kiểu dáng", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  const tab = (id: string, t: string, icon?: string) => ({ id, type: "tab", attrs: { title: t, ...(icon ? { icon } : {}) }, content: [{ id: `${id}p`, type: "paragraph", attrs: {}, inline: [{ type: "text", text: `Nội dung ${t}` }] }] });
+  await page.evaluate((ts) => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "T", type: "tabs", attrs: {}, content: ts }], { focus: false }); s.select(["T"], { editing: null }); }, [tab("t1", "Giao hàng", "clock"), tab("t2", "Đổi trả")]);
+  const i = insp(page);
+  const btn = c.locator(".ecx-tabs [role=tab]").first();
+  const pos = async () => { const [a, b] = [await btn.locator(".ecx-tab-icon").boundingBox(), await btn.locator(".ecx-tab-label").boundingBox()]; return { a: a!, b: b! }; };
+  let p = await pos();
+  expect(p.a.x).toBeLessThan(p.b.x); // mặc định: icon bên trái chữ
+  await i.getByRole("radiogroup", { name: "Vị trí icon" }).getByRole("radio", { name: "Phải" }).click();
+  p = await pos(); expect(p.a.x).toBeGreaterThan(p.b.x);
+  await i.getByRole("radiogroup", { name: "Vị trí icon" }).getByRole("radio", { name: "Trên" }).click();
+  p = await pos(); expect(p.a.y).toBeLessThan(p.b.y);
+  await expect(c.locator(".ecx-tabs.has-icon-top")).toBeVisible();
+  await i.getByRole("checkbox", { name: /Chỉ hiện icon/ }).check();
+  await expect(c.locator(".ecx-tabs.is-icon-only")).toBeVisible();
+  expect((await btn.locator(".ecx-tab-label").boundingBox())!.width).toBeLessThanOrEqual(1); // chữ của tab có icon bị ẩn
+  expect((await c.locator(".ecx-tabs [role=tab]").nth(1).locator(".ecx-tab-label").boundingBox())!.width).toBeGreaterThan(20); // tab không icon vẫn hiện chữ
+  expect(await find(page, "tabs")).toMatchObject({ attrs: { iconPosition: "top", iconOnly: true } });
+  // Kiểu dáng: rộng tiêu đề, cao tối thiểu nội dung
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["T"], { tabsTitleWidth: { base: "40%" }, tabsPanelMinHeight: { base: "200px" } }));
+  await expect.poll(async () => Math.round((await c.locator(".ecx-tabs [role=tab]").nth(1).boundingBox())!.width)).toBeGreaterThan(200);
+  await expect.poll(async () => Math.round((await c.locator(".ecx-tabs [role=tabpanel]:visible").boundingBox())!.height)).toBeGreaterThanOrEqual(200);
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await expect(i.getByText("Rộng tiêu đề tab")).toBeVisible();
+  await expect(i.getByText("Cao tối thiểu nội dung")).toBeVisible();
+});

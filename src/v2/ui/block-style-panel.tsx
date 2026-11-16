@@ -7,7 +7,7 @@ import { UnitInput } from "./unit-controls";
 
 type State = "normal" | "hover" | "active";
 /** Ô rời mà phần (attrs.parts) chưa thay được — luôn hiện ở khối đã chia phần. */
-const KEEP = new Set(["imageFit", "imageOpacity", "imageFilter", "imageHoverEffect", "imageHoverOpacity", "imageHoverFilter", "iconListGap", "iconListColumnGap", "iconListIconGap", "iconListDivider", "tabsGap", "accGap", "buttonSize", "buttonWidth", "buttonIconColor", "buttonIconHoverColor", "buttonIconSize", "progressHeight", "iconBoxImageWidth"]);
+const KEEP = new Set(["imageFit", "imageOpacity", "imageFilter", "imageHoverEffect", "imageHoverOpacity", "imageHoverFilter", "iconListGap", "iconListColumnGap", "iconListIconGap", "iconListDivider", "tabsGap", "accGap", "buttonSize", "buttonWidth", "buttonIconColor", "buttonIconHoverColor", "buttonIconSize", "progressHeight", "iconBoxImageWidth", "tabsTitleWidth", "tabsPanelMinHeight"]);
 
 /**
  * Mục Kiểu dáng riêng của khối lõi (như tab Style của từng widget Elementor: Danh sách › khoảng cách, đường kẻ; Icon › màu, cỡ…).
