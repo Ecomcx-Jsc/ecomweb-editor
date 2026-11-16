@@ -884,3 +884,25 @@ test("thư viện ảnh: không cắt ảnh (ảnh ngang giữ tỉ lệ) thì �
   const img = (await c.locator(".ecx-gallery-item img").boundingBox())!;
   expect(img.width / img.height).toBeGreaterThan(1.5); // giữ tỉ lệ ngang, không bị ép thành ô vuông
 });
+
+test("khách hàng: section nền màu website 40% đặt trên nền ảnh cố định — nhìn xuyên được ảnh; độ đậm chỉnh ngay trong ô chọn màu", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
+    { id: "OUT", type: "group", attrs: { style: { background: { image: "/sample.svg", fixed: true }, padding: { base: "xl" } } }, content: [
+      { id: "SEC", type: "group", attrs: { style: { padding: { base: "lg" } } }, content: [{ id: "p1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Nội dung section" }] }] }] }], { focus: false }); s.select(["SEC"], { editing: null }); });
+  const i = insp(page);
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
+  await i.locator(".ecx-color-row-btn").first().click();
+  const pop = page.locator(".ecx-color-pop");
+  await pop.getByRole("button", { name: /primary/ }).first().click();
+  await i.locator(".ecx-color-row-btn").first().click(); // chọn màu đóng bảng; mở lại để chỉnh độ đậm
+  await pop.getByRole("slider", { name: /Độ đậm/ }).fill("40");
+  const sec = (await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks.find((b: any) => b.id === "OUT").content[0].attrs.style));
+  expect(sec.color.background).toBe("primary/40");
+  // Màu tính ra có độ trong suốt 0.4 → ảnh nền của khối ngoài nhìn xuyên được
+  const bg = await c.locator('[data-type="group"] [data-type="group"]').first().evaluate((e) => getComputedStyle(e).backgroundColor);
+  expect(bg).toMatch(/0\.4\)?$/);
+  const outer = await c.locator('[data-type="group"]').first().evaluate((e) => ({ img: getComputedStyle(e).backgroundImage, att: getComputedStyle(e).backgroundAttachment }));
+  expect(outer.img).toContain("sample.svg");
+  expect(outer.att).toBe("fixed");
+});

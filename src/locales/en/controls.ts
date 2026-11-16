@@ -7,6 +7,7 @@ export const controls = {
   siteColors: "Site colours",
   customColor: "Custom colour",
   clearColor: "Clear colour",
+  colorOpacity: "Opacity",
   colorHint: "Pick a site colour: change the site palette and every page follows.",
   linkSides: "All sides the same",
   unlinkSides: "Edit each side",

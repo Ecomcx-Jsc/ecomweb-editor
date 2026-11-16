@@ -7,6 +7,7 @@ export const controls = {
   siteColors: "Màu của website",
   customColor: "Màu tự chọn",
   clearColor: "Bỏ màu",
+  colorOpacity: "Độ đậm",
   colorHint: "Chọn màu của website: đổi màu website là cả trang đổi theo.",
   linkSides: "Bốn cạnh như nhau",
   unlinkSides: "Chỉnh từng cạnh",
