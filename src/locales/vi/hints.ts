@@ -58,6 +58,8 @@ export const hints = {
   "button.variant.opt.primary": "Chính",
   "button.variant.opt.secondary": "Phụ",
   "button.variant.opt.outline": "Viền",
+  "button.text.placeholder": "Ví dụ: Mua ngay",
+  "button.href.placeholder": "https://… hoặc /duong-dan",
   "button.iconPosition.opt.left": "Trái chữ",
   "button.iconPosition.opt.right": "Phải chữ",
   "button.width.opt.auto": "Vừa chữ",

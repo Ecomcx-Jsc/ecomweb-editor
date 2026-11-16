@@ -139,4 +139,25 @@ test.describe("bảng cài đặt khối", () => {
     await page.getByRole("option", { name: "Không có icon" }).click();
     expect((await blockOf(page, "heading")).attrs.icon).toBeUndefined();
   });
+
+  test("nút: ô Chữ / Liên kết có gợi ý nhập; hàng Căn của nhóm nút dùng biểu tượng; chữ gợi ý trên nút mới không bị cắt", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("/nut");
+    await page.keyboard.press("Enter");
+    const insp = page.locator(".ecx-inspector");
+    // Nhóm nút vừa chèn: hàng Căn là biểu tượng, vẫn có tên cho trình đọc màn hình
+    const center = insp.getByRole("radio", { name: "Giữa", exact: true });
+    await expect(center.locator("svg")).toHaveCount(1);
+    await expect(center).toHaveAttribute("title", "Giữa");
+    // Chữ gợi ý trong nút nằm trọn trong nút (không tràn / bị cắt)
+    const btn = c.locator('[data-type="button"]').first();
+    // Chữ gợi ý bám mép trái của ô chữ và rộng bằng ô (không bắt đầu giữa ô rồi bị cắt đuôi)
+    const ph = await btn.evaluate((a) => { const cs = getComputedStyle(a.querySelector("[data-ecx-rich]")!, "::before"); return { left: cs.left, right: cs.right, italic: cs.fontStyle }; });
+    expect(ph).toEqual({ left: "0px", right: "0px", italic: "normal" });
+    await btn.click();
+    await expect(insp.getByRole("textbox", { name: "Chữ", exact: true })).toHaveAttribute("placeholder", "Ví dụ: Mua ngay");
+    await expect(insp.getByRole("textbox", { name: "Liên kết", exact: true })).toHaveAttribute("placeholder", /https/);
+  });
 });

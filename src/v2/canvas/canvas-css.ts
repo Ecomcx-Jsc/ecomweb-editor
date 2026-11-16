@@ -64,7 +64,8 @@ span[data-ecx-rich][data-empty][data-placeholder] { min-width: calc(var(--ecx-ph
 span[data-ecx-rich][data-empty][data-placeholder] { display: inline-block; vertical-align: top; }
 [data-ecx-rich][data-empty][data-placeholder] { min-width: 0; } /* ô lưới/flex trống không bị chữ gợi ý (nowrap) đẩy rộng hơn khung */
 [data-ecx-rich][data-empty][data-placeholder][contenteditable="true"] { opacity: 1 !important; } /* phần tử vốn mờ (chức danh, chú thích): gợi ý không mờ chồng mờ */
-.ecx-button [data-ecx-rich][data-empty][data-placeholder]::before { opacity: 1; font-style: italic; } /* chữ trên nền màu nút: mờ đi là không đủ tương phản */
+.ecx-button [data-ecx-rich][data-empty][data-placeholder]::before { opacity: .8; font-style: normal; left: 0; right: 0; text-align: center; } /* chữ gợi ý trên nền màu nút: sáng vừa đủ tương phản, không nghiêng */
+.ecx-button span[data-ecx-rich][data-empty][data-placeholder] { min-width: calc(var(--ecx-ph, 0) * .75em); } /* chữ đậm của nút rộng hơn chữ thường: chừa chỗ để gợi ý không bị cắt */
 [data-ecx-rich][data-empty][data-placeholder] { flex: 1 1 8em; } /* trong hàng ngang (flex): ô trống không co về 0px (gợi ý là ::before absolute) */
 [data-ecx-rich][data-empty][data-placeholder]::before { white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .ProseMirror-hideselection *::selection { background: transparent; }

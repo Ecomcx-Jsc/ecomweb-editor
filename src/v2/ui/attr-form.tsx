@@ -1,6 +1,6 @@
 import type { BlockAttrSpec } from "@ecomcx/ecomweb-content";
-import { RotateCcw } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { AlignCenter, AlignHorizontalSpaceBetween, AlignJustify, AlignLeft, AlignRight, RotateCcw } from "lucide-react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { useEditor } from "../context";
 import type { Choice, ChoiceKind } from "../core/host";
 import type { BlockType } from "../core/registry";
@@ -56,12 +56,17 @@ function useChoices(kind: ChoiceKind | undefined, args: Record<string, string> |
   return state?.key === key ? state.list : undefined;
 }
 
+/** Giá trị căn → biểu tượng (như thanh căn chữ của WP): hàng chọn căn chỉ toàn các giá trị này thì vẽ bằng biểu tượng, chữ nằm ở tooltip / nhãn đọc màn hình. */
+const ALIGN_ICONS: Record<string, ComponentType<{ className?: string }>> = { left: AlignLeft, center: AlignCenter, right: AlignRight, justify: AlignJustify, "space-between": AlignHorizontalSpaceBetween };
 function SegText({ value, options, onChange, label }: { value: string | undefined; options: Array<[string, string]>; onChange(v: string | undefined): void; label: string }) {
+  // Từ 3 lựa chọn trở lên: hai lựa chọn trái / phải thường là vị trí (icon trước / sau chữ), không phải căn
+  const icons = options.length > 2 && options.every(([v]) => ALIGN_ICONS[v]);
   return (
-    <div role="radiogroup" aria-label={label} className="ecx-seg is-text">
-      {options.map(([v, text]) => (
-        <button key={v} type="button" role="radio" aria-checked={value === v} className={cx("ecx-seg-btn", value === v && "is-active")} onClick={() => onChange(value === v ? undefined : v)}>{text}</button>
-      ))}
+    <div role="radiogroup" aria-label={label} className={cx("ecx-seg", !icons && "is-text")}>
+      {options.map(([v, text]) => {
+        const Icon = icons ? ALIGN_ICONS[v] : undefined;
+        return <button key={v} type="button" role="radio" aria-checked={value === v} aria-label={Icon ? text : undefined} title={Icon ? text : undefined} className={cx("ecx-seg-btn", value === v && "is-active")} onClick={() => onChange(value === v ? undefined : v)}>{Icon ? <Icon className="ecx-icon" /> : text}</button>;
+      })}
     </div>
   );
 }
@@ -189,7 +194,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
               </Field>
             );
           default:
-            return <Field key={k} label={label}><input className="ecx-input" type={controlOf(spec) === "url" ? "url" : "text"} value={value == null ? "" : String(value)} onChange={(e) => set(e.target.value)} />{help}</Field>;
+            return <Field key={k} label={label}><input className="ecx-input" type={controlOf(spec) === "url" ? "url" : "text"} value={value == null ? "" : String(value)} placeholder={hintText(hint, "placeholder", lang)} onChange={(e) => set(e.target.value)} />{help}</Field>;
         }
   }
 }

@@ -26,7 +26,7 @@ export const placeholders: typeof vi = {
   calloutTitle: "Title (optional)…",
   code: "// Paste or type code…",
   preformatted: "Text that keeps its spacing…",
-  buttonText: "Add button text…",
+  buttonText: "Button text",
   tabTitle: "Tab name…",
   moveTabLeft: "Move open tab left",
   moveTabRight: "Move open tab right",

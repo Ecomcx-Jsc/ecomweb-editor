@@ -29,6 +29,8 @@ export interface AttrHint {
   when?: (attrs: Record<string, unknown>) => boolean;
   /** Có ghi chú dưới ô (chữ: hints "<khoá>.help"). */
   help?: true;
+  /** Có chữ gợi ý trong ô trống (chữ: hints "<khoá>.placeholder"). */
+  placeholder?: true;
 }
 
 const ALIGN: Opt[] = ["left", "center", "right"];
@@ -111,6 +113,8 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "heading.iconTitle": { label: true, help: true, when: (a) => !!a.icon },
   "heading.tocTitle": { label: true, help: true },
   "button.iconPosition": { control: "segmented", options: ["left", "right"], when: (a) => !!a.icon },
+  "button.text": { placeholder: true },
+  "button.href": { placeholder: true },
   "button.width": { control: "segmented", options: ["auto", "full"] },
   "button.ariaLabel": { help: true },
   "tabs.tabsAlign": { control: "segmented", options: ["flex-start", "center", "flex-end", "space-between"] },
@@ -266,7 +270,7 @@ export function hintOf(block: string, attr: string): AttrHint {
 const text = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
 
 /** Chữ nhãn / ghi chú của hint theo ngôn ngữ (undefined nếu hint không khai báo). */
-export const hintText = (hint: AttrHint, part: "label" | "help", lang: string): string | undefined =>
+export const hintText = (hint: AttrHint, part: "label" | "help" | "placeholder", lang: string): string | undefined =>
   hint[part] && hint.key ? text(messages("hints", lang)[`${hint.key}.${part}`]) : undefined;
 
 /** Nhãn của giá trị chọn: riêng của hint, rồi mẫu "Tiêu đề N", rồi nhãn chung của giá trị, cuối cùng là giá trị thô. */

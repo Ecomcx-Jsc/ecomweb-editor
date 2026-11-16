@@ -58,6 +58,8 @@ export const hints = {
   "button.variant.opt.primary": "Primary",
   "button.variant.opt.secondary": "Secondary",
   "button.variant.opt.outline": "Outline",
+  "button.text.placeholder": "e.g. Buy now",
+  "button.href.placeholder": "https://… or /path",
   "button.iconPosition.opt.left": "Before text",
   "button.iconPosition.opt.right": "After text",
   "button.width.opt.auto": "Fit text",

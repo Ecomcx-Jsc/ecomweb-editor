@@ -25,7 +25,7 @@ export const placeholders = {
   calloutTitle: "Tiêu đề (không bắt buộc)…",
   code: "// Dán hoặc gõ mã…",
   preformatted: "Văn bản giữ nguyên khoảng trắng…",
-  buttonText: "Nhập chữ trên nút…",
+  buttonText: "Chữ trên nút",
   tabTitle: "Tên tab…",
   addTab: "Thêm tab",
   moveTabLeft: "Dời tab đang mở sang trái",
