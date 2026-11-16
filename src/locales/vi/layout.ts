@@ -58,4 +58,12 @@ export const layout = {
   divider_tilt: "Vát",
   divider_triangle: "Tam giác",
   divider_zigzag: "Răng cưa",
+  textShadow: "Bóng chữ",
+  tsX: "Lệch ngang",
+  tsY: "Lệch dọc",
+  tsBlur: "Độ nhoè",
+  tsColor: "Màu bóng",
+  writingMode: "Hướng chữ",
+  wmHorizontal: "Ngang",
+  wmVertical: "Dọc",
 };

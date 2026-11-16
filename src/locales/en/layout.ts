@@ -58,4 +58,12 @@ export const layout = {
   divider_tilt: "Tilt",
   divider_triangle: "Triangle",
   divider_zigzag: "Zigzag",
+  textShadow: "Text shadow",
+  tsX: "Offset X",
+  tsY: "Offset Y",
+  tsBlur: "Blur",
+  tsColor: "Shadow colour",
+  writingMode: "Text direction",
+  wmHorizontal: "Horizontal",
+  wmVertical: "Vertical",
 };

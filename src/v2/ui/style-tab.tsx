@@ -21,7 +21,7 @@ const RESPONSIVE = new Set(["padding", "margin", "gap", "width", "maxWidth", "mi
 const SIZES = ["sm", "md", "lg", "xl", "2xl"];
 const SPACES = ["0", "xs", "sm", "md", "lg", "xl", "2xl"];
 const WEIGHTS = ["300", "400", "500", "600", "700", "800", "900"];
-const TYPO = ["fontFamily", "fontSize", "lineHeight", "letterSpacing", "fontWeight", "fontStyle", "textDecoration", "textTransform", "textAlign"];
+const TYPO = ["fontFamily", "fontSize", "lineHeight", "letterSpacing", "fontWeight", "fontStyle", "textDecoration", "textTransform", "textAlign", "textShadow", "writingMode"];
 const SPACING = ["padding", "margin"];
 const STRUCTURE = ["gap", "width", "maxWidth", "minHeight", "aspectRatio", "zIndex", "grow", "order"];
 type State = "normal" | "hover";
@@ -50,6 +50,25 @@ function ValueInput({ value, onCommit, check, placeholder, label, inherited }: {
  * `part`: "style" = biến thể, chữ, màu (tab Kiểu dáng); "advanced" = khoảng cách, viền, bố cục / hiệu ứng, hover, chuyển động, ẩn hiện
  * (tab Nâng cao — lớp chung của mọi khối như Advanced của Elementor); bỏ trống = tất cả. Ô Nền vẽ ở BackgroundControl.
  */
+function TextShadowRow({ style, set }: { style: BlockStyle; set(k: "textShadow", v: BlockStyle["textShadow"]): void }) {
+  const lt = useMsgs("layout") as Record<string, string>;
+  const sh = style.textShadow;
+  const put = (p: Partial<NonNullable<BlockStyle["textShadow"]>>) => set("textShadow", { x: 0, y: 2, blur: 4, color: "black/30", ...sh, ...p });
+  return (
+    <>
+      <label className="ecx-check-row"><input type="checkbox" role="switch" className="ecx-switch" aria-label={lt.textShadow} checked={!!sh} onChange={(e) => set("textShadow", e.target.checked ? { x: 0, y: 2, blur: 4, color: "black/30" } : undefined)} /> {lt.textShadow}</label>
+      {sh && (
+        <div className="ecx-textshadow">
+          {([["x", lt.tsX, -20, 20], ["y", lt.tsY, -20, 20], ["blur", lt.tsBlur, 0, 40]] as const).map(([k, label, min, max]) => (
+            <label key={k} className="ecx-textshadow-row"><span>{label}: {sh[k]}px</span><input type="range" className="ecx-range" min={min} max={max} aria-label={label} value={sh[k]} onChange={(e) => put({ [k]: Number(e.target.value) })} /></label>
+          ))}
+          <ColorInput label={lt.tsColor} value={sh.color} onChange={(c) => put({ color: c ?? "black/30" })} />
+        </div>
+      )}
+    </>
+  );
+}
+
 export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, variants, variant, onVariantChange, part, lead, parts, structure }: {
   type: string; style: unknown; onChange(style: BlockStyle | null): void; device: Device; onDeviceChange(d: Device): void;
   variants?: Array<{ name: string; label: string }>; variant?: string | null; onVariantChange?(v: string | null): void; part?: "style" | "advanced";
@@ -144,7 +163,7 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
 
       {parts && lead}
 
-      {show("typography", TYPO) && <Section title={t.style_typography} modified={has(TYPO)} onReset={() => reset(TYPO)} moreOpen={has(["fontFamily", "letterSpacing", "textDecoration", "textTransform"])}
+      {show("typography", TYPO) && <Section title={t.style_typography} modified={has(TYPO)} onReset={() => reset(TYPO)} moreOpen={has(["fontFamily", "letterSpacing", "textDecoration", "textTransform", "textShadow", "writingMode"])}
         more={<>
           {row("fontFamily", t.style_fontFamily,
             <select className="ecx-input" value={style.fontFamily ?? ""} aria-label={t.style_fontFamily} onChange={(e) => set("fontFamily", e.target.value || undefined)}>
@@ -156,6 +175,9 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
             options={[["none", "—", t.none], ["underline", "U̲", t.underlineText], ["line-through", "S̶", t.strikeText]]} />)}
           {row("transform", t.style_transform, <Seg label={t.style_transform} value={style.textTransform} onChange={(v) => set("textTransform", v)}
             options={[["none", "—", t.none], ["uppercase", "AB", t.upper], ["lowercase", "ab", t.lower], ["capitalize", "Ab", t.capitalize]]} />)}
+          {row("writingMode", lt.writingMode, <Seg label={lt.writingMode} value={style.writingMode ?? "horizontal"} onChange={(v) => set("writingMode", v === "vertical" ? "vertical" : undefined)}
+            options={[["horizontal", lt.wmHorizontal, lt.wmHorizontal], ["vertical", lt.wmVertical, lt.wmVertical]]} />)}
+          <TextShadowRow style={style} set={set} />
         </>}>
         {row("fontSize", t.style_fontSize, <>
           <Seg label={t.style_fontSize} value={get("fontSize")} onChange={(v) => set("fontSize", v)} options={sizes.map((v) => [v, v.toUpperCase(), presets?.fontSizes?.[v] ? `${v} · ${presets.fontSizes[v]}` : v] as [string, string, string])} />

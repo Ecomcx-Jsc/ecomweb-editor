@@ -96,4 +96,25 @@ test.describe("bảng cài đặt khối", () => {
     expect((await state(page)).docs.root.blocks.length).toBe(4);
     void showToolbar;
   });
+
+  test("tab Kiểu dáng: bóng chữ tự chỉnh + chữ dọc → CSS thật trên canvas; tắt = gỡ", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Nội dung bài viết.");
+    await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
+    const typo = insp(page).locator(".ecx-style-section").first();
+    await typo.getByRole("button", { name: "Thêm tuỳ chọn" }).click();
+    await typo.getByRole("switch", { name: "Bóng chữ" }).click();
+    await typo.getByRole("slider", { name: "Lệch ngang" }).fill("6");
+    await typo.getByRole("radio", { name: "Dọc", exact: true }).click();
+    const st = (await blockOf(page, "paragraph")).attrs.style;
+    expect(st.textShadow).toMatchObject({ x: 6, y: 2, blur: 4 });
+    expect(st.writingMode).toBe("vertical");
+    const cs = await c.locator("p", { hasText: "Nội dung bài viết." }).first().evaluate((n) => ({ s: getComputedStyle(n).textShadow, w: getComputedStyle(n).writingMode }));
+    expect(cs.s).toContain("6px 2px 4px");
+    expect(cs.w).toBe("vertical-rl");
+    await typo.getByRole("switch", { name: "Bóng chữ" }).click();
+    await typo.getByRole("radio", { name: "Ngang", exact: true }).click();
+    expect((await blockOf(page, "paragraph")).attrs.style?.textShadow).toBeUndefined();
+    expect((await blockOf(page, "paragraph")).attrs.style?.writingMode).toBeUndefined();
+  });
 });
