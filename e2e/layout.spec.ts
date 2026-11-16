@@ -287,4 +287,16 @@ test.describe("bố cục + hiệu ứng", () => {
     const size = await c.locator('[data-type="columns"]').evaluate((g) => getComputedStyle(g, "::after").backgroundSize);
     expect(size).toContain("80px");
   });
+
+  test("nhóm mới chèn: thanh công cụ nổi của đoạn không che các nút chọn bố cục", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "nhom");
+    await showToolbar(page);
+    const tb = (await page.locator(".ecx-toolbar").boundingBox())!;
+    const ch = (await c.locator(".ecx-ph-choices").boundingBox())!;
+    expect(tb.y + tb.height <= ch.y + 1 || tb.y >= ch.y + ch.height - 1).toBe(true);
+    await c.locator(".ecx-ph-choice").first().click();
+    expect((await groupOf(page)).attrs.style.layout).toBeTruthy();
+  });
 });

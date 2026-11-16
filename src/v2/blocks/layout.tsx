@@ -45,6 +45,8 @@ function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEdi
   const items: Array<["stack" | "row" | "grid", typeof Square, string]> = [["stack", Rows3, tp.layoutStack], ["row", RowIcon, tp.layoutRow], ["grid", LayoutGrid, tp.layoutGrid]];
   return (
     <div {...shellProps(blockProps, "group", block.attrs)} data-ecx-placeholder={fresh ? "layout" : undefined}>
+      <InnerBlocks parent={block} />
+      {/* Chọn bố cục nằm dưới đoạn văn: thanh công cụ nổi của đoạn nằm phía trên, không che các nút */}
       {fresh && (
         <div className="ecx-media-placeholder ecx-ph-choose" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
           <p className="ecx-ph-title">{tp.chooseLayout}</p>
@@ -53,7 +55,6 @@ function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEdi
           </div>
         </div>
       )}
-      <InnerBlocks parent={block} />
       {selected && editable && <PaddingHandles blockId={block.id} />}
       {selected && editable && !fresh && <ContentWidthHandles blockId={block.id} />}
     </div>
