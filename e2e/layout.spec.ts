@@ -247,4 +247,29 @@ test.describe("bố cục + hiệu ứng", () => {
     expect(st.background.color).toEqual({ mobile: "accent" });
     await expect(insp.getByText("Đang dùng màu của máy tính")).toHaveCount(0);
   });
+
+  test("nhóm: đường chia trên / dưới chọn hình, màu, cao → CSS ::after thật trên canvas; Không = tắt", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "nhom");
+    await page.keyboard.type("Thẻ");
+    await showToolbar(page);
+    await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+    const insp = page.locator(".ecx-inspector");
+    await insp.getByRole("button", { name: "Đường chia", exact: true }).click();
+    await insp.locator('[data-ecx-divider="top"]').getByRole("radio", { name: "Sóng" }).click();
+    await insp.locator('[data-ecx-divider="bottom"]').getByRole("radio", { name: "Vòm" }).click();
+    await insp.locator('[data-ecx-divider="bottom"]').getByRole("slider", { name: "Cao" }).fill("150");
+    let st = (await groupOf(page)).attrs.style;
+    expect(st.divider.top.shape).toBe("wave");
+    expect(st.divider.bottom).toMatchObject({ shape: "curve", height: 150 });
+    const mask = await c.locator('[data-type="group"]').evaluate((g) => { const cs = getComputedStyle(g, "::after"); return { pos: cs.position, size: cs.backgroundSize, img: cs.maskImage || cs.webkitMaskImage }; });
+    expect(mask.pos).toBe("absolute");
+    expect(mask.size).toContain("150px");
+    expect(mask.img).toContain("svg");
+    await insp.locator('[data-ecx-divider="top"]').getByRole("radio", { name: "Không" }).click();
+    await insp.locator('[data-ecx-divider="bottom"]').getByRole("radio", { name: "Không" }).click();
+    st = (await groupOf(page)).attrs.style;
+    expect(st?.divider).toBeUndefined();
+  });
 });

@@ -10,6 +10,7 @@ import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { StyleTab } from "./style-tab";
 import { LayoutSection } from "./layout-panel";
 import { GroupWidthSection } from "./group-width";
+import { DividerSection } from "./divider-panel";
 import { Row, Section, SectionGroup } from "./style-controls";
 import { BackgroundControl } from "./background-panel";
 import { BlockStyleSections } from "./block-style-panel";
@@ -80,6 +81,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
               {single && first.type === "group" && <GroupWidthSection attrs={first.attrs} setAttrs={setAttrs} />}
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
               {styled && single && BG_IN_SETTINGS.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
+              {styled && single && first.type === "group" && <DividerSection key={`d${first.id}`} attrs={first.attrs} setAttrs={setAttrs} />}
               {styled && single && <LayoutSection type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} />}
               {Custom && <Custom block={first} attrs={first.attrs} setAttrs={setAttrs} blockProps={null as never} selected editable labels={labels} />}
               {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} />}

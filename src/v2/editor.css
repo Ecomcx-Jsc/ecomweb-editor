@@ -567,3 +567,10 @@ body.is-dragging .ecx-section-adder { display: none; }
 .ecx-quick-colors { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; max-width: 200px; }
 .ecx-quick-colors .ecx-color-dot { width: 24px; height: 24px; border: 0; padding: 0; cursor: pointer; }
 .ecx-quick-colors .ecx-color-dot:hover, .ecx-quick-colors .ecx-color-dot:focus-visible { outline: 2px solid var(--ecx-ed-accent, #1a597b); outline-offset: 2px; }
+
+.ecx-divider-side + .ecx-divider-side { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--ecx-ed-line, #e5e7eb); }
+.ecx-divider-shapes { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; }
+.ecx-divider-shape { min-width: 0; height: 32px; padding: 0 2px; border: 1px solid var(--ecx-ed-line, #d1d5db); border-radius: 6px; background: var(--ecx-ed-panel, #fff); color: var(--ecx-ed-muted, #5d6a75); font: inherit; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.ecx-divider-shape svg { width: 22px; height: 12px; }
+.ecx-divider-shape:hover { border-color: var(--ecx-ed-accent, #1a597b); }
+.ecx-divider-shape.is-active { border-color: var(--ecx-ed-accent, #1a597b); background: var(--ecx-ed-accent, #1a597b); color: #fff; }
