@@ -198,4 +198,33 @@ test.describe("bố cục + hiệu ứng", () => {
     expect(blocks.length).toBe(before + 1);
     expect(blocks.filter((b: { type: string }) => b.type === "group").length).toBe(2);
   });
+
+  test("nhóm: kéo tay độ rộng nội dung hai mép → đối xứng, hiện số px, kéo hết ra = hết khối", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "nhom");
+    await page.keyboard.type("Thẻ");
+    await showToolbar(page);
+    await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+    const h = c.locator('[data-ecx-zone="content-width-right"]');
+    await expect(h).toBeVisible();
+    const hb = (await h.boundingBox())!;
+    await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(hb.x - 60, hb.y + hb.height / 2, { steps: 5 });
+    await expect(c.locator(".ecx-cw-tip").first()).toContainText("px");
+    await page.mouse.up();
+    const w = parseInt((await groupOf(page)).attrs.contentWidth, 10);
+    expect(w).toBeGreaterThan(240);
+    const kid = await c.locator('[data-type="group"] > [data-ecx-block]').first().boundingBox();
+    expect(Math.abs(kid!.width - w)).toBeLessThan(3);
+    // kéo ngược ra quá mép → bỏ giá trị (Hết khối)
+    const h2 = c.locator('[data-ecx-zone="content-width-right"]');
+    const b2 = (await h2.boundingBox())!;
+    await page.mouse.move(b2.x + b2.width / 2, b2.y + b2.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b2.x + 2000, b2.y + b2.height / 2, { steps: 5 });
+    await page.mouse.up();
+    expect((await groupOf(page)).attrs.contentWidth).toBeUndefined();
+  });
 });

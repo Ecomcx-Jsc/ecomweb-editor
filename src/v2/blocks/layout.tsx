@@ -10,7 +10,7 @@ import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
 import { useEditor } from "../context";
 import { ButtonLinkTool, ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
-import { ColumnHandles, HeightHandle, PaddingHandles, useActiveWithin } from "./resize";
+import { ColumnHandles, ContentWidthHandles, HeightHandle, PaddingHandles, useActiveWithin } from "./resize";
 import { ColumnInspector, ColumnsInspector } from "./columns-inspector";
 import { layoutFor, layoutKind } from "../ui/layout-panel";
 import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
@@ -55,6 +55,7 @@ function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEdi
       )}
       <InnerBlocks parent={block} />
       {selected && editable && <PaddingHandles blockId={block.id} />}
+      {selected && editable && !fresh && <ContentWidthHandles blockId={block.id} />}
     </div>
   );
 }

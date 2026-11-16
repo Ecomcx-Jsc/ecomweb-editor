@@ -211,3 +211,56 @@ export function PaddingHandles({ blockId }: { blockId: string }) {
     </span>
   );
 }
+
+/**
+ * Tay kéo độ rộng nội dung bên trong của Nhóm: hai tay ở hai mép vùng nội dung (khối con đầu tiên); kéo vào / ra là đổi độ rộng đối xứng,
+ * số px hiện cạnh tay khi kéo. Kéo hết cỡ ra mép = về "Hết khối". Lưu vào `contentWidth` như ô ở bảng Cài đặt.
+ */
+export function ContentWidthHandles({ blockId }: { blockId: string }) {
+  const { store, ui } = useEditor();
+  const [box, setBox] = useState<{ left: number; right: number; max: number } | null>(null);
+  const [drag, setDrag] = useState<number | null>(null);
+  const measure = () => {
+    const el = ui.blockEl(blockId), kid = el?.querySelector(":scope > [data-ecx-block]") as HTMLElement | null;
+    if (!el || !kid) return null;
+    const g = el.getBoundingClientRect(), k = kid.getBoundingClientRect(), cs = el.ownerDocument.defaultView!.getComputedStyle(el);
+    const max = Math.round(g.width - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0));
+    return { left: Math.round(k.left - g.left), right: Math.round(k.right - g.left), max, width: Math.round(k.width) };
+  };
+  useLayoutEffect(() => {
+    const m = measure();
+    setBox((p) => (!m ? null : p && p.left === m.left && p.right === m.right && p.max === m.max ? p : { left: m.left, right: m.right, max: m.max }));
+  });
+  const start = (dir: 1 | -1, e: React.PointerEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    const handle = e.currentTarget as HTMLElement, m = measure();
+    if (!m) return;
+    const x0 = e.clientX;
+    handle.setPointerCapture(e.pointerId);
+    handle.classList.add("is-dragging");
+    const move = (ev: PointerEvent) => {
+      const w = Math.min(m.max, Math.max(240, Math.round(m.width + 2 * dir * (ev.clientX - x0))));
+      const node = store.block(blockId);
+      if (!node) return;
+      setDrag(w);
+      store.setAttrs([blockId], { constrained: undefined, contentWidth: w >= m.max ? undefined : `${w}px` });
+    };
+    const up = () => {
+      handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up);
+      handle.classList.remove("is-dragging"); setDrag(null); store.breakMerge(); focusCanvas(handle);
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+  };
+  if (!box) return null;
+  return (
+    <span className="ecx-cw-handles" contentEditable={false} aria-hidden="true">
+      {([["left", box.left, -1], ["right", box.right, 1]] as const).map(([side, x, dir]) => (
+        <span key={side} className={`ecx-cw-handle is-${side}`} style={{ left: x }} data-ecx-zone={`content-width-${side}`}
+          onPointerDown={(e) => start(dir === 1 ? 1 : -1, e)} onMouseDown={(e) => e.stopPropagation()}>
+          {drag !== null && <span className="ecx-cw-tip">{drag}px</span>}
+        </span>
+      ))}
+    </span>
+  );
+}
