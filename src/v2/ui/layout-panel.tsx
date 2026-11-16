@@ -73,7 +73,7 @@ export function LayoutSection({ type, style: raw, onChange, device }: { type: st
 
   if (!CONTAINERS.has(type)) return null;
   return (
-        <Section title={t.layout}>
+        <Section title={t.layout} defaultOpen={l ? true : undefined}>
           <Row label={t.type}>
             <Seg<Kind> label={t.type} value={kind} onChange={(k) => set({ layout: layoutFor(k ?? "flow", l) })}
               options={[["flow", Square, t.flow], ["row", Columns3, t.row], ["stack", Rows3, t.stack], ["grid", LayoutGrid, t.grid]]} />

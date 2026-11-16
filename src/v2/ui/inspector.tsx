@@ -9,6 +9,7 @@ import { AttrForm, Field, attrName, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
 import { StyleTab } from "./style-tab";
 import { LayoutSection } from "./layout-panel";
+import { GroupWidthSection } from "./group-width";
 import { Row, Section, SectionGroup } from "./style-controls";
 import { BackgroundControl } from "./background-panel";
 import { BlockStyleSections } from "./block-style-panel";
@@ -22,10 +23,10 @@ import { useMsgs } from "../i18n";
 
 /** Khối "khung" (như Container / Section của Elementor): ô Nền đặt ngay tab Cài đặt — chỗ người dùng tìm đầu tiên. */
 // Nền của Nhóm / Cột nằm ở tab Kiểu dáng như bộ khối lớn; ảnh bìa: nền là nội dung chính nên ở Cài đặt
-const BG_IN_SETTINGS = new Set(["cover"]);
+const BG_IN_SETTINGS = new Set(["cover", "group"]);
 /** Khối chứa đổi được thẻ HTML (attrs.tagName). */
 const TAGGED = new Set(["group", "column", "columns"]);
-const BG_FIRST = new Set(["group", "column", "columns", "row", "stack", "grid"]);
+const BG_FIRST = new Set(["column", "columns", "row", "stack", "grid"]);
 
 /**
  * Bảng cài đặt của khối đang chọn (như Elementor): thẻ khối, tab Cài đặt (nội dung: form + phần riêng của khối), tab Kiểu dáng
@@ -76,6 +77,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
           <SectionGroup key={`${first.id}:${tab}`}>
           {tab === "settings" || (tab === "style" && !styled) ? (
             <div className="ecx-panel">
+              {single && first.type === "group" && <GroupWidthSection attrs={first.attrs} setAttrs={setAttrs} />}
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
               {styled && single && BG_IN_SETTINGS.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
               {styled && single && <LayoutSection type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} />}

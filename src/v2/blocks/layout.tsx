@@ -462,7 +462,7 @@ export function layoutBlocks(): BlockType[] {
   return [
     {
       name: "group", title: "Nhóm", icon: Square, category: "design", keywords: "nhom group khung section container", kind: "container", edit: GroupEdit,
-      attributes: { background: { type: "string", control: "color" }, textColor: { type: "string", control: "color" }, padding: { type: "string", enum: ["none", "small", "medium", "large"], default: "medium" }, constrained: { type: "boolean", default: false } },
+      attributes: { background: { type: "string", control: "color" }, textColor: { type: "string", control: "color" }, padding: { type: "string", enum: ["none", "small", "medium", "large"], default: "medium" }, constrained: { type: "boolean", default: false, control: "hidden" }, contentWidth: { type: "string", control: "hidden" } },
       create: (attrs) => makeBlock("group", attrs ?? {}, [makeBlock("paragraph")]),
       toolbar: GroupLayoutTools,
       variations: [

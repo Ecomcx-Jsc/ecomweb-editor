@@ -81,7 +81,7 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
   );
   return (
     <>
-    <Section title={b.bg.title} modified={modified} onReset={reset}>
+    <Section title={b.bg.title} modified={modified} onReset={reset} defaultOpen={type === "group" ? true : undefined}>
       <StateTabs value={state} onChange={setState} />
       {state === "hover" ? (
         <>

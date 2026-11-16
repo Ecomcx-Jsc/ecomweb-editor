@@ -134,8 +134,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
-    // Nhóm: ô Nền ở tab Kiểu dáng — loại Chuyển màu
-    await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
+    // Nhóm: ô Nền ở tab Cài đặt — loại Chuyển màu
     await insp.getByRole("radio", { name: "Chuyển màu" }).click();
     await insp.getByRole("button", { name: "brand" }).click();
     let g = await groupOf(page);
@@ -146,6 +145,7 @@ test.describe("bố cục + hiệu ứng", () => {
     g = await groupOf(page);
     expect(g.attrs.style.gradient).toMatch(/^linear-gradient\(135deg, #1a597b 0%, #f26251 100%\)$/);
     // Đổ bóng nằm trong mục Viền & bo góc; trạng thái rê chuột là công tắc ngay trong mục
+    await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
     await insp.getByRole("button", { name: "Viền & bo góc" }).click();
     const border = insp.locator(".ecx-style-section", { hasText: "Viền & bo góc" });
     await border.getByLabel("Đổ bóng").selectOption("md");

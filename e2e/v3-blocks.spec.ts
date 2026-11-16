@@ -891,8 +891,8 @@ test("khách hàng: section nền màu website 40% đặt trên nền ảnh cố
     { id: "OUT", type: "group", attrs: { style: { background: { image: "/sample.svg", fixed: true }, padding: { base: "xl" } } }, content: [
       { id: "SEC", type: "group", attrs: { style: { padding: { base: "lg" } } }, content: [{ id: "p1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Nội dung section" }] }] }] }], { focus: false }); s.select(["SEC"], { editing: null }); });
   const i = insp(page);
-  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
-  await i.locator(".ecx-color-row-btn").first().click();
+  await i.locator(".ecx-style-section", { hasText: "Nền" }).first().locator(".ecx-style-section-toggle[aria-expanded=false]").click({ timeout: 1500 }).catch(() => {});
+  await i.locator(".ecx-color-row-btn").first().click(); // Nền ở tab Cài đặt của Nhóm
   const pop = page.locator(".ecx-color-pop");
   await pop.getByRole("button", { name: /primary/ }).first().click();
   await i.locator(".ecx-color-row-btn").first().click(); // chọn màu đóng bảng; mở lại để chỉnh độ đậm
@@ -905,4 +905,29 @@ test("khách hàng: section nền màu website 40% đặt trên nền ảnh cố
   const outer = await c.locator('[data-type="group"]').first().evaluate((e) => ({ img: getComputedStyle(e).backgroundImage, att: getComputedStyle(e).backgroundAttachment }));
   expect(outer.img).toContain("sample.svg");
   expect(outer.att).toBe("fixed");
+});
+
+test("nhóm: độ rộng khối + độ rộng nội dung (hết khối / theo website / tự nhập số) ở tab Cài đặt; nền phủ hết, nội dung canh giữa theo số", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
+    { id: "G", type: "group", attrs: { style: { color: { background: "#e3edf3" } } }, content: [{ id: "p1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Nội dung section" }] }] }], { focus: false }); s.select(["G"], { editing: null }); });
+  const i = insp(page);
+  await expect(i.getByText("Độ rộng", { exact: true }).first()).toBeVisible();
+  const box = c.locator('[data-type="group"]').first();
+  const para = c.locator('[data-type="group"] p').first();
+  const w = async (l: any) => Math.round((await l.boundingBox())!.width);
+  const full = await w(para);
+  await i.getByRole("radiogroup", { name: "Độ rộng nội dung bên trong" }).getByRole("radio", { name: "Tự nhập" }).click();
+  await i.getByRole("spinbutton", { name: "Độ rộng nội dung" }).first().fill("400");
+  await expect.poll(async () => w(para)).toBeLessThanOrEqual(400);
+  expect(await w(box)).toBeGreaterThan(400); // khối (nền) vẫn phủ rộng hơn nội dung
+  const a = (await find(page, "group")).attrs;
+  expect(a.contentWidth).toBe("400px");
+  // Về "Hết khối": bỏ số
+  await i.getByRole("radiogroup", { name: "Độ rộng nội dung bên trong" }).getByRole("radio", { name: "Hết khối" }).click();
+  expect((await find(page, "group")).attrs.contentWidth).toBeUndefined();
+  await expect.poll(async () => w(para)).toBe(full);
+  // Độ rộng khối
+  await i.getByRole("radiogroup", { name: "Độ rộng khối" }).getByRole("radio", { name: "Đầy màn" }).click();
+  expect((await find(page, "group")).attrs.align).toBe("full");
 });
