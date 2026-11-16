@@ -18,10 +18,9 @@ import { motion } from "./motion";
 import { background } from "./background";
 import { blockStyle } from "./block-style";
 import { patternLib } from "./pattern-lib";
-import { patterns } from "./patterns";
 import { shortcuts } from "./shortcuts";
 import { placeholders } from "./placeholders";
 import { library } from "./library";
 
 /** Tiếng Anh: đủ khoá như vi/ (thiếu khoá là lỗi biên dịch) và là ngôn ngữ dự phòng của mọi ngôn ngữ khác. */
-export const en: typeof vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, presets, layout, legacyBasic, legacyDynamic, motion, library, patternLib, patterns, placeholders, shortcuts };
+export const en: typeof vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, presets, layout, legacyBasic, legacyDynamic, motion, library, patternLib, placeholders, shortcuts };

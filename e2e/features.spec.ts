@@ -5,8 +5,8 @@ const tool = (page: Page, label: string) => page.locator(".ecx-toolbar").getByRo
 const blockOf = async (page: Page, type: string) => (await state(page)).docs.root.blocks.find((b: { type: string }) => b.type === type);
 
 test.describe("mẫu + khối plugin", () => {
-  test("thư viện mẫu: chèn mẫu lõi 'Ba tính năng' (tiêu đề + 3 cột)", async ({ page }) => {
-    const c = await open(page, "?doc=post");
+  test("thư viện mẫu: chèn mẫu đã đăng ký 'Ba tính năng' (tiêu đề + 3 cột)", async ({ page }) => {
+    const c = await open(page, "?doc=post&patterns=1");
     await clickEnd(c, "Đoạn thứ hai.");
     await page.getByRole("button", { name: "Thêm khối" }).first().click();
     await page.locator(".ecx-inserter-panel").getByRole("tab", { name: "Mẫu" }).click();

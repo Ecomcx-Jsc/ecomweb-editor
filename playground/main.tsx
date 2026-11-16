@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import contentCss from "@ecomcx/ecomweb-content/style.css?url";
 import "../src/v2/editor.css";
-import { BlockEditor, EditorStore, blocksFromContent, contentFromBlocks, fixTree, flatten, inlineText, registerAnimation, registerBlock, registerBlockPanel, type EditorHost } from "../src/v2";
+import { BlockEditor, EditorStore, blocksFromContent, contentFromBlocks, fixTree, flatten, inlineText, registerAnimation, registerBlock, registerBlockPanel, registerPattern, type EditorHost } from "../src/v2";
 import { defineBlock } from "@ecomcx/ecomweb-content";
 import { registerBindingSource } from "../src/v2/ui/bindings";
 
@@ -30,6 +30,13 @@ const template = {
     { type: "templatePart", attrs: { slug: "footer", tagName: "footer" } },
   ],
 };
+// Lõi không có mẫu dựng sẵn: `?patterns=1` đăng ký vài mẫu thử để kiểm giao diện thư viện mẫu / trình chèn
+if (params.get("patterns") === "1") {
+  const g = (title: string, category: string, ...content: object[]) => registerPattern({ name: `test/${category}-${title}`, title, category, content });
+  g("Ba tính năng", "features", h(2, "Tính năng"), { type: "columns", content: [1, 2, 3].map((n) => ({ type: "column", content: [h(3, `Mục ${n}`), p("Mô tả")] })) });
+  for (const n of [1, 2, 3]) g(`Gói ${n}`, "pricing", { type: "group", content: [h(3, `Gói ${n}`), p("Giá")] });
+  g("Câu hỏi thường gặp", "faq", h(2, "Hỏi đáp"), { type: "details", attrs: { summary: "Câu hỏi?" }, content: [p("Trả lời")] });
+}
 const post = { type: "doc", content: [h(2, "Tiêu đề bài"), p("Nội dung bài viết."), p("Đoạn thứ hai.")] };
 const cell = (t: string, header = false) => ({ type: header ? "tableHeader" : "tableCell", content: [p(t)] });
 const rich = {

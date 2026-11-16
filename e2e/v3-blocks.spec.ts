@@ -502,8 +502,20 @@ test("form: Cc, tiêu đề email, chuyển trang; ô 1/3 hàng + tự điền",
 });
 
 test.describe("thư viện mẫu", () => {
-  test("chèn mẫu theo danh mục; kiểu màu tối bọc mẫu trong nhóm nền tối; trang = nhiều mẫu", async ({ page }) => {
+  test("lõi không có mẫu dựng sẵn: thư viện báo trống, trình chèn không có thẻ mẫu", async ({ page }) => {
     await open(page, "?doc=post");
+    await page.getByRole("button", { name: "Thư viện mẫu" }).click();
+    const lib = page.getByRole("dialog", { name: "Thư viện mẫu" });
+    await expect(lib).toBeVisible();
+    await expect(lib.locator(".ecx-lib-card")).toHaveCount(0);
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Thêm khối" }).first().click();
+    await page.locator(".ecx-inserter-panel").getByRole("tab", { name: "Mẫu" }).click();
+    await expect(page.locator(".ecx-pattern-card")).toHaveCount(0);
+  });
+
+  test("chèn mẫu đã đăng ký theo danh mục; kiểu màu tối bọc mẫu trong nhóm nền tối", async ({ page }) => {
+    await open(page, "?doc=post&patterns=1");
     const before = (await state(page)).docs.root.blocks.length;
     await page.getByRole("button", { name: "Thư viện mẫu" }).click();
     const lib = page.getByRole("dialog", { name: "Thư viện mẫu" });
@@ -516,14 +528,10 @@ test.describe("thư viện mẫu", () => {
     expect(blocks.length).toBe(before + 1);
     const g = blocks.find((b: any) => b.type === "group" && b.attrs.style?.color?.background === "#0f1b24");
     expect(g?.content?.length).toBeGreaterThan(0);
-    await page.getByRole("button", { name: "Thư viện mẫu" }).click();
-    await lib.getByRole("tab", { name: "Trang" }).click();
-    await lib.locator(".ecx-lib-card[data-page=contact]").click();
-    expect((await state(page)).docs.root.blocks.length).toBeGreaterThan(before + 3);
   });
 
   test("Tạo bằng AI: viết lại chữ của mẫu đang xem, giữ bố cục", async ({ page }) => {
-    await open(page, "?doc=post&ai=1");
+    await open(page, "?doc=post&ai=1&patterns=1");
     await page.getByRole("button", { name: "Thư viện mẫu" }).click();
     const lib = page.getByRole("dialog", { name: "Thư viện mẫu" });
     await lib.getByRole("radio", { name: "Tạo bằng AI" }).click();
