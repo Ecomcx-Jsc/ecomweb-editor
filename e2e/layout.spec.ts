@@ -227,4 +227,24 @@ test.describe("bố cục + hiệu ứng", () => {
     await page.mouse.up();
     expect((await groupOf(page)).attrs.contentWidth).toBeUndefined();
   });
+
+  test("nhóm: màu nền riêng cho điện thoại, máy tính giữ nguyên; CSS media query đúng", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "nhom");
+    await page.keyboard.type("Thẻ");
+    await showToolbar(page);
+    await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+    const insp = page.locator(".ecx-inspector");
+    await insp.locator(".ecx-color-row-btn").first().click();
+    await page.getByRole("button", { name: "Màu: primary" }).click();
+    await page.getByRole("button", { name: "Điện thoại", exact: true }).first().click();
+    await expect(insp.getByText("Đang dùng màu của máy tính")).toBeVisible();
+    await insp.locator(".ecx-color-row-btn").first().click();
+    await page.getByRole("button", { name: "Màu: accent" }).click();
+    const st = (await groupOf(page)).attrs.style;
+    expect(st.color.background).toBe("primary");
+    expect(st.background.color).toEqual({ mobile: "accent" });
+    await expect(insp.getByText("Đang dùng màu của máy tính")).toHaveCount(0);
+  });
 });

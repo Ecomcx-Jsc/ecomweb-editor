@@ -41,7 +41,14 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
     if (v) r[device] = v; else delete r[device];
     setBg({ [k]: Object.keys(r).length ? r : undefined });
   };
+  /** Màu riêng của khổ tablet / điện thoại (máy tính dùng style.color.background). */
+  const setBgColorAt = (v: string | undefined) => {
+    const r: Record<string, string | undefined> = { ...(bg.color ?? {}) };
+    if (v) r[device] = v; else delete r[device];
+    setBg({ color: Object.keys(r).length ? r : undefined });
+  };
   const setColor = (v: string | undefined) => {
+    if (device !== "base") return setBgColorAt(v);
     const next: BlockStyle = { ...style, color: { ...style.color, background: v } };
     if (legacy === undefined) return commitStyle(next);
     // Màu cũ của nhóm kéo theo khoảng đệm + bo góc trong vỏ → giữ nguyên dáng khi chuyển sang style
@@ -134,7 +141,8 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
           </Row>
           {kind === "color" && (
             <>
-              <ColorInput label={b.bg.color} value={style.color?.background ?? legacy} onChange={setColor} />
+              <ColorInput label={b.bg.color} value={device === "base" ? style.color?.background ?? legacy : bg.color?.[device]} onChange={setColor} />
+              {device !== "base" && !bg.color?.[device] && <p className="ecx-muted">{b.bg.colorInherit}</p>}
               {legacy && !style.color?.background && <p className="ecx-muted">{b.bg.legacy}</p>}
             </>
           )}

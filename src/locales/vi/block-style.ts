@@ -54,6 +54,7 @@ export const blockStyle = {
     hoverColor: "Màu nền khi rê chuột",
     hoverNote: "Rê chuột chỉ đổi màu nền; ảnh / chuyển màu giữ nguyên.",
     legacy: "Màu nền cũ của nhóm — chọn màu khác để chuyển sang kiểu dáng mới.",
+    colorInherit: "Đang dùng màu của máy tính; chọn màu để riêng cho khổ này.",
   },
   more: "tuỳ chọn khác",
   tabTitle: "Tab {n}",

@@ -51,6 +51,7 @@ export const blockStyle: (typeof vi)["blockStyle"] = {
     hoverColor: "Background color on hover",
     hoverNote: "Hover only changes the background color; image / gradient stay.",
     legacy: "Old group background color — pick another color to move it to the new style.",
+    colorInherit: "Using the desktop colour; pick one to override on this screen size.",
   },
   more: "more options",
   tabTitle: "Tab {n}",
