@@ -78,4 +78,10 @@ export const blocks = {
   sampleName: "Customer name",
   sampleRole: "Role, company",
   sampleSkill: "Skill",
+  contentWidth: "Content width",
+  cwFill: "Fill block",
+  cwSite: "Site width",
+  quickColor: "Quick background colour",
+  noColor: "No colour",
+  addSectionBelow: "Add section below",
 };

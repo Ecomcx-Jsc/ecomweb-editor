@@ -563,3 +563,7 @@ body.is-dragging .ecx-section-adder { display: none; }
 /* Hàng sửa một mục của danh sách (chữ; icon + liên kết + xoá) */
 .ecx-item-row { display: flex; flex-direction: column; gap: 4px; padding: 8px; border: 1px solid var(--ecx-ed-line); border-radius: 8px; }
 .ecx-item-row-sub { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 28px; gap: 4px; align-items: center; }
+
+.ecx-quick-colors { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; max-width: 200px; }
+.ecx-quick-colors .ecx-color-dot { width: 24px; height: 24px; border: 0; padding: 0; cursor: pointer; }
+.ecx-quick-colors .ecx-color-dot:hover, .ecx-quick-colors .ecx-color-dot:focus-visible { outline: 2px solid var(--ecx-ed-accent, #1a597b); outline-offset: 2px; }

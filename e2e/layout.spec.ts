@@ -174,4 +174,28 @@ test.describe("bố cục + hiệu ứng", () => {
     expect(g.attrs.style.layout.type).toBe("flex");
     if (saved) expect(saved).toContain("\"layout\":{\"type\":\"flex\"");
   });
+
+  test("nhóm: thanh nổi có độ rộng nội dung, màu nền nhanh, thêm section bên dưới", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "nhom");
+    await page.keyboard.type("Thẻ");
+    await showToolbar(page);
+    const tb = page.locator(".ecx-toolbar");
+    await tb.getByRole("button", { name: "Chọn khối cha" }).click();
+    await tb.getByRole("button", { name: "Độ rộng nội dung" }).click();
+    await page.getByRole("menuitem", { name: "960px" }).click();
+    expect((await groupOf(page)).attrs.contentWidth).toBe("960px");
+    await tb.getByRole("button", { name: "Màu nền nhanh" }).click();
+    await page.locator('.ecx-quick-colors [data-color="primary"]').click();
+    expect((await groupOf(page)).attrs.style.color.background).toBe("primary");
+    await tb.getByRole("button", { name: "Màu nền nhanh" }).click();
+    await page.locator('.ecx-quick-colors [data-color="none"]').click();
+    expect((await groupOf(page)).attrs.style?.color?.background).toBeUndefined();
+    const before = (await state(page)).docs.root.blocks.length;
+    await tb.getByRole("button", { name: "Thêm section bên dưới" }).click();
+    const blocks = (await state(page)).docs.root.blocks;
+    expect(blocks.length).toBe(before + 1);
+    expect(blocks.filter((b: { type: string }) => b.type === "group").length).toBe(2);
+  });
 });

@@ -14,10 +14,11 @@ import { ColumnHandles, HeightHandle, PaddingHandles, useActiveWithin } from "./
 import { ColumnInspector, ColumnsInspector } from "./columns-inspector";
 import { layoutFor, layoutKind } from "../ui/layout-panel";
 import { normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
-import { ToolButton } from "../ui/toolbar";
+import { Dropdown, MenuItem, ToolButton } from "../ui/toolbar";
+import { useSiteColors } from "../ui/color-field";
 import { AddItemButton, MediaPlaceholder } from "../ui/placeholders";
 import type { MediaItem } from "../../shared/types";
-import { LayoutGrid, Rows3, Columns3 as RowIcon } from "lucide-react";
+import { LayoutGrid, Rows3, Columns3 as RowIcon, MoveHorizontal, Paintbrush } from "lucide-react";
 import { useMsgs } from "../i18n";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
@@ -59,7 +60,9 @@ function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEdi
 }
 
 /** Thanh công cụ của nhóm: đổi nhanh Nhóm / Hàng ngang / Xếp dọc / Lưới (giữ các kiểu dáng khác). */
-function GroupLayoutTools({ attrs, setAttrs, labels }: BlockEditProps) {
+function GroupLayoutTools({ block, attrs, setAttrs, labels }: BlockEditProps) {
+  const { store } = useEditor();
+  const colors = useSiteColors();
   const style: BlockStyle = normalizeStyle(attrs.style) ?? {};
   const kind = layoutKind(style.layout);
   const t = useMsgs("blocks");
@@ -69,6 +72,25 @@ function GroupLayoutTools({ attrs, setAttrs, labels }: BlockEditProps) {
       {items.map(([k, I, label]) => (
         <ToolButton key={k} label={label} active={kind === k} onClick={() => setAttrs({ style: normalizeStyle({ ...style, layout: layoutFor(k, style.layout) }) })}><I className="ecx-icon" /></ToolButton>
       ))}
+      <Dropdown label={t.contentWidth} trigger={<span className="ecx-tool-text" data-ecx-content-width={attrs.contentWidth || (attrs.constrained ? "site" : "fill")}><MoveHorizontal className="ecx-icon" /></span>}>
+        {(close) => ([["fill", t.cwFill], ["site", t.cwSite], ["720px", "720px"], ["960px", "960px"], ["1140px", "1140px"]] as const).map(([v, l]) => {
+          const cur = attrs.contentWidth || (attrs.constrained ? "site" : "fill");
+          return <MenuItem key={v} label={(v === cur ? "✓ " : "") + l} onClick={() => { close(); setAttrs({ constrained: v === "site" ? true : undefined, contentWidth: v.endsWith("px") ? v : undefined }); }} />;
+        })}
+      </Dropdown>
+      <Dropdown label={t.quickColor} trigger={<span className="ecx-tool-text"><Paintbrush className="ecx-icon" /></span>}>
+        {(close) => (
+          <div className="ecx-quick-colors" role="group" aria-label={t.quickColor}>
+            {Object.entries(colors).map(([name, css]) => (
+              <button key={name} type="button" className="ecx-color-dot" title={name} aria-label={name} data-color={name} style={{ background: css }}
+                onClick={() => { close(); setAttrs({ style: normalizeStyle({ ...style, color: { ...style.color, background: name } }) }); }} />
+            ))}
+            <button type="button" className="ecx-color-dot is-none" title={t.noColor} aria-label={t.noColor} data-color="none"
+              onClick={() => { close(); setAttrs({ style: normalizeStyle({ ...style, color: { ...style.color, background: undefined } }) }); }} />
+          </div>
+        )}
+      </Dropdown>
+      <ToolButton label={t.addSectionBelow} onClick={() => store.insertAfter(block.id, [makeBlock("group", {}, [makeBlock("paragraph")])], { replaceEmpty: false })}><Plus className="ecx-icon" /></ToolButton>
     </>
   );
 }

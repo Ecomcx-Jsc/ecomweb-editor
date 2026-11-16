@@ -83,18 +83,18 @@ test.describe("chọn khối + thanh công cụ", () => {
   test("menu thêm: chèn trên / dưới, gom nhóm, bỏ nhóm, xoá", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");
-    await tool(page, "Thêm").click();
+    await toolbar(page).getByRole("button", { name: "Thêm", exact: true }).click();
     await page.getByRole("menuitem", { name: "Thêm khối phía dưới" }).click();
     await page.keyboard.type("cuối");
     expect((await texts(page)).at(-1)).toBe("paragraph:cuối");
     await clickEnd(c, "Đoạn thứ hai.");
-    await tool(page, "Thêm").click();
+    await toolbar(page).getByRole("button", { name: "Thêm", exact: true }).click();
     await page.getByRole("menuitem", { name: "Gom vào nhóm" }).click();
     expect(((await shape(page)) as unknown[])[2]).toEqual({ group: ["paragraph"] });
-    await tool(page, "Thêm").click();
+    await toolbar(page).getByRole("button", { name: "Thêm", exact: true }).click();
     await page.getByRole("menuitem", { name: "Bỏ nhóm" }).click();
     expect(((await shape(page)) as unknown[])[2]).toBe("paragraph");
-    await tool(page, "Thêm").click();
+    await toolbar(page).getByRole("button", { name: "Thêm", exact: true }).click();
     await page.getByRole("menuitem", { name: "Xoá" }).click();
     expect(await texts(page)).toEqual(["heading:Tiêu đề bài", "paragraph:Nội dung bài viết.", "paragraph:cuối"]);
   });

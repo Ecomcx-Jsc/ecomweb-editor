@@ -78,4 +78,10 @@ export const blocks = {
   sampleName: "Tên khách hàng",
   sampleRole: "Chức danh, công ty",
   sampleSkill: "Kỹ năng",
+  contentWidth: "Độ rộng nội dung",
+  cwFill: "Hết khối",
+  cwSite: "Theo website",
+  quickColor: "Màu nền nhanh",
+  noColor: "Không màu",
+  addSectionBelow: "Thêm section bên dưới",
 };
