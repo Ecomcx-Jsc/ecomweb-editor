@@ -70,6 +70,24 @@ test.describe("trải nghiệm soạn", () => {
     await expect(c.locator('[data-ecx-block="pt"]')).toHaveCSS("display", "grid");
   });
 
+  test("khối Tìm kiếm bấm vào ô nhập / ô chọn vẫn chọn được khối; thanh lọc hiện mục và ô sắp xếp", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await page.evaluate(() => {
+      (window as any).__ecx.store.insert("root", null, 3, [
+        { id: "sr2", type: "search", attrs: { scopeSelect: true, scopes: "product:Sản phẩm" } },
+        { id: "qf", type: "queryFilter", attrs: { termStyle: "links", showSearch: true, showSort: true } },
+      ]);
+    });
+    const selected = () => page.evaluate(() => { const st = (window as any).__ecx.store; const s = st.getState().selection; return st.locate(s.ids[0] ?? s.editing)?.block?.id; });
+    await c.locator('[data-ecx-block="sr2"] input[type=search]').click({ force: true });
+    expect(await selected()).toBe("sr2");
+    await page.evaluate(() => (window as any).__ecx.store.select([], { editing: null }));
+    await c.locator('[data-ecx-block="sr2"] select.search-scope').click({ force: true });
+    expect(await selected()).toBe("sr2");
+    await expect(c.locator('[data-ecx-block="qf"] input[type=search]')).toBeVisible();
+    await expect(c.locator('[data-ecx-block="qf"] select')).toHaveCount(1);
+  });
+
   test("bộ cột: nút + ở mép phải thêm cột, con trỏ vào cột mới", async ({ page }) => {
     const c = await open(page, "?doc=rich");
     await clickEnd(c, "Phải");

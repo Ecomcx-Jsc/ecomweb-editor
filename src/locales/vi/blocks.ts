@@ -25,6 +25,7 @@ export const blocks = {
   contents: "Mục lục",
   menu: "Menu",
   noMenuIsAssigned: "Chưa có menu nào gán cho vị trí này — gán ở Giao diện › Menu, hoặc chọn vị trí khác trong bảng cài đặt.",
+  filterAll: "Tất cả", filterSearch: "Tìm trong danh sách…", filterSort: "Sắp xếp", filterNewest: "Mới nhất", filterEmpty: "Thanh lọc trống: bật tìm kiếm, sắp xếp hoặc chọn phân loại ở bảng bên phải",
   searchLabel: "Tìm kiếm", searchScope: "Phạm vi tìm kiếm", searchAll: "Tất cả", searchPlaceholder: "Tìm trên website…", searchButton: "Tìm",
   categoryName: "Tên chuyên mục",
   category: "Chuyên mục: ",

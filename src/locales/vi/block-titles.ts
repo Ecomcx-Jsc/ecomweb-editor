@@ -50,6 +50,7 @@ export const blockTitles = {
   postNavigation: "Bài trước / bài sau",
   query: "Danh sách bài",
   postTemplate: "Khuôn mỗi bài",
+  queryFilter: "Thanh lọc",
   pagination: "Phân trang",
   queryEmpty: "Khi không có bài",
   form: "Form",

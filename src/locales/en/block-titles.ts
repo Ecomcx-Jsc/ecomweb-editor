@@ -50,6 +50,7 @@ export const blockTitles = {
   postNavigation: "Previous / next post",
   query: "Query loop",
   postTemplate: "Post template",
+  queryFilter: "Filter bar",
   pagination: "Pagination",
   queryEmpty: "No results",
   form: "Form",

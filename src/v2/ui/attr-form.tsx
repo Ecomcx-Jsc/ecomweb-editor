@@ -40,7 +40,7 @@ export function Field({ label, children, group }: { label: string; children: Rea
 }
 
 /** Lựa chọn lấy từ ứng dụng (host.choices); null = ứng dụng không cung cấp → ô gõ tay. */
-function useChoices(kind: ChoiceKind | undefined, args: Record<string, string> | undefined): Choice[] | null | undefined {
+export function useChoices(kind: ChoiceKind | undefined, args: Record<string, string> | undefined): Choice[] | null | undefined {
   const { host, labels } = useEditor();
   const key = JSON.stringify([kind, args]);
   const [state, setState] = useState<{ key: string; list: Choice[] | null } | null>(null);
@@ -83,6 +83,22 @@ function ChoiceField({ hint, attrs, value, set, label }: { hint: AttrHint; attrs
       {list?.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
       {v && list && !list.some((c) => c.value === v) && <option value={v}>{v} {labels.choiceMissing}</option>}
     </select>
+  );
+}
+
+/** Chọn nhiều mục (danh sách tích): giá trị lưu là các mã cách nhau dấu phẩy. */
+function MultiChoiceField({ hint, attrs, value, set, label }: { hint: AttrHint; attrs: Record<string, unknown>; value: unknown; set(v: unknown): void; label: string }) {
+  const { labels } = useEditor();
+  const list = useChoices(hint.choice?.kind, hint.choice?.args?.(attrs));
+  const picked = new Set(String(value ?? "").split(",").map((x) => x.trim()).filter(Boolean));
+  if (list === null) return <input className="ecx-input" aria-label={label} value={String(value ?? "")} onChange={(e) => set(e.target.value || undefined)} />;
+  if (list === undefined) return <span className="ecx-muted">{labels.choiceLoading}</span>;
+  const toggle = (v: string) => { const next = new Set(picked); if (next.has(v)) next.delete(v); else next.add(v); set(next.size ? [...next].join(",") : undefined); };
+  return (
+    <div className="ecx-multichoice" role="group" aria-label={label}>
+      {list.map((c) => <label key={c.value} className="ecx-check"><input type="checkbox" checked={picked.has(c.value)} onChange={() => toggle(c.value)} /> {c.label}</label>)}
+      {!list.length && <span className="ecx-muted">{labels.choiceSelect}</span>}
+    </div>
   );
 }
 
@@ -150,6 +166,8 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
           }
           case "icon":
             return <Field key={k} label={label}><IconPicker label={label} value={value == null ? undefined : String(value)} allowNone={hint.allowNone} onChange={(v) => set(v)} />{help}</Field>;
+          case "multichoice":
+            return <Field key={k} label={label}><MultiChoiceField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
           case "choice":
             return <Field key={k} label={label}><ChoiceField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
           case "range": {

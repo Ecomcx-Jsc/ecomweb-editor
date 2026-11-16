@@ -44,7 +44,8 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     if (store.modeOf(block.id) === "disabled") return;
     const rich = target.closest<HTMLElement>("[data-ecx-rich]");
     if (rich && rich.isContentEditable && !e.shiftKey) return; // bấm vào chữ: ProseMirror đặt con trỏ, focus báo đang gõ
-    if (target.closest("input, textarea, select, button, [contenteditable=true]") && !e.shiftKey) return;
+    // Ô nhập / nút thật của khối đặt chỗ tự xử lý; riêng vùng đánh dấu data-ecx-inert (bản xem trước không bấm được, vd khối Tìm kiếm) thì bấm vào là chọn khối
+    if (target.closest("input, textarea, select, button, [contenteditable=true]") && !target.closest("[data-ecx-inert]") && !e.shiftKey) return;
     // Bấm vào phần đệm của ô bảng: con trỏ vào chữ trong ô (như bấm vào ô của Word / WordPress), không chọn cả ô
     if ((block.type === "tableCell" || block.type === "tableHeader") && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
       const text = block.content?.find((b) => b.inline);
@@ -70,7 +71,7 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     if (t.closest("[data-ecx-block]")?.getAttribute("data-ecx-block") !== block.id) return;
     // Chỉ xét trong khối (cả khung soạn là contenteditable)
     const hit = t.closest("[data-ecx-rich], input, textarea, select, button, a, [contenteditable=true], .ecx-pad-handles, .ecx-col-handles, .ecx-image-handle");
-    if (hit && e.currentTarget.contains(hit)) return;
+    if (hit && e.currentTarget.contains(hit) && !hit.closest("[data-ecx-inert]")) return;
     const ids = store.getState().selection.ids;
     startDrag(ctx, e, ids.includes(block.id) ? ids : [block.id]);
   }, [block.id, ctx, store, ui]);

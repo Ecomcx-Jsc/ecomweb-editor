@@ -14,7 +14,7 @@ export interface AttrHint {
   label?: true;
   /** Khoá của hint (do hintOf điền) — dùng tra chữ. */
   key?: string;
-  control?: "select" | "segmented" | "range" | "choice" | "newTab" | "suggest" | "code" | "hidden" | "icon";
+  control?: "select" | "segmented" | "range" | "choice" | "multichoice" | "newTab" | "suggest" | "code" | "hidden" | "icon";
   /** control "icon": có lựa chọn "Không có icon". */
   allowNone?: true;
   options?: Opt[];
@@ -195,6 +195,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "search.showLabel": { label: true },
   "search.buttonPosition": { control: "segmented", label: true, options: ["right", "left", "below"] },
   "search.buttonStyle": { control: "segmented", label: true, options: ["text", "icon"] },
+  "search.collapse": { control: "segmented", label: true, help: true, options: ["never", "tablet", "mobile"] },
   "search.scopeSelect": { label: true, help: true },
   "search.scopes": { label: true, help: true, when: (a) => a.scopeSelect === true },
   "postAuthor.showName": { label: true },
@@ -256,6 +257,30 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "orderedList.reversed": { label: true },
   "blockquote.citation": { label: true },
   "postDate.displayType": { control: "segmented", label: true, options: ["published", "modified"] },
+  "query.source": { control: "segmented", label: true, options: ["latest", "manual", "related"], when: notInherit },
+  "query.include": { label: true, help: true, placeholder: true, when: (a) => a.inherit === false && a.source === "manual" },
+  "query.terms": { control: "multichoice", choice: { kind: "term", args: (a) => ({ taxonomy: String(a.taxonomy ?? "") }) }, label: true, when: (a) => !!a.taxonomy },
+  "query.termMode": { control: "segmented", label: true, options: ["any", "all", "none"], when: (a) => !!a.taxonomy && !!String(a.terms ?? "").trim() },
+  "query.metaKey": { label: true, help: true, placeholder: true, when: notInherit },
+  "query.metaCompare": { control: "select", label: true, options: ["=", "!=", ">", ">=", "<", "<=", "LIKE", "EXISTS", "NOT EXISTS"], when: (a) => a.inherit === false && !!a.metaKey },
+  "query.metaValue": { label: true, when: (a) => a.inherit === false && !!a.metaKey && !["EXISTS", "NOT EXISTS"].includes(String(a.metaCompare ?? "=")) },
+  "query.dateRange": { control: "select", label: true, options: ["any", "7", "30", "90", "365"], when: notInherit },
+  "query.after": { label: true, placeholder: true, when: notInherit },
+  "query.before": { label: true, placeholder: true, when: notInherit },
+  "query.parent": { label: true, help: true, when: notInherit },
+  "query.offset": { label: true, help: true, when: notInherit },
+  "query.excludeCurrent": { label: true, help: true, when: notInherit },
+  "query.authorCurrent": { label: true, when: notInherit },
+  "query.urlFilters": { label: true, help: true },
+  "queryFilter.taxonomy": { control: "choice", choice: { kind: "taxonomy" }, label: true, help: true },
+  "queryFilter.termStyle": { control: "segmented", label: true, options: ["none", "links", "chips", "select"], when: (a) => !!a.taxonomy },
+  "queryFilter.allLabel": { label: true, placeholder: true },
+  "queryFilter.showSearch": { label: true },
+  "queryFilter.showSort": { label: true },
+  "queryFilter.sortOptions": { label: true, help: true, placeholder: true, when: (a) => a.showSort === true },
+  "queryFilter.placeholder": { label: true, when: (a) => a.showSearch === true },
+  "queryFilter.submitText": { label: true },
+  "queryFilter.action": { label: true, help: true, placeholder: true },
   "query.paginate": { label: true, help: true, when: notInherit },
   "query.orderByMeta": { label: true, help: true, when: notInherit },
   "query.order": { control: "segmented", options: ["desc", "asc"], when: notInherit },

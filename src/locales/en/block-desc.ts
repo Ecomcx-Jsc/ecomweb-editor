@@ -73,6 +73,7 @@ export const blockDesc = {
   pageList: "The site’s pages, by level.",
   archives: "Links to posts by month.",
   postTemplate: "How each post looks inside a post list.",
+  queryFilter: "Filter bar for a post list: search, pick a category, sort. Turn on \"Use the filter bar\" on the post list block.",
   pagination: "Previous / next and page numbers for a post list.",
   queryEmpty: "Content shown when the post list is empty.",
   syncedPattern: "Shared pattern — edit once, changes on every page using it.",

@@ -73,6 +73,7 @@ export const blockDesc = {
   pageList: "Danh sách các trang của website, theo cấp.",
   archives: "Liên kết lưu trữ bài theo tháng.",
   postTemplate: "Khuôn hiển thị mỗi bài trong khối Danh sách bài.",
+  queryFilter: "Thanh lọc cho danh sách: tìm, chọn danh mục, sắp xếp. Bật \"Nhận bộ lọc từ thanh lọc\" ở khối Danh sách bài.",
   pagination: "Nút trang trước / sau và số trang của danh sách bài.",
   queryEmpty: "Nội dung hiện khi danh sách bài không có bài nào.",
   syncedPattern: "Mẫu dùng chung — sửa một nơi, đổi ở mọi trang dùng nó.",
