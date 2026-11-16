@@ -106,6 +106,11 @@ function IconListInspector({ attrs, setAttrs }: BlockEditProps) {
 }
 
 const spec = (name: string) => CORE_NODES[name]?.attrs;
+/** Thứ tự ô ở bảng phải: phần đầu hộp (icon / ảnh / số) trước, rồi chữ, rồi liên kết. Ô không kể tên giữ thứ tự cũ ở cuối. */
+const ICON_BOX_ORDER = ["media", "icon", "number", "src", "alt", "width", "height", "iconStyle", "position", "verticalAlign", "hover", "title", "text", "level", "textAlign", "href", "linkMode", "buttonText", "fullHeight"];
+function ordered<T>(attrs: Record<string, T>, order: string[]): Record<string, T> {
+  return Object.fromEntries([...order.filter((k) => k in attrs), ...Object.keys(attrs).filter((k) => !order.includes(k))].map((k) => [k, attrs[k]]));
+}
 const ICON_SELECT = { type: "string" as const, enum: ICON_NAMES };
 
 /** Khối widget của lõi; `lang` = ngôn ngữ của trình soạn (chữ mẫu khi chèn). */
@@ -113,8 +118,9 @@ export function widgetBlocks(lang?: string): BlockType[] {
   const m = messages("blocks", lang) as Record<string, string>;
   const base = { kind: "atom" as const, category: "widgets", edit: WidgetEdit, supports: { style: true, anchor: true, className: true } };
   return [
-    { ...base, name: "iconBox", title: "Icon Box", icon: Star, keywords: "icon box hop bieu tuong tinh nang dich vu feature", attributes: { ...spec("iconBox"), icon: { ...ICON_SELECT, default: "star" } }, create: () => makeBlock("iconBox", { icon: "star", title: "", text: "" }), summary: (a) => a.title },
-    { ...base, name: "imageBox", title: "Image Box", icon: ImageIcon, keywords: "image box hop anh the card dich vu", attributes: { ...spec("imageBox"), src: { type: "url", control: "media" } }, create: () => makeBlock("imageBox", { title: "", text: "" }), summary: (a) => a.title },
+    { ...base, name: "iconBox", title: "Icon Box", icon: Star, keywords: "icon box hop bieu tuong tinh nang dich vu feature", attributes: ordered({ ...spec("iconBox"), icon: { ...ICON_SELECT, default: "star" }, src: { type: "url", control: "media" } }, ICON_BOX_ORDER), create: () => makeBlock("iconBox", { icon: "star", title: "", text: "" }), summary: (a) => a.title },
+    // Hộp ảnh đã gộp vào Hộp icon (media = ảnh): ẩn khỏi trình chèn, nội dung cũ vẫn sửa được
+    { ...base, hidden: true, name: "imageBox", title: "Image Box", icon: ImageIcon, keywords: "image box hop anh the card dich vu", attributes: { ...spec("imageBox"), src: { type: "url", control: "media" } }, create: () => makeBlock("imageBox", { title: "", text: "" }), summary: (a) => a.title },
     { ...base, name: "iconList", title: "Icon List", icon: ListChecks, keywords: "icon list danh sach bieu tuong loi ich checklist", inspector: IconListInspector, attributes: { ...spec("iconList"), icon: { ...ICON_SELECT, default: "check" } }, create: () => makeBlock("iconList", { items: [{ text: "" }, { text: "" }] }) },
     { ...base, name: "counter", title: "Counter", icon: Hash, keywords: "counter dem so con so thong ke number", attributes: spec("counter"), create: () => makeBlock("counter", { end: 0, suffix: "+", title: "", textAlign: "center" }), summary: (a) => a.title },
     { ...base, name: "testimonial", title: "Testimonial", icon: Quote, keywords: "testimonial loi chung thuc danh gia khach hang review", attributes: { ...spec("testimonial"), src: { type: "url", control: "media" } }, create: () => makeBlock("testimonial", { quote: "", name: "", role: "" }), summary: (a) => a.name },

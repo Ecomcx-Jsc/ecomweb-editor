@@ -618,3 +618,35 @@ test("liên kết trong đoạn văn: không gạch chân, rê chuột mới g�
   await sec.getByRole("radiogroup", { name: "Trang trí" }).getByRole("radio").nth(1).click();
   expect((await find(page, "paragraph")).attrs.parts.link).toMatchObject({ style: { textDecoration: "none" }, hover: { textDecoration: "underline" } });
 });
+
+test("hộp icon: media là ảnh — ô chọn ảnh trên khối, căn dọc chỉ hiện khi ảnh nằm bên, rộng ảnh, cao bằng ô chứa; Hộp ảnh không còn trong bảng chèn", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "I", type: "iconBox", attrs: { icon: "star", title: "Dịch vụ", text: "Mô tả" } }], { focus: false }); s.select(["I"], { editing: null }); });
+  await expect(insp(page).getByRole("radiogroup", { name: "Căn dọc với chữ" })).toHaveCount(0);
+  await insp(page).getByRole("radio", { name: "Ảnh", exact: true }).click();
+  // Chưa có ảnh: ô chọn ảnh nằm ngay trên khối; ô icon và khung icon ẩn
+  await expect(c.locator(".ecx-icon-box-icon.is-image .ecx-media-pick")).toBeVisible();
+  await expect(insp(page).getByRole("combobox", { name: "Icon", exact: true })).toHaveCount(0);
+  await expect(insp(page).getByRole("radio", { name: "Tròn" })).toHaveCount(0);
+  const src = "/uploads/dich-vu.jpg"; // đường dẫn data: bị bộ lọc URL bỏ (đúng thiết kế)
+  await page.evaluate((u) => (window as any).__ecx.store.setAttrs(["I"], { src: u, alt: "Ảnh dịch vụ" }), src);
+  const img = c.locator(".ecx-icon-box-icon.is-image img");
+  await expect(img).toHaveAttribute("alt", "Ảnh dịch vụ");
+  await insp(page).getByRole("radio", { name: "Bên trái" }).click();
+  await insp(page).getByRole("radiogroup", { name: "Căn dọc với chữ" }).getByRole("radio", { name: "Giữa" }).click();
+  await insp(page).getByRole("checkbox", { name: /Cao bằng ô chứa/ }).check();
+  const box = c.locator(".ecx-icon-box.is-left.is-v-center.is-full-height");
+  await expect(box).toBeVisible();
+  expect(Math.round((await img.boundingBox())!.width)).toBe(96); // mặc định 6rem khi ảnh nằm bên
+  const [m, b] = [await box.locator(".ecx-icon-box-icon").boundingBox(), await box.locator(".ecx-icon-box-body").boundingBox()];
+  expect(m!.x).toBeLessThan(b!.x);
+  expect(Math.abs((m!.y + m!.height / 2) - (b!.y + b!.height / 2))).toBeLessThan(2); // căn giữa theo chiều dọc
+  const a = await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks.find((b: any) => b.id === "I").attrs);
+  expect(a).toMatchObject({ media: "image", position: "left", verticalAlign: "center", fullHeight: true });
+  // Rộng ảnh ở tab Kiểu dáng
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["I"], { iconBoxImageWidth: "160px" }));
+  await expect.poll(async () => Math.round((await img.boundingBox())!.width)).toBe(160);
+  await page.getByRole("button", { name: "Thêm khối" }).first().click();
+  await expect(page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="iconBox"]').first()).toBeVisible();
+  await expect(page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="imageBox"]')).toHaveCount(0);
+});

@@ -23,7 +23,7 @@ export const blockStyle = {
     accTitleColor: "Màu tiêu đề", accTitleBg: "Nền tiêu đề", accActiveColor: "Màu tiêu đề", accBorderColor: "Màu viền", accGap: "Khoảng giữa các mục", accPadding: "Khoảng đệm",
     columnsGap: "Khoảng giữa các cột", columnsDirection: "Hướng xếp", tabsAlign: "Căn tiêu đề tab",
     hrStyle: "Kiểu", hrWeight: "Độ dày", hrColor: "Màu", hrWidth: "Chiều rộng", hrAlign: "Căn",
-    iconBoxIconColor: "Màu icon", iconBoxIconSize: "Cỡ icon", iconBoxTitleColor: "Màu tiêu đề", iconBoxTextColor: "Màu mô tả",
+    iconBoxIconColor: "Màu icon", iconBoxIconSize: "Cỡ icon", iconBoxImageWidth: "Rộng ảnh", iconBoxTitleColor: "Màu tiêu đề", iconBoxTextColor: "Màu mô tả",
     imageBoxRadius: "Bo góc ảnh", imageBoxTitleColor: "Màu tiêu đề", imageBoxTextColor: "Màu mô tả",
     iconListGap: "Khoảng giữa các mục", iconListColumnGap: "Khe giữa các cột", iconListIconGap: "Khoảng icon – chữ", iconListDivider: "Đường kẻ giữa các mục", iconListIconColor: "Màu icon", iconListIconSize: "Cỡ icon", iconListTextColor: "Màu chữ",
     counterNumberColor: "Màu số", counterNumberSize: "Cỡ số", counterTitleColor: "Màu tiêu đề",

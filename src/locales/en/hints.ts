@@ -369,4 +369,12 @@ export const hints = {
   "iconList.iconStyle.opt.circle": "Circle",
   "iconList.iconStyle.opt.square": "Square",
   "iconList.stroke.label": "Stroke width",
+  "iconBox.media.opt.image": "Image",
+  "iconBox.src.label": "Image",
+  "iconBox.verticalAlign.label": "Vertical alignment",
+  "iconBox.verticalAlign.opt.top": "Top",
+  "iconBox.verticalAlign.opt.center": "Middle",
+  "iconBox.verticalAlign.opt.bottom": "Bottom",
+  "iconBox.fullHeight.label": "Fill container height",
+  "iconBox.fullHeight.help": "Boxes side by side in columns get equal height",
 };

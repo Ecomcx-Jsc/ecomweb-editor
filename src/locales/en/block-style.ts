@@ -22,7 +22,7 @@ export const blockStyle: (typeof vi)["blockStyle"] = {
     accTitleColor: "Title color", accTitleBg: "Title background", accActiveColor: "Title color", accBorderColor: "Border color", accGap: "Space between", accPadding: "Padding",
     columnsGap: "Columns gap", columnsDirection: "Direction", tabsAlign: "Tab title alignment",
     hrStyle: "Style", hrWeight: "Weight", hrColor: "Color", hrWidth: "Width", hrAlign: "Alignment",
-    iconBoxIconColor: "Icon color", iconBoxIconSize: "Icon size", iconBoxTitleColor: "Title color", iconBoxTextColor: "Description color",
+    iconBoxIconColor: "Icon color", iconBoxIconSize: "Icon size", iconBoxImageWidth: "Image width", iconBoxTitleColor: "Title color", iconBoxTextColor: "Description color",
     imageBoxRadius: "Image radius", imageBoxTitleColor: "Title color", imageBoxTextColor: "Description color",
     iconListGap: "Space between", iconListColumnGap: "Column gap", iconListIconGap: "Icon – text gap", iconListDivider: "Divider", iconListIconColor: "Icon color", iconListIconSize: "Icon size", iconListTextColor: "Text color",
     counterNumberColor: "Number color", counterNumberSize: "Number size", counterTitleColor: "Title color",
