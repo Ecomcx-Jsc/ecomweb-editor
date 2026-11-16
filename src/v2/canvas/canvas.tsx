@@ -325,6 +325,12 @@ function useCanvasKeys(doc: Document) {
       }
       if (e.key === "Backspace" && !store.getState().selection.ids.length) { e.preventDefault(); return; }
       const ids = store.getState().selection.ids;
+      // Alt+Shift+↑ / ↓: đưa khối đang chọn lên / xuống một bước (giống nút Lên / Xuống của thanh công cụ)
+      if (e.altKey && e.shiftKey && !mod && ids.length && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        store.moveBy(ids, e.key === "ArrowUp" ? -1 : 1);
+        return;
+      }
       if (mod && k === "a") {
         e.preventDefault();
         store.select(store.getState().docs[store.activeDocId].blocks.map((b) => b.id), { editing: null });

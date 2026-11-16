@@ -316,6 +316,8 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
       dt.setData("text/plain", t);
       node.dispatchEvent(new ClipboardEvent("paste", { clipboardData: dt, bubbles: true, cancelable: true }));
     }, text);
+    // Đợi vùng bôi đen thật sự có (Shift+Home xử lý bất đồng bộ; dán khi chưa có vùng chọn thì ra chữ thường, không phải liên kết)
+    await expect.poll(() => c.locator("p:has-text('Đoạn thứ hai.')").first().evaluate((n) => n.ownerDocument.getSelection()?.toString())).toBe("Đoạn thứ hai.");
     await paste("p:has-text('Đoạn thứ hai.')", "https://ecomcx.vn");
     expect((await state(page)).docs.root.blocks[2].inline[0].marks).toEqual([{ type: "link", attrs: { href: "https://ecomcx.vn" } }]);
     await page.keyboard.press(END);
@@ -454,4 +456,23 @@ test("chọn khối cha bằng thanh nổi rồi dùng phím: ⌘⇧D nhân đô
   expect(await tree()).toEqual([{ t: "group", kids: ["Section 1"] }, { t: "group", kids: ["Section 1"] }, { t: "group", kids: ["Section 2"] }]);
   await page.keyboard.press("Delete");
   expect(await tree()).toEqual([{ t: "group", kids: ["Section 1"] }, { t: "group", kids: ["Section 2"] }]);
+});
+
+test("chọn khối rồi Alt+Shift+↓ / ↑: đưa cả khối xuống / lên một bước", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => {
+    const st = (window as any).__ecx.store;
+    const g = (id: string, t: string) => ({ id, type: "group", attrs: { padding: "medium" }, content: [{ id: id + "p", type: "paragraph", attrs: {}, inline: [{ type: "text", text: t }] }] });
+    st.insert("root", null, 3, [g("g1", "Section 1"), g("g2", "Section 2"), g("g3", "Section 3")], { focus: false });
+    st.select([]);
+  });
+  const names = async () => (await state(page)).docs.root.blocks.slice(3).map((b: any) => b.content[0].inline[0].text);
+  await clickEnd(c, "Section 2");
+  await showToolbar(page);
+  await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+  await page.keyboard.press("Alt+Shift+ArrowDown");
+  expect(await names()).toEqual(["Section 1", "Section 3", "Section 2"]);
+  await page.keyboard.press("Alt+Shift+ArrowUp");
+  await page.keyboard.press("Alt+Shift+ArrowUp");
+  expect(await names()).toEqual(["Section 2", "Section 1", "Section 3"]);
 });

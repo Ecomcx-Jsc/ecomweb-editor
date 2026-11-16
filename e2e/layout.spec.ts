@@ -154,7 +154,8 @@ test.describe("bố cục + hiệu ứng", () => {
     await border.getByLabel("Nhấc lên").check();
     g = await groupOf(page);
     expect(g.attrs.style.hover).toEqual({ lift: true });
-    await el.hover();
+    // Rê vào góc khối: giữa khối đang chọn có nút "+ Thêm section" nằm đè, trúng nó thì khối không nhận :hover
+    await el.hover({ position: { x: 12, y: 6 } });
     await expect.poll(() => el.evaluate((n) => getComputedStyle(n).transform)).not.toBe("none");
   });
 
@@ -241,8 +242,13 @@ test.describe("bố cục + hiệu ứng", () => {
     await page.getByRole("button", { name: "Màu: primary" }).click();
     await page.getByRole("button", { name: "Điện thoại", exact: true }).first().click();
     await expect(insp.getByText("Đang dùng màu của máy tính")).toBeVisible();
-    await insp.locator(".ecx-color-row-btn").first().click();
-    await page.getByRole("button", { name: "Màu: accent" }).click();
+    // Đổi khổ vẽ lại bảng bên phải: bấm mở bảng màu có thể trúng lúc nó đang vẽ lại (mở rồi bị đóng) → thử lại như người dùng
+    const accent = page.getByRole("button", { name: "Màu: accent" });
+    await expect(async () => {
+      if (!(await accent.isVisible())) await insp.locator(".ecx-color-row-btn").first().click();
+      await expect(accent).toBeVisible({ timeout: 800 });
+    }).toPass();
+    await accent.click();
     const st = (await groupOf(page)).attrs.style;
     expect(st.color.background).toBe("primary");
     expect(st.background.color).toEqual({ mobile: "accent" });

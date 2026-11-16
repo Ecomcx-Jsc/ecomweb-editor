@@ -198,6 +198,13 @@ test.describe("báo cáo khách hàng: sửa lỗi trình soạn", () => {
     const rows = page.locator(".ecx-listview .ecx-list-row");
     const before = (await state(page)).docs.root.blocks.map((b: any) => b.id);
     const handle = rows.nth(0).locator(".ecx-list-drag");
+    // Ngăn Cây khối trượt ra: đo vị trí khi nó đã đứng yên (đo lúc đang trượt thì bấm trượt tay nắm)
+    await expect(async () => {
+      const a = (await handle.boundingBox())!;
+      await page.waitForTimeout(120);
+      const b = (await handle.boundingBox())!;
+      expect(b.x).toBe(a.x);
+    }).toPass();
     const from = (await handle.boundingBox())!, to = (await rows.nth(2).boundingBox())!;
     await page.mouse.move(from.x + 4, from.y + 4); await page.mouse.down();
     await page.mouse.move(to.x + 40, to.y + to.height * 0.8, { steps: 12 });

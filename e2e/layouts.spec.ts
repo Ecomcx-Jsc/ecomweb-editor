@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { writeFileSync } from "node:fs";
 import { open } from "./helpers";
 
 /**
@@ -55,6 +56,11 @@ const LAYOUTS: Array<{ name: string; build: () => B[]; stackSel?: string }> = [
   { name: "cac-section-mau-xen-ke", build: () => ["primary/15", "accent/15", "muted/20"].map((c, i) => grp([h("Section " + (i + 1), 2, { textAlign: "center" }), p(LOREM, { textAlign: "center" })], { padding: "large", align: "full", style: bg(c) })) },
   { name: "the-cao-bang-nhau", build: () => [cols([1, 2, 3].map((i) => col([card([h("Thẻ " + i, 3), p(LOREM.repeat(i)), btns([btn("Chi tiết", "outline")])])])), { verticalAlign: "stretch" })], stackSel: ".ecx-columns" },
   { name: "bai-viet-2-cot-chu", build: () => [cols([col([h("Cột chữ trái", 3), p(LOREM.repeat(3))]), col([h("Cột chữ phải", 3), p(LOREM.repeat(3))])])], stackSel: ".ecx-columns" },
+  { name: "sidebar-dinh-khi-cuon", build: () => [cols([col([h("Bài dài", 2), p(LOREM.repeat(4)), p(LOREM.repeat(4))], 70), col([card([h("Mục lục", 3), p("Mục một"), p("Mục hai")], { position: { type: "sticky", top: "1rem" } })], 30)], { verticalAlign: "top" })], stackSel: ".ecx-columns" },
+  { name: "section-co-duong-chia", build: () => [grp([h("Section có sóng", 2, { textAlign: "center" }), p(LOREM, { textAlign: "center" })], { padding: "large", align: "full", style: { ...bg("primary/20"), divider: { bottom: { shape: "wave", color: "white", height: 80 } } } }), grp([h("Section vát", 2, { textAlign: "center" }), p(LOREM, { textAlign: "center" })], { padding: "large", align: "full", style: { ...bg("accent/20"), divider: { top: { shape: "tilt", color: "primary/20" }, bottom: { shape: "curve", color: "white" } } } })] },
+  { name: "cot-25-50-25", build: () => [cols([col([p("Cột trái hẹp")], 25), col([h("Cột giữa rộng", 3), p(LOREM)], 50), col([p("Cột phải hẹp")], 25)])], stackSel: ".ecx-columns" },
+  { name: "cot-40-20-20-20", build: () => [cols([col([h("Chính", 3), p(LOREM)], 40), col([p("Phụ 1")], 20), col([p("Phụ 2")], 20), col([p("Phụ 3")], 20)])], stackSel: ".ecx-columns" },
+  { name: "carousel-the", build: () => [{ id: id(), type: "carousel", attrs: { slidesPerView: 2 }, content: [1, 2, 3].map((i) => grp([h("Thẻ " + i, 3), p(LOREM)], { padding: "medium", style: bg("muted/10") })) }] },
   { name: "banner-tieu-de-trang", build: () => [grp([wid("breadcrumbs", {}), h("Tên trang", 1)], { padding: "medium", align: "full", style: bg("muted/15") })] },
 ];
 
@@ -75,6 +81,11 @@ for (const lay of LAYOUTS) {
     const c = await open(page, "?doc=post");
     await load(page, lay.build());
     await expect(c.locator(".ecx-block-error")).toHaveCount(0);
+    // Xuất nội dung đã lưu của bố cục thành fixture hợp đồng (ECX_DUMP_LAYOUTS=<thư mục>): content / máy chủ / SDK cùng kiểm
+    if (process.env.ECX_DUMP_LAYOUTS) {
+      const input = await page.evaluate(() => (window as any).__ecx.content());
+      writeFileSync(`${process.env.ECX_DUMP_LAYOUTS}/layout-${lay.name}.json`, JSON.stringify({ name: `layout-${lay.name}`, note: "Bố cục trang thường gặp (dựng bằng trình soạn): chuẩn hoá không làm mất thuộc tính nào", input }, null, 2));
+    }
     const shots = process.env.ECX_LAYOUT_SHOTS;
     for (const [label, key] of DEVICES) {
       await page.getByRole("button", { name: label, exact: true }).first().click();

@@ -166,7 +166,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-col-handle { position: absolute; width: 12px; margin-left: -6px; cursor: col-resize; pointer-events: auto; touch-action: none; }
 .ecx-col-handle.is-dragging::before, .ecx-col-handle.is-dragging::after { position: absolute; top: 8px; padding: 1px 6px; border-radius: 4px; background: var(--ecx-ui); color: #fff; font: 600 11px/1.5 system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
 .ecx-col-handle.is-dragging::before { content: attr(data-left); right: 14px; }
-.ecx-col-handle.is-dragging::after { content: attr(data-right); left: 14px; }
+.ecx-col-handle.is-dragging::after { content: attr(data-right); left: 14px; width: auto; bottom: auto; opacity: 1; } /* ghi đè vạch 2px của ::after thường: nhãn % bên phải không bị cắt */
 .ecx-col-handle::after { content: ""; position: absolute; left: 5px; top: 0; bottom: 0; width: 2px; background: var(--ecx-ui); opacity: .35; border-radius: 1px; }
 .ecx-col-handle:hover::after { opacity: 1; }
 .ecx-image-handle { position: absolute; z-index: 6; width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; background: var(--ecx-ui); cursor: nwse-resize; touch-action: none; box-shadow: 0 0 0 1px var(--ecx-ui); }
