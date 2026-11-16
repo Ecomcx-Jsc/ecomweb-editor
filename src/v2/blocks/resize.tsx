@@ -26,7 +26,7 @@ export function ColumnHandles({ block }: { block: BNode }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [gaps, setGaps] = useState<Array<{ left: number; top: number; height: number }>>([]);
   const cols = block.content ?? [];
-  useLayoutEffect(() => {
+  const measure = () => {
     const host = ref.current?.parentElement;
     if (!host) return;
     const hr = host.getBoundingClientRect();
@@ -38,7 +38,16 @@ export function ColumnHandles({ block }: { block: BNode }) {
       return { left: (a.right + b.left) / 2 - hr.left, top: Math.min(a.top, b.top) - hr.top, height: Math.max(a.bottom, b.bottom) - Math.min(a.top, b.top) };
     }).filter(Boolean) as Array<{ left: number; top: number; height: number }>;
     setGaps((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next));
-  });
+  };
+  useLayoutEffect(measure);
+  // Đổi khổ màn hình / thu nhỏ khung: cột có thể xuống dòng mà không vẽ lại → đo lại, không để tay kéo nằm ngoài khung (tràn ngang)
+  useLayoutEffect(() => {
+    const host = ref.current?.parentElement;
+    if (!host) return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(host);
+    return () => ro.disconnect();
+  }, []);
   const start = (i: number, e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
