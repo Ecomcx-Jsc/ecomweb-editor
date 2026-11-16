@@ -18,7 +18,7 @@ export const blocks = {
   down: "Xuống",
   removeLink: "Xoá liên kết",
   addLink: "Thêm liên kết",
-  galleryImages: "Ảnh trong gallery",
+  imageLink: "Liên kết riêng (tuỳ chọn)", imageLinkN: "Liên kết ảnh {n}", galleryImages: "Ảnh trong gallery",
   imageAltN: "Mô tả ảnh {n}",
   removeImage: "Xoá ảnh",
   addImages: "Thêm ảnh",

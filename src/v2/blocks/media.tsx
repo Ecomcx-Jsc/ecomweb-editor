@@ -51,7 +51,7 @@ function GalleryEdit({ block, blockProps, setAttrs, editable, selected }: BlockE
   const add = (items: MediaItem[]) => setAttrs({ images: [...images, ...((mediaAttrs("gallery", items).images ?? []) as typeof images)] });
   return (
     <figure {...blockProps} className={cx(blockProps.className, blockShell("gallery", block.attrs)!.className)} style={{ ...(blockProps.style ?? {}), ...(blockShell("gallery", block.attrs)!.style as CSSProperties) }}>
-      {images.map((im, i) => <figure key={i} className="ecx-gallery-item cms-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={{ width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" }} /></figure>)}
+      {images.map((im, i) => <figure key={i} className="ecx-gallery-item cms-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={block.attrs.layout === "masonry" || block.attrs.imageCrop === false ? { width: "100%", height: "auto", display: "block" } : { width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" }} /></figure>)}
       {/* Có ảnh rồi vẫn còn ô "+" cuối lưới để thêm tiếp (chỉ khi đang chọn: website không có ô này) */}
       {editable && selected && <MediaPlaceholder kind="gallery" compact title={tp.addImage} icon={Plus} className="ecx-gallery-add" onSelect={add} />}
       {block.attrs.caption ? <figcaption className="ecx-gallery-caption cms-gallery-caption" style={{ gridColumn: "1 / -1" }}>{String(block.attrs.caption)}</figcaption> : null}
@@ -201,7 +201,7 @@ function SocialInspector({ attrs, setAttrs, labels }: BlockEditProps) {
 function GalleryInspector({ attrs, setAttrs }: BlockEditProps) {
   const t = useMsgs("blocks");
   const { host } = useEditor();
-  type Img = { src: string; alt?: string; width?: number; height?: number; id?: number | string };
+  type Img = { src: string; alt?: string; width?: number; height?: number; id?: number | string; href?: string };
   const images = (Array.isArray(attrs.images) ? attrs.images : []) as Img[];
   const save = (next: Img[]) => setAttrs({ images: next });
   const patch = (i: number, p: Partial<Img>) => save(images.map((im, k) => (k === i ? { ...im, ...p } : im)));
@@ -218,6 +218,7 @@ function GalleryInspector({ attrs, setAttrs }: BlockEditProps) {
         <div key={`${i}-${im.src}`} className="ecx-social-row" data-gallery-row={i}>
           <img src={isSafeUrl(im.src) ? im.src : ""} alt="" width={36} height={36} style={{ objectFit: "cover", borderRadius: 4, flex: "none" }} />
           <input className="ecx-input" type="text" aria-label={format(t.imageAltN, { n: i + 1 })} placeholder={t.imageAltN.replace("{n}", String(i + 1))} value={im.alt ?? ""} onChange={(e) => patch(i, { alt: e.target.value })} />
+          <input className="ecx-input" type="url" inputMode="url" aria-label={format(t.imageLinkN, { n: i + 1 })} placeholder={t.imageLink} value={im.href ?? ""} onChange={(e) => patch(i, { href: e.target.value || undefined })} />
           <span className="ecx-social-row-tools">
             <button type="button" className="ecx-tool" aria-label={t.up} disabled={i === 0} onClick={() => move(i, -1)}><ArrowUp className="ecx-icon ecx-icon-sm" /></button>
             <button type="button" className="ecx-tool" aria-label={t.down} disabled={i === images.length - 1} onClick={() => move(i, 1)}><ArrowDown className="ecx-icon ecx-icon-sm" /></button>
@@ -272,7 +273,7 @@ export function mediaBlocks(): BlockType[] {
       attributes: { ...media, alt: { type: "string", control: "textarea" }, title: { type: "string" }, width: { type: "number" }, height: { type: "number" }, size: { type: "string", default: "large" }, align: { type: "string", enum: ["left", "right", "center", "wide", "full"] }, href: { type: "url" }, linkTarget: { type: "string", enum: ["_self", "_blank"] }, lightbox: { type: "boolean", default: false } },
       supports: { style: true, anchor: true, className: true, blockStyle: true }, summary: (a) => a.alt || a.src,
     },
-    { name: "gallery", title: "Gallery", icon: Images, category: "media", keywords: "gallery bo suu tap nhieu anh album", kind: "atom", edit: GalleryEdit, inspector: GalleryInspector, attributes: { images: { type: "json", default: [] }, columns: { type: "integer", default: 3, min: 1, max: 6 }, caption: { type: "string" }, linkTo: { type: "string", enum: ["none", "media"], default: "media" }, imageCrop: { type: "boolean", default: true }, lightbox: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
+    { name: "gallery", title: "Gallery", icon: Images, category: "media", keywords: "gallery bo suu tap nhieu anh album", kind: "atom", edit: GalleryEdit, inspector: GalleryInspector, attributes: { layout: { type: "string", enum: ["grid", "masonry"], default: "grid" }, images: { type: "json", default: [] }, columns: { type: "integer", default: 3, min: 1, max: 6 }, caption: { type: "string" }, linkTo: { type: "string", enum: ["none", "media"], default: "media" }, imageCrop: { type: "boolean", default: true }, lightbox: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },
     { name: "video", title: "Video", icon: Video, category: "media", keywords: "video mp4 phim", kind: "atom", edit: VideoEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, poster: { type: "url", control: "media" }, autoplay: { type: "boolean", default: false }, loop: { type: "boolean", default: false }, muted: { type: "boolean", default: false }, controls: { type: "boolean", default: true }, playsInline: { type: "boolean", default: true }, preload: { type: "string", enum: ["none", "metadata", "auto"], default: "metadata" } }, supports: { style: true, anchor: true } },
     { name: "audio", title: "Âm thanh", icon: Music, category: "media", keywords: "am thanh audio nhac mp3 podcast", kind: "atom", edit: AudioEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, autoplay: { type: "boolean", default: false }, loop: { type: "boolean", default: false }, preload: { type: "string", enum: ["none", "metadata", "auto"], default: "metadata" } }, supports: { style: true, anchor: true } },
     { name: "file", title: "Tệp", icon: FileIcon, category: "media", keywords: "tep file pdf tai xuong download tai lieu", kind: "atom", edit: FileEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, size: { type: "number" }, embed: { type: "boolean", default: true }, download: { type: "boolean" } }, supports: { style: true, anchor: true } },

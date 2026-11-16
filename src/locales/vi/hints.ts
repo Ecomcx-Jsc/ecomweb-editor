@@ -422,4 +422,7 @@ export const hints = {
   "search.buttonStyle.label": "Kiểu nút",
   "search.buttonStyle.opt.text": "Chữ",
   "search.buttonStyle.opt.icon": "Icon kính lúp",
+  "gallery.layout.label": "Kiểu xếp",
+  "gallery.layout.opt.grid": "Lưới đều",
+  "gallery.layout.opt.masonry": "Masonry",
 };

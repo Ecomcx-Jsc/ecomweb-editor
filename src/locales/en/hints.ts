@@ -422,4 +422,7 @@ export const hints = {
   "search.buttonStyle.label": "Button style",
   "search.buttonStyle.opt.text": "Text",
   "search.buttonStyle.opt.icon": "Magnifier icon",
+  "gallery.layout.label": "Layout",
+  "gallery.layout.opt.grid": "Even grid",
+  "gallery.layout.opt.masonry": "Masonry",
 };

@@ -159,6 +159,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "navigation.location": { control: "choice", choice: { kind: "menuLocation" }, help: true },
   "navigation.orientation": { control: "segmented", options: ["horizontal", "vertical"] },
   "navigation.overlayMenu": { control: "segmented", label: true, options: ["never", "mobile", "always"] },
+  "gallery.layout": { control: "segmented", label: true, options: ["grid", "masonry"] },
   "gallery.linkTo": { control: "segmented", label: true, options: ["none", "media"] },
   "gallery.imageCrop": { label: true },
   "gallery.lightbox": { label: true },

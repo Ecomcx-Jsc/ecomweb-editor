@@ -792,3 +792,26 @@ test("tìm kiếm: nút icon kính lúp có nhãn đọc màn hình; phần Ô n
   await expect(i.getByText("Màu chữ gợi ý")).toBeVisible();
   await expect(i.getByText("Rộng tối đa của ô tìm")).toBeVisible();
 });
+
+test("thư viện ảnh: kiểu masonry (ảnh giữ tỉ lệ, chia cột), khoảng cách ảnh chỉnh được, link riêng từng ảnh nhập ở bảng phải", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  const im = (n: number, w: number, h: number) => ({ src: `/uploads/a${n}.jpg`, alt: `Ảnh ${n}`, width: w, height: h });
+  await page.evaluate((images) => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "G", type: "gallery", attrs: { columns: 2, images } }], { focus: false }); s.select(["G"], { editing: null }); }, [im(1, 400, 300), im(2, 400, 600), im(3, 400, 300)]);
+  const g = c.locator("figure.ecx-gallery");
+  await expect(g).toHaveCSS("display", "grid");
+  await insp(page).getByRole("radiogroup", { name: "Kiểu xếp" }).getByRole("radio", { name: "Masonry" }).click();
+  await expect(c.locator("figure.ecx-gallery.is-masonry")).toHaveCSS("column-count", "2");
+  await expect(g).toHaveCSS("display", "block");
+  // Khoảng cách ảnh: biến CSS đi vào khoảng giữa cột
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["G"], { galleryGap: { base: "24px" } }));
+  await expect(g).toHaveCSS("column-gap", "24px");
+  // Link riêng của ảnh (ô trong danh sách ảnh)
+  await insp(page).getByRole("textbox", { name: "Liên kết ảnh 2" }).fill("/san-pham/hai");
+  expect((await find(page, "gallery")).attrs.images[1]).toMatchObject({ href: "/san-pham/hai", alt: "Ảnh 2" });
+  // Về lưới đều: gap mặc định hoặc theo ô
+  await insp(page).getByRole("radiogroup", { name: "Kiểu xếp" }).getByRole("radio", { name: "Lưới đều" }).click();
+  await expect(g).toHaveCSS("display", "grid");
+  await expect(g).toHaveCSS("column-gap", "24px");
+  await page.evaluate(() => (window as any).__ecx.store.setAttrs(["G"], { galleryGap: undefined }));
+  await expect(g).toHaveCSS("column-gap", "8px");
+});

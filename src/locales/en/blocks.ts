@@ -18,7 +18,7 @@ export const blocks = {
   down: "Down",
   removeLink: "Remove link",
   addLink: "Add link",
-  galleryImages: "Gallery images",
+  imageLink: "Own link (optional)", imageLinkN: "Link of image {n}", galleryImages: "Gallery images",
   imageAltN: "Image {n} description",
   removeImage: "Remove image",
   addImages: "Add images",
