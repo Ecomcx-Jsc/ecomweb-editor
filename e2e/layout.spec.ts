@@ -272,4 +272,19 @@ test.describe("bố cục + hiệu ứng", () => {
     st = (await groupOf(page)).attrs.style;
     expect(st?.divider).toBeUndefined();
   });
+
+  test("bộ cột: có đường chia trên / dưới như nhóm", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "cot 50");
+    await page.keyboard.type("Cột");
+    await showToolbar(page);
+    const insp = page.locator(".ecx-inspector");
+    await insp.getByRole("button", { name: "Đường chia", exact: true }).click();
+    await insp.locator('[data-ecx-divider="bottom"]').getByRole("radio", { name: "Tam giác" }).click();
+    const cols = (await state(page)).docs.root.blocks.find((b: { type: string }) => b.type === "columns");
+    expect(cols.attrs.style.divider.bottom.shape).toBe("triangle");
+    const size = await c.locator('[data-type="columns"]').evaluate((g) => getComputedStyle(g, "::after").backgroundSize);
+    expect(size).toContain("80px");
+  });
 });

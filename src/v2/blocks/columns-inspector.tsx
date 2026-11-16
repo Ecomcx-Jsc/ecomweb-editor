@@ -8,6 +8,7 @@ import { useMsgs } from "../i18n";
 import { Row, Section, Seg, cx } from "../ui/style-controls";
 import { byStep } from "../ui/style-tab";
 import { UnitInput } from "../ui/unit-controls";
+import { DividerSection } from "../ui/divider-panel";
 import { makeBlock } from "../core/model";
 
 type Responsive<T> = T | Partial<Record<Device, T>>;
@@ -134,6 +135,7 @@ export function ColumnsInspector({ block, attrs, setAttrs }: BlockEditProps) {
         <UnitInput label={t.rowMaxWidth} value={rowMax} units={["px", "rem", "%"]} max={1600} onChange={setRowMax} />
       </Row>
     </Section>
+      <DividerSection attrs={attrs} setAttrs={setAttrs} />
     </>
   );
 }
