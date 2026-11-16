@@ -248,6 +248,13 @@ function useCanvasEvents(doc: Document) {
     win.addEventListener("resize", bump);
     const ro = new ResizeObserver(bump);
     ro.observe(doc.body);
+    // Chọn cả khối (nút "Chọn khối cha", Cây khối, Esc…) trong khi tiêu điểm bàn phím còn ở ô gõ chữ bên trong:
+    // đưa tiêu điểm ra khung soạn, để ⌘⇧D / Delete / ⌘C tác động lên khối đang chọn chứ không lên đoạn văn bên trong.
+    const unsub = store.subscribe(() => {
+      if (!store.getState().selection.ids.length) return;
+      const ae = doc.activeElement as HTMLElement | null;
+      if (ae?.isContentEditable) doc.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true });
+    });
     // Chuột phải / Shift+F10 / phím Menu trên khối → menu của khối (BlockContextMenu); Shift + chuột phải giữ menu của trình duyệt (chính tả, dán…)
     const menu = (e: MouseEvent) => {
       const el = (e.target as Element | null)?.closest?.<HTMLElement>("[data-ecx-block]");
@@ -265,7 +272,7 @@ function useCanvasEvents(doc: Document) {
     };
     doc.addEventListener("contextmenu", menu);
     return () => {
-      win.removeEventListener("scroll", bump); win.removeEventListener("resize", bump); ro.disconnect(); cancelAnimationFrame(raf);
+      win.removeEventListener("scroll", bump); win.removeEventListener("resize", bump); ro.disconnect(); cancelAnimationFrame(raf); unsub();
       doc.removeEventListener("mousemove", moved); document.removeEventListener("mousemove", moved);
       doc.removeEventListener("contextmenu", menu);
     };

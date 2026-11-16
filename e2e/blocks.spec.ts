@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { canvas, clickEnd, mod, open, shape, state, texts, HOME, END } from "./helpers";
+import { canvas, clickEnd, mod, open, shape, showToolbar, state, texts, HOME, END } from "./helpers";
 
 const toolbar = (page: Page) => page.locator(".ecx-toolbar");
 const tool = (page: Page, label: string) => toolbar(page).getByRole("button", { name: label, exact: false });
@@ -436,4 +436,22 @@ test.describe("kéo thả vào / ra khỏi nhóm", () => {
     await up();
     expect(await groupShape(page)).toEqual([{ group: ["Trong nhóm A", "Ngoài nhóm Z", "Trong nhóm B"] }]);
   });
+});
+
+test("chọn khối cha bằng thanh nổi rồi dùng phím: ⌘⇧D nhân đôi cả khối, Delete xoá cả khối (không đụng chữ bên trong)", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => {
+    const st = (window as any).__ecx.store;
+    const g = (id: string, t: string) => ({ id, type: "group", attrs: { padding: "medium" }, content: [{ id: id + "p", type: "paragraph", attrs: {}, inline: [{ type: "text", text: t }] }] });
+    st.insert("root", null, 3, [g("g1", "Section 1"), g("g2", "Section 2")], { focus: false });
+    st.select([]);
+  });
+  const tree = async () => (await state(page)).docs.root.blocks.slice(3).map((b: any) => ({ t: b.type, kids: (b.content ?? []).map((x: any) => x.inline?.map((n: any) => n.text).join("")) }));
+  await clickEnd(c, "Section 1");
+  await showToolbar(page);
+  await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+  await page.keyboard.press(`${mod}+Shift+d`);
+  expect(await tree()).toEqual([{ t: "group", kids: ["Section 1"] }, { t: "group", kids: ["Section 1"] }, { t: "group", kids: ["Section 2"] }]);
+  await page.keyboard.press("Delete");
+  expect(await tree()).toEqual([{ t: "group", kids: ["Section 1"] }, { t: "group", kids: ["Section 2"] }]);
 });
