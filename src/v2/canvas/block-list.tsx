@@ -22,6 +22,9 @@ export function sectionOf(store: ReturnType<typeof useEditor>["store"], el: HTML
 }
 
 /** Props gắn vào phần tử gốc của khối: chọn, viền, kiểu dáng, neo. */
+/** Khối chứa mà con phủ kín: có nhãn rê chuột để bấm chọn chính khối chứa (xem canvas-css). */
+const LABELED = new Set(["query", "postTemplate", "queryEmpty", "templatePart", "tabs", "tab", "accordion", "details", "carousel", "columns", "column", "buttons", "form", "mediaText", "cover"]);
+
 export function useBlockProps(block: BNode, state: { selected: boolean; editing: boolean; mode: EditingMode }): BlockProps {
   const ctx = useEditor();
   const { store, registry, ui } = ctx;
@@ -79,6 +82,7 @@ export function useBlockProps(block: BNode, state: { selected: boolean; editing:
     ref: null,
     "data-ecx-block": block.id,
     "data-type": block.type,
+    ...(LABELED.has(block.type) ? { "data-ecx-label": type?.title ?? block.type } : {}),
     tabIndex: type?.kind === "text" ? undefined : -1,
     id: typeof a.anchor === "string" ? a.anchor : undefined,
     className: cx(

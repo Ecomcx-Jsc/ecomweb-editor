@@ -7,7 +7,7 @@ import { DocBlocks } from "./block-list";
 import { BLOCKS_MIME, blocksFromClipboard, serializeBlocks } from "../core/clipboard";
 import { DocScopeProvider, useEditor, useEditorState, useUiTick } from "../context";
 import { usePrefs } from "../prefs";
-import { CANVAS_CSS } from "./canvas-css";
+import { CANVAS_CSS, CONTAINER_LABEL_CSS } from "./canvas-css";
 import { applyDocumentAttrs } from "./document-attrs";
 import { wrapperNodes } from "./wrapper-props";
 import { makeBlock, type BNode } from "../core/model";
@@ -160,7 +160,7 @@ function useCanvasStyles(doc: Document) {
     const add = (el: HTMLElement) => { head.appendChild(el); nodes.push(el); };
     const base = doc.createElement("style");
     base.dataset.ecx = "canvas";
-    base.textContent = CANVAS_CSS;
+    base.textContent = CANVAS_CSS + CONTAINER_LABEL_CSS;
     add(base);
     for (const s of host.canvasStyles ?? []) {
       if (typeof s === "string") {

@@ -319,3 +319,11 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 hr.ecx-block { position: relative; overflow: visible; }
 hr.ecx-block::before { content: ""; position: absolute; left: 0; right: 0; top: -20px; bottom: -20px; }
 `;
+
+export const CONTAINER_LABEL_CSS = `
+/* Khối chứa mà con phủ kín (Danh sách bài, Khuôn mỗi bài, Phần mẫu, Tabs…): rê chuột hiện nhãn ở góc trên trái, bấm nhãn = chọn khối chứa */
+.ecx-canvas-root [data-ecx-label]:hover { position: relative; }
+.ecx-canvas-root [data-ecx-label]:hover:not(:has([data-ecx-label]:hover))::before {
+  content: attr(data-ecx-label); position: absolute; top: 0; left: 0; z-index: 30; padding: 2px 8px; border-radius: 0 0 6px 0; background: var(--ecx-ui, #1a597b); color: #fff;
+  font: 600 11px/18px var(--ecx-ui-font, system-ui); letter-spacing: .02em; cursor: pointer; pointer-events: auto; white-space: nowrap; }
+`;
