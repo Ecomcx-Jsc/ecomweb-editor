@@ -276,6 +276,14 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-add-item { display: inline-flex; align-items: center; gap: 4px; margin: 6px 0 0; padding: 6px 10px; border: 1px dashed color-mix(in srgb, currentColor 40%, transparent); border-radius: 6px; background: transparent; color: inherit; font: 600 13px/1.2 var(--ecx-ui-font); cursor: pointer; opacity: .85; }
 .ecx-add-item:hover, .ecx-add-item:focus-visible { opacity: 1; border-color: var(--ecx-ui); color: var(--ecx-ui); }
 .ecx-tabs-list .ecx-add-item { margin: 0 0 0 8px; align-self: center; }
+/* Thanh chuyển slide của carousel (chỉ trên khung soạn) */
+.ecx-carousel-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin: 8px 0 0; font: 600 12px/1 var(--ecx-ui-font); user-select: none; }
+.ecx-carousel-nav:empty { display: none; }
+.ecx-carousel-nav .ecx-add-item { margin: 0 0 0 8px; }
+.ecx-carousel-nav button { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; padding: 0 6px; border: 1px solid #c9d0d7; border-radius: 6px; background: #fff; color: #1f2d38; font: inherit; cursor: pointer; }
+.ecx-carousel-nav button[aria-current="true"] { border-color: var(--ecx-ui); background: var(--ecx-ui); color: #fff; }
+.ecx-carousel-nav button:disabled { opacity: .4; cursor: default; }
+.ecx-carousel-nav .ecx-icon { width: 16px; height: 16px; }
 .ecx-social .ecx-add-item, .ecx-social-add .ecx-add-item { margin: 0; }
 .ecx-ph-list-add { list-style: none; }
 .ecx-ph-list-add .ecx-add-item { margin-top: 2px; }

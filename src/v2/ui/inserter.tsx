@@ -7,7 +7,7 @@ import { cx } from "./attr-form";
 import type { MediaItem } from "../../shared/types";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentType } from "react";
 import { norm } from "../../shared/util";
-import { useEditor, useUiTick, type InserterRequest } from "../context";
+import { useEditor, useEditorState, useUiTick, type InserterRequest } from "../context";
 import { cloneBlock, inlineLength, makeBlock, type BNode } from "../core/model";
 import type { BlockType } from "../core/registry";
 import { canContain } from "../core/structure";
@@ -147,15 +147,20 @@ export function InserterPopover() {
   }, [ctx, ui]);
   useLayoutEffect(() => { listRef.current?.querySelector(`[data-index="${active}"]`)?.scrollIntoView({ block: "nearest" }); }, [active]);
 
-  // Bấm ra ngoài: đóng
+  // Bấm ra ngoài: đóng. Pha capture vì nhiều khối chặn mousedown (stopPropagation) trước khi tới document.
   useEffect(() => {
     if (!req || req.mode === "slash") return;
     const close = (e: MouseEvent) => { if (!(e.target as Element).closest?.(".ecx-inserter-popover")) ui.openInserter(null); };
     const frameDoc = ui.canvasDoc;
-    document.addEventListener("mousedown", close);
-    frameDoc?.addEventListener("mousedown", close);
-    return () => { document.removeEventListener("mousedown", close); frameDoc?.removeEventListener("mousedown", close); };
+    document.addEventListener("mousedown", close, true);
+    frameDoc?.addEventListener("mousedown", close, true);
+    return () => { document.removeEventListener("mousedown", close, true); frameDoc?.removeEventListener("mousedown", close, true); };
   }, [req, ui]);
+  // Chọn khối khác bằng đường không bấm chuột (danh sách khối, phím tắt…): đóng
+  const selKey = useEditorState((s) => (s.selection.ids.length ? s.selection.ids : [s.selection.editing ?? ""]).join(","));
+  const openSel = useRef<string | null>(null);
+  useEffect(() => { openSel.current = req && req.mode !== "slash" ? selKey : null; }, [req]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (openSel.current !== null && selKey !== openSel.current) ui.openInserter(null); }, [selKey, ui]);
 
   if (!req) return null;
   if (req.mode === "slash" && !results.length) return null;

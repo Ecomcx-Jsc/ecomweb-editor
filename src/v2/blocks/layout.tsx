@@ -1,14 +1,14 @@
 import { COUNTDOWN_ZONES, ICON_NAMES, ICON_PATHS, countdownParts, countdownTarget, wallInZone, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue, tabsClass } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
 import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
-import { useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
 import { withoutOverridden } from "./inline-style";
 import { makeBlock, type BNode } from "../core/model";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
-import { useEditor } from "../context";
+import { useEditor, useEditorState } from "../context";
 import { ButtonLinkTool, ButtonsTools, ColumnsTools, TableTools, addColumnTo } from "./tools";
 import { ColumnHandles, ContentWidthHandles, HeightHandle, PaddingHandles, useActiveWithin } from "./resize";
 import { ColumnInspector, ColumnsInspector } from "./columns-inspector";
@@ -314,9 +314,45 @@ function TabEdit({ block, blockProps }: BlockEditProps) {
   );
 }
 
+/**
+ * Carousel trên khung soạn: mỗi lần chỉ hiện `slidesPerView` slide cạnh nhau như website, thanh trên chuyển trang slide.
+ * Chọn khối nằm trong slide đang ẩn (danh sách khối, tìm kiếm…) → nhảy tới slide đó.
+ */
 function CarouselEdit({ block, blockProps, editable }: BlockEditProps) {
+  const { store } = useEditor();
   const tp = useMsgs("placeholders");
-  return <div {...(merge(blockProps, "ecx-carousel") as object)}><InnerBlocks parent={block} />{editable && <AddChild block={block} label={tp.addSlide} make={() => makeBlock("group", {}, [makeBlock("paragraph")])} />}</div>;
+  const kids = block.content ?? [];
+  const per = Math.min(4, Math.max(1, Math.round(Number(block.attrs.slidesPerView) || 1)));
+  const max = Math.max(0, kids.length - per);
+  const start = Math.min(useOpenTab(block.id), max);
+  const sel = useEditorState(useCallback((s) => {
+    const cur = s.selection.ids.length ? s.selection.ids : s.selection.editing ? [s.selection.editing] : [];
+    return kids.findIndex((k) => cur.some((c) => c === k.id || !!store.locate(c)?.ancestors.includes(k.id)));
+  }, [kids, store]));
+  // Chỉ chạy khi vùng chọn đổi slide: bấm "Slide sau" lúc con trỏ còn ở slide cũ không bị kéo về
+  useEffect(() => {
+    if (sel < 0) return;
+    if (sel < start) setOpenTab(block.id, sel);
+    else if (sel >= start + per) setOpenTab(block.id, sel - per + 1);
+  }, [sel]); // eslint-disable-line react-hooks/exhaustive-deps
+  const hidden = kids.filter((_, i) => i < start || i >= start + per).map((k) => `[data-ecx-block="${k.id}"]`);
+  return (
+    <div {...(merge(blockProps, "ecx-carousel") as object)}>
+      {hidden.length > 0 && <style>{`${hidden.join(",")}{display:none!important}`}</style>}
+      <div className="ecx-carousel-track" style={{ display: "grid", gridTemplateColumns: `repeat(${per}, minmax(0, 1fr))`, gap: 16 }}>
+        <InnerBlocks parent={block} />
+      </div>
+      {/* Thanh chuyển slide nằm dưới (trên thì bị thanh công cụ của khối đang chọn che) */}
+      <div className="ecx-carousel-nav" contentEditable={false} onMouseDown={(e) => e.preventDefault()}>
+        {kids.length > per && <>
+          <button type="button" aria-label={tp.prevSlide} disabled={start <= 0} onClick={() => setOpenTab(block.id, start - 1)}><ChevronLeft className="ecx-icon" /></button>
+          {kids.map((k, i) => <button key={k.id} type="button" aria-label={`${tp.slide} ${i + 1}`} aria-current={i >= start && i < start + per ? "true" : undefined} onClick={() => setOpenTab(block.id, Math.min(i, max))}>{i + 1}</button>)}
+          <button type="button" aria-label={tp.nextSlide} disabled={start >= max} onClick={() => setOpenTab(block.id, start + 1)}><ChevronRight className="ecx-icon" /></button>
+        </>}
+        {editable && <AddChild block={block} label={tp.addSlide} make={() => makeBlock("group", {}, [makeBlock("paragraph")])} />}
+      </div>
+    </div>
+  );
 }
 
 /** Shortcode: ô nhập tên luôn hiện ngay trên khối. */

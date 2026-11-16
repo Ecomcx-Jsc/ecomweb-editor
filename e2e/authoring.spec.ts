@@ -19,6 +19,41 @@ test.describe("trải nghiệm soạn", () => {
     await expect(pop).toHaveCount(0);
   });
 
+  test("bảng chèn nhanh đóng khi chọn khối khác (bấm vào khối hay chọn qua danh sách khối)", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 3, [{ id: "g1", type: "group", attrs: {}, content: [] }, { id: "g2", type: "group", attrs: {}, content: [] }]); });
+    const pop = page.locator(".ecx-inserter-popover");
+    await c.locator('[data-ecx-block="g1"] .ecx-appender').first().click();
+    await expect(pop).toBeVisible();
+    // Nút "+ Thêm khối" của khối kia chặn mousedown: vẫn phải đóng bảng cũ rồi mở bảng mới
+    await c.locator('[data-ecx-block="g2"] .ecx-appender').first().click();
+    await expect(pop).toHaveCount(1);
+    await page.evaluate(() => (window as any).__ecx.store.select(["g1"]));
+    await expect(pop).toHaveCount(0);
+  });
+
+  test("carousel: hiện từng trang slide cạnh nhau, thanh chuyển slide, chọn khối trong slide ẩn thì nhảy tới", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await page.evaluate(() => {
+      const g = (i: number) => ({ id: "s" + i, type: "group", attrs: {}, content: [{ id: "p" + i, type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Slide " + i }] }] });
+      (window as any).__ecx.store.insert("root", null, 3, [{ id: "cr", type: "carousel", attrs: { slidesPerView: 2 }, content: [1, 2, 3].map(g) }]);
+    });
+    const car = c.locator('[data-ecx-block="cr"]');
+    await expect(c.locator('[data-ecx-block="s1"]')).toBeVisible();
+    await expect(c.locator('[data-ecx-block="s2"]')).toBeVisible();
+    await expect(c.locator('[data-ecx-block="s3"]')).toBeHidden();
+    const [b1, b2] = [await c.locator('[data-ecx-block="s1"]').boundingBox(), await c.locator('[data-ecx-block="s2"]').boundingBox()];
+    expect(Math.abs(b1!.y - b2!.y)).toBeLessThan(2); // cạnh nhau, không chồng dọc
+    await car.locator(".ecx-carousel-nav").getByRole("button", { name: "Slide sau" }).click();
+    await expect(c.locator('[data-ecx-block="s1"]')).toBeHidden();
+    await expect(c.locator('[data-ecx-block="s3"]')).toBeVisible();
+    await page.evaluate(() => (window as any).__ecx.store.select(["p3"]));
+    await expect(c.locator('[data-ecx-block="s3"]')).toBeVisible();
+    await page.evaluate(() => (window as any).__ecx.store.select(["p1"]));
+    await expect(c.locator('[data-ecx-block="s1"]')).toBeVisible();
+    await expect(c.locator('[data-ecx-block="s3"]')).toBeHidden();
+  });
+
   test("bộ cột: nút + ở mép phải thêm cột, con trỏ vào cột mới", async ({ page }) => {
     const c = await open(page, "?doc=rich");
     await clickEnd(c, "Phải");
