@@ -1,4 +1,4 @@
-import { ICON_NAMES, ICON_PATHS, countdownParts, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue, tabsClass } from "@ecomcx/ecomweb-content";
+import { COUNTDOWN_ZONES, ICON_NAMES, ICON_PATHS, countdownParts, countdownTarget, wallInZone, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue, tabsClass } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
 import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import { useEffect, useState, useSyncExternalStore, type CSSProperties } from "react";
@@ -341,7 +341,8 @@ const toLocalInput = (v: unknown) => { const d = new Date(String(v ?? "")); retu
 function CountdownEdit({ block, blockProps, setAttrs, editable, labels }: BlockEditProps) {
   const a = block.attrs;
   const tp = useMsgs("placeholders");
-  const valid = Number.isFinite(Date.parse(String(a.target ?? "")));
+  const valid = Number.isFinite(countdownTarget(a));
+  const tz = typeof a.timezone === "string" && a.timezone ? a.timezone : "";
   const active = useActiveWithin(block.id);
   // Chọn ngày giờ ngay trong khối (thiếu / sai thời điểm: website không vẽ khối → nói rõ, không để khối "mất tích" im lặng)
   if (!valid || (editable && active)) return (
@@ -349,7 +350,19 @@ function CountdownEdit({ block, blockProps, setAttrs, editable, labels }: BlockE
       <span className="ecx-ph-digits" aria-hidden>00 : 00 : 00 : 00</span>
       {editable && <label className="ecx-ph-row" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
         <span className="ecx-ph-label">{tp.countdownTarget}</span>
-        <input className="ecx-input" type="datetime-local" value={toLocalInput(a.target)} onChange={(e) => setAttrs({ target: e.target.value ? new Date(e.target.value).toISOString() : undefined })} />
+        <input className="ecx-input" type="datetime-local" value={tz ? String(a.target ?? "").slice(0, 16) : toLocalInput(a.target)}
+          onChange={(e) => setAttrs({ target: e.target.value ? (tz ? e.target.value : new Date(e.target.value).toISOString()) : undefined })} />
+      </label>}
+      {editable && <label className="ecx-ph-row" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
+        <span className="ecx-ph-label">{tp.countdownZone}</span>
+        <select className="ecx-input" aria-label={tp.countdownZone} value={tz} onChange={(e) => {
+          const next = e.target.value, ms = countdownTarget(a);
+          // Đổi múi giờ giữ nguyên thời điểm đã đặt: giờ tường mới (hoặc ISO của máy khi về "Theo máy người xem")
+          setAttrs({ timezone: next || undefined, ...(Number.isFinite(ms) ? { target: next ? wallInZone(ms, next) : new Date(ms).toISOString() } : {}) });
+        }}>
+          <option value="">{tp.countdownZoneLocal}</option>
+          {COUNTDOWN_ZONES.map((z) => <option key={z} value={z}>{z}</option>)}
+        </select>
       </label>}
       {!valid && <p className="ecx-placeholder-hint">{labels.countdownNoTarget}</p>}
     </div>
@@ -363,7 +376,7 @@ function CountdownPreview({ block, blockProps }: Pick<BlockEditProps, "block" | 
   const tp = useMsgs("placeholders");
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(id); }, []);
-  const left = Math.max(0, Date.parse(String(a.target)) - now);
+  const left = Math.max(0, countdownTarget(a) - now);
   const cls = cx("ecx-countdown", a.layout === "inline" && "is-inline", a.divider === true && "has-divider");
   if (left === 0 && a.expiredText) return <div {...(merge(blockProps, "ecx-countdown is-expired") as object)}>{String(a.expiredText)}</div>;
   return (
@@ -566,7 +579,7 @@ export function layoutBlocks(): BlockType[] {
     },
     {
       name: "countdown", title: "Đếm ngược", icon: Square, category: "design", keywords: "dem nguoc countdown khuyen mai sale", kind: "atom", edit: CountdownEdit,
-      attributes: { target: { type: "string" }, label: { type: "string" }, postText: { type: "string" }, expiredText: { type: "string" }, layout: { type: "string", enum: ["block", "inline"], default: "block" }, divider: { type: "boolean", default: false }, pad: { type: "boolean", default: true }, showDays: { type: "boolean", default: true }, showSeconds: { type: "boolean", default: true }, daysLabel: { type: "string" }, hoursLabel: { type: "string" }, minutesLabel: { type: "string" }, secondsLabel: { type: "string" } }, supports: { style: true, anchor: true, className: true },
+      attributes: { target: { type: "string" }, timezone: { type: "string", enum: [...COUNTDOWN_ZONES], control: "hidden" }, label: { type: "string" }, postText: { type: "string" }, expiredText: { type: "string" }, layout: { type: "string", enum: ["block", "inline"], default: "block" }, divider: { type: "boolean", default: false }, pad: { type: "boolean", default: true }, showDays: { type: "boolean", default: true }, showSeconds: { type: "boolean", default: true }, daysLabel: { type: "string" }, hoursLabel: { type: "string" }, minutesLabel: { type: "string" }, secondsLabel: { type: "string" } }, supports: { style: true, anchor: true, className: true },
     },
     {
       name: "rating", title: "Đánh giá sao", icon: Square, category: "design", keywords: "danh gia sao rating review", kind: "atom", edit: RatingEdit,

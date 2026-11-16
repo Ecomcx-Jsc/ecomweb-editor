@@ -99,4 +99,6 @@ export const placeholders: typeof vi = {
   openSettings: "Open settings",
   cdDays: "days", cdHours: "hours", cdMinutes: "minutes", cdSeconds: "seconds",
   "mapAddress": "Type an address to show the map…",
+  countdownZone: "Time zone",
+  countdownZoneLocal: "Viewer's device",
 };

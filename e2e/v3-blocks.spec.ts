@@ -955,3 +955,20 @@ test("nhóm: lớp phủ nền chọn loại Màu / Chuyển màu / Ảnh, kiể
   await expect.poll(async () => (await before()).blend).toBe("normal");
   expect((await bg()).overlayBlend).toBeUndefined();
 });
+
+test("đếm ngược: chọn múi giờ giữ nguyên thời điểm, giờ tường đổi theo múi giờ; về 'Theo máy người xem' trả ISO", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const st = (window as any).__ecx.store; st.insert("root", null, 0, [{ id: "CZ", type: "countdown", attrs: { target: "2999-01-01T02:00:00.000Z" } }], { focus: false }); st.select(["CZ"]); });
+  const blk = () => page.evaluate(() => (window as any).__ecx.store.block("CZ").attrs);
+  await c.locator('[data-type="countdown"]').first().click();
+  const sel = c.getByRole("combobox", { name: "Múi giờ" });
+  await expect(sel).toBeVisible();
+  await sel.selectOption("Asia/Ho_Chi_Minh");
+  expect(await blk()).toMatchObject({ timezone: "Asia/Ho_Chi_Minh", target: "2999-01-01T09:00" });
+  await sel.selectOption("America/New_York");
+  expect(await blk()).toMatchObject({ timezone: "America/New_York", target: "2998-12-31T21:00" });
+  await sel.selectOption("");
+  const a = await blk();
+  expect(a.timezone).toBeUndefined();
+  expect(a.target).toBe("2999-01-01T02:00:00.000Z");
+});

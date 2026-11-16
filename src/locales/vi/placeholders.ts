@@ -98,4 +98,6 @@ export const placeholders = {
   openSettings: "Mở cài đặt",
   cdDays: "ngày", cdHours: "giờ", cdMinutes: "phút", cdSeconds: "giây",
   "mapAddress": "Gõ địa chỉ để hiện bản đồ…",
+  countdownZone: "Múi giờ",
+  countdownZoneLocal: "Theo máy người xem",
 };
