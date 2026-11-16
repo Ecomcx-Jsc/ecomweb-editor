@@ -650,3 +650,31 @@ test("hộp icon: media là ảnh — ô chọn ảnh trên khối, căn dọc c
   await expect(page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="iconBox"]').first()).toBeVisible();
   await expect(page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="imageBox"]')).toHaveCount(0);
 });
+
+test("lời chứng thực: kiểu bong bóng (khung ngoài bỏ nền, lời trích có nền + đuôi), sao đánh giá, dấu trích; phần Sao / Dấu trích ở Kiểu dáng", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "T", type: "testimonial", attrs: { quote: "Giao nhanh, đóng gói kỹ.", name: "Chị Lan", role: "Khách mua lẻ" } }], { focus: false }); s.select(["T"], { editing: null }); });
+  const box = c.locator(".ecx-testimonial");
+  await expect(box.locator(".ecx-testimonial-rating, .ecx-testimonial-mark")).toHaveCount(0);
+  const bg = (l: any) => l.evaluate((e: Element) => getComputedStyle(e).backgroundColor);
+  const cardBg = await bg(box);
+  expect(cardBg).not.toBe("rgba(0, 0, 0, 0)");
+  await insp(page).getByRole("radio", { name: "Bong bóng" }).click();
+  await expect(c.locator(".ecx-testimonial.is-bubble")).toBeVisible();
+  expect(await bg(box)).toBe("rgba(0, 0, 0, 0)");
+  expect(await bg(box.locator(".ecx-testimonial-quote"))).toBe(cardBg);
+  // Đuôi bong bóng lấy nền của lời trích
+  expect(await box.locator(".ecx-testimonial-quote").evaluate((e) => getComputedStyle(e, "::after").backgroundColor)).toBe(cardBg);
+  await insp(page).getByRole("slider", { name: "Sao đánh giá" }).fill("4");
+  await insp(page).getByRole("checkbox", { name: /Hiện dấu trích/ }).check();
+  await expect(box.locator(".ecx-testimonial-rating")).toHaveAttribute("aria-label", "4/5");
+  await expect(box.locator(".ecx-testimonial-rating .is-on")).toHaveCount(4);
+  await expect(box.locator(".ecx-testimonial-mark")).toHaveText("“");
+  // Sao nằm trên lời trích, tên nằm dưới
+  const y = async (sel: string) => (await box.locator(sel).boundingBox())!.y;
+  expect(await y(".ecx-testimonial-rating")).toBeLessThan(await y(".ecx-testimonial-quote"));
+  expect(await y(".ecx-testimonial-quote")).toBeLessThan(await y(".ecx-testimonial-name"));
+  await page.locator(".ecx-inspector > .ecx-tabs [role=tab]").nth(1).click();
+  await expect(insp(page).getByRole("button", { name: "Sao đánh giá" })).toBeVisible();
+  await expect(insp(page).getByRole("button", { name: "Dấu trích" })).toBeVisible();
+});

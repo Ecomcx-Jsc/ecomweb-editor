@@ -377,4 +377,11 @@ export const hints = {
   "iconBox.verticalAlign.opt.bottom": "Dưới",
   "iconBox.fullHeight.label": "Cao bằng ô chứa",
   "iconBox.fullHeight.help": "Các hộp đặt cạnh nhau trong cột sẽ cao bằng nhau",
+  "testimonial.variant.label": "Kiểu",
+  "testimonial.variant.opt.card": "Thẻ",
+  "testimonial.variant.opt.plain": "Trơn",
+  "testimonial.variant.opt.bubble": "Bong bóng",
+  "testimonial.rating.label": "Sao đánh giá",
+  "testimonial.rating.help": "0 = không hiện sao",
+  "testimonial.quoteMark.label": "Hiện dấu trích ở đầu",
 };

@@ -377,4 +377,11 @@ export const hints = {
   "iconBox.verticalAlign.opt.bottom": "Bottom",
   "iconBox.fullHeight.label": "Fill container height",
   "iconBox.fullHeight.help": "Boxes side by side in columns get equal height",
+  "testimonial.variant.label": "Style",
+  "testimonial.variant.opt.card": "Card",
+  "testimonial.variant.opt.plain": "Plain",
+  "testimonial.variant.opt.bubble": "Bubble",
+  "testimonial.rating.label": "Star rating",
+  "testimonial.rating.help": "0 = no stars",
+  "testimonial.quoteMark.label": "Show quote mark",
 };
