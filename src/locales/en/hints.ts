@@ -429,4 +429,13 @@ export const hints = {
   "form.inputSize.opt.sm": "Small",
   "form.inputSize.opt.md": "Medium",
   "form.inputSize.opt.lg": "Large",
+  "map.address.label": "Address",
+  "map.address.help": "Type an address or a place name (e.g. 1 Main St, Hanoi)",
+  "map.title.label": "Map description",
+  "map.title.help": "For screen readers; empty = the address",
+  "map.zoom.label": "Zoom",
+  "map.height.label": "Height",
+  "map.mapType.label": "Map type",
+  "map.mapType.opt.roadmap": "Roadmap",
+  "map.mapType.opt.satellite": "Satellite",
 };

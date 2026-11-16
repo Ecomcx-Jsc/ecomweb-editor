@@ -852,3 +852,24 @@ test("form: cỡ ô nhập S / M / L đổi chiều cao ô thật; phần Ô nh�
   await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
   for (const part of ["Nhãn", "Ô nhập", "Dấu \\* bắt buộc", "Gợi ý dưới ô", "Báo lỗi", "Báo thành công", "Nút"]) await expect(insp(page).getByRole("button", { name: new RegExp(`^${part}`) })).toBeVisible();
 });
+
+test("bản đồ: gõ địa chỉ ngay trên khối ra khung Google Maps; mức phóng, cao, kiểu vệ tinh đổi địa chỉ khung và chiều cao", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "M", type: "map", attrs: {} }], { focus: false }); s.select(["M"], { editing: null }); });
+  await expect(c.locator(".ecx-map.is-empty")).toBeVisible(); // chưa có địa chỉ: ô gõ địa chỉ
+  await insp(page).getByRole("textbox", { name: /^Địa chỉ/ }).fill("1 Phạm Văn Đồng, Hà Nội");
+  const frame = c.locator(".ecx-map iframe");
+  await expect(frame).toHaveAttribute("src", /^https:\/\/www\.google\.com\/maps\?q=1%20Ph.*&z=14&t=m&output=embed$/);
+  await insp(page).getByRole("radiogroup", { name: "Kiểu bản đồ" }).getByRole("radio", { name: "Vệ tinh" }).click();
+  await expect(frame).toHaveAttribute("src", /&t=k&/);
+  await insp(page).getByRole("slider", { name: "Mức phóng" }).fill("17");
+  await expect(frame).toHaveAttribute("src", /&z=17&/);
+  await insp(page).getByRole("slider", { name: "Chiều cao" }).fill("500");
+  await expect.poll(async () => Math.round((await frame.boundingBox())!.height)).toBe(500);
+  expect((await find(page, "map")).attrs).toMatchObject({ address: "1 Phạm Văn Đồng, Hà Nội", mapType: "satellite", zoom: 17, height: 500 });
+  // Có trong bảng chèn, phần "Khung bản đồ" ở Kiểu dáng
+  await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
+  await expect(insp(page).getByRole("button", { name: /^Khung bản đồ/ })).toBeVisible();
+  await page.getByRole("button", { name: "Thêm khối" }).first().click();
+  await expect(page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="map"]').first()).toBeVisible();
+});

@@ -429,4 +429,13 @@ export const hints = {
   "form.inputSize.opt.sm": "Nhỏ",
   "form.inputSize.opt.md": "Vừa",
   "form.inputSize.opt.lg": "Lớn",
+  "map.address.label": "Địa chỉ",
+  "map.address.help": "Gõ địa chỉ hoặc tên nơi chốn (vd: 1 Phạm Văn Đồng, Hà Nội)",
+  "map.title.label": "Mô tả bản đồ",
+  "map.title.help": "Dành cho trình đọc màn hình; trống = dùng địa chỉ",
+  "map.zoom.label": "Mức phóng",
+  "map.height.label": "Chiều cao",
+  "map.mapType.label": "Kiểu bản đồ",
+  "map.mapType.opt.roadmap": "Đường phố",
+  "map.mapType.opt.satellite": "Vệ tinh",
 };

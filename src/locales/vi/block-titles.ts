@@ -60,4 +60,5 @@ export const blockTitles = {
   counter: "Bộ đếm số",
   testimonial: "Lời chứng thực",
   progressBar: "Thanh tiến độ",
+  "map": "Bản đồ",
 };

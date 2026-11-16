@@ -87,4 +87,5 @@ export const blockDesc = {
   counter: "Highlighted number (e.g. 1,200+ customers) that counts up when scrolled into view; prefix / suffix and label.",
   testimonial: "Customer testimonial: quote, name, role and avatar.",
   progressBar: "Labelled progress bar with a percentage (skills, goals) that fills when scrolled into view.",
+  "map": "Google map for a typed address (store, office).",
 };

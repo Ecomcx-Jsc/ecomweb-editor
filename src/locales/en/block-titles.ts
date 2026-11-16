@@ -60,4 +60,5 @@ export const blockTitles = {
   counter: "Counter",
   testimonial: "Testimonial",
   progressBar: "Progress Bar",
+  "map": "Map",
 };

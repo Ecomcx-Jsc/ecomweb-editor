@@ -98,4 +98,5 @@ export const placeholders: typeof vi = {
   otherSettings: "Display style and other options: sidebar › Block.",
   openSettings: "Open settings",
   cdDays: "days", cdHours: "hours", cdMinutes: "minutes", cdSeconds: "seconds",
+  "mapAddress": "Type an address to show the map…",
 };

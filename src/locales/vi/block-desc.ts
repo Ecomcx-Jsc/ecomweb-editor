@@ -87,4 +87,5 @@ export const blockDesc = {
   counter: "Con số nổi bật (vd 1.200+ khách hàng) đếm lên khi cuộn tới; có tiền tố / hậu tố và nhãn.",
   testimonial: "Lời chứng thực của khách hàng: câu trích, tên, chức danh và ảnh đại diện.",
   progressBar: "Thanh tiến độ có nhãn và phần trăm (kỹ năng, mục tiêu), chạy lên khi cuộn tới.",
+  "map": "Bản đồ Google theo địa chỉ gõ tay (cửa hàng, văn phòng).",
 };

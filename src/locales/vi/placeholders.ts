@@ -97,4 +97,5 @@ export const placeholders = {
   otherSettings: "Kiểu hiển thị và thuộc tính khác: thanh bên › Khối.",
   openSettings: "Mở cài đặt",
   cdDays: "ngày", cdHours: "giờ", cdMinutes: "phút", cdSeconds: "giây",
+  "mapAddress": "Gõ địa chỉ để hiện bản đồ…",
 };

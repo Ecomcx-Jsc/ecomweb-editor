@@ -1,5 +1,5 @@
 import { CORE_NODES, ICON_NAMES, ICON_PATHS, iconListClass, widgetMarkup, type WidgetEl } from "@ecomcx/ecomweb-content";
-import { BarChart3, Hash, Image as ImageIcon, ListChecks, Quote, Star } from "lucide-react";
+import { BarChart3, Hash, Image as ImageIcon, ListChecks, MapPin, Quote, Star } from "lucide-react";
 import { createElement, type CSSProperties, type ReactNode } from "react";
 import { makeBlock } from "../core/model";
 import type { BlockEditProps, BlockType } from "../core/registry";
@@ -18,7 +18,7 @@ const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "strin
  * Ô chữ (`field`) gõ trực tiếp trên khối, chỗ ảnh trống (`slot`) là ô chọn ảnh; số / thanh tiến độ hiện giá trị cuối (không chạy hiệu ứng).
  */
 /** Gợi ý của từng ô chữ theo khối (không còn chữ mẫu thật dễ quên sửa). */
-const FIELD_PH: Record<string, string> = { title: "boxTitle", text: "boxText", quote: "testimonialQuote", name: "testimonialName", role: "testimonialRole", label: "skill" };
+const FIELD_PH: Record<string, string> = { title: "boxTitle", text: "boxText", quote: "testimonialQuote", name: "testimonialName", role: "testimonialRole", label: "skill", address: "mapAddress" };
 
 function WidgetEdit(props: BlockEditProps) {
   const { block, blockProps, setAttrs, editable } = props;
@@ -124,6 +124,7 @@ export function widgetBlocks(lang?: string): BlockType[] {
     { ...base, name: "iconList", title: "Icon List", icon: ListChecks, keywords: "icon list danh sach bieu tuong loi ich checklist", inspector: IconListInspector, attributes: { ...spec("iconList"), icon: { ...ICON_SELECT, default: "check" } }, create: () => makeBlock("iconList", { items: [{ text: "" }, { text: "" }] }) },
     { ...base, name: "counter", title: "Counter", icon: Hash, keywords: "counter dem so con so thong ke number", attributes: spec("counter"), create: () => makeBlock("counter", { end: 0, suffix: "+", title: "", textAlign: "center" }), summary: (a) => a.title },
     { ...base, name: "testimonial", title: "Testimonial", icon: Quote, keywords: "testimonial loi chung thuc danh gia khach hang review", attributes: ordered({ ...spec("testimonial"), src: { type: "url", control: "media" } }, ["variant", "quoteMark", "rating", "quote", "name", "role", "src", "alt", "textAlign"]), create: () => makeBlock("testimonial", { quote: "", name: "", role: "" }), summary: (a) => a.name },
+    { ...base, name: "map", title: "Map", icon: MapPin, keywords: "map ban do dia chi google maps vi tri", attributes: ordered(spec("map") ?? {}, ["address", "title", "zoom", "height", "mapType"]), create: () => makeBlock("map", { address: "" }), summary: (a) => a.address },
     { ...base, name: "progressBar", title: "Progress Bar", icon: BarChart3, keywords: "progress bar thanh tien do ky nang phan tram", attributes: spec("progressBar"), create: () => makeBlock("progressBar", { label: "", value: 80 }), summary: (a) => a.label },
   ];
 }
