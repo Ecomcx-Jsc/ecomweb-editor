@@ -1,4 +1,4 @@
-import { blockCitation, blockShell } from "@ecomcx/ecomweb-content";
+import { ICON_NAMES, blockCitation, blockShell } from "@ecomcx/ecomweb-content";
 import { Code, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, List, ListChecks, ListOrdered, Pilcrow, Quote, SquareCode, TextQuote, Type } from "lucide-react";
 import type { CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
@@ -13,6 +13,8 @@ import { useEditor } from "../context";
 
 // Căn chữ lấy từ vỏ dùng chung với website: căn trái không in style (trước đây canvas in thừa)
 const align = (a: Record<string, unknown>, type = "paragraph"): CSSProperties | undefined => blockShell(type, a)?.style as CSSProperties | undefined;
+/** Class + chú thích của icon cạnh chữ (cùng vỏ với website). */
+const iconProps = (a: Record<string, unknown>, type = "paragraph") => { const sh = blockShell(type, a); return { className: sh?.className, title: sh?.attrs?.title }; };
 const HEADING_ICONS = [Heading1, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6];
 
 function ParagraphEdit({ block, blockProps, editable }: BlockEditProps) {
@@ -23,7 +25,7 @@ function ParagraphEdit({ block, blockProps, editable }: BlockEditProps) {
   // Gợi ý theo vai trò: mục danh sách / việc khác đoạn văn thường
   const parent = store.locate(block.id)?.parent?.type;
   const ph = parent === "listItem" ? tp.listItem : parent === "taskItem" ? tp.taskItem : tp.paragraph;
-  return <RichText blockId={block.id} value={block.inline} tagName="p" blockProps={blockProps} style={align(block.attrs)} placeholder={ph} placeholderAlways editable={editable} />;
+  return <RichText blockId={block.id} value={block.inline} tagName="p" blockProps={{ ...blockProps, title: iconProps(block.attrs).title }} className={iconProps(block.attrs).className} style={align(block.attrs)} placeholder={ph} placeholderAlways editable={editable} />;
 }
 
 function HeadingEdit({ block, blockProps, editable }: BlockEditProps) {
@@ -31,7 +33,7 @@ function HeadingEdit({ block, blockProps, editable }: BlockEditProps) {
   const level = Math.min(6, Math.max(1, Number(block.attrs.level) || 2));
   const bound = useBindingPreview(block, "content");
   if (bound.bound) return <BoundText tagName={`h${level}`} preview={bound} blockProps={blockProps} style={align(block.attrs, "heading")} />;
-  return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={blockProps} style={align(block.attrs, "heading")} placeholder={tp.heading} placeholderAlways editable={editable} />;
+  return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={{ ...blockProps, title: iconProps(block.attrs, "heading").title }} className={iconProps(block.attrs, "heading").className} style={align(block.attrs, "heading")} placeholder={tp.heading} placeholderAlways editable={editable} />;
 }
 
 const CODE_LANGS = ["html", "css", "javascript", "typescript", "json", "bash", "python", "php", "sql", "csharp", "yaml", "markdown"];
@@ -141,12 +143,12 @@ export function textBlocks(): BlockType[] {
   return [
     {
       name: "paragraph", title: "Đoạn văn", icon: Pilcrow, category: "text", keywords: "doan van text paragraph p", kind: "text", edit: ParagraphEdit,
-      attributes: { textAlign: { type: "string", enum: ["left", "center", "right", "justify"] } },
+      attributes: { textAlign: { type: "string", enum: ["left", "center", "right", "justify"] }, icon: { type: "string", enum: [...ICON_NAMES] }, iconPosition: { type: "string", enum: ["left", "right"], default: "left" }, iconTitle: { type: "string" } },
       supports: { style: true, anchor: true, className: true }, transforms: textTransforms("paragraph"),
     },
     {
       name: "heading", title: "Tiêu đề", icon: Heading2, category: "text", keywords: "tieu de heading h1 h2 h3 h4", kind: "text", edit: HeadingEdit,
-      attributes: { level: { type: "integer", default: 2, min: 1, max: 6 }, textAlign: { type: "string", enum: ["left", "center", "right", "justify"] } },
+      attributes: { level: { type: "integer", default: 2, min: 1, max: 6 }, textAlign: { type: "string", enum: ["left", "center", "right", "justify"] }, icon: { type: "string", enum: [...ICON_NAMES] }, iconPosition: { type: "string", enum: ["left", "right"], default: "left" }, iconTitle: { type: "string" }, tocTitle: { type: "string" } },
       create: (attrs) => makeBlock("heading", { level: 2, ...attrs }),
       variations: [1, 2, 3, 4, 5, 6].map((level) => ({ name: `h${level}`, title: `H${level}`, icon: HEADING_ICONS[level], keywords: `h${level}`, attrs: { level }, isActive: (a) => Number(a.level) === level })),
       supports: { style: true, anchor: true, className: true }, transforms: textTransforms("heading"),

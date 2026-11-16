@@ -255,7 +255,7 @@ function TocItems({ minLevel, maxLevel, listStyle, columns, empty }: { minLevel:
   const doc = store.getState().docs[store.activeDocId];
   const items: Array<{ level: number; text: string }> = [];
   const walk = (list: typeof doc.blocks) => list.forEach((b) => {
-    if (b.type === "heading" && Number(b.attrs.level) >= minLevel && Number(b.attrs.level) <= maxLevel) items.push({ level: Number(b.attrs.level), text: (b.inline ?? []).map((n) => n.text ?? "").join("") });
+    if (b.type === "heading" && Number(b.attrs.level) >= minLevel && Number(b.attrs.level) <= maxLevel) items.push({ level: Number(b.attrs.level), text: (typeof b.attrs.tocTitle === "string" && b.attrs.tocTitle.trim()) || (b.inline ?? []).map((n) => n.text ?? "").join("") });
     if (b.content) walk(b.content);
   });
   if (doc) walk(doc.blocks);

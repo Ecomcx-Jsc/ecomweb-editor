@@ -117,4 +117,26 @@ test.describe("bảng cài đặt khối", () => {
     expect((await blockOf(page, "paragraph")).attrs.style?.textShadow).toBeUndefined();
     expect((await blockOf(page, "paragraph")).attrs.style?.writingMode).toBeUndefined();
   });
+
+  test("tiêu đề: icon cạnh chữ + vị trí + chú thích → ::before / ::after thật; tên mục lục", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Tiêu đề bài");
+    const insp = page.locator(".ecx-inspector");
+    await insp.locator(".ecx-icon-picker-btn").click();
+    await page.getByRole("option", { name: "star" }).click();
+    const h = c.locator("h1, h2").filter({ hasText: "Tiêu đề bài" }).first();
+    expect(await h.evaluate((n) => getComputedStyle(n, "::before").content)).toBe('""');
+    expect(await h.evaluate((n) => getComputedStyle(n, "::before").width)).not.toBe("auto");
+    await insp.getByRole("radio", { name: "Phải chữ" }).click();
+    expect(await h.evaluate((n) => getComputedStyle(n, "::after").content)).toBe('""');
+    expect(await h.evaluate((n) => getComputedStyle(n, "::before").content)).toBe("none");
+    await insp.getByRole("textbox", { name: "Chú thích icon" }).fill("Nổi bật");
+    await expect(h).toHaveAttribute("title", "Nổi bật");
+    await insp.getByRole("textbox", { name: "Tên trong mục lục" }).fill("Mở đầu");
+    const a = (await blockOf(page, "heading")).attrs;
+    expect(a).toMatchObject({ icon: "star", iconPosition: "right", iconTitle: "Nổi bật", tocTitle: "Mở đầu" });
+    await insp.locator(".ecx-icon-picker-btn").click();
+    await page.getByRole("option", { name: "Không có icon" }).click();
+    expect((await blockOf(page, "heading")).attrs.icon).toBeUndefined();
+  });
 });
