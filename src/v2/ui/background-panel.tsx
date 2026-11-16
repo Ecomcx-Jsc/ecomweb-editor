@@ -69,10 +69,45 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
     commitStyle(next, { ...(legacy ? { background: undefined } : {}), ...(cover ? { src: undefined, mediaId: undefined, overlay: undefined, opacity: undefined, fixed: undefined, focal: undefined } : {}) });
   };
 
+  const ovKind: "color" | "gradient" | "image" = bg.overlayImage ? "image" : bg.overlayGradient ? "gradient" : "color";
+  const [ovTab, setOvTab] = useState<"color" | "gradient" | "image" | null>(null);
+  const ovShown = ovTab ?? ovKind;
+  const hasOv = !!(overlay || bg.overlayGradient || bg.overlayImage);
+  const pickOverlayImage = async () => {
+    const [item] = (await host.media?.pick({ kind: "image", multiple: false })) ?? [];
+    if (item) setBg({ overlayImage: item.sizes?.large?.url ?? item.url, overlayOpacity: bg.overlayOpacity });
+  };
+  const BLENDS = ["multiply", "screen", "overlay", "darken", "lighten", "color-dodge", "color-burn", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
   const overlayFields = (
     <>
-      <ColorInput label={t.overlay} value={overlay} onChange={setOverlay} />
-      {(overlay || (cover && attrs.src)) && (
+      {!cover && (
+        <Row label={t.overlayType}>
+          <div role="radiogroup" aria-label={t.overlayType} className="ecx-seg is-text">
+            {(["color", "gradient", "image"] as const).map((k) => (
+              <button key={k} type="button" role="radio" aria-checked={ovShown === k} className={cx("ecx-seg-btn", ovShown === k && "is-active")} onClick={() => setOvTab(k)}>{b.bg[k]}</button>
+            ))}
+          </div>
+        </Row>
+      )}
+      {(cover || ovShown === "color") && <ColorInput label={t.overlay} value={overlay} onChange={setOverlay} />}
+      {!cover && ovShown === "gradient" && <Row label={b.bg.gradient}><GradientField value={bg.overlayGradient} onChange={(g) => setBg({ overlayGradient: g, overlayOpacity: g ? bg.overlayOpacity : undefined })} /></Row>}
+      {!cover && ovShown === "image" && (
+        <Row label={t.image}>
+          <div className="ecx-bg-actions">
+            {host.media && <button type="button" className="ecx-btn" onClick={pickOverlayImage}>{bg.overlayImage ? t.replace : t.choose}</button>}
+            {bg.overlayImage && <button type="button" className="ecx-btn" onClick={() => setBg({ overlayImage: undefined })}>{t.remove}</button>}
+          </div>
+        </Row>
+      )}
+      {!cover && hasOv && (
+        <Row label={t.overlayBlend}>
+          <select className="ecx-input" aria-label={t.overlayBlend} value={bg.overlayBlend ?? ""} onChange={(e) => setBg({ overlayBlend: e.target.value || undefined })}>
+            <option value="">{t.blendNormal}</option>
+            {BLENDS.map((x) => <option key={x} value={x}>{(t as Record<string, string>)[`blend_${x.replace(/-/g, "_")}`] ?? x}</option>)}
+          </select>
+        </Row>
+      )}
+      {(hasOv || (cover && attrs.src)) && (
         <Row label={`${t.opacity}: ${opacity}%`}>
           <input type="range" min={0} max={100} step={5} value={opacity} aria-label={t.opacity} onChange={(e) => setOpacity(Number(e.target.value))} />
         </Row>
@@ -149,7 +184,7 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
       )}
     </Section>
     {/* Lớp phủ nền: mục riêng (phủ lên màu / chuyển màu / ảnh), như bộ khối lớn */}
-    {!cover && <Section title={t.overlayTitle} modified={!!overlay} onReset={() => setOverlay(undefined)} defaultOpen={!!overlay}>{overlayFields}</Section>}
+    {!cover && <Section title={t.overlayTitle} modified={hasOv} onReset={() => setBg({ overlay: undefined, overlayOpacity: undefined, overlayGradient: undefined, overlayImage: undefined, overlayBlend: undefined })} defaultOpen={hasOv ? true : undefined}>{overlayFields}</Section>}
     </>
   );
 }

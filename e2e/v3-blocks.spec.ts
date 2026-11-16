@@ -931,3 +931,27 @@ test("nhóm: độ rộng khối + độ rộng nội dung (hết khối / theo 
   await i.getByRole("radiogroup", { name: "Độ rộng khối" }).getByRole("radio", { name: "Đầy màn" }).click();
   expect((await find(page, "group")).attrs.align).toBe("full");
 });
+
+test("nhóm: lớp phủ nền chọn loại Màu / Chuyển màu / Ảnh, kiểu hoà trộn, độ mờ — khung soạn vẽ đúng ::before", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
+    { id: "G", type: "group", attrs: { style: { background: { image: { base: "/sample.svg" } }, padding: { base: "xl" } } }, content: [{ id: "p1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Nội dung" }] }] }], { focus: false }); s.select(["G"], { editing: null }); });
+  const i = insp(page);
+  await i.getByRole("button", { name: "Lớp phủ nền" }).click();
+  const ov = i.locator(".ecx-style-section", { hasText: "Lớp phủ nền" });
+  await expect(ov.getByRole("radiogroup", { name: "Loại lớp phủ" })).toBeVisible();
+  await ov.getByRole("radiogroup", { name: "Loại lớp phủ" }).getByRole("radio", { name: "Chuyển màu" }).click();
+  await ov.getByRole("button", { name: "brand" }).click();
+  await ov.getByLabel("Hoà trộn với nền").selectOption("multiply");
+  const bg = async () => (await page.evaluate(() => (window as any).__ecx.store.getState().docs.root.blocks.find((b: any) => b.id === "G").attrs.style.background));
+  const a = await bg();
+  expect(a.overlayGradient).toBeTruthy();
+  expect(a.overlayBlend).toBe("multiply");
+  const g = c.locator('[data-type="group"]').first();
+  const before = () => g.evaluate((e) => { const s = getComputedStyle(e, "::before"); return { img: s.backgroundImage, blend: s.mixBlendMode, op: s.opacity }; });
+  await expect.poll(before).toMatchObject({ blend: "multiply" });
+  expect((await before()).img).toContain("gradient");
+  await ov.getByLabel("Hoà trộn với nền").selectOption("");
+  await expect.poll(async () => (await before()).blend).toBe("normal");
+  expect((await bg()).overlayBlend).toBeUndefined();
+});
