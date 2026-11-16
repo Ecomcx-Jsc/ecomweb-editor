@@ -143,8 +143,8 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-pad-handles { position: absolute; inset: 0; max-width: none; margin: 0; pointer-events: none; z-index: 7; }
 .ecx-block.is-selected:has(> .ecx-cw-handles) { position: relative; }
 .ecx-cw-handles { position: absolute; inset: 0; max-width: none; margin: 0; pointer-events: none; z-index: 8; }
-.ecx-cw-handle { position: absolute; top: 50%; width: 10px; height: 44px; margin: -22px 0 0 1px; border-radius: 6px; background: var(--ecx-ui); box-shadow: 0 0 0 2px #fff; cursor: ew-resize; pointer-events: auto; opacity: .55; touch-action: none; }
-.ecx-cw-handle.is-left { margin-left: -11px; }
+.ecx-cw-handle { position: absolute; top: 50%; width: 10px; height: 44px; margin: -22px 0 0 4px; border-radius: 6px; background: var(--ecx-ui); box-shadow: 0 0 0 2px #fff; cursor: ew-resize; pointer-events: auto; opacity: .55; touch-action: none; }
+.ecx-cw-handle.is-left { margin-left: -14px; }
 .ecx-cw-handle:hover, .ecx-cw-handle.is-dragging { opacity: 1; }
 .ecx-cw-tip { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); padding: 2px 8px; border-radius: 4px; background: var(--ecx-ui); color: #fff; font: 600 12px/1.4 system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
 .ecx-pad-handle { position: absolute; left: 0; width: min(40%, 320px); height: 12px; cursor: ns-resize; pointer-events: auto; touch-action: none; }

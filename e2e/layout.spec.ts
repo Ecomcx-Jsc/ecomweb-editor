@@ -299,4 +299,29 @@ test.describe("bố cục + hiệu ứng", () => {
     await c.locator(".ecx-ph-choice").first().click();
     expect((await groupOf(page)).attrs.style.layout).toBeTruthy();
   });
+
+  test("nhóm xếp dọc: kéo tay độ rộng nội dung bám theo con trỏ, khối con đúng bằng độ rộng đặt", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "nhom");
+    await c.locator(".ecx-ph-choice", { hasText: "Xếp dọc" }).click();
+    await page.keyboard.type("Nội dung A");
+    await showToolbar(page);
+    await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
+    const h = c.locator('[data-ecx-zone="content-width-right"]');
+    const widths: number[] = [];
+    for (let i = 0; i < 3; i++) {
+      const b = (await h.boundingBox())!;
+      await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(b.x + b.width / 2 - 60, b.y + b.height / 2, { steps: 5 });
+      await page.mouse.up();
+      const w = parseInt((await groupOf(page)).attrs.contentWidth, 10);
+      const kid = (await c.locator('[data-type="group"] > [data-ecx-block]').first().boundingBox())!;
+      expect(Math.abs(kid.width - w)).toBeLessThan(3);
+      widths.push(w);
+    }
+    expect(widths[0]).toBeGreaterThan(widths[1]);
+    expect(widths[1]).toBeGreaterThan(widths[2]);
+  });
 });

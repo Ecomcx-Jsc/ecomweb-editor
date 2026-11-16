@@ -220,12 +220,16 @@ export function ContentWidthHandles({ blockId }: { blockId: string }) {
   const { store, ui } = useEditor();
   const [box, setBox] = useState<{ left: number; right: number; max: number } | null>(null);
   const [drag, setDrag] = useState<number | null>(null);
+  /** Đo theo giá trị ràng buộc (max-width của khối con), không theo kích thước khối con — hàng ngang / lưới / xếp dọc làm khối con co theo chữ. */
   const measure = () => {
     const el = ui.blockEl(blockId), kid = el?.querySelector(":scope > [data-ecx-block]") as HTMLElement | null;
     if (!el || !kid) return null;
-    const g = el.getBoundingClientRect(), k = kid.getBoundingClientRect(), cs = el.ownerDocument.defaultView!.getComputedStyle(el);
-    const max = Math.round(g.width - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0));
-    return { left: Math.round(k.left - g.left), right: Math.round(k.right - g.left), max, width: Math.round(k.width) };
+    const win = el.ownerDocument.defaultView!, cs = win.getComputedStyle(el), g = el.getBoundingClientRect();
+    const padL = parseFloat(cs.paddingLeft) || 0, max = Math.round(g.width - padL - (parseFloat(cs.paddingRight) || 0));
+    const mwRaw = win.getComputedStyle(kid).maxWidth, mw = mwRaw.endsWith("px") ? parseFloat(mwRaw) : NaN;
+    const width = Math.min(max, Number.isFinite(mw) ? Math.round(mw) : max);
+    const left = Math.round(padL + (max - width) / 2);
+    return { left, right: left + width, max, width };
   };
   useLayoutEffect(() => {
     const m = measure();
