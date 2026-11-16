@@ -2,7 +2,7 @@
 export const bindings = {
   panelTitle: "Gắn dữ liệu",
   panelHelp: "Lấy giá trị từ dữ liệu của website khi hiển thị (tiêu đề bài, trường meta, dữ liệu của plugin…) thay cho chữ gõ tay.",
-  notBound: "— Không gắn —",
+  notBound: "— Không gắn —", hideIfEmpty: "Ẩn khối khi nguồn không có giá trị",
   unbind: "Bỏ gắn",
   source: "nguồn",
   field: "trường",

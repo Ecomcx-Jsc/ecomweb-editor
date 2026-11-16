@@ -66,6 +66,9 @@ export function BindingsPanel({ block, bindable, onChange }: { block: BNode; bin
                 </select>
               : <input className="ecx-input" aria-label={`${ATTR[attr] ?? attr}: ${argKey}`} placeholder={argKey} value={String(b.args?.[argKey] ?? "")}
                   onChange={(e) => set(attr, { ...b, args: { ...b.args, [argKey]: e.target.value.replace(/[^\w.-]/g, "").slice(0, 200) } })} />)}
+            {b && (attr === "content" || attr === "text") && (
+              <label className="ecx-check"><input type="checkbox" checked={b.args?.hideIfEmpty === true} onChange={(e) => { const { hideIfEmpty: _drop, ...rest } = b.args ?? {}; set(attr, { ...b, args: e.target.checked ? { ...rest, hideIfEmpty: true } : rest }); }} /> {t.hideIfEmpty}</label>
+            )}
           </div>
         );
       })}

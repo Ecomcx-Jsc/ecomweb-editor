@@ -54,6 +54,22 @@ test.describe("trải nghiệm soạn", () => {
     await expect(c.locator('[data-ecx-block="s3"]')).toBeHidden();
   });
 
+  test("tìm kiếm có ô chọn phạm vi; danh sách bài dạng cuộn ngang; menu có mức tablet", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await page.evaluate(() => {
+      const s = (window as any).__ecx.store;
+      s.insert("root", null, 3, [
+        { id: "sr", type: "search", attrs: { scopeSelect: true, scopes: "product:Sản phẩm, post:Tin tức" } },
+        { id: "q1", type: "query", attrs: { inherit: false, postType: "post", perPage: 4 }, content: [{ id: "pt", type: "postTemplate", attrs: { layout: "carousel", columns: 4, gap: "md" }, content: [{ id: "pp", type: "postTitle", attrs: {} }] }] },
+        { id: "nv", type: "navigation", attrs: { overlayMenu: "tablet" } },
+      ]);
+    });
+    const opts = c.locator('[data-ecx-block="sr"] select.search-scope option');
+    await expect(opts).toHaveText(["Tất cả", "Sản phẩm", "Tin tức"]);
+    await expect(c.locator('[data-ecx-block="pt"]')).toHaveClass(/is-grid/);
+    await expect(c.locator('[data-ecx-block="pt"]')).toHaveCSS("display", "grid");
+  });
+
   test("bộ cột: nút + ở mép phải thêm cột, con trỏ vào cột mới", async ({ page }) => {
     const c = await open(page, "?doc=rich");
     await clickEnd(c, "Phải");

@@ -25,7 +25,7 @@ export const blocks = {
   contents: "Contents",
   menu: "Menu",
   noMenuIsAssigned: "No menu is assigned to this location — assign one in Appearance › Menus, or pick another location.",
-  searchLabel: "Search", searchPlaceholder: "Search the site…", searchButton: "Search",
+  searchLabel: "Search", searchScope: "Search in", searchAll: "All", searchPlaceholder: "Search the site…", searchButton: "Search",
   categoryName: "Category name",
   category: "Category: ",
   theDescriptionOfThe: "The description of the category / tag being viewed.",

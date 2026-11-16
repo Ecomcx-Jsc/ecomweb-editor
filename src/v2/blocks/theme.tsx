@@ -1,6 +1,6 @@
 import { Star, AlignLeft, ArrowLeftRight, CalendarDays, ChevronsRight, Heading1, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { ICON_PATHS, SEARCH_ICON_PATH } from "@ecomcx/ecomweb-content";
+import { ICON_PATHS, SEARCH_ICON_PATH, spacingValue } from "@ecomcx/ecomweb-content";
 import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
 import { DocScopeProvider, LoopPostContext, useDocScope, useDynamicData, useEditor, useEditorState } from "../context";
 import type { DynamicPost, QueryArgs } from "../core/host";
@@ -73,7 +73,8 @@ function NavigationEdit({ block, blockProps, selected }: BlockEditProps) {
   const { labels } = useEditor();
   const location = String(block.attrs.location ?? "primary");
   const items = d.menus?.[location];
-  const mobile = block.attrs.mobile !== false;
+  const overlay = ["never", "mobile", "tablet", "always"].includes(String(block.attrs.overlayMenu)) ? String(block.attrs.overlayMenu) : block.attrs.mobile === false ? "never" : "mobile";
+  const mobile = overlay !== "never";
   const t = useMsgs("blocks");
   const tp = useMsgs("placeholders");
   const { host } = useEditor();
@@ -94,9 +95,9 @@ function NavigationEdit({ block, blockProps, selected }: BlockEditProps) {
   }
   const menu = <nav className="ecx-navigation-menu" aria-label={location}><ul>{items.map((it, i) => <li key={i}><a href={it.url} onClick={(e) => e.preventDefault()}>{it.title}</a></li>)}</ul></nav>;
   return (
-    <div {...merge(blockProps, cx("ecx-navigation", `ecx-navigation-${block.attrs.orientation ?? "horizontal"}`, mobile && "has-mobile"))}>
-      <div className="ecx-navigation-items">{menu}</div>
-      {mobile && <details className="ecx-navigation-toggle"><summary aria-label={t.menu}>☰</summary>{menu}</details>}
+    <div {...merge(blockProps, cx("ecx-navigation", `ecx-navigation-${block.attrs.orientation ?? "horizontal"}`, mobile && "has-mobile", overlay === "tablet" && "bp-tablet", overlay === "always" && "overlay-always"))}>
+      {overlay !== "always" && <div className="ecx-navigation-items">{menu}</div>}
+      {mobile && <div className="ecx-nav-drawer"><button type="button" className="ecx-nav-burger" tabIndex={-1} aria-label={t.menu}><svg viewBox="0 0 24 24" width={24} height={24} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" /></svg></button></div>}
       <EditMenuButton location={location} selected={selected} />
     </div>
   );
@@ -116,6 +117,12 @@ function SearchEdit({ block, blockProps }: BlockEditProps) {
         {block.attrs.showLabel === true && <label className="search-label">{t.searchLabel}</label>}
         {pos === "left" && button}
         <input type="search" placeholder={String(block.attrs.placeholder || t.searchPlaceholder)} aria-label={t.searchLabel} readOnly tabIndex={-1} />
+        {block.attrs.scopeSelect === true && (
+          <select className="search-scope" aria-label={t.searchScope} tabIndex={-1} onMouseDown={(e) => e.preventDefault()}>
+            <option>{t.searchAll}</option>
+            {String(block.attrs.scopes ?? "").split(",").map((x) => x.trim()).filter(Boolean).map((x) => { const [v, ...r] = x.split(":"); return <option key={x}>{r.join(":").trim() || v}</option>; })}
+          </select>
+        )}
         {pos !== "left" && button}
       </form>
     </div>
@@ -338,6 +345,7 @@ export function queryArgs(a: Record<string, unknown>): QueryArgs {
     inherit: a.inherit !== false, postType: typeof a.postType === "string" && a.postType ? a.postType : "post",
     perPage: Math.min(100, Math.max(1, Number(a.perPage) || 10)),
     category: typeof a.category === "string" && a.category ? a.category : undefined, tag: typeof a.tag === "string" && a.tag ? a.tag : undefined,
+    taxonomy: typeof a.taxonomy === "string" && a.taxonomy && typeof a.term === "string" && a.term ? a.taxonomy : undefined, term: typeof a.term === "string" && a.term ? a.term : undefined,
     orderBy: typeof a.orderBy === "string" ? a.orderBy : "date", order: a.order === "asc" ? "asc" : "desc",
   };
 }
@@ -374,14 +382,17 @@ function PostTemplateEdit({ block, blockProps, editable, labels }: BlockEditProp
   const q = queryArgs(queryAttrs);
   const posts = useQueryPosts(q);
   const [active, setActive] = useState(0);
-  const grid = block.attrs.layout === "grid";
+  const grid = block.attrs.layout === "grid" || block.attrs.layout === "carousel";
+  const carousel = block.attrs.layout === "carousel";
+  const responsive = block.attrs.layout === "grid" && (Number(block.attrs.columnsTablet) > 0 || Number(block.attrs.columnsMobile) > 0);
   const cols = Math.min(6, Math.max(1, Number(block.attrs.columns) || 3));
-  const count = posts ? Math.max(1, Math.min(posts.length, q.perPage, 6)) : 3;
+  const gap = spacingValue(block.attrs.gap) ?? "1.5rem";
+  const count = posts ? Math.max(1, Math.min(posts.length, q.perPage, carousel ? cols : 6)) : 3;
   const current = Math.min(active, count - 1);
   const t = useMsgs("blocks");
   const tp = useMsgs("placeholders");
   return (
-    <ul {...(merge(blockProps, cx("ecx-post-template", grid && "is-grid"), grid ? { display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap: "1.5rem" } : undefined) as object)} data-ecx-posts={posts ? posts.length : ""}>
+    <ul {...(merge(blockProps, cx("ecx-post-template", grid && "is-grid", responsive && "is-responsive"), responsive ? { "--per": cols, "--per-tablet": Number(block.attrs.columnsTablet) || Math.min(cols, 3), "--per-mobile": Number(block.attrs.columnsMobile) || Math.min(cols, 2), "--gap": gap } as CSSProperties : grid ? { display: "grid", gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap } : undefined) as object)} data-ecx-posts={posts ? posts.length : ""}>
       {posts && !posts.length && <li className="ecx-post ecx-post-none ecx-ph-theme is-missing" data-ecx-placeholder="no-posts"><Missing>{tp.noPosts}</Missing> <span className="ecx-placeholder-hint">{tp.noPostsHint}</span> <AdminButton target="newPost" args={{ postType: q.postType }}>+ {tp.writeFirst}</AdminButton></li>}
       {Array.from({ length: count }, (_, i) => {
         const post = posts?.[i] ?? null;
@@ -458,8 +469,8 @@ export function themeBlocks(): BlockType[] {
     { name: "siteTitle", title: "Tên website", icon: Type, category: theme, keywords: "ten website site title", kind: "atom", edit: SiteTitleEdit, attributes: { level: { type: "integer", default: 0, min: 0, max: 6 }, link: { type: "boolean", default: true }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "siteLogo", title: "Logo", icon: ImageIcon, category: theme, keywords: "logo", kind: "atom", edit: SiteLogoEdit, attributes: { width: { type: "number", default: 120 }, link: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     { name: "siteTagline", title: "Khẩu hiệu", icon: Type, category: theme, keywords: "khau hieu tagline mo ta", kind: "atom", edit: SiteTaglineEdit, attributes: { textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
-    { name: "navigation", title: "Menu", icon: Menu, category: theme, keywords: "menu dieu huong navigation", kind: "atom", edit: NavigationEdit, attributes: { location: { type: "string", default: "primary" }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" }, mobile: { type: "boolean", default: true }, overlayMenu: { type: "string", enum: ["never", "mobile", "always"], default: "mobile" } }, supports: { style: true, className: true }, summary: (a) => a.location },
-    { name: "search", title: "Tìm kiếm", icon: Search, category: theme, keywords: "tim kiem search", kind: "atom", edit: SearchEdit, attributes: { placeholder: { type: "string" }, buttonText: { type: "string" }, postType: { type: "string" }, showLabel: { type: "boolean", default: false }, buttonPosition: { type: "string", enum: ["right", "left", "below"], default: "right" }, buttonStyle: { type: "string", enum: ["text", "icon"], default: "text" } }, supports: { style: true, className: true } },
+    { name: "navigation", title: "Menu", icon: Menu, category: theme, keywords: "menu dieu huong navigation", kind: "atom", edit: NavigationEdit, attributes: { location: { type: "string", default: "primary" }, orientation: { type: "string", enum: ["horizontal", "vertical"], default: "horizontal" }, mobile: { type: "boolean", default: true }, overlayMenu: { type: "string", enum: ["never", "mobile", "tablet", "always"], default: "mobile" } }, supports: { style: true, className: true }, summary: (a) => a.location },
+    { name: "search", title: "Tìm kiếm", icon: Search, category: theme, keywords: "tim kiem search", kind: "atom", edit: SearchEdit, attributes: { placeholder: { type: "string" }, buttonText: { type: "string" }, postType: { type: "string" }, showLabel: { type: "boolean", default: false }, buttonPosition: { type: "string", enum: ["right", "left", "below"], default: "right" }, buttonStyle: { type: "string", enum: ["text", "icon"], default: "text" }, scopeSelect: { type: "boolean", default: false }, scopes: { type: "string" } }, supports: { style: true, className: true } },
     { name: "languageSwitcher", title: "Chọn ngôn ngữ", icon: Globe2, category: theme, keywords: "ngon ngu language", kind: "atom", edit: LanguageEdit, attributes: { display: { type: "string", enum: ["inline", "dropdown"], default: "inline" } }, supports: { style: true, className: true } },
     { name: "copyright", title: "Bản quyền", icon: Copyright, category: theme, keywords: "ban quyen copyright", kind: "atom", edit: CopyrightEdit, attributes: { text: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "postTitle", title: "Tiêu đề bài", icon: Type, category: theme, keywords: "tieu de bai post title", kind: "atom", edit: PostTitleEdit, attributes: { level: { type: "integer", default: 1, min: 1, max: 6 }, link: { type: "boolean", default: false }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
@@ -487,12 +498,12 @@ export function themeBlocks(): BlockType[] {
     { name: "postNavigation", title: "Bài trước / bài sau", icon: ArrowLeftRight, category: theme, keywords: "bai truoc bai sau dieu huong post navigation", kind: "atom", edit: PostNavigationEdit, attributes: { showTitle: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     {
       name: "query", title: "Danh sách bài", icon: Rows3, category: theme, keywords: "danh sach bai query loop tin tuc", kind: "container", edit: QueryEdit,
-      attributes: { inherit: { type: "boolean", default: true }, postType: { type: "string", default: "post" }, perPage: { type: "integer", default: 10, min: 1, max: 100 }, category: { type: "string" }, tag: { type: "string" }, orderBy: { type: "string", enum: ["date", "title", "modified", "menu_order", "comment_count", "rand"], default: "date" }, order: { type: "string", enum: ["desc", "asc"], default: "desc" }, authorId: { type: "integer", min: 1 }, search: { type: "string" }, exclude: { type: "string" }, sticky: { type: "string", enum: ["any", "only", "exclude"], default: "any" }, orderByMeta: { type: "string" }, paginate: { type: "boolean", default: false } },
+      attributes: { inherit: { type: "boolean", default: true }, postType: { type: "string", default: "post" }, perPage: { type: "integer", default: 10, min: 1, max: 100 }, category: { type: "string" }, tag: { type: "string" }, taxonomy: { type: "string" }, term: { type: "string" }, orderBy: { type: "string", enum: ["date", "title", "modified", "menu_order", "comment_count", "rand"], default: "date" }, order: { type: "string", enum: ["desc", "asc"], default: "desc" }, authorId: { type: "integer", min: 1 }, search: { type: "string" }, exclude: { type: "string" }, sticky: { type: "string", enum: ["any", "only", "exclude"], default: "any" }, orderByMeta: { type: "string" }, paginate: { type: "boolean", default: false } },
       // Mới chèn: chưa có khuôn → hỏi kiểu hiển thị trước (Danh sách / Lưới / Thẻ có ảnh)
       create: () => makeBlock("query", { inherit: true }, []),
       supports: { style: true, className: true },
     },
-    { name: "postTemplate", title: "Khuôn mỗi bài", icon: LayoutTemplate, kind: "container", edit: PostTemplateEdit, hidden: true, attributes: { layout: { type: "string", enum: ["list", "grid"], default: "list" }, columns: { type: "integer", default: 3, min: 1, max: 6 } }, structure: { parents: ["query"] } },
+    { name: "postTemplate", title: "Khuôn mỗi bài", icon: LayoutTemplate, kind: "container", edit: PostTemplateEdit, hidden: true, attributes: { layout: { type: "string", enum: ["list", "grid", "carousel"], default: "list" }, columns: { type: "integer", default: 3, min: 1, max: 6 }, columnsTablet: { type: "integer", min: 1, max: 6 }, columnsMobile: { type: "integer", min: 1, max: 4 }, gap: { type: "string" }, arrows: { type: "boolean", default: true } }, structure: { parents: ["query"] } },
     { name: "pagination", title: "Phân trang", icon: ListOrdered, kind: "atom", edit: PaginationEdit, attributes: { type: { type: "string", enum: ["numbers", "prevNext", "both"], default: "both" }, midSize: { type: "integer", default: 2, min: 0, max: 5 } }, hidden: true, structure: { parents: ["query"] } },
     { name: "queryEmpty", title: "Khi không có bài", icon: SquareDashed, kind: "container", edit: QueryEmptyEdit, hidden: true, structure: { parents: ["query"] } },
     { name: "templatePart", title: "Phần dùng chung", icon: PanelTop, category: theme, keywords: "phan dung chung template part header footer", kind: "atom", edit: TemplatePartEdit, attributes: { slug: { type: "string" }, tagName: { type: "string", enum: ["div", "header", "footer", "aside", "section"], default: "div" } }, summary: (a) => a.slug },

@@ -102,7 +102,7 @@ export interface DocumentHost {
 export type DynamicPost = { title?: string; date?: string; author?: string; excerpt?: string; image?: string | null; terms?: string[]; /** Chuyên mục đầu tiên (breadcrumb như website); không có = bài/trang không thuộc chuyên mục nào. */ category?: string; comments?: number; link?: string; /** Nội dung đã lưu của bài (ContentDoc) — khối "Nội dung bài" trong template vẽ nội dung thật thay vì khung giữ chỗ. */ content?: unknown };
 
 /** Thiết lập của khối "Danh sách bài" (attrs của query). */
-export interface QueryArgs { inherit: boolean; postType: string; perPage: number; category?: string; tag?: string; orderBy: string; order: "asc" | "desc" }
+export interface QueryArgs { inherit: boolean; postType: string; perPage: number; category?: string; tag?: string; taxonomy?: string; term?: string; orderBy: string; order: "asc" | "desc" }
 
 export type ChoiceKind = "menuLocation" | "postType" | "taxonomy" | "term" | "templatePart" | "imageSize";
 export interface Choice { value: string; label: string }

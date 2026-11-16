@@ -2,7 +2,7 @@
 export const bindings = {
   panelTitle: "Bind data",
   panelHelp: "Show a value from site data at render time (post title, meta field, plugin data…) instead of typed text.",
-  notBound: "— Not bound —",
+  notBound: "— Not bound —", hideIfEmpty: "Hide the block when the source has no value",
   unbind: "Unbind",
   source: "source",
   field: "field",
