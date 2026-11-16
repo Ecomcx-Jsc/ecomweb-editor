@@ -678,3 +678,28 @@ test("lời chứng thực: kiểu bong bóng (khung ngoài bỏ nền, lời tr
   await expect(insp(page).getByRole("button", { name: "Sao đánh giá" })).toBeVisible();
   await expect(insp(page).getByRole("button", { name: "Dấu trích" })).toBeVisible();
 });
+
+test("bộ đếm: số chữ thập phân và thẻ tiêu đề; thanh tiến độ: số thập phân, tắt hiệu ứng thì ẩn ô thời gian / kiểu chạy, nhãn đọc màn hình", async ({ page }) => {
+  const c = await open(page, "?doc=post");
+  await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
+    { id: "C", type: "counter", attrs: { end: 12.5, title: "Năm kinh nghiệm" } },
+    { id: "P", type: "progressBar", attrs: { label: "Đơn hàng", value: 72.25 } }], { focus: false }); s.select(["C"], { editing: null }); });
+  await expect(c.locator(".ecx-counter-value")).toHaveText("12.5");
+  await insp(page).getByRole("spinbutton", { name: "Số chữ thập phân" }).fill("2");
+  await expect(c.locator(".ecx-counter-value")).toHaveText("12.50");
+  await insp(page).getByRole("combobox", { name: "Thẻ HTML của tiêu đề" }).selectOption("h3");
+  await expect(c.locator("h3.ecx-counter-title")).toHaveText("Năm kinh nghiệm");
+  await page.evaluate(() => (window as any).__ecx.store.select(["P"], { editing: null }));
+  const bar = c.locator(".ecx-progress");
+  await expect(bar.locator(".ecx-progress-value")).toHaveText("72%");
+  await insp(page).getByRole("radiogroup", { name: "Số chữ thập phân" }).getByRole("radio", { name: "0,1", exact: true }).click();
+  await expect(bar.locator(".ecx-progress-value")).toHaveText("72.3%");
+  await insp(page).getByRole("combobox", { name: "Kiểu chạy" }).selectOption("linear");
+  expect(await bar.locator(".ecx-progress-bar").evaluate((e) => getComputedStyle(e).transitionTimingFunction)).toBe("linear");
+  await insp(page).getByRole("checkbox", { name: /Chạy từ 0 khi cuộn tới/ }).uncheck();
+  await expect(c.locator(".ecx-progress.ecx-in")).toHaveCount(0);
+  await expect(insp(page).getByRole("combobox", { name: "Kiểu chạy" })).toHaveCount(0);
+  await expect(insp(page).getByRole("spinbutton", { name: /Thời gian chạy/ })).toHaveCount(0);
+  await insp(page).getByRole("textbox", { name: "Nhãn cho trình đọc màn hình" }).fill("Tiến độ đơn hàng");
+  await expect(bar.locator("[role=progressbar]")).toHaveAttribute("aria-label", "Tiến độ đơn hàng");
+});
