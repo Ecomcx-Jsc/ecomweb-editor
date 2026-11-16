@@ -384,4 +384,56 @@ test("khối Tìm kiếm: khung soạn đổi theo 'Hiện nhãn' + 'Vị trí n
   expect(await c.locator("form.search-form").evaluate((f) => [...f.children].map((e) => e.tagName))).toEqual(["LABEL", "BUTTON", "INPUT"]);
   await page.evaluate((i) => (window as any).__ecx.store.setAttrs([i], { buttonPosition: "below" }), id);
   await expect(c.locator("form.search-form.search-button-below")).toHaveCount(1);
+
+});
+
+test.describe("kéo thả vào / ra khỏi nhóm", () => {
+  const seedGroup = (page: Page, layout?: unknown) => page.evaluate((lay) => {
+    const st = (window as any).__ecx.store;
+    const p = (id: string, t: string) => ({ id, type: "paragraph", attrs: {}, inline: [{ type: "text", text: t }] });
+    st.insert("root", null, 3, [{ id: "G", type: "group", attrs: { padding: "medium", style: { color: { background: "muted/20" }, ...(lay ? { layout: lay } : {}) } }, content: [p("A", "Trong nhóm A"), p("B", "Trong nhóm B")] }, p("Z", "Ngoài nhóm Z")], { focus: false });
+    st.select([]);
+  }, layout);
+  const groupShape = async (page: Page) => (await state(page)).docs.root.blocks.slice(3).map((b: any) => b.content ? { [b.type]: b.content.map((x: any) => x.inline[0].text) } : b.inline[0].text);
+  const dragHandleTo = async (page: Page, x: number, y: number) => {
+    const h = (await page.locator(".ecx-drag-handle").boundingBox())!;
+    await page.mouse.move(h.x + h.width / 2, h.y + h.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(h.x + 30, h.y - 20, { steps: 4 });
+    await page.mouse.move(x, y, { steps: 12 });
+    return () => page.mouse.up();
+  };
+
+  test("kéo khối vào GIỮA hai khối con của nhóm: nằm trong nhóm, đường thả hiện giữa chúng", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await seedGroup(page);
+    await clickEnd(c, "Ngoài nhóm Z");
+    const a = (await c.locator("p", { hasText: "Trong nhóm A" }).boundingBox())!, b = (await c.locator("p", { hasText: "Trong nhóm B" }).boundingBox())!;
+    const up = await dragHandleTo(page, a.x + 40, (a.y + a.height + b.y) / 2);
+    const line = (await page.locator(".ecx-drop-line").boundingBox())!;
+    expect(line.y).toBeGreaterThan(a.y + a.height - 8); // đường thả nằm giữa A và B, không ở mép trên nhóm
+    expect(line.y).toBeLessThan(b.y + 4);
+    await up();
+    expect(await groupShape(page)).toEqual([{ group: ["Trong nhóm A", "Ngoài nhóm Z", "Trong nhóm B"] }]);
+  });
+
+  test("kéo khối từ trong nhóm ra sát mép dưới nhóm: ra ngoài nhóm", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await seedGroup(page);
+    await clickEnd(c, "Trong nhóm B");
+    const g = (await c.locator('[data-type="group"]').boundingBox())!;
+    const up = await dragHandleTo(page, g.x + 40, g.y + g.height + 6);
+    await up();
+    expect(await groupShape(page)).toEqual([{ group: ["Trong nhóm A"] }, "Trong nhóm B", "Ngoài nhóm Z"]);
+  });
+
+  test("nhóm hàng ngang: kéo vào giữa hai khối con theo chiều ngang", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await seedGroup(page, { type: "flex", direction: { base: "row" }, gap: "md" });
+    await clickEnd(c, "Ngoài nhóm Z");
+    const a = (await c.locator("p", { hasText: "Trong nhóm A" }).boundingBox())!, b = (await c.locator("p", { hasText: "Trong nhóm B" }).boundingBox())!;
+    const up = await dragHandleTo(page, (a.x + a.width + b.x) / 2, a.y + a.height / 2);
+    await up();
+    expect(await groupShape(page)).toEqual([{ group: ["Trong nhóm A", "Ngoài nhóm Z", "Trong nhóm B"] }]);
+  });
 });

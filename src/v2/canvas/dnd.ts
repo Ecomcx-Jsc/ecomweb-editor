@@ -208,6 +208,23 @@ function findTarget(ctx: EditorContextValue, x: number, y: number, src: Source):
     if (node.content && !node.content.length && canContainAll(node.type, src.types)) {
       return { docId: loc.docId, parentId: node.id, index: 0, rect: toParentRect(r), horizontal: false };
     }
+    // Con trỏ nằm trong khoảng trống bên trong khối chứa (đệm, khe giữa các khối con): thả vào GIỮA các khối con gần nhất,
+    // không nhảy ra trước / sau cả khối. Sát mép khối (≤ 16px) vẫn là trước / sau khối đó, để đưa khối ra ngoài nhóm.
+    if (id === blockEl.dataset.ecxBlock && node.content?.length && canContainAll(node.type, src.types)) {
+      const el = ui.blockEl(id)!, row0 = isRow(el);
+      const edge = Math.min(16, (row0 ? r.width : r.height) / 4);
+      const inner = row0 ? ix > r.left + edge && ix < r.right - edge : iy > r.top + edge && iy < r.bottom - edge;
+      const kids = node.content.map((k) => ui.blockEl(k.id)?.getBoundingClientRect()).filter((x): x is DOMRect => !!x);
+      if (inner && kids.length === node.content.length) {
+        let idx = kids.length;
+        for (let i = 0; i < kids.length; i++) if (row0 ? ix < kids[i].left + kids[i].width / 2 : iy < kids[i].top + kids[i].height / 2) { idx = i; break; }
+        const ref = kids[Math.min(idx, kids.length - 1)];
+        const line = row0
+          ? new DOMRect((idx < kids.length ? ref.left : ref.right) - 2, ref.top, 4, ref.height)
+          : new DOMRect(ref.left, (idx < kids.length ? ref.top : ref.bottom) - 2, ref.width, 4);
+        return { docId: loc.docId, parentId: node.id, index: idx, rect: toParentRect(line), horizontal: row0 };
+      }
+    }
     const parentEl = ui.blockEl(id)!.parentElement;
     const horizontal = !!parentEl && isRow(parentEl);
     const after = horizontal ? ix > r.left + r.width / 2 : iy > r.top + r.height / 2;
