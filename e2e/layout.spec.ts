@@ -189,6 +189,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await tb.getByRole("button", { name: "Màu nền nhanh" }).click();
     await page.locator('.ecx-quick-colors [data-color="primary"]').click();
     expect((await groupOf(page)).attrs.style.color.background).toBe("primary");
+    expect((await groupOf(page)).attrs.padding).toBe("medium"); // có màu nền thì có đệm: chữ không dính mép
     await tb.getByRole("button", { name: "Màu nền nhanh" }).click();
     await page.locator('.ecx-quick-colors [data-color="none"]').click();
     expect((await groupOf(page)).attrs.style?.color?.background).toBeUndefined();
@@ -323,5 +324,15 @@ test.describe("bố cục + hiệu ứng", () => {
     }
     expect(widths[0]).toBeGreaterThan(widths[1]);
     expect(widths[1]).toBeGreaterThan(widths[2]);
+  });
+
+  test("nhóm mới: chọn bố cục xong gõ chữ được ngay, không mất ký tự đầu", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await clickEnd(c, "Đoạn thứ hai.");
+    await insertVia(page, "nhom");
+    await c.locator(".ecx-ph-choice", { hasText: "Xếp dọc" }).click();
+    await page.keyboard.type("Chào mừng bạn");
+    const g = await groupOf(page);
+    expect(g.content[0].inline.map((n: { text?: string }) => n.text ?? "").join("")).toBe("Chào mừng bạn");
   });
 });

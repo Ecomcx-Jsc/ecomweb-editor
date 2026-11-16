@@ -18,7 +18,7 @@ import { Dropdown, MenuItem, ToolButton } from "../ui/toolbar";
 import { useSiteColors } from "../ui/color-field";
 import { AddItemButton, MediaPlaceholder } from "../ui/placeholders";
 import type { MediaItem } from "../../shared/types";
-import { LayoutGrid, Rows3, Columns3 as RowIcon, MoveHorizontal, Paintbrush } from "lucide-react";
+import { LayoutGrid, Rows3, Columns3 as RowIcon, MoveHorizontal, Palette } from "lucide-react";
 import { useMsgs } from "../i18n";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
@@ -38,6 +38,7 @@ const shellProps = (bp: BlockEditProps["blockProps"], type: string, attrs: Recor
 
 function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEditProps) {
   const tp = useMsgs("placeholders");
+  const { store } = useEditor();
   const style: BlockStyle = normalizeStyle(block.attrs.style) ?? {};
   // Nhóm mới chèn (chưa chọn bố cục, chưa có nội dung): hỏi bố cục ngay trong khối như WordPress — đoạn văn bên trong vẫn gõ được ngay (gõ "/nhom" rồi gõ tiếp)
   const kids = block.content ?? [];
@@ -51,7 +52,7 @@ function GroupEdit({ block, blockProps, setAttrs, editable, selected }: BlockEdi
         <div className="ecx-media-placeholder ecx-ph-choose" contentEditable={false} onMouseDown={(e) => e.stopPropagation()}>
           <p className="ecx-ph-title">{tp.chooseLayout}</p>
           <div className="ecx-ph-choices">
-            {items.map(([k, I, label]) => <button key={k} type="button" className="ecx-ph-choice" onClick={() => setAttrs({ style: normalizeStyle({ ...style, layout: layoutFor(k) }) })}><I className="ecx-icon" aria-hidden />{label}</button>)}
+            {items.map(([k, I, label]) => <button key={k} type="button" className="ecx-ph-choice" onClick={() => { setAttrs({ style: normalizeStyle({ ...style, layout: layoutFor(k) }) }); const first = kids[0]; if (first?.type === "paragraph") store.focusText(first.id, 0); }}><I className="ecx-icon" aria-hidden />{label}</button>)}
           </div>
         </div>
       )}
@@ -80,12 +81,12 @@ function GroupLayoutTools({ block, attrs, setAttrs, labels }: BlockEditProps) {
           return <MenuItem key={v} label={(v === cur ? "✓ " : "") + l} onClick={() => { close(); setAttrs({ constrained: v === "site" ? true : undefined, contentWidth: v.endsWith("px") ? v : undefined }); }} />;
         })}
       </Dropdown>
-      <Dropdown label={t.quickColor} trigger={<span className="ecx-tool-text"><Paintbrush className="ecx-icon" /></span>}>
+      <Dropdown label={t.quickColor} trigger={<span className="ecx-tool-text"><Palette className="ecx-icon" /></span>}>
         {(close) => (
           <div className="ecx-quick-colors" role="group" aria-label={t.quickColor}>
             {Object.entries(colors).map(([name, css]) => (
               <button key={name} type="button" className="ecx-color-dot" title={name} aria-label={name} data-color={name} style={{ background: css }}
-                onClick={() => { close(); setAttrs({ style: normalizeStyle({ ...style, color: { ...style.color, background: name } }) }); }} />
+                onClick={() => { close(); /* Nhóm chưa có đệm: thêm đệm vừa để chữ không dính sát mép vùng màu */ setAttrs({ style: normalizeStyle({ ...style, color: { ...style.color, background: name } }), ...(!attrs.padding && !style.padding ? { padding: "medium" } : {}) }); }} />
             ))}
             <button type="button" className="ecx-color-dot is-none" title={t.noColor} aria-label={t.noColor} data-color="none"
               onClick={() => { close(); setAttrs({ style: normalizeStyle({ ...style, color: { ...style.color, background: undefined } }) }); }} />
