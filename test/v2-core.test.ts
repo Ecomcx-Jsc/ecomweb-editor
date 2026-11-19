@@ -30,7 +30,7 @@ test("đọc rồi ghi lại mọi fixture của ecomweb-content: không mất d
     for (const blk of doc.blocks) {
       if (blk.type !== "richtext") continue;
       const back = docFromBlocks(blocksFromDoc(blk.data));
-      assert.deepEqual(normalizeContent({ version: 1, blocks: [{ type: "richtext", data: back }] }).doc.blocks[0].data, blk.data, f);
+      assert.deepEqual(normalizeContent({ version: 2, blocks: [{ type: "richtext", data: back }] }).doc.blocks[0].data, blk.data, f);
     }
   }
 });

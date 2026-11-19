@@ -29,7 +29,7 @@
     "*.css"
   ],
   "peerDependencies": {
-    "@ecomcx/ecomweb-content": "^1.28.0",
+    "@ecomcx/ecomweb-content": "^1.28.1",
     "react": ">=18",
     "react-dom": ">=18"
   },
@@ -45,7 +45,7 @@
     "prosemirror-view": "1.42.7"
   },
   "devDependencies": {
-    "@ecomcx/ecomweb-content": "^1.28.0",
+    "@ecomcx/ecomweb-content": "^1.28.1",
     "@playwright/test": "1.53.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
