@@ -498,27 +498,61 @@ function startRange(store: EditorStore, view: EditorView, id: string, dir: -1 | 
   return true;
 }
 
-/** Theo chuột từ lúc bấm trong ô gõ tới lúc nhả: sang khối chữ khác → dải chữ; quay về ô cũ → chọn chữ trong ô. */
+/** Nơi cuộn của khung soạn: chính tài liệu trong khung nếu nó cuộn, không thì tổ tiên cuộn được của iframe ở trang ngoài (admin thường để khung cao theo nội dung). */
+function scrollerOf(doc: Document): { by(dy: number): void; top: number; bottom: number } {
+  const win = doc.defaultView!;
+  const own = doc.scrollingElement as HTMLElement | null;
+  if (own && own.scrollHeight > win.innerHeight + 1) return { by: (dy) => win.scrollBy(0, dy), top: 0, bottom: win.innerHeight };
+  const fe = win.frameElement as HTMLElement | null;
+  if (!fe) return { by: (dy) => win.scrollBy(0, dy), top: 0, bottom: win.innerHeight };
+  let el: HTMLElement | null = fe.parentElement;
+  while (el && !(/(auto|scroll)/.test(getComputedStyle(el).overflowY) && el.scrollHeight > el.clientHeight + 1)) el = el.parentElement;
+  const host = el ?? (fe.ownerDocument.scrollingElement as HTMLElement);
+  const hostRect = el ? el.getBoundingClientRect() : { top: 0, bottom: fe.ownerDocument.defaultView!.innerHeight };
+  const f = fe.getBoundingClientRect();
+  // Vùng nhìn thấy của host, đổi sang toạ độ bên trong khung
+  return { by: (dy) => host.scrollBy(0, dy), top: hostRect.top - f.top, bottom: hostRect.bottom - f.top };
+}
+
+/** Theo chuột từ lúc bấm trong ô gõ tới lúc nhả: sang khối chữ khác → dải chữ; quay về ô cũ → chọn chữ trong ô. Giữ chuột ở mép khung thì tự cuộn theo. */
 function trackRangeDrag(store: EditorStore, view: EditorView, id: string) {
   const doc = view.dom.ownerDocument;
   let anchor: number | null = null;
   let crossed = false;
-  const move = (e: MouseEvent) => {
-    if (!(e.buttons & 1)) return up();
-    const rich = (doc.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null)?.closest<HTMLElement>("[data-ecx-rich]:not([data-ecx-field])");
+  let last: { x: number; y: number } | null = null;
+  let raf = 0;
+  const apply = (x: number, y: number, e?: MouseEvent) => {
+    const rich = (doc.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>("[data-ecx-rich]:not([data-ecx-field])");
     const bid = rich?.closest<HTMLElement>("[data-ecx-block]")?.dataset.ecxBlock;
     if (!bid) return;
     const target = bid === id ? view : richViews.get(bid);
     if (!target) return;
     if (bid === id && !crossed) return; // trong cùng ô: ProseMirror tự chọn
     if (anchor == null) anchor = view.state.selection.anchor;
-    const pos = target.posAtCoords({ left: e.clientX, top: e.clientY })?.pos ?? 0;
+    const pos = target.posAtCoords({ left: x, top: y })?.pos ?? 0;
     if (!crossed) { crossed = true; leaveForRange(view); }
-    e.preventDefault();
+    e?.preventDefault();
     store.selectText({ id, offset: anchor }, { id: bid, offset: pos });
     if (bid === id) crossed = false;
   };
+  // Tự cuộn: chuột trong vùng 56px sát mép trên / dưới → cuộn (nhanh dần theo độ sát mép), rồi cập nhật vùng chọn theo khối mới dưới chuột
+  const tick = () => {
+    raf = 0;
+    if (!last || !crossed) return;
+    const s = scrollerOf(doc), zone = 56;
+    let dy = 0;
+    if (last.y > s.bottom - zone) dy = Math.min(28, 4 + (last.y - (s.bottom - zone)) / 2);
+    else if (last.y < s.top + zone) dy = -Math.min(28, 4 + ((s.top + zone) - last.y) / 2);
+    if (dy) { s.by(dy); apply(last.x, Math.max(s.top + 1, Math.min(s.bottom - 1, last.y))); raf = requestAnimationFrame(tick); }
+  };
+  const move = (e: MouseEvent) => {
+    if (!(e.buttons & 1)) return up();
+    last = { x: e.clientX, y: e.clientY };
+    apply(e.clientX, e.clientY, e);
+    if (crossed && !raf) raf = requestAnimationFrame(tick);
+  };
   const up = () => {
+    if (raf) cancelAnimationFrame(raf);
     doc.removeEventListener("mousemove", move);
     doc.removeEventListener("mouseup", up);
     if (store.getState().range) { doc.getSelection()?.removeAllRanges(); doc.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true }); }
