@@ -22,6 +22,7 @@ import { shortcuts } from "./shortcuts";
 import { placeholders } from "./placeholders";
 import { library } from "./library";
 import { palette } from "./palette";
+import { patternOverrides } from "./pattern-overrides";
 
 /** Tiếng Anh: đủ khoá như vi/ (thiếu khoá là lỗi biên dịch) và là ngôn ngữ dự phòng của mọi ngôn ngữ khác. */
-export const en: typeof vi = { v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, presets, layout, legacyBasic, legacyDynamic, motion, library, patternLib, placeholders, shortcuts, palette };
+export const en: typeof vi = { patternOverrides, v2, legacy, attrs, background, bindings, blockStyle, blockDesc, blockTitles, blocks, controls, columns, hints, parts, presets, layout, legacyBasic, legacyDynamic, motion, library, patternLib, placeholders, shortcuts, palette };

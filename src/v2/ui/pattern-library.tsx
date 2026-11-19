@@ -1,3 +1,4 @@
+import { CONTENT_VERSION } from "@ecomcx/ecomweb-content";
 import { LayoutTemplate, Search, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { norm } from "../../shared/util";
@@ -78,7 +79,7 @@ function Preview({ nodes, height, render }: { nodes: RichNode[]; height: number;
     ro.observe(el);
     return () => { io.disconnect(); ro.disconnect(); };
   }, []);
-  const value = useMemo(() => ({ version: 1, blocks: [{ type: "richtext", data: { type: "doc", content: nodes } }] }), [nodes]);
+  const value = useMemo(() => ({ version: CONTENT_VERSION, blocks: [{ type: "richtext", data: { type: "doc", content: nodes } }] }), [nodes]);
   return (
     <div ref={box} className="ecx-lib-preview" style={{ height }} aria-hidden="true">
       {seen && (

@@ -1,6 +1,6 @@
 import { ensurePresets, localBlockPresets } from "./core/block-presets";
 import type { RichNode } from "@ecomcx/ecomweb-content";
-import { normalizeContent } from "@ecomcx/ecomweb-content";
+import { normalizeContent, CONTENT_VERSION } from "@ecomcx/ecomweb-content";
 import { Command as CommandIcon, ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { coreBlockTypes, registerCoreBlocks } from "./blocks";
@@ -44,7 +44,7 @@ export function splitContent(value: unknown): { blocks: BNode[]; extra: Array<{ 
 }
 /** Khối → nội dung lưu (ContentDoc chuẩn của CMS). */
 export function contentFromBlocks(blocks: BNode[], extra: Array<{ type: string; data: unknown; id?: string }> = []) {
-  return { version: 1, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }, ...extra] };
+  return { version: CONTENT_VERSION, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }, ...extra] };
 }
 
 export interface EditorProviderProps {

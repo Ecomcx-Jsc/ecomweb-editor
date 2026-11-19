@@ -1,3 +1,4 @@
+import { CONTENT_VERSION } from "@ecomcx/ecomweb-content";
 import { useEffect, useMemo, useState } from "react";
 import { useEditor } from "../context";
 import { docFromBlocks, type BNode } from "../core/model";
@@ -10,7 +11,7 @@ export function LiveBlockPreview({ id, create }: { id: string; create(): BNode }
   const { ui } = useEditor();
   const [on, setOn] = useState(false);
   useEffect(() => { setOn(false); const t = setTimeout(() => setOn(true), 160); return () => clearTimeout(t); }, [id]);
-  const value = useMemo(() => { try { return { version: 1, blocks: [{ type: "richtext", data: docFromBlocks([create()]) }] }; } catch { return null; } }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const value = useMemo(() => { try { return { version: CONTENT_VERSION, blocks: [{ type: "richtext", data: docFromBlocks([create()]) }] }; } catch { return null; } }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!ui.renderPreview || !value) return null;
   return (
     <div className="ecx-block-preview-live" aria-hidden="true">

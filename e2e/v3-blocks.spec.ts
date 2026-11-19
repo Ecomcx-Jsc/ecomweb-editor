@@ -387,7 +387,7 @@ test("tabs: dọc, accordion trên điện thoại, icon + phụ đề của t�
   expect(list!.x + list!.width).toBeLessThanOrEqual(panel!.x + 1);
   // phụ đề + icon của tab: sửa trên khối tab
   await page.evaluate(() => (window as any).__ecx.store.select(["t1"], { editing: null }));
-  await insp(page).getByLabel("Phụ đề").fill("Giới thiệu nhanh");
+  await insp(page).getByLabel("Phụ đề", { exact: true }).fill("Giới thiệu nhanh");
   await expect(tabs.locator(".ecx-tab-subtitle")).toHaveText("Giới thiệu nhanh");
   await page.evaluate(() => (window as any).__ecx.store.setAttrs(["t1"], { icon: "star" }));
   await expect(tabs.locator(".ecx-tab-icon")).toHaveCount(1);

@@ -8,6 +8,7 @@ import { useEditor, useEditorState, useUiTick } from "../context";
 import type { BNode } from "../core/model";
 import { AttrForm, Field, attrName, cx } from "./attr-form";
 import { BindingsPanel, CORE_BINDABLE } from "./bindings";
+import { OverrideKeySection, PatternOverridesSection } from "./pattern-overrides";
 import { StyleTab } from "./style-tab";
 import { LayoutSection } from "./layout-panel";
 import { GroupWidthSection } from "./group-width";
@@ -58,7 +59,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const hasParts = single && blockControls().some((c) => c.partsOnly && c.parts && (c.blocks === "*" || c.blocks.includes(first.type)));
   const Custom = single ? type?.inspector : undefined;
   const styled = type?.supports?.style !== false && !store.isContentOnly(first.id);
-  const bindable = type?.bindable ?? CORE_BINDABLE[first.type];
+  const bindable = type?.bindable ?? (CORE_BINDABLE[first.type] as string[] | undefined);
   const variants = [...(CORE_BLOCK_STYLES[first.type] ?? []).map((name) => ({ name, label: (t.blockStyle as Record<string, string>)[name] ?? name })), ...(blockStyles?.[first.type] ?? [])];
   return (
     <div className="ecx-inspector">
@@ -86,6 +87,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
               {styled && single && BG_IN_SETTINGS.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
               {styled && single && <LayoutSection type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} />}
               {Custom && <Custom block={first} attrs={first.attrs} setAttrs={setAttrs} blockProps={null as never} selected editable labels={labels} />}
+              {single && first.type === "syncedPattern" && <PatternOverridesSection block={first} setAttrs={setAttrs} />}
               {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} />}
               {nodes.length === 1 && bindable?.length && <BindingsPanel block={first} bindable={bindable} onChange={(b) => setAttrs({ bindings: b })} />}
             </div>
@@ -120,6 +122,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
                   <Field label={attrName("className", labels.lang) ?? "className"}><input className="ecx-input" value={String(first.attrs.className ?? "")} onChange={(e) => setAttrs({ className: e.target.value || undefined })} /></Field>
                 </Section>
               )}
+              {single && <OverrideKeySection block={first} setAttrs={setAttrs} />}
               {nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} tab="advanced" />}
             </div>
           )}

@@ -33,7 +33,12 @@ export function BindingsPanel({ block, bindable, onChange }: { block: BNode; bin
   const all = useSyncExternalStore(subscribeBindingSources, bindingSources, bindingSources);
   const current = bindingsOf(block) ?? {};
   const t = useMsgs("bindings");
-  const ATTR: Record<string, string> = { content: t.attrContent, src: t.attrSrc, alt: t.attrAlt, caption: t.attrCaption, text: t.attrText, href: t.attrHref };
+  const ATTR: Record<string, string> = {
+    content: t.attrContent, src: t.attrSrc, alt: t.attrAlt, caption: t.attrCaption, text: t.attrText, href: t.attrHref,
+    title: t.attrTitle, subtitle: t.attrSubtitle, quote: t.attrQuote, name: t.attrName, role: t.attrRole, poster: t.attrPoster, address: t.attrAddress,
+    placeholder: t.attrPlaceholder, buttonText: t.attrButtonText, summary: t.attrSummary, citation: t.attrCitation, label: t.attrLabel, tooltip: t.attrTooltip,
+    prefix: t.attrPrefix, suffix: t.attrSuffix, target: t.attrTarget,
+  };
   const set = (attr: string, b: Binding | undefined) => {
     const next = { ...current };
     if (b) next[attr] = b; else delete next[attr];
@@ -66,7 +71,7 @@ export function BindingsPanel({ block, bindable, onChange }: { block: BNode; bin
                 </select>
               : <input className="ecx-input" aria-label={`${ATTR[attr] ?? attr}: ${argKey}`} placeholder={argKey} value={String(b.args?.[argKey] ?? "")}
                   onChange={(e) => set(attr, { ...b, args: { ...b.args, [argKey]: e.target.value.replace(/[^\w.-]/g, "").slice(0, 200) } })} />)}
-            {b && (attr === "content" || attr === "text") && (
+            {b && !["src", "href", "poster"].includes(attr) && (
               <label className="ecx-check"><input type="checkbox" checked={b.args?.hideIfEmpty === true} onChange={(e) => { const { hideIfEmpty: _drop, ...rest } = b.args ?? {}; set(attr, { ...b, args: e.target.checked ? { ...rest, hideIfEmpty: true } : rest }); }} /> {t.hideIfEmpty}</label>
             )}
           </div>

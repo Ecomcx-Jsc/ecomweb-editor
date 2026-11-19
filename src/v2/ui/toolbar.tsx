@@ -1,7 +1,7 @@
-import { WIDE_BLOCKS } from "@ecomcx/ecomweb-content";
-import { clearCells, mergeRange, selectedCellRect } from "../core/tables";
+import { WIDE_BLOCKS, CONTENT_VERSION } from "@ecomcx/ecomweb-content";
+import { addColumn, addRow, canMerge, canSplit, clearCells, deleteColumn, deleteRow, hasHeaderRow, mergeCells, mergeRange, selectedCellRect, splitCell, tableContext, toggleHeaderRow } from "../core/tables";
 import { AiTools } from "./ai";
-import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter, Paintbrush, ClipboardPaste, Scissors, PenLine, Eye, EyeOff } from "lucide-react";
+import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter, Paintbrush, ClipboardPaste, Scissors, PenLine, Eye, EyeOff, ArrowLeftToLine, ArrowRightToLine, TableCellsSplit, Heading } from "lucide-react";
 import { TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
@@ -9,7 +9,7 @@ import { createPortal } from "react-dom";
 import { serializeBlocks } from "../core/clipboard";
 
 /** Khối → nội dung lưu (ContentDoc). */
-const contentFromBlocks = (blocks: BNode[]) => ({ version: 1, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }] });
+const contentFromBlocks = (blocks: BNode[]) => ({ version: CONTENT_VERSION, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }] });
 import { useEditor, useEditorState, useUiTick } from "../context";
 import { usePrefs } from "../prefs";
 import { startDrag } from "../canvas/dnd";
@@ -353,8 +353,42 @@ export function BlockMenuItems({ ids, close, onDialog }: { ids: string[]; close(
       if (ordered.length > 1) store.remove(ordered.slice(1), { focusNeighbor: false });
     });
   };
+  // Bảng: chuột phải trong ô / trên vùng ô đang bôi đen → thao tác của bảng (chèn / xoá hàng, cột, gộp, tách ô, hàng tiêu đề)
+  const tctx = first.type === "table" ? null : tableContext(store, first.id);
+  const cellRange = ids.length > 0 ? selectedCellRect(store, ids) : null;
+  const onlyCells = nodes.length > 0 && nodes.every((n) => n.type === "tableCell" || n.type === "tableHeader");
+  const tableItems = tctx && (
+    <>
+      {cellRange && ids.length > 1 && <MenuItem icon={TableCellsMerge} label={labels.mergeCells} onClick={() => { close(); mergeRange(store, cellRange.table, cellRange.docId, cellRange.rect); }} />}
+      {cellRange && <MenuItem icon={Eraser} label={labels.clearCells} onClick={() => { close(); clearCells(store, cellRange.table, ids); }} />}
+      {!(cellRange && ids.length > 1) && canMerge(tctx, "right") && <MenuItem icon={TableCellsMerge} label={labels.mergeRight} onClick={() => { close(); mergeCells(store, tctx, "right"); }} />}
+      {!(cellRange && ids.length > 1) && canMerge(tctx, "down") && <MenuItem icon={TableCellsMerge} label={labels.mergeDown} onClick={() => { close(); mergeCells(store, tctx, "down"); }} />}
+      {canSplit(tctx) && <MenuItem icon={TableCellsSplit} label={labels.splitCell} onClick={() => { close(); splitCell(store, tctx); }} />}
+      <MenuItem icon={ArrowUpToLine} label={labels.rowBefore} onClick={() => { close(); addRow(store, tctx, false); }} />
+      <MenuItem icon={ArrowDownToLine} label={labels.rowAfter} onClick={() => { close(); addRow(store, tctx, true); }} />
+      <MenuItem icon={ArrowLeftToLine} label={labels.colBefore} onClick={() => { close(); addColumn(store, tctx, false); }} />
+      <MenuItem icon={ArrowRightToLine} label={labels.colAfter} onClick={() => { close(); addColumn(store, tctx, true); }} />
+      <MenuItem icon={Heading} label={`${labels.headerRow}${hasHeaderRow(tctx.table) ? " ✓" : ""}`} onClick={() => { close(); toggleHeaderRow(store, tctx); }} />
+      <MenuItem icon={Trash2} label={labels.deleteRow} danger onClick={() => { close(); deleteRow(store, tctx); }} />
+      <MenuItem icon={Trash2} label={labels.deleteColumn} danger onClick={() => { close(); deleteColumn(store, tctx); }} />
+    </>
+  );
+  // Khối con của một phần tử lặp (cột, tab, mục accordion, slide, nút…): chuột phải ngay trong chữ vẫn nhân đôi / xoá được phần tử đó, không phải chọn lên cha trước
+  const REPEAT = new Set(["column", "tab", "details", "button", "listItem"]);
+  const repeatLoc = REPEAT.has(first.type) ? null : [...loc.ancestors].reverse().map((id) => store.locate(id)).find((l) => l && REPEAT.has(l.block.type) && l.parent && (l.parent.content?.length ?? 0) > 1) ?? null;
+  const repeatItems = repeatLoc && !tctx && (
+    <>
+      <MenuItem icon={CopyPlus} label={`${labels.duplicate}: ${ctx.registry.get(repeatLoc.block.type)?.title ?? repeatLoc.block.type}`} onClick={() => { close(); store.duplicate([repeatLoc.block.id]); }} />
+      {store.canRemove(repeatLoc.block.id) && <MenuItem icon={Trash2} label={`${labels.remove}: ${ctx.registry.get(repeatLoc.block.type)?.title ?? repeatLoc.block.type}`} danger onClick={() => { close(); store.remove([repeatLoc.block.id]); }} />}
+      <MenuItem icon={ArrowUpLeft} label={labels.selectParent} onClick={() => { close(); store.select([repeatLoc.block.id], { editing: null }); }} />
+    </>
+  );
+  // Đang bôi đen nhiều ô: chỉ có thao tác của bảng (nhân đôi / cắt / xoá "ô" không có nghĩa)
+  if (onlyCells && tableItems) return tableItems;
   return (
     <>
+      {tableItems && <>{tableItems}<div className="ecx-menu-sep" role="separator" /></>}
+      {repeatItems && <>{repeatItems}<div className="ecx-menu-sep" role="separator" /></>}
       {insertable && <>
         <MenuItem icon={CopyPlus} label={labels.duplicate} shortcut={`${mod}⇧D`} onClick={() => { close(); store.duplicate(ordered); }} />
         <MenuItem icon={ArrowUpToLine} label={labels.insertBefore} shortcut={`${mod}⌥T`} onClick={() => { close(); insertSibling(store, ordered[0], 0); }} />

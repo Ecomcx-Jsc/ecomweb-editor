@@ -1,8 +1,8 @@
 import { makeBlock } from "../core/model";
 import { SOCIAL_ICONS } from "./social-icons";
-import { blockShell, embedInfo, imageFx, isSafeUrl } from "@ecomcx/ecomweb-content";
+import { blockShell, carouselConfig, carouselData, carouselVars, embedInfo, imageFx, isSafeUrl } from "@ecomcx/ecomweb-content";
 import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Globe, X } from "lucide-react";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useEditor } from "../context";
 import { AiAltButton } from "../ui/ai";
 import type { BlockEditProps, BlockType } from "../core/registry";
@@ -51,12 +51,53 @@ function GalleryEdit({ block, blockProps, setAttrs, editable, selected }: BlockE
   if (!images.length) return <MediaDrop blockId={block.id} kind="gallery" blockProps={blockProps} />;
   const cols = Math.min(6, Math.max(1, Number(block.attrs.columns) || 3));
   const add = (items: MediaItem[]) => setAttrs({ images: [...images, ...((mediaAttrs("gallery", items).images ?? []) as typeof images)] });
+  // Dạng slider: giống website (mỗi ảnh một slide, cuộn ngang bám mép, nút trước / sau + chấm) — không còn xếp dọc như lưới 1 cột
+  if (block.attrs.layout === "slider" && images.length > 1) return <GallerySlider block={block} blockProps={blockProps} images={images} cols={cols} />;
   return (
     <figure {...blockProps} className={cx(blockProps.className, blockShell("gallery", block.attrs)!.className, (block.attrs.layout === "masonry" || block.attrs.imageCrop === false) && "is-natural")} style={{ ...(blockProps.style ?? {}), ...(blockShell("gallery", block.attrs)!.style as CSSProperties) }}>
       {images.map((im, i) => <figure key={i} className="ecx-gallery-item cms-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={block.attrs.layout === "masonry" || block.attrs.imageCrop === false ? { width: "100%", height: "auto", display: "block" } : { width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" }} /></figure>)}
       {/* Có ảnh rồi vẫn còn ô "+" cuối lưới để thêm tiếp (chỉ khi đang chọn: website không có ô này) */}
       {editable && selected && <MediaPlaceholder kind="gallery" compact title={tp.addImage} icon={Plus} className="ecx-gallery-add" onSelect={add} />}
       {block.attrs.caption ? <figcaption className="ecx-gallery-caption cms-gallery-caption" style={{ gridColumn: "1 / -1" }}>{String(block.attrs.caption)}</figcaption> : null}
+    </figure>
+  );
+}
+
+function GallerySlider({ block, blockProps, images, cols }: { block: BlockEditProps["block"]; blockProps: BlockEditProps["blockProps"]; images: Array<{ src: string; alt?: string }>; cols: number }) {
+  const tp = useMsgs("placeholders");
+  const track = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  const c = carouselConfig({ slidesPerView: Math.min(4, cols), arrows: block.attrs.arrows, dots: block.attrs.dots, autoplay: false, loop: block.attrs.loop, gap: "var(--ecx-gallery-gap, 8px)" });
+  const last = Math.max(0, images.length - c.per);
+  const goTo = (i: number) => {
+    const el = track.current, kid = el?.children[i] as HTMLElement | undefined;
+    if (el && kid) { el.scrollTo({ left: kid.offsetLeft - (el.children[0] as HTMLElement).offsetLeft, behavior: "smooth" }); setIndex(i); }
+  };
+  const chev = (d: string) => <svg viewBox="0 0 24 24" width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>;
+  const crop = block.attrs.imageCrop !== false;
+  return (
+    <figure {...blockProps} className={cx(blockProps.className, "ecx-gallery cms-gallery is-slider")} style={{ ...(blockProps.style ?? {}), margin: 0 }}>
+      <div className="ecx-carousel" style={carouselVars(c) as CSSProperties} {...carouselData({ ...c, effect: "slide" })}>
+        <div className="ecx-carousel-track" ref={track} onScroll={(e) => { const el = e.currentTarget, first = el.children[0] as HTMLElement | undefined, second = el.children[1] as HTMLElement | undefined; const step = first && second ? second.offsetLeft - first.offsetLeft : first?.offsetWidth || 1; setIndex(Math.max(0, Math.min(last, Math.round(el.scrollLeft / step)))); }}>
+          {images.map((im, i) => (
+            <div key={i} className="ecx-carousel-slide" role="group" aria-roledescription="slide" aria-label={`${i + 1} / ${images.length}`}>
+              <figure className="ecx-gallery-item cms-gallery-item" style={{ margin: 0 }}><img src={safe(im.src)} alt={im.alt ?? ""} draggable={false} style={crop ? { width: "100%", height: "100%", objectFit: "cover", aspectRatio: "1" } : { width: "100%", height: "auto", display: "block" }} /></figure>
+            </div>
+          ))}
+        </div>
+        <div contentEditable={false} onMouseDown={(e) => e.preventDefault()}>
+          {c.arrows && last > 0 && <>
+            <button type="button" className="ecx-carousel-arrow is-prev" aria-label={tp.prevSlide} disabled={!c.loop && index <= 0} onClick={() => goTo(index <= 0 ? last : index - 1)}>{chev("m15 18-6-6 6-6")}</button>
+            <button type="button" className="ecx-carousel-arrow is-next" aria-label={tp.nextSlide} disabled={!c.loop && index >= last} onClick={() => goTo(index >= last ? 0 : index + 1)}>{chev("m9 18 6-6-6-6")}</button>
+          </>}
+          {c.dots && last > 0 && (
+            <div className="ecx-carousel-dots">
+              {Array.from({ length: last + 1 }, (_, i) => <button key={i} type="button" className="ecx-carousel-dot" aria-label={`${tp.slide} ${i + 1}`} aria-current={i === index ? "true" : undefined} onClick={() => goTo(i)} />)}
+            </div>
+          )}
+        </div>
+      </div>
+      {block.attrs.caption ? <figcaption className="ecx-gallery-caption cms-gallery-caption">{String(block.attrs.caption)}</figcaption> : null}
     </figure>
   );
 }

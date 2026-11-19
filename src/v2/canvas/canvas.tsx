@@ -304,14 +304,22 @@ function useCanvasEvents(doc: Document) {
       if (ae?.isContentEditable) doc.querySelector<HTMLElement>(".ecx-canvas-root")?.focus({ preventScroll: true });
     });
     // Chuột phải / Shift+F10 / phím Menu trên khối → menu của khối (BlockContextMenu); Shift + chuột phải giữ menu của trình duyệt (chính tả, dán…)
+    // Chuột phải làm ô chữ bên dưới nhận tiêu điểm → vùng chọn nhiều khối (vd các ô bảng bôi đen) bị thu về một khối: nhớ lại lúc nhấn
+    let selAtDown: ReturnType<typeof store.getState>["selection"] | null = null;
+    const rememberSel = (e: MouseEvent) => { if (e.button === 2) selAtDown = store.getState().selection; };
+    doc.addEventListener("mousedown", rememberSel, true);
     const menu = (e: MouseEvent) => {
       const el = (e.target as Element | null)?.closest?.<HTMLElement>("[data-ecx-block]");
       const id = el?.dataset.ecxBlock;
       if (!id || !ui.canvasFrame || (e.shiftKey && e.button === 2) || store.modeOf(id) === "disabled") return;
       e.preventDefault();
-      const sel = store.getState().selection;
-      const ids = sel.ids.includes(id) ? sel.ids : sel.editing === id ? [id] : null;
+      const sel = selAtDown && selAtDown.ids.length > 1 ? selAtDown : store.getState().selection;
+      selAtDown = null;
+      // Chuột phải bên trong khối đang chọn (vd đoạn chữ trong ô bảng đang bôi đen) → giữ nguyên vùng chọn, không thu về một khối
+      const inSel = sel.ids.includes(id) || (sel.ids.length > 1 && (store.locate(id)?.ancestors ?? []).some((a) => sel.ids.includes(a)));
+      const ids = inSel ? sel.ids : sel.editing === id ? [id] : null;
       if (!ids) store.select([id], { editing: null });
+      else if (ids.length > 1) store.select(ids, { editing: null });
       const f = ui.canvasFrame.getBoundingClientRect();
       const scale = f.width / (ui.canvasFrame.offsetWidth || f.width) || 1;
       // Mở bằng bàn phím: không có toạ độ chuột → neo dưới góc trái của khối
@@ -322,7 +330,7 @@ function useCanvasEvents(doc: Document) {
     return () => {
       win.removeEventListener("scroll", bump); win.removeEventListener("resize", bump); ro.disconnect(); cancelAnimationFrame(raf); unsub();
       doc.removeEventListener("mousemove", moved); document.removeEventListener("mousemove", moved);
-      doc.removeEventListener("contextmenu", menu);
+      doc.removeEventListener("contextmenu", menu); doc.removeEventListener("mousedown", rememberSel, true);
     };
   }, [doc, ui, store]);
 }

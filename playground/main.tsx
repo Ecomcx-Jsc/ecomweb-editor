@@ -118,6 +118,12 @@ const host: EditorHost = {
     async load(ref) {
       await new Promise((r) => setTimeout(r, 30));
       if (ref.kind === "part" && parts[String(ref.ref)]) return { title: String(ref.ref), content: parts[String(ref.ref)] };
+      // Mẫu đồng bộ thử (?doc có khối syncedPattern ref 7): một tiêu đề + một nút cho phép sửa riêng, một đoạn cố định
+      if (ref.kind === "pattern" && Number(ref.ref) === 7) return { title: "Khối khuyến mãi", content: { version: 2, blocks: [{ id: "main", type: "richtext", data: { type: "doc", content: [
+        { type: "heading", attrs: { level: 2, overrideKey: "tieu-de" }, content: [{ type: "text", text: "Giảm giá mùa hè" }] },
+        { type: "paragraph", content: [{ type: "text", text: "Đoạn cố định của mẫu" }] },
+        { type: "button", attrs: { text: "Mua ngay", href: "/mua", overrideKey: "nut" } },
+      ] } }] } };
       return null;
     },
     async save(ref, _blocks, content) {

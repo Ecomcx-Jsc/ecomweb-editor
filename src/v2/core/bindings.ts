@@ -1,3 +1,4 @@
+import { CORE_BINDABLE as CONTENT_BINDABLE } from "@ecomcx/ecomweb-content";
 import { msgs } from "../../i18n";
 import type { DynamicData } from "./host";
 import type { BNode } from "./model";
@@ -24,7 +25,7 @@ export interface EditorBindingSource {
 export interface Binding { source: string; args?: Record<string, string | number | boolean> }
 
 /** Thuộc tính gắn được của khối lõi; khối plugin khai báo bằng BlockType.bindable. */
-export const CORE_BINDABLE: Record<string, string[]> = { paragraph: ["content"], heading: ["content"], image: ["src", "alt", "caption"], button: ["text", "href"] };
+export const CORE_BINDABLE: Record<string, readonly string[]> = CONTENT_BINDABLE;
 
 const sources = new Map<string, EditorBindingSource>();
 const listeners = new Set<() => void>();
@@ -44,12 +45,16 @@ export function registerCoreBindingSources(lang: string) {
     fields: [
       { value: "title", label: t.fTitle }, { value: "excerpt", label: t.fExcerpt }, { value: "date", label: t.fDate },
       { value: "author", label: t.fAuthor }, { value: "link", label: t.fLink }, { value: "featuredImage", label: t.fFeaturedImage },
+      { value: "featuredImageAlt", label: t.fFeaturedImageAlt }, { value: "category", label: t.fCategory }, { value: "modified", label: t.fModified },
+      { value: "comments", label: t.fComments }, { value: "authorAvatar", label: t.fAuthorAvatar }, { value: "authorBio", label: t.fAuthorBio }, { value: "slug", label: t.fSlug }, { value: "id", label: "ID" },
     ],
     preview: (args, { dynamic }) => {
       const p = dynamic?.post;
       switch (args.field) {
         case "title": return p?.title; case "excerpt": return p?.excerpt; case "date": return p?.date; case "author": return p?.author;
         case "featuredImage": return p?.image ?? undefined; case "link": return "/…";
+        case "category": return p?.category; case "comments": return p?.comments === undefined ? undefined : String(p.comments);
+        case "modified": return p?.date; case "slug": return "slug-bai-viet"; case "id": return "123";
         default: return undefined;
       }
     },
