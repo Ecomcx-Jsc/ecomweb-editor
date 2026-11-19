@@ -215,7 +215,9 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 
 /* Chỉ trong trình soạn: khối "vô hình" trên website vẫn thấy được để chọn / sửa */
 .ecx-spacer { background: repeating-linear-gradient(-45deg, transparent 0 6px, color-mix(in srgb, var(--ecx-ui) 8%, transparent) 6px 7px); }
-.ecx-block.ecx-column:not(.is-selected):not(.is-editing) { outline: 1px dashed color-mix(in srgb, currentColor 16%, transparent); outline-offset: -1px; min-height: 96px; }
+.ecx-block.ecx-column:not(.is-selected):not(.is-editing) { outline: 1px dashed color-mix(in srgb, currentColor 16%, transparent); outline-offset: -1px; }
+/* Chỉ cột TRỐNG mới cần chỗ để thả / thêm khối; cột có nội dung cao đúng như ngoài website */
+.ecx-block.ecx-column:not(.is-selected):not(.is-editing):not(:has(> [data-ecx-block])) { min-height: 96px; }
 /* Nút + cuối khối chứa (Cột, Nhóm, Tab, Hộp lưu ý): hiện khi rê chuột vào khối trong cùng / khi đang chọn hoặc gõ trong khối */
 .ecx-tail-appender { display: none; align-items: center; justify-content: center; width: 100%; height: 26px; margin: 6px 0 0; padding: 0; border: 1px dashed color-mix(in srgb, var(--ecx-ui) 55%, transparent); border-radius: 6px; background: transparent; color: var(--ecx-ui); font: 600 16px/1 var(--ecx-ui-font); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .12s ease; }
 .ecx-tail-appender:hover { background: color-mix(in srgb, var(--ecx-ui) 8%, transparent); border-style: solid; }

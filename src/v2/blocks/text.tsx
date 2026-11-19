@@ -89,11 +89,13 @@ function ListItemEdit({ block, blockProps }: BlockEditProps) {
 function QuoteEdit({ block, blockProps, editable, setAttrs }: BlockEditProps) {
   const cite = blockCitation(block.attrs);
   const tp = useMsgs("placeholders");
-  // Website in <cite> sau nội dung khi có nguồn: trình soạn luôn có ô nguồn ("— Thêm nguồn…") để sửa tại chỗ
+  const active = useActiveWithin(block.id);
+  // Website in <cite> sau nội dung khi có nguồn. Trình soạn chỉ hiện ô nguồn trống ("— Thêm nguồn…") khi đang chọn / gõ trong khối
+  // (như WordPress) — luôn hiện thì khung soạn cao hơn website một dòng
   return (
     <blockquote {...blockProps}>
       <InnerBlocks parent={block} />
-      {(cite !== undefined || editable) && <RichText blockId={block.id} field="citation" tagName="cite" value={cite ?? ""} onChange={(v) => setAttrs({ citation: v || undefined })} placeholder={tp.citation} placeholderAlways editable={editable} />}
+      {(cite !== undefined || (editable && active)) && <RichText blockId={block.id} field="citation" tagName="cite" value={cite ?? ""} onChange={(v) => setAttrs({ citation: v || undefined })} placeholder={tp.citation} placeholderAlways editable={editable} />}
     </blockquote>
   );
 }
