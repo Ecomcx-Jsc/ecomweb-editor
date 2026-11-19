@@ -521,15 +521,30 @@ function trackRangeDrag(store: EditorStore, view: EditorView, id: string) {
   let crossed = false;
   let last: { x: number; y: number } | null = null;
   let raf = 0;
-  const apply = (x: number, y: number, e?: MouseEvent) => {
-    const rich = (doc.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>("[data-ecx-rich]:not([data-ecx-field])");
-    const bid = rich?.closest<HTMLElement>("[data-ecx-block]")?.dataset.ecxBlock;
-    if (!bid) return;
+  /** Ô chữ dưới chuột; chuột nằm ở khoảng trống (lề, khoảng cách giữa khối, dưới khối cuối) → ô chữ gần nhất theo chiều dọc, toạ độ kẹp vào trong ô đó. */
+  const richAt = (x: number, y: number): { el: HTMLElement; x: number; y: number } | null => {
+    const hit = (doc.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>("[data-ecx-rich]:not([data-ecx-field])");
+    if (hit) return { el: hit, x, y };
+    let best: HTMLElement | null = null, bestD = Infinity;
+    doc.querySelectorAll<HTMLElement>("[data-ecx-rich]:not([data-ecx-field])").forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (!r.height) return;
+      const d = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0;
+      if (d < bestD) { bestD = d; best = el; }
+    });
+    if (!best || bestD > 160) return null;
+    const r = (best as HTMLElement).getBoundingClientRect();
+    return { el: best, x: Math.max(r.left + 1, Math.min(r.right - 1, x)), y: Math.max(r.top + 1, Math.min(r.bottom - 1, y)) };
+  };
+  const apply = (px: number, py: number, e?: MouseEvent) => {
+    const at = richAt(px, py);
+    const bid = at?.el.closest<HTMLElement>("[data-ecx-block]")?.dataset.ecxBlock;
+    if (!at || !bid) return;
     const target = bid === id ? view : richViews.get(bid);
     if (!target) return;
     if (bid === id && !crossed) return; // trong cùng ô: ProseMirror tự chọn
     if (anchor == null) anchor = view.state.selection.anchor;
-    const pos = target.posAtCoords({ left: x, top: y })?.pos ?? 0;
+    const pos = target.posAtCoords({ left: at.x, top: at.y })?.pos ?? 0;
     if (!crossed) { crossed = true; leaveForRange(view); }
     e?.preventDefault();
     store.selectText({ id, offset: anchor }, { id: bid, offset: pos });

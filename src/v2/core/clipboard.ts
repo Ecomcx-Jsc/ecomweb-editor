@@ -180,9 +180,18 @@ function replaceAt(blocks: BNode[], parentId: string | null, index: number, node
   return walk(blocks);
 }
 
+/** Chữ của một khối khi chép dạng text thuần: khối chữ lấy phần inline; nút, ảnh (chú thích), nhúng không có inline nên lấy từ thuộc tính. */
+function plainOf(n: BNode): string {
+  if (n.inline) return inlineText(n.inline);
+  const a = n.attrs ?? {};
+  if (n.type === "button") return String(a.text ?? "");
+  if (n.type === "image" || n.type === "embed") return String(a.caption ?? "");
+  return "";
+}
+
 export function serializeBlocks(nodes: BNode[]): { json: string; text: string; html: string } {
   const rich = nodes.map(toRich);
-  const text = flatten(nodes).filter((n) => n.inline).map((n) => inlineText(n.inline)).join("\n\n");
+  const text = flatten(nodes).map(plainOf).filter(Boolean).join("\n\n");
   return { json: JSON.stringify(rich), text, html: richToHtml(rich) };
 }
 
@@ -211,7 +220,18 @@ export function richToHtml(nodes: RichNode[]): string {
       case "blockquote": return `<blockquote>${kids()}</blockquote>`;
       case "codeBlock": return `<pre>${esc((n.content ?? []).map((c) => c.text ?? "").join(""))}</pre>`;
       case "spacer": return n.attrs?.line === true ? "<hr>" : "";
-      case "image": return typeof n.attrs?.src === "string" && isSafeUrl(n.attrs.src) ? `<img src="${esc(n.attrs.src)}" alt="${esc(String(n.attrs.alt ?? ""))}">` : "";
+      case "image": {
+        if (typeof n.attrs?.src !== "string" || !isSafeUrl(n.attrs.src)) return "";
+        const img = `<img src="${esc(n.attrs.src)}" alt="${esc(String(n.attrs.alt ?? ""))}">`;
+        const cap = typeof n.attrs.caption === "string" ? n.attrs.caption.trim() : "";
+        return cap ? `<figure>${img}<figcaption>${esc(cap)}</figcaption></figure>` : img; // dán lại vào trình soạn: figure + figcaption → ảnh có chú thích
+      }
+      case "button": {
+        const text = esc(String(n.attrs?.text ?? ""));
+        const href = typeof n.attrs?.href === "string" && isSafeUrl(n.attrs.href) ? n.attrs.href : "";
+        return text ? `<p>${href ? `<a href="${esc(href)}">${text}</a>` : text}</p>` : "";
+      }
+      case "embed": return typeof n.attrs?.url === "string" && isSafeUrl(n.attrs.url) ? `<p><a href="${esc(n.attrs.url)}">${esc(String(n.attrs.caption || n.attrs.url))}</a></p>` : "";
       case "table": return `<table>${kids()}</table>`;
       case "tableRow": return `<tr>${kids()}</tr>`;
       case "tableCell": return `<td>${kids()}</td>`;
