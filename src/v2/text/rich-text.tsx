@@ -344,12 +344,15 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef, keepCaret: (
       now(() => store.mergeForward(pr.current.blockId));
       return true;
     }),
-    "Mod-a": fresh((state) => {
-      // Đã chọn hết chữ trong khối → chọn mọi khối của tài liệu
-      if (!textMode() || state.selection.from > 0 || state.selection.to < state.doc.content.size) return false;
+    "Mod-a": fresh(() => {
+      // Một lần bấm chọn mọi khối của tài liệu (như Word / Docs: ⌘A ⌘C ⌘V chép cả bài). Tài liệu chỉ có một khối → để ProseMirror chọn chữ trong khối.
+      // Muốn chọn riêng chữ của một khối: bấm ba lần (chọn đoạn) hoặc kéo chuột.
+      if (!textMode()) return false;
       const loc = store.locate(pr.current.blockId);
       if (!loc) return false;
-      store.select(store.getState().docs[loc.docId].blocks.map((b) => b.id), { editing: null });
+      const all = store.getState().docs[loc.docId].blocks;
+      if (all.length < 2) return false;
+      store.select(all.map((b) => b.id), { editing: null });
       return true;
     }),
     "Alt-F10": () => { ui.focusToolbar(); return true; },

@@ -121,10 +121,9 @@ test.describe("chọn khối + thanh công cụ", () => {
     expect(await texts(page)).toEqual(["paragraph:Đoạn thứ hai."]);
   });
 
-  test("⌘A hai lần chọn mọi khối", async ({ page }) => {
+  test("⌘A một lần chọn mọi khối (như Word)", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");
-    await page.keyboard.press(`${mod}+a`);
     await page.keyboard.press(`${mod}+a`);
     expect((await state(page)).selection.ids.length).toBe(3);
   });
