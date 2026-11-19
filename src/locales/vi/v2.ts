@@ -104,6 +104,8 @@ export const v2 = {
   undo: "Hoàn tác",
   redo: "Làm lại",
   listView: "Cây khối",
+  commandPalette: "Bảng lệnh",
+  resizeGap: "đổi khoảng cách cột",
   settings: "Cài đặt",
   noSelection: "Chọn một khối để chỉnh",
   editOriginal: "Chỉnh sửa bản gốc",

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { expect, test, type Page } from "@playwright/test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { canvas } from "./helpers";
+import { loadSiteRenderer } from "./site-render";
 
 /**
  * Parity canvas ↔ website: cùng một tài liệu vẽ bằng canvas (trình soạn) và bằng renderer của theme-sdk (website),
@@ -21,22 +22,6 @@ const BASE_FILES = ["basic-blocks", "layout-blocks", "all-core-nodes", "block-ex
 // Khối động (cần dữ liệu từ máy chủ: bài viết, bình luận, truy vấn…) và khối media (canvas hiện ô chọn / khung soạn riêng) không so cấu trúc ở trang thử
 const NOT_COMPARABLE = /^block-(archives|avatar|breadcrumbs|comments|commentsCount|copyright|featuredImage|footnotes|languageSwitcher|loginout|pageBreak|pageList|postAuthor|postContent|postDate|postExcerpt|postNavigation|postTerms|postTitle|query|queryTitle|readMore|search|siteLogo|siteTagline|siteTitle|templatePart|termDescription|termList|audio|file|video|youtube|image|gallery|cover|carousel|tabs|accordion|details|map|form|embed|customHtml|shortcode|navigation|queryEmpty|queryTotal|pagination|postTemplate|icon|tableOfContents|countdown|iconList|socialLinks|rating)\b/;
 const FILES = [...new Set(BASE_FILES)].filter((f) => !NOT_COMPARABLE.test(f));
-
-/** Renderer của website (theme-sdk/rich.tsx) gói thành CommonJS để chạy trong Node; `next/navigation` (chỉ dùng ở trình duyệt) thay bằng khung rỗng. */
-async function loadSiteRenderer(): Promise<(content: unknown, ctx: unknown) => Promise<unknown>> {
-  const dir = path.resolve(here, "../node_modules/.cache/parity");
-  mkdirSync(dir, { recursive: true });
-  const tag = `w${process.pid}`;
-  const stub = path.join(dir, `next-stub-${tag}.cjs`);
-  writeFileSync(stub, "const C = (p) => null; module.exports = { __esModule: true, default: C, usePathname: () => '/', useRouter: () => ({}), useSearchParams: () => new URLSearchParams(), useLinkStatus: () => ({ pending: false }) };");
-  // next/link: vẽ <a> như Next.js; esbuild nạp CJS kiểu Node (default = module.exports) nên xuất chính component (theme-sdk dùng Link cho link nội bộ trong nội dung, nút, ảnh)
-  const linkStub = path.join(dir, `next-link-stub-${tag}.cjs`);
-  writeFileSync(linkStub, "const { createElement } = require('react'); const L = ({ prefetch, replace, scroll, ...p }) => createElement('a', p); L.useLinkStatus = () => ({ pending: false }); module.exports = L;");
-  const out = path.join(dir, `rich-${tag}.cjs`);
-  await build({ entryPoints: [path.resolve(here, "../../sdk/packages/theme-sdk/src/rich.tsx")], bundle: true, platform: "node", format: "cjs", outfile: out, jsx: "automatic",
-    external: ["react", "react-dom"], alias: { "next/navigation": stub, "next/link": linkStub, "next/form": stub, "server-only": path.resolve(here, "../../sdk/node_modules/server-only/empty.js") }, logLevel: "error", nodePaths: [path.resolve(here, "../../sdk/node_modules")] });
-  return (createRequire(import.meta.url)(out) as { renderContent: (c: unknown, x: unknown) => Promise<unknown> }).renderContent;
-}
 
 /** Chạy trong trình duyệt: cây thu gọn của một vùng DOM (bỏ phần chỉ có ở trình soạn). */
 // Khoảng trống đã biết (chưa khớp): bảng — website tách thead/tbody/tfoot và bọc ảnh trong picture + source WebP, canvas để mọi hàng trong một tbody (so phẳng các hàng); html — canvas xem trước trong iframe;

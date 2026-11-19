@@ -1,12 +1,14 @@
-import { AlignCenter, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalSpaceBetween, AlignLeft, AlignRight, AlignStartHorizontal, Link2, StretchHorizontal, Columns2, Minus, Plus, Table2, ArrowUpToLine, ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, Trash2, Heading, TableCellsMerge, TableCellsSplit } from "lucide-react";
+import { Star, AlignCenter, AlignCenterHorizontal, AlignEndHorizontal, AlignHorizontalSpaceBetween, AlignLeft, AlignRight, AlignStartHorizontal, Link2, StretchHorizontal, Columns2, Minus, Plus, Table2, ArrowUpToLine, ArrowDownToLine, ArrowLeftToLine, ArrowRightToLine, Trash2, Heading, TableCellsMerge, TableCellsSplit } from "lucide-react";
 import { useEditor } from "../context";
 import { makeBlock, type BNode } from "../core/model";
 import { addColumn, addRow, canMerge, canSplit, deleteColumn, deleteRow, hasHeaderRow, mergeCells, splitCell, tableContext, toggleHeaderRow } from "../core/tables";
 import { Dropdown, MenuItem, ToolButton } from "../ui/toolbar";
 import { useState } from "react";
 import { useMsgs } from "../i18n";
-import { isSafeUrl } from "@ecomcx/ecomweb-content";
+import { isSafeUrl, resolveIcon } from "@ecomcx/ecomweb-content";
+import { IconSvg } from "../ui/icon-svg";
 import type { BlockEditProps } from "../core/registry";
+import { IconGrid } from "../ui/icon-picker";
 
 /** Công cụ bảng khi đang gõ trong ô (hoặc chọn cả bảng). */
 export function TableTools({ ancestor, currentId }: { ancestor: BNode; currentId: string }) {
@@ -96,6 +98,26 @@ export function ButtonsTools({ ancestor }: { ancestor: BNode; currentId: string 
       }}><Plus className="ecx-icon" /></ToolButton>
     </>
   );
+}
+
+/** Chọn icon ngay trên thanh công cụ (icon là thuộc tính chính của Icon Box / Icon List / Nút): bấm nút mở lưới icon có ô tìm. */
+export function IconTool({ value, onChange, allowNone }: { value?: string; onChange(v: string | undefined): void; allowNone?: boolean }) {
+  const t = useMsgs("controls");
+  const has = !!value && !!resolveIcon(value);
+  return (
+    <Dropdown label={t.chooseIcon} trigger={has ? <IconSvg className="ecx-icon" name={value} size={20} /> : <Star className="ecx-icon" />}>
+      {(close) => <IconGrid className="ecx-tool-icon-pop" value={value} label={t.chooseIcon} allowNone={allowNone} onPick={(v) => { onChange(v); close(); }} />}
+    </Dropdown>
+  );
+}
+
+export function ButtonIconTool({ block, setAttrs }: BlockEditProps) {
+  return <IconTool value={block.attrs.icon as string | undefined} onChange={(v) => setAttrs({ icon: v })} allowNone />;
+}
+
+/** Thanh của nút: icon + liên kết. */
+export function ButtonTools(p: BlockEditProps) {
+  return <><ButtonIconTool {...p} /><ButtonLinkTool {...p} /></>;
 }
 
 /** Liên kết của nút ngay trên thanh: ô địa chỉ + mở tab mới (cùng thuộc tính href / target với bảng bên phải). */

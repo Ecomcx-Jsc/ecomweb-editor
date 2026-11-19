@@ -69,8 +69,8 @@ test.describe("danh sách bài", () => {
     const c = await open(page, "?doc=loop");
     await expect(items(c)).toHaveCount(3);
     await page.getByRole("button", { name: "Cây khối" }).click();
-    await page.locator(".ecx-list-row", { hasText: "Danh sách bài" }).first().click();
-    await expect(page.locator(".ecx-inspector")).toContainText("Danh sách bài");
+    await page.locator(".ecx-list-row", { hasText: "Posts (Query Loop)" }).first().click();
+    await expect(page.locator(".ecx-inspector")).toContainText("Posts (Query Loop)");
     await expect(page.locator(".ecx-inspector select, .ecx-inspector input").first()).toBeVisible();
     void c;
   });

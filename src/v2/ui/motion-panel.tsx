@@ -1,4 +1,5 @@
-import { MOTION_HOVER, MOTION_IN, normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
+import { MOTION_EASE, MOTION_HOVER, MOTION_IN, MOTION_LOOP, MOTION_PARALLAX, normalizeStyle, type BlockStyle } from "@ecomcx/ecomweb-content";
+import { PickTiles, motionHoverThumb, motionInThumb } from "./option-thumbs";
 import { Play } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { onAnimationsChange, pluginAnimations } from "../../shared/animation-store";
@@ -55,12 +56,9 @@ export function MotionPanel({ type, style: raw, onChange }: { type: string; styl
   return (
     <Section title={t.title} defaultOpen={false} modified={!!style.motion} summary={m.in ? (t.in as Record<string, string>)[m.in] ?? m.in : ct.noMotion} onReset={() => onChange(normalizeStyle({ ...style, motion: undefined }) ?? null)}>
       <Row label={t.scroll}>
-        <div className="ecx-chip-row" role="radiogroup" aria-label={t.scroll}>
-          <button type="button" role="radio" aria-checked={!m.in} className={cx("ecx-chip", !m.in && "is-active")} onClick={() => set({ in: undefined, duration: undefined, delay: undefined, repeat: undefined, stagger: undefined })}>{t.none}</button>
-          {MOTION_IN.map((id) => (
-            <button key={id} type="button" role="radio" aria-checked={m.in === id} className={cx("ecx-chip", m.in === id && "is-active")} onClick={() => set({ in: id }, true)}>{t.in[id]}</button>
-          ))}
-        </div>
+        <PickTiles label={t.scroll} value={m.in && (MOTION_IN as readonly string[]).includes(m.in) ? m.in : undefined} none={{ label: t.none }}
+          options={MOTION_IN.map((id) => ({ id, label: t.in[id], thumb: motionInThumb(id) }))}
+          onChange={(v) => (v === undefined ? set({ in: undefined, duration: undefined, delay: undefined, repeat: undefined, stagger: undefined }) : set({ in: v }, true))} />
         {plugin.length > 0 && (
           <select className="ecx-input" aria-label={t.more} value={isPlugin ? m.in : ""} onChange={(e) => e.target.value && set({ in: e.target.value }, true)}>
             <option value="">{t.more}…</option>
@@ -76,6 +74,11 @@ export function MotionPanel({ type, style: raw, onChange }: { type: string; styl
             <Seg label={t.speed} value={m.duration ?? "normal"} onChange={(v) => set({ duration: !v || v === "normal" ? undefined : v }, true)}
               options={[["fast", t.fast, t.fast], ["normal", t.normal, t.normal], ["slow", t.slow, t.slow]]} />
           </Row>
+          <Row label={t.ease}>
+            <select className="ecx-input" aria-label={t.ease} value={m.ease ?? "smooth"} onChange={(e) => set({ ease: e.target.value === "smooth" ? undefined : (e.target.value as Motion["ease"]) }, true)}>
+              {MOTION_EASE.map((id) => <option key={id} value={id}>{t.eases[id]}</option>)}
+            </select>
+          </Row>
           <Row label={t.delay}>
             <select className="ecx-input" aria-label={t.delay} value={m.delay ?? 0} onChange={(e) => set({ delay: Number(e.target.value) || undefined }, true)}>
               {[...new Set([...DELAYS, m.delay ?? 0])].sort((a, b) => a - b).map((d) => <option key={d} value={d}>{d} ms</option>)}
@@ -87,13 +90,19 @@ export function MotionPanel({ type, style: raw, onChange }: { type: string; styl
         </>
       )}
 
+      <Row label={t.loop}>
+        <PickTiles label={t.loop} value={m.loop} none={{ label: t.none }} options={MOTION_LOOP.map((id) => ({ id, label: t.loops[id], thumb: motionHoverThumb("grow") }))} onChange={(v) => set({ loop: v as Motion["loop"], parallax: v ? undefined : m.parallax })} />
+      </Row>
+      {!m.in && !m.loop && (
+        <Row label={t.parallax}>
+          <select className="ecx-input" aria-label={t.parallax} value={m.parallax ?? ""} onChange={(e) => set({ parallax: (e.target.value || undefined) as Motion["parallax"] })}>
+            <option value="">{t.none}</option>
+            {MOTION_PARALLAX.map((id) => <option key={id} value={id}>{t.parallaxes[id]}</option>)}
+          </select>
+        </Row>
+      )}
       <Row label={t.hover}>
-        <div className="ecx-chip-row" role="radiogroup" aria-label={t.hover}>
-          <button type="button" role="radio" aria-checked={!m.hover} className={cx("ecx-chip", !m.hover && "is-active")} onClick={() => set({ hover: undefined })}>{t.none}</button>
-          {MOTION_HOVER.map((id) => (
-            <button key={id} type="button" role="radio" aria-checked={m.hover === id} className={cx("ecx-chip", m.hover === id && "is-active")} onClick={() => set({ hover: id })}>{t.hv[id]}</button>
-          ))}
-        </div>
+        <PickTiles label={t.hover} value={m.hover} none={{ label: t.none }} options={MOTION_HOVER.map((id) => ({ id, label: t.hv[id], thumb: motionHoverThumb(id) }))} onChange={(v) => set({ hover: v as (typeof MOTION_HOVER)[number] | undefined })} />
       </Row>
     </Section>
   );

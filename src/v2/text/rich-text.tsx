@@ -77,6 +77,7 @@ export function RichText(props: RichTextProps) {
         v.updateState(next);
         syncEmpty(v);
         if (!tr.docChanged || tr.getMeta("external")) return;
+        ui.fresh.delete(propsRef.current.blockId);
         const inline = docToInline(next.doc);
         lastValue.current = inline;
         const p = propsRef.current;
@@ -94,14 +95,29 @@ export function RichText(props: RichTextProps) {
       handlePaste: (v, event) => (propsRef.current.onChange ? false : pasteIntoBlock(ctx, propsRef.current.blockId, v, event)),
       handleDOMEvents: {
         // Kéo chuột từ ô này sang khối chữ khác → chọn chữ qua nhiều khối
+        // Chữ mẫu chưa sửa: nhả chuột xong mà chỉ có con trỏ (không kéo chọn) → chọn hết để gõ là thay
+        mouseup: (v) => {
+          const p = propsRef.current;
+          if (ui.fresh.has(p.blockId) && v.state.selection.empty && v.state.doc.content.size > 0) setTimeout(() => { if (ui.fresh.has(p.blockId) && v.hasFocus() && v.state.selection.empty) v.dispatch(v.state.tr.setSelection(TextSelection.create(v.state.doc, 0, v.state.doc.content.size))); }, 0);
+          return false;
+        },
         mousedown: (v, e) => {
           const p = propsRef.current;
+          // Ô trống: bấm chỗ nào (kể cả giữa chữ gợi ý) con trỏ cũng về đầu ô — không để trình duyệt tự đặt theo toạ độ chuột lên chữ gợi ý
+          if (e.button === 0 && !e.shiftKey && !e.metaKey && !e.ctrlKey && v.state.doc.content.size === 0 && v.editable) {
+            e.preventDefault();
+            v.focus();
+            v.dispatch(v.state.tr.setSelection(TextSelection.create(v.state.doc, 0)));
+            return true;
+          }
           if (e.button === 0 && !e.shiftKey && !p.onChange && !p.field) trackRangeDrag(store, v, p.blockId);
           return false;
         },
         focus: () => {
           const p = propsRef.current;
           ui.activeRich = viewKey(p.blockId, p.field);
+          // Chữ mẫu của khối vừa chèn: chọn hết ở lần bấm đầu (sau khi chuột đặt con trỏ) để gõ là thay
+          if (ui.fresh.has(p.blockId) && viewRef.current) { const v = viewRef.current; setTimeout(() => { if (ui.fresh.has(p.blockId) && v.hasFocus() && v.state.doc.content.size > 0) v.dispatch(v.state.tr.setSelection(TextSelection.create(v.state.doc, 0, v.state.doc.content.size))); }, 0); }
           store.setEditing(p.blockId);
           ui.bump();
           return false;

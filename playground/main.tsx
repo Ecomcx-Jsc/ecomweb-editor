@@ -72,6 +72,8 @@ const POSTS = [
   { title: "Hướng dẫn chọn size", date: "20/10/2026", terms: ["huong-dan"] },
 ];
 const host: EditorHost = {
+  // ?content=1 thử như soạn bài thật (bảng chèn gọn); mặc định hiện hết để các test cũ chèn được mọi khối
+  showAllBlocks: !params.get("content"),
   canvasStyles: [contentCss, { css: "body { font-family: Georgia, serif; color: #222; } .ecx-site-title { font-weight: 700; } .ecx-navigation-menu { display: flex; gap: 1rem; list-style: none; padding: 0; margin: 0; } header .ecx-group { display: flex; justify-content: space-between; align-items: center; }" }, ...(params.get("css") ? [{ css: params.get("css")! }] : [])],
   // ?contentClass=…: class của vùng soạn như website đặt (vd ecx-template), ?css=…: CSS của theme — kiểm CSS theme thắng mặc định của trình soạn
   ...(params.get("contentClass") ? { canvasContentClass: params.get("contentClass")! } : {}),
@@ -83,7 +85,7 @@ const host: EditorHost = {
   },
   // ?ai=1: AI giả lập — "custom" với mảng JSON thì trả mảng chữ hoa (thư viện mẫu), còn lại trả chữ hoa
   ...(params.get("ai") ? { ai: {
-    async run(_task: string, text: string) { await new Promise((r) => setTimeout(r, 30)); try { const a = JSON.parse(text); if (Array.isArray(a)) return `Đây: ${JSON.stringify(a.map((x) => `AI ${String(x).toUpperCase()}`))}`; } catch { /* chữ thường */ } return text.toUpperCase(); },
+    async run(_task: string, text: string) { await new Promise((r) => setTimeout(r, 30)); if (_task === "write" && /demo-md/.test(text)) return "## Vì sao chọn chúng tôi\n\nGiao hàng **nhanh** trong 24 giờ.\n\n- Miễn phí đổi trả\n- Bảo hành 12 tháng\n\n1. Chọn sản phẩm\n2. Thanh toán"; if (_task === "write" && /demo-fail/.test(text)) throw new Error("AI chưa được bật hoặc thiếu nhà cung cấp, model, khoá API (Cài đặt › AI)"); try { const a = JSON.parse(text); if (Array.isArray(a)) return `Đây: ${JSON.stringify(a.map((x) => `AI ${String(x).toUpperCase()}`))}`; } catch { /* chữ thường */ } return text.toUpperCase(); },
   } } : {}),
   // ?media=1: thư viện media giả lập (chọn / tải lên trả về ảnh mẫu)
   ...(params.get("media") ? { media: {

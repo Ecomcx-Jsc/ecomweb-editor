@@ -20,6 +20,22 @@ async function groupInspector(page: Page) {
 }
 
 test.describe("chuyển động", () => {
+  test("nhịp chạy, chuyển động lặp, thị sai, hiệu ứng vào / rê chuột mới: lưu đúng, lặp chạy thật trên khung soạn", async ({ page }) => {
+    const { c, insp } = await groupInspector(page);
+    await expect(insp.getByLabel("Thị sai khi cuộn")).toBeVisible();
+    await insp.getByLabel("Thị sai khi cuộn").selectOption("fast");
+    expect((await groupOf(page)).attrs.style.motion).toEqual({ parallax: "fast" });
+    await insp.getByRole("radio", { name: "Nảy vào" }).click(); // có hiệu ứng vào → thị sai bị bỏ
+    await insp.getByLabel("Nhịp chạy").selectOption("bounce");
+    await insp.getByRole("radio", { name: "Nổi lên xuống" }).click();
+    await insp.getByRole("radio", { name: "Nghiêng 3D" }).click();
+    const g = await groupOf(page);
+    expect(g.attrs.style.motion).toEqual({ in: "bounce-in", ease: "bounce", loop: "float", hover: "tilt" });
+    const el = c.locator(`[data-ecx-block="${g.id}"]`);
+    await insp.getByRole("button", { name: "Xem thử" }).click();
+    await expect.poll(() => el.evaluate((n) => getComputedStyle(n).animationName)).toContain("ecx-loop-float");
+  });
+
   test("chọn hiệu ứng cuộn: lưu vào style.motion, hiện tuỳ chọn phụ, xem thử chạy animation thật", async ({ page }) => {
     const { c, insp } = await groupInspector(page);
     await expect(insp.getByLabel("Tốc độ")).toHaveCount(0); // chưa chọn hiệu ứng thì chưa có tuỳ chọn phụ

@@ -163,6 +163,12 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
                   {inherited && !image && <p className="ecx-muted">{t.inherited}</p>}
                 </div>
               </Row>
+              {!cover && (
+                <Row label={t.video}>
+                  <input className="ecx-input" type="url" inputMode="url" aria-label={t.video} placeholder="/uploads/video.mp4" value={bg.video ?? ""} onChange={(e) => setBg({ video: e.target.value.trim() || undefined })} />
+                  <p className="ecx-field-help">{t.videoHint}</p>
+                </Row>
+              )}
               {hasImage && (
                 <>
                   {!cover && (
@@ -183,6 +189,22 @@ export function BackgroundControl({ type, attrs, setAttrs, device }: { type: str
                   </Row>
                   {!cover && <label className="ecx-check"><input type="checkbox" checked={!!bg.repeat} onChange={(e) => setBg({ repeat: e.target.checked || undefined })} /> {t.repeat}</label>}
                   <label className="ecx-check"><input type="checkbox" checked={cover ? !!attrs.fixed : !!bg.fixed} onChange={(e) => (cover ? setAttrs({ fixed: e.target.checked || undefined }) : setBg({ fixed: e.target.checked || undefined }))} /> {t.fixed}</label>
+                  {!cover && (
+                    <>
+                      <Row label={`${t.imageOpacity}: ${bg.imageOpacity ?? 100}%`}>
+                        <input type="range" min={0} max={100} step={5} value={bg.imageOpacity ?? 100} aria-label={t.imageOpacity} onChange={(e) => setBg({ imageOpacity: Number(e.target.value) >= 100 ? undefined : Number(e.target.value) })} />
+                      </Row>
+                      <Row label={`${t.imageBlur}: ${bg.imageBlur ?? 0}px`}>
+                        <input type="range" min={0} max={40} step={1} value={bg.imageBlur ?? 0} aria-label={t.imageBlur} onChange={(e) => setBg({ imageBlur: Number(e.target.value) || undefined })} />
+                      </Row>
+                      <Row label={t.imageBlend}>
+                        <select className="ecx-input" aria-label={t.imageBlend} value={bg.imageBlend ?? ""} onChange={(e) => setBg({ imageBlend: e.target.value || undefined })}>
+                          <option value="">{t.blendNormal}</option>
+                          {BLENDS.map((x) => <option key={x} value={x}>{(t as Record<string, string>)[`blend_${x.replace(/-/g, "_")}`] ?? x}</option>)}
+                        </select>
+                      </Row>
+                    </>
+                  )}
                 </>
               )}
               {cover && overlayFields}

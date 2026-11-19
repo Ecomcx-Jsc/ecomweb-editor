@@ -1,4 +1,5 @@
 import type { Device } from "@ecomcx/ecomweb-content";
+import { VariationGrid } from "../canvas/variation-picker";
 import { CONTAINER_TAGS, CORE_BLOCK_STYLES, controlValue, optionValue } from "@ecomcx/ecomweb-content";
 import { Blocks, Info, LayoutPanelTop, Paintbrush, SlidersHorizontal } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
@@ -22,12 +23,11 @@ import { ColorInput } from "./color-field";
 import { UnitInput } from "./unit-controls";
 import { useMsgs } from "../i18n";
 
-/** Khối "khung" (như Container / Section của Elementor): ô Nền đặt ngay tab Cài đặt — chỗ người dùng tìm đầu tiên. */
 // Nền của Nhóm / Cột nằm ở tab Kiểu dáng như bộ khối lớn; ảnh bìa: nền là nội dung chính nên ở Cài đặt
-const BG_IN_SETTINGS = new Set(["cover", "group"]);
+const BG_IN_SETTINGS = new Set(["cover"]);
 /** Khối chứa đổi được thẻ HTML (attrs.tagName). */
 const TAGGED = new Set(["group", "column", "columns"]);
-const BG_FIRST = new Set(["column", "columns", "row", "stack", "grid"]);
+const BG_FIRST = new Set(["column", "columns", "row", "stack", "grid", "group"]);
 
 /**
  * Bảng cài đặt của khối đang chọn (như Elementor): thẻ khối, tab Cài đặt (nội dung: form + phần riêng của khối), tab Kiểu dáng
@@ -37,6 +37,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
   const { store, registry, labels, ui } = useEditor();
   useUiTick();
   const t = useMsgs("controls");
+  const tb = useMsgs("blocks") as unknown as Record<string, string>;
   const sel = useEditorState((s) => s.selection);
   useEditorState((s) => s.revision);
   const [tab, setTab] = useState<"settings" | "style" | "advanced">("settings");
@@ -63,7 +64,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
     <div className="ecx-inspector">
       <div className="ecx-block-card">
         <Icon className="ecx-icon ecx-card-icon" />
-        <strong>{nodes.length > 1 ? `${nodes.length} ${labels.blocks}` : (typeof first.attrs.customName === "string" && first.attrs.customName) || (type?.title ?? first.type)}</strong>
+        <strong>{nodes.length > 1 ? `${nodes.length} ${labels.blocks}` : (typeof first.attrs.customName === "string" && first.attrs.customName) || (type?.titleOf?.(first.attrs) ?? type?.title ?? first.type)}</strong>
         {/* Mô tả khối: nút ⓘ (rê / bấm) thay cho 2–3 dòng chữ chiếm chỗ đầu bảng */}
         {type?.description && nodes.length === 1 && <span className="ecx-card-info" tabIndex={0} role="note" aria-label={type.description} title={type.description}><Info className="ecx-icon" /><span className="ecx-card-tip">{type.description}</span></span>}
       </div>
@@ -79,9 +80,10 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
           {tab === "settings" || (tab === "style" && !styled) ? (
             <div className="ecx-panel">
               {single && first.type === "group" && <GroupWidthSection attrs={first.attrs} setAttrs={setAttrs} />}
+              {single && type?.layouts?.length && !disabled && <div className="ecx-layout-section"><span className="ecx-field-label">{tb.layoutLabel}</span><VariationGrid type={type} attrs={first.attrs} onPick={(v) => setAttrs(v.attrs)} /></div>}
               {same && type && <AttrForm type={type} attrs={first.attrs} onChange={setAttrs} />}
+              {single && styled && <BlockStyleSections tab="settings" type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
               {styled && single && BG_IN_SETTINGS.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
-              {styled && single && first.type === "group" && <DividerSection key={`d${first.id}`} attrs={first.attrs} setAttrs={setAttrs} />}
               {styled && single && <LayoutSection type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} />}
               {Custom && <Custom block={first} attrs={first.attrs} setAttrs={setAttrs} blockProps={null as never} selected editable labels={labels} />}
               {same && nodes.length === 1 && <PluginPanels type={first.type} attrs={first.attrs} setAttrs={setAttrs} />}
@@ -91,6 +93,7 @@ export function Inspector({ blockStyles }: { blockStyles?: Record<string, Array<
             <div className="ecx-panel">
               {/* Khối chứa: Nền là mục đầu của tab Kiểu dáng (như bộ khối lớn) */}
               {single && BG_FIRST.has(first.type) && <BackgroundControl key={first.id} type={first.type} attrs={first.attrs} setAttrs={setAttrs} device={device} />}
+              {single && (first.type === "group" || first.type === "columns") && <DividerSection key={`d${first.id}`} attrs={first.attrs} setAttrs={setAttrs} />}
               <StyleTab type={first.type} style={first.attrs.style} onChange={(st) => setAttrs({ style: st ?? undefined })} device={device} onDeviceChange={setDevice} part="style"
                 variants={variants.length ? variants : undefined} variant={(first.attrs.blockStyle as string) ?? null} onVariantChange={(v) => setAttrs({ blockStyle: v ?? undefined })}
                 parts={hasParts}

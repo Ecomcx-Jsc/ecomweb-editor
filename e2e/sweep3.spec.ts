@@ -16,12 +16,12 @@ async function tileKeys(page: Page): Promise<string[]> {
 }
 
 test("đổi mọi ô điều khiển của từng khối — gom hết lỗi", async ({ page }) => {
-  test.setTimeout(1_800_000);
+  test.setTimeout(3_600_000); // nhiều khối hơn: Firefox mất hơn 25 phút
   const errors: string[] = [];
   const touched: Record<string, number> = {};
   let current = "", step = "";
   page.on("pageerror", (e) => errors.push(`[${current}] ${step}: pageerror: ${e.message.split("\n")[0].slice(0, 140)}`));
-  page.on("console", (m) => { if (m.type() === "error" && !/favicon|Failed to load resource|net::ERR/.test(m.text())) errors.push(`[${current}] ${step}: console.error: ${m.text().slice(0, 140)}`); });
+  page.on("console", (m) => { if (m.type() === "error" && !/favicon|Failed to load resource|net::ERR|debugger eval code/.test(m.text()) /* "debugger eval code" = lỗi nội bộ của Playwright trên Firefox khi phần tử bị vẽ lại giữa chừng, không phải lỗi của trình soạn */) errors.push(`[${current}] ${step}: console.error: ${m.text().slice(0, 140)}`); });
   await open(page, "?doc=post");
   let keys = await tileKeys(page);
   if (process.env.ECX_SWEEP_ONLY) keys = keys.filter((k) => process.env.ECX_SWEEP_ONLY!.split(",").includes(k));

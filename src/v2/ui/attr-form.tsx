@@ -1,5 +1,5 @@
 import type { BlockAttrSpec } from "@ecomcx/ecomweb-content";
-import { AlignCenter, AlignHorizontalSpaceBetween, AlignJustify, AlignLeft, AlignRight, RotateCcw } from "lucide-react";
+import { AlignCenter, AlignHorizontalSpaceBetween, AlignJustify, AlignLeft, AlignRight, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, MoveHorizontal, MoveVertical, RotateCcw } from "lucide-react";
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { useEditor } from "../context";
 import type { Choice, ChoiceKind } from "../core/host";
@@ -9,6 +9,7 @@ import { blockOptions } from "../../shared/block-defs";
 import { DEFAULT_IMAGE_SIZES, hintOf, hintText, imageSizeLabel, optionLabel, type AttrHint } from "./attr-hints";
 import { ColorInput } from "./color-field";
 import { IconPicker } from "./icon-picker";
+import { PickTiles, frameThumb, iconHoverThumb } from "./option-thumbs";
 import { mediaSrcsets } from "../core/media";
 
 export const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
@@ -58,13 +59,25 @@ export function useChoices(kind: ChoiceKind | undefined, args: Record<string, st
 
 /** Giá trị căn → biểu tượng (như thanh căn chữ của WP): hàng chọn căn chỉ toàn các giá trị này thì vẽ bằng biểu tượng, chữ nằm ở tooltip / nhãn đọc màn hình. */
 const ALIGN_ICONS: Record<string, ComponentType<{ className?: string }>> = { left: AlignLeft, center: AlignCenter, right: AlignRight, justify: AlignJustify, "space-between": AlignHorizontalSpaceBetween };
-function SegText({ value, options, onChange, label }: { value: string | undefined; options: Array<[string, string]>; onChange(v: string | undefined): void; label: string }) {
+/** Căn dọc (trên / giữa / dưới): giá trị giữa vẽ biểu tượng dọc, không dùng biểu tượng căn ngang. */
+const VALIGN_ICONS: Record<string, ComponentType<{ className?: string }>> = { top: AlignVerticalJustifyStart, start: AlignVerticalJustifyStart, center: AlignVerticalJustifyCenter, middle: AlignVerticalJustifyCenter, bottom: AlignVerticalJustifyEnd, end: AlignVerticalJustifyEnd };
+const ORIENT_ICONS: Record<string, ComponentType<{ className?: string }>> = { horizontal: MoveHorizontal, vertical: MoveVertical };
+/** Bộ biểu tượng cho một hàng lựa chọn: căn ngang / căn dọc (từ 3 lựa chọn) hoặc ngang – dọc (đúng hai lựa chọn); không khớp thì null (nút chữ). */
+function iconSetFor(options: Array<[string, string]>): Record<string, ComponentType<{ className?: string }>> | null {
+  const vs = options.map(([v]) => v);
+  if (vs.length === 2 && vs.every((v) => ORIENT_ICONS[v])) return ORIENT_ICONS;
   // Từ 3 lựa chọn trở lên: hai lựa chọn trái / phải thường là vị trí (icon trước / sau chữ), không phải căn
-  const icons = options.length > 2 && options.every(([v]) => ALIGN_ICONS[v]);
+  if (vs.length > 2 && vs.some((v) => v === "top" || v === "bottom") && vs.every((v) => VALIGN_ICONS[v])) return VALIGN_ICONS;
+  if (vs.length > 2 && vs.every((v) => ALIGN_ICONS[v])) return ALIGN_ICONS;
+  return null;
+}
+function SegText({ value, options, onChange, label }: { value: string | undefined; options: Array<[string, string]>; onChange(v: string | undefined): void; label: string }) {
+  const set = iconSetFor(options);
+  const icons = !!set;
   return (
     <div role="radiogroup" aria-label={label} className={cx("ecx-seg", !icons && "is-text")}>
       {options.map(([v, text]) => {
-        const Icon = icons ? ALIGN_ICONS[v] : undefined;
+        const Icon = set ? set[v] : undefined;
         return <button key={v} type="button" role="radio" aria-checked={value === v} aria-label={Icon ? text : undefined} title={Icon ? text : undefined} className={cx("ecx-seg-btn", value === v && "is-active")} onClick={() => onChange(value === v ? undefined : v)}>{Icon ? <Icon className="ecx-icon" /> : text}</button>;
       })}
     </div>
@@ -103,6 +116,9 @@ function MultiChoiceField({ hint, attrs, value, set, label }: { hint: AttrHint; 
 }
 
 /** Form thuộc tính tự sinh từ mô tả khối + gợi ý hiển thị (attr-hints): không phải viết giao diện cho từng khối. */
+/** Ô segmented có hình minh hoạ: `<khối>.<thuộc tính>` → hàm vẽ hình theo giá trị. */
+const ATTR_THUMBS: Record<string, (v: string) => ReactNode> = { "iconBox.iconStyle": frameThumb, "icon.iconStyle": frameThumb, "iconList.iconStyle": frameThumb, "iconBox.hover": iconHoverThumb };
+
 export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Record<string, any>; onChange(a: Record<string, unknown>): void }) {
   const { host, labels } = useEditor();
   const lang = labels.lang;
@@ -110,7 +126,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
   const translate = blockOptions(type.name).translate ?? host.translate;
   const entries = Object.entries(type.attributes ?? {})
     .map(([k, s]) => [k, s, hintOf(type.name, k)] as const)
-    .filter(([k, s, h]) => !HIDDEN_ATTRS.has(k) && controlOf(s) !== "hidden" && h.control !== "hidden" && (!h.when || h.when(attrs)));
+    .filter(([k, s, h]) => !type.layoutOwns?.includes(k) && !HIDDEN_ATTRS.has(k) && controlOf(s) !== "hidden" && h.control !== "hidden" && (!h.when || h.when(attrs)));
   if (!entries.length) return null;
   const resetLabel = String(messages("controls", lang).reset ?? "Reset");
   return (
@@ -147,8 +163,12 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
             return <div key={k}><label className="ecx-check"><input type="checkbox" checked={!!value} onChange={(e) => set(e.target.checked)} /> {label}</label>{help}</div>;
           case "newTab":
             return <label key={k} className="ecx-check"><input type="checkbox" checked={value === "_blank"} onChange={(e) => set(e.target.checked ? "_blank" : undefined)} /> {labels.openInNewTab}</label>;
-          case "segmented":
+          case "segmented": {
+            // Ô có hình minh hoạ (khung icon, hiệu ứng rê chuột…): thẻ hình hai lớp thay cho dãy nút chữ
+            const thumbs = ATTR_THUMBS[`${type.name}.${k}`];
+            if (thumbs) return <Field key={k} label={label} group><PickTiles label={label} value={value == null ? undefined : String(value)} options={opts().map(([v, text]) => ({ id: v, label: text, thumb: thumbs(v) }))} onChange={(v) => set(v === undefined ? undefined : parse(v))} />{help}</Field>;
             return <Field key={k} label={label} group><SegText label={label} value={value == null ? undefined : String(value)} options={opts()} onChange={(v) => set(v === undefined ? undefined : parse(v))} />{help}</Field>;
+          }
           case "select": {
             // Ít lựa chọn, chữ ngắn → dãy nút bấm (một chạm, thấy hết lựa chọn) như bảng của các bộ khối lớn; cấp tiêu đề → H1…H6
             const list = k === "level" ? opts().map(([v]) => [v, `H${v}`] as [string, string]) : opts();

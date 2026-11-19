@@ -39,7 +39,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await clickEnd(c, "Đoạn thứ hai.");
     await insertVia(page, "luoi");
     await expect(c.locator('[data-type="group"]').first()).toBeVisible();
-    await page.getByRole("button", { name: "Điện thoại", exact: true }).click();
+    await page.getByRole("group", { name: "Thiết bị" }).getByRole("button", { name: "Điện thoại", exact: true }).click();
     expect(await c.locator("html").evaluate((h) => h.scrollWidth - h.clientWidth)).toBeLessThanOrEqual(0);
     // ô trống (gợi ý nowrap) không được có min-width tự động = độ rộng chữ gợi ý
     const cell = c.locator('[data-type="group"] [data-ecx-rich][data-empty][data-placeholder]').first();
@@ -134,7 +134,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
-    // Nhóm: ô Nền ở tab Cài đặt — loại Chuyển màu
+    await insp.getByRole("tab", { name: "Kiểu dáng" }).click(); // Nhóm: ô Nền ở tab Kiểu dáng — loại Chuyển màu
     await insp.getByRole("radio", { name: "Chuyển màu" }).click();
     await insp.getByRole("button", { name: "brand" }).click();
     let g = await groupOf(page);
@@ -238,6 +238,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
+    await insp.getByRole("tab", { name: "Kiểu dáng" }).click();
     await insp.locator(".ecx-color-row-btn").first().click();
     await page.getByRole("button", { name: "Màu: primary" }).click();
     await page.getByRole("button", { name: "Điện thoại", exact: true }).first().click();
@@ -263,8 +264,9 @@ test.describe("bố cục + hiệu ứng", () => {
     await showToolbar(page);
     await page.locator(".ecx-toolbar").getByRole("button", { name: "Chọn khối cha" }).click();
     const insp = page.locator(".ecx-inspector");
+    await insp.getByRole("tab", { name: "Kiểu dáng" }).click(); // Nền / Đường chia của Nhóm nằm ở tab Kiểu dáng (như bộ khối lớn)
     await insp.getByRole("button", { name: "Đường chia", exact: true }).click();
-    await insp.locator('[data-ecx-divider="top"]').getByRole("radio", { name: "Sóng" }).click();
+    await insp.locator('[data-ecx-divider="top"]').getByRole("radio", { name: "Sóng", exact: true }).click();
     await insp.locator('[data-ecx-divider="bottom"]').getByRole("radio", { name: "Vòm" }).click();
     await insp.locator('[data-ecx-divider="bottom"]').getByRole("slider", { name: "Cao" }).fill("150");
     let st = (await groupOf(page)).attrs.style;
@@ -287,6 +289,7 @@ test.describe("bố cục + hiệu ứng", () => {
     await page.keyboard.type("Cột");
     await showToolbar(page);
     const insp = page.locator(".ecx-inspector");
+    await insp.getByRole("tab", { name: "Kiểu dáng" }).click(); // Nền / Đường chia của Nhóm nằm ở tab Kiểu dáng (như bộ khối lớn)
     await insp.getByRole("button", { name: "Đường chia", exact: true }).click();
     await insp.locator('[data-ecx-divider="bottom"]').getByRole("radio", { name: "Tam giác" }).click();
     const cols = (await state(page)).docs.root.blocks.find((b: { type: string }) => b.type === "columns");

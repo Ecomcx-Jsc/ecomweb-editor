@@ -15,11 +15,13 @@ const KEEP = new Set(["imageFit", "imageOpacity", "imageFilter", "imageHoverEffe
  * đang chọn ở đầu tab; ô có `state` nằm trong thẻ Rê chuột / Đang mở của mục.
  */
 /** `legacyOnly`: khối đã chia phần (attrs.parts) — chỉ hiện mục ô rời đã có giá trị (nội dung cũ), để sửa / xoá. */
-export function BlockStyleSections({ type, attrs, setAttrs, device, legacyOnly }: { type: string; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void; device: Device; legacyOnly?: boolean }) {
+/** `tab="settings"`: chỉ các ô khai `tab: "settings"` (bố cục / cách hiển thị) — hiện ở tab Cài đặt; mặc định là các ô còn lại (tab Kiểu dáng). */
+export function BlockStyleSections({ type, attrs, setAttrs, device, legacyOnly, tab = "style" }: { type: string; attrs: Record<string, any>; setAttrs(a: Record<string, unknown>): void; device: Device; legacyOnly?: boolean; tab?: "style" | "settings" }) {
   const t = useMsgs("blockStyle");
   const sections = new Map<string, Array<[string, ControlSpec]>>();
   for (const [name, spec] of Object.entries(coreControlsFor(type))) {
     if (name === "tabsAlign") continue; // sửa ở tab Cài đặt
+    if ((spec.tab ?? "style") !== tab) continue;
     const k = spec.section ?? "text";
     sections.set(k, [...(sections.get(k) ?? []), [name, spec]]);
   }

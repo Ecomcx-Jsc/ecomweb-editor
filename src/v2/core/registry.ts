@@ -37,6 +37,8 @@ export interface BlockVariation {
   create?(): BNode;
   /** Hiện trong thư viện khối bằng tên riêng (vd "Hàng ngang") thay vì "tên khối + tên biến thể". */
   standalone?: boolean;
+  /** Ô cũ đã gộp vào khối cha (ô chọn bố cục / kiểu): ẩn khỏi bảng chèn, chỉ hiện khi host.showAllBlocks. */
+  legacy?: boolean;
   /** Biến thể đang áp dụng cho khối này (hiện tên/biểu tượng đúng biến thể). */
   isActive?(attrs: Record<string, any>): boolean;
 }
@@ -59,7 +61,11 @@ export interface BlockType {
   category?: BlockCategory;
   /** Từ khoá tìm (không dấu). */
   keywords?: string;
+  /** Tên khác (vd tên tiếng Việt cũ) — tìm bằng tên này vẫn ra khối ở hạng như tên chính. */
+  aliases?: string[];
   kind: BlockKind;
+  /** Tên hiện ở bảng bên phải / đường dẫn theo thuộc tính (vd Nhóm rộng hết trang có khung nội dung là "Section"); undefined → dùng `title`. */
+  titleOf?(attrs: Record<string, unknown>): string | undefined;
   /** Thuộc tính gắn dữ liệu được (attrs.bindings) — khối lõi: CORE_BINDABLE. */
   bindable?: string[];
   attributes?: Record<string, BlockAttrSpec>;
@@ -102,7 +108,16 @@ export interface BlockType {
   supports?: { style?: boolean | string[]; anchor?: boolean; className?: boolean; blockStyle?: boolean; align?: boolean };
   /** Tóm tắt một dòng (cây khối, khung chung). */
   summary?(attrs: Record<string, any>): string | undefined;
+  /** Bố cục chọn sẵn (thẻ có hình thu nhỏ): hiện ngay sau khi chèn từ bảng chèn và ở đầu bảng phải. */
+  layouts?: BlockLayout[];
+  /** false = chỉ hiện lưới bố cục ở bảng phải, không bật ô chọn ngay sau khi chèn (khối nhỏ, bố cục đổi nhẹ). Mặc định: bật. */
+  layoutsOnInsert?: boolean;
+  /** Thuộc tính chỉ chỉnh bằng thẻ bố cục (mọi giá trị đều có thẻ): ẩn ô chọn trùng ở dưới để một việc chỉ có một chỗ chỉnh. */
+  layoutOwns?: string[];
 }
+
+/** Một bố cục chọn sẵn của khối: áp `attrs` lên khối; `thumb` là bản vẽ thu nhỏ (xem ui/variation-picker). */
+export interface BlockLayout { id: string; label: string; attrs: Record<string, unknown>; thumb: ReactNode }
 
 export class BlockTypeRegistry {
   private types = new Map<string, BlockType>();

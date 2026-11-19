@@ -12,7 +12,7 @@ export const controls = {
   linkSides: "All sides the same",
   unlinkSides: "Edit each side",
   noMotion: "No effect yet",
-  noIcon: "No icon", searchIcons: "Search icons…", noIconFound: "No icon found",
+  chooseIcon: "Choose icon", iconLibrary: "Library", iconCustom: "Custom SVG", iconCustomHint: "Paste your SVG code (or choose a .svg file). Only the drawing is kept; scripts, links and styles are removed. The icon takes the text colour.", iconCustomCode: "SVG code", iconCustomFile: "Choose .svg file", iconCustomPreview: "Preview", iconCustomInvalid: "This SVG cannot be read (needs an <svg> tag with shapes, at most {max} characters after cleaning).", iconCustomUse: "Use this icon", iconMore: "Show more ({n} icons)", iconLibraryLoading: "Loading icon library…", noIcon: "No icon", searchIcons: "Search icons…", noIconFound: "No icon found",
   tablet: "Tablet",
   mobile: "Mobile",
   modified: "modified",

@@ -1,7 +1,7 @@
 import { Check, ChevronDown, RotateCcw, Save, Star, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { blockControls } from "../../shared/panel-store";
-import { applyStyle, ensurePresets, onPresetsChange, pickStyle, presetsSnapshot, sameStyle, setPresets, styleKeys, type BlockPresetMap } from "../core/block-presets";
+import { applyStyle, ensurePresets, localBlockPresets, onPresetsChange, pickStyle, presetsSnapshot, sameStyle, setPresets, styleKeys, type BlockPresetMap } from "../core/block-presets";
 import type { BNode } from "../core/model";
 import { useEditor } from "../context";
 import { useMsgs } from "../i18n";
@@ -15,7 +15,8 @@ export function PresetBar({ block, setAttrs }: { block: BNode; setAttrs(a: Recor
   const { host } = useEditor();
   const t = useMsgs("presets");
   const map = useSyncExternalStore(onPresetsChange, presetsSnapshot, presetsSnapshot);
-  useEffect(() => ensurePresets(host.blockPresets?.load), [host]);
+  const store = host.blockPresets ?? localBlockPresets;
+  useEffect(() => ensurePresets(store.load), [store]);
   const [open, setOpen] = useState(false);
   const [naming, setNaming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,7 +27,6 @@ export function PresetBar({ block, setAttrs }: { block: BNode; setAttrs(a: Recor
     document.addEventListener("mousedown", out, true);
     return () => document.removeEventListener("mousedown", out, true);
   }, [open]);
-  if (!host.blockPresets) return null;
   const keys = styleKeys(block.type, blockControls());
   const cur = pickStyle(block.attrs, keys);
   const entry = map?.[block.type] ?? {};
@@ -36,11 +36,11 @@ export function PresetBar({ block, setAttrs }: { block: BNode; setAttrs(a: Recor
   const isDefault = !match && sameStyle(cur, pickStyle(def, keys));
   const label = match ? match.name : t.default;
   const edited = !match && !isDefault;
-  const canSave = !!host.blockPresets.save;
+  const canSave = !!store.save;
 
   const save = async (next: BlockPresetMap) => {
     setBusy(true);
-    try { setPresets((await host.blockPresets!.save!(next as Record<string, unknown>)) as BlockPresetMap); }
+    try { setPresets((await store.save!(next as Record<string, unknown>)) as BlockPresetMap); }
     finally { setBusy(false); }
   };
   const withEntry = (patch: Partial<typeof entry>) => ({ ...(map ?? {}), [block.type]: { ...entry, ...patch } });

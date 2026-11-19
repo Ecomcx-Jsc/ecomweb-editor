@@ -81,6 +81,9 @@ test.describe("v3: sửa lỗi bảng bên phải (báo cáo 13, mục 1)", () =
     await page.keyboard.press("Enter");
     await page.keyboard.type(slash);
     await page.keyboard.press("Enter");
+    // Gõ "/" cũng bật ô chọn bố cục như bảng chèn (Tabs, Accordion…): bỏ qua để giữ bố cục mặc định
+    const skip = c.locator(".ecx-variation-skip");
+    if (await skip.count()) { await skip.click(); await page.waitForTimeout(250); }
     const id = (await find(page, type)).id;
     await page.evaluate((x) => (window as any).__ecx.store.select([x]), id);
     return c;
@@ -374,7 +377,7 @@ test("tabs: dọc, accordion trên điện thoại, icon + phụ đề của t�
   await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "T", type: "tabs", attrs: {}, content: [
     { id: "t1", type: "tab", attrs: { title: "Một" }, content: [{ id: "tp1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "nội dung một" }] }] },
     { id: "t2", type: "tab", attrs: { title: "Hai" }, content: [{ id: "tp2", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "nội dung hai" }] }] }] }], { focus: false }); s.select(["T"], { editing: null }); });
-  await insp(page).getByRole("radio", { name: "Dọc" }).click();
+  await insp(page).getByRole("radio", { name: "Dọc" }).last().click();
   await insp(page).getByRole("checkbox", { name: "Thành accordion trên điện thoại" }).check();
   expect((await find(page, "tabs")).attrs).toMatchObject({ orientation: "vertical", mobileAccordion: true });
   const tabs = c.locator(".ecx-tabs.is-vertical.has-mobile-accordion");
@@ -400,8 +403,8 @@ test("accordion: 2 cột, icon dấu cộng bên trái, thẻ tiêu đề, FAQ",
   await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "A", type: "accordion", attrs: {}, content: [
     { id: "d1", type: "details", attrs: { summary: "Một" }, content: [{ id: "dp1", type: "paragraph", attrs: {}, inline: [] }] },
     { id: "d2", type: "details", attrs: { summary: "Hai" }, content: [{ id: "dp2", type: "paragraph", attrs: {}, inline: [] }] }] }], { focus: false }); s.select(["A"], { editing: null }); });
-  await insp(page).getByRole("radio", { name: "2 cột" }).click();
-  await insp(page).getByRole("radio", { name: "Dấu cộng" }).click();
+  await insp(page).getByRole("radio", { name: "2 cột" }).last().click();
+  await insp(page).getByRole("radio", { name: "Dấu cộng" }).last().click();
   await insp(page).getByRole("radiogroup", { name: "Vị trí icon" }).getByRole("radio", { name: "Trái" }).click();
   await insp(page).getByRole("radio", { name: "h3" }).click();
   await insp(page).getByRole("checkbox", { name: /FAQ Schema/ }).check();
@@ -423,7 +426,7 @@ test("nút: chỉ icon, icon hiện khi rê (chỉ hiện ô khi nút có icon);
   await expect(c.locator(".ecx-button.is-icon-only")).not.toContainText("Một");
   await expect(insp(page).getByRole("checkbox", { name: "Icon chỉ hiện khi rê chuột" })).toHaveCount(0);
   await page.evaluate(() => (window as any).__ecx.store.select(["G"], { editing: null }));
-  await insp(page).getByRole("radio", { name: "Dọc" }).click();
+  await insp(page).getByRole("radio", { name: "Dọc" }).last().click();
   const [a, b] = [await c.locator(".ecx-buttons-group .ecx-button").nth(0).boundingBox(), await c.locator(".ecx-buttons-group .ecx-button").nth(1).boundingBox()];
   expect(b!.y).toBeGreaterThan(a!.y + a!.height - 1);
 });
@@ -433,7 +436,7 @@ test("thanh tiến độ: giá trị / tối đa, hậu tố, chữ trong thanh"
   await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "P", type: "progressBar", attrs: { label: "Đơn hàng", value: 30 } }], { focus: false }); s.select(["P"], { editing: null }); });
   await insp(page).getByRole("spinbutton", { name: "Giá trị tối đa" }).fill("60");
   await insp(page).getByRole("textbox", { name: "Hậu tố của số" }).fill(" đơn");
-  await insp(page).getByRole("radio", { name: "Trong thanh" }).click();
+  await insp(page).locator(".ecx-variations").getByRole("radio", { name: "Chữ trong thanh" }).click();
   const bar = c.locator(".ecx-progress.is-text-inside");
   await expect(bar.locator(".ecx-progress-value")).toHaveText("30 đơn");
   await expect(bar.locator(".ecx-progress-bar")).toHaveAttribute("style", /width: 50%/);
@@ -460,8 +463,8 @@ test("hộp icon: media số, khung tròn, icon bên phải, nút Xem thêm (ô 
   await expect(insp(page).getByRole("textbox", { name: "Số hiển thị" })).toHaveCount(0);
   await insp(page).getByRole("radio", { name: "Số" }).click();
   await insp(page).getByRole("textbox", { name: "Số hiển thị" }).fill("01");
-  await insp(page).getByRole("radio", { name: "Tròn" }).click();
-  await insp(page).getByRole("radio", { name: "Bên phải" }).click();
+  await insp(page).getByRole("radio", { name: "Tròn", exact: true }).click();
+  await insp(page).locator(".ecx-variations").getByRole("radio", { name: "Icon phải" }).click();
   await insp(page).getByRole("radio", { name: /Xem thêm/ }).click();
   await insp(page).getByRole("textbox", { name: "Chữ trên nút" }).fill("Chi tiết");
   const box = c.locator(".ecx-icon-box.is-right");
@@ -571,7 +574,7 @@ test("icon: độ dày nét, khung tròn, liên kết (ô mở tab chỉ hiện 
   const c = await open(page, "?doc=post");
   await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "ic1", type: "icon", attrs: { name: "heart", size: 40 } }]); s.select(["ic1"]); });
   const i = insp(page);
-  await i.getByRole("radio", { name: "Tròn" }).click();
+  await i.getByRole("radio", { name: "Tròn", exact: true }).click();
   await expect(c.locator(".ecx-icon-shape.is-circle")).toHaveCSS("padding-top", "16px");
   await i.getByRole("slider", { name: "Độ dày nét" }).fill("1");
   await expect(c.locator(".ecx-icon-block svg")).toHaveAttribute("stroke-width", "1");
@@ -591,10 +594,12 @@ test("danh sách icon: 2 cột, khung tròn, sửa từng mục (chữ, không i
   const i = insp(page), list = c.locator(".ecx-icon-list");
   await i.getByRole("slider", { name: "Số cột" }).fill("2");
   await expect(list).toHaveClass(/is-cols-2/);
-  await i.getByRole("radiogroup", { name: "Khung icon" }).getByRole("radio", { name: "Tròn" }).click();
+  await i.getByRole("radiogroup", { name: "Khung icon" }).getByRole("radio", { name: "Tròn", exact: true }).click();
   await expect(list).toHaveClass(/has-icon-circle/);
-  await i.getByLabel("Icon 1").selectOption("none");
+  await i.getByRole("button", { name: "Icon 1", exact: true }).click();
+  await i.locator(".ecx-icon-pop").getByRole("option", { name: "Không có icon" }).click();
   await expect(list.locator(".ecx-widget-icon")).toHaveCount(1);
+  await i.getByLabel("Chữ 2").click();
   await i.getByLabel("Liên kết 2").fill("/hai");
   await i.getByRole("button", { name: "Thêm mục" }).click();
   await i.getByLabel("Chữ 3").fill("Ba");
@@ -638,12 +643,12 @@ test("hộp icon: media là ảnh — ô chọn ảnh trên khối, căn dọc c
   // Chưa có ảnh: ô chọn ảnh nằm ngay trên khối; ô icon và khung icon ẩn
   await expect(c.locator(".ecx-icon-box-icon.is-image .ecx-media-pick")).toBeVisible();
   await expect(insp(page).getByRole("combobox", { name: "Icon", exact: true })).toHaveCount(0);
-  await expect(insp(page).getByRole("radio", { name: "Tròn" })).toHaveCount(0);
+  await expect(insp(page).getByRole("radio", { name: "Tròn", exact: true })).toHaveCount(0);
   const src = "/uploads/dich-vu.jpg"; // đường dẫn data: bị bộ lọc URL bỏ (đúng thiết kế)
   await page.evaluate((u) => (window as any).__ecx.store.setAttrs(["I"], { src: u, alt: "Ảnh dịch vụ" }), src);
   const img = c.locator(".ecx-icon-box-icon.is-image img");
   await expect(img).toHaveAttribute("alt", "Ảnh dịch vụ");
-  await insp(page).getByRole("radio", { name: "Bên trái" }).click();
+  await insp(page).locator(".ecx-variations").getByRole("radio", { name: "Icon trái" }).click();
   await insp(page).getByRole("radiogroup", { name: "Căn dọc với chữ" }).getByRole("radio", { name: "Giữa" }).click();
   await insp(page).getByRole("checkbox", { name: /Cao bằng ô chứa/ }).check();
   const box = c.locator(".ecx-icon-box.is-left.is-v-center.is-full-height");
@@ -670,7 +675,7 @@ test("lời chứng thực: kiểu bong bóng (khung ngoài bỏ nền, lời tr
   const bg = (l: any) => l.evaluate((e: Element) => getComputedStyle(e).backgroundColor);
   const cardBg = await bg(box);
   expect(cardBg).not.toBe("rgba(0, 0, 0, 0)");
-  await insp(page).getByRole("radio", { name: "Bong bóng" }).click();
+  await insp(page).getByRole("radio", { name: "Bong bóng" }).last().click();
   await expect(c.locator(".ecx-testimonial.is-bubble")).toBeVisible();
   expect(await bg(box)).toBe("rgba(0, 0, 0, 0)");
   expect(await bg(box.locator(".ecx-testimonial-quote"))).toBe(cardBg);
@@ -895,8 +900,9 @@ test("khách hàng: section nền màu website 40% đặt trên nền ảnh cố
     { id: "OUT", type: "group", attrs: { style: { background: { image: "/sample.svg", fixed: true }, padding: { base: "xl" } } }, content: [
       { id: "SEC", type: "group", attrs: { style: { padding: { base: "lg" } } }, content: [{ id: "p1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Nội dung section" }] }] }] }], { focus: false }); s.select(["SEC"], { editing: null }); });
   const i = insp(page);
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click(); // Nền của Nhóm ở tab Kiểu dáng
   await i.locator(".ecx-style-section", { hasText: "Nền" }).first().locator(".ecx-style-section-toggle[aria-expanded=false]").click({ timeout: 1500 }).catch(() => {});
-  await i.locator(".ecx-color-row-btn").first().click(); // Nền ở tab Cài đặt của Nhóm
+  await i.locator(".ecx-color-row-btn").first().click(); // Nền ở tab Kiểu dáng của Nhóm
   const pop = page.locator(".ecx-color-pop");
   await pop.getByRole("button", { name: /primary/ }).first().click();
   await i.locator(".ecx-color-row-btn").first().click(); // chọn màu đóng bảng; mở lại để chỉnh độ đậm
@@ -941,6 +947,7 @@ test("nhóm: lớp phủ nền chọn loại Màu / Chuyển màu / Ảnh, kiể
   await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [
     { id: "G", type: "group", attrs: { style: { background: { image: { base: "/sample.svg" } }, padding: { base: "xl" } } }, content: [{ id: "p1", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Nội dung" }] }] }], { focus: false }); s.select(["G"], { editing: null }); });
   const i = insp(page);
+  await i.getByRole("tab", { name: "Kiểu dáng" }).click();
   await i.getByRole("button", { name: "Lớp phủ nền" }).click();
   const ov = i.locator(".ecx-style-section", { hasText: "Lớp phủ nền" });
   await expect(ov.getByRole("radiogroup", { name: "Loại lớp phủ" })).toBeVisible();

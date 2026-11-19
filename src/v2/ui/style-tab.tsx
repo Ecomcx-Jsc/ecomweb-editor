@@ -1,4 +1,4 @@
-import { normalizeStyle, type BlockStyle, type Device } from "@ecomcx/ecomweb-content";
+import { normalizeStyle, scopeCustomCss, CUSTOM_CSS_MAX, type BlockStyle, type Device } from "@ecomcx/ecomweb-content";
 import { AlignCenter, AlignJustify, AlignLeft, AlignRight } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { labelsLegacy, type EditorLabels } from "../../shared/labels";
@@ -6,6 +6,7 @@ import { useEditor } from "../context";
 import { ColorInput } from "./color-field";
 import { GradientField } from "./layout-panel";
 import { MotionPanel } from "./motion-panel";
+import { PlaceTransformPanels } from "./transform-panel";
 import { Row, Section, Seg, StateTabs, cx } from "./style-controls";
 import { styleGroups, type StyleGroup } from "./style-supports";
 import { FourInput, SpacingControl, UnitInput } from "./unit-controls";
@@ -31,6 +32,21 @@ const STEP_ORDER = ["0", "none", "3xs", "2xs", "xxs", "xs", "sm", "md", "base", 
 export const byStep = (keys: string[]) => [...keys].sort((a, b) => { const i = STEP_ORDER.indexOf(a), j = STEP_ORDER.indexOf(b); return (i < 0 ? 99 : i) - (j < 0 ? 99 : j); });
 
 /** Ô giá trị (preset như `lg` hoặc `16px`, `1.5rem`…): lưu khi rời ô / Enter; sai thì viền đỏ, không lưu. */
+/** CSS riêng của khối: ô soạn có nháp riêng (chỉ ghi vào khối khi rời ô — không chen từng phím vào lịch sử hoàn tác), báo ngay phần bị lọc bỏ. */
+function CustomCssField({ value, onCommit, lt }: { value: string; onCommit(v: string | undefined): void; lt: Record<string, string> }) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  const report = scopeCustomCss(draft, ".x");
+  return (
+    <>
+      <textarea className="ecx-input ecx-css-input" rows={6} spellCheck={false} aria-label={lt.customCss} placeholder={lt.customCssExample} maxLength={CUSTOM_CSS_MAX} value={draft}
+        onChange={(e) => setDraft(e.target.value)} onBlur={() => { if (draft !== value) onCommit(draft.trim() ? draft : undefined); }} />
+      <p className="ecx-field-help">{lt.customCssHelp}</p>
+      {report.dropped.length > 0 && <ul className="ecx-field-warn" role="alert">{report.dropped.map((d) => <li key={d}>{lt.customCssDropped}: {d}</li>)}</ul>}
+    </>
+  );
+}
+
 function ValueInput({ value, onCommit, check, placeholder, label, inherited }: { value?: string | number; onCommit(v: string | null): void; check(v: string): boolean; placeholder?: string; label: string; inherited?: string }) {
   const [text, setText] = useState(value == null ? "" : String(value));
   const [bad, setBad] = useState(false);
@@ -135,6 +151,8 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   const container = registry.get(type)?.kind === "container";
   // Trạng thái rê chuột nằm ngay trong mục Màu / Viền (công tắc Thường · Rê chuột), không còn mục "Khi rê chuột" riêng
   const hoverOk = groups.has("hover") || style.hover !== undefined;
+  const { store: hvStore, ui: hvUi } = useEditor();
+  const hvId = hvStore.currentIds[hvStore.currentIds.length - 1] ?? null;
   const fxOk = groups.has("effects") || ["gradient", "shadow", "aspectRatio", "position"].some((k) => style[k] !== undefined);
   const setHover = (patch: NonNullable<BlockStyle["hover"]>) => set("hover", { ...style.hover, ...patch });
   const shadows = ["sm", "md", "lg", "xl", ...Object.keys(presets?.shadows ?? {}).filter((x) => !["sm", "md", "lg", "xl"].includes(x))];
@@ -146,24 +164,9 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
   );
   const appearance = `${style.fontWeight ?? ""}${style.fontStyle === "italic" ? "i" : ""}`;
 
-  return (
-    <div className="ecx-style-tab">
-
-      {part !== "advanced" && variants && variants.length > 0 && (
-        <div className="ecx-style-row">
-          <span className="ecx-field-label">{t.blockVariant}</span>
-          <div role="radiogroup" aria-label={t.blockVariant} className="ecx-seg is-text">
-            {[{ name: "", label: t.variant_default }, ...variants].map((v) => (
-              <button key={v.name || "default"} type="button" role="radio" aria-checked={(variant ?? "") === v.name} className={cx("ecx-seg-btn", (variant ?? "") === v.name && "is-active")}
-                onClick={() => onVariantChange?.(v.name || null)}>{v.label}</button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {parts && lead}
-
-      {show("typography", TYPO) && <Section title={t.style_typography} modified={has(TYPO)} onReset={() => reset(TYPO)} moreOpen={has(["fontFamily", "letterSpacing", "textDecoration", "textTransform", "textShadow", "writingMode"])}
+  // Khối chứa (Section, Hàng, Cột, Nhóm…): Màu / Nền / Viền lên trước, Kiểu chữ xuống sau — việc người dùng cần trước hết; khối chữ thì ngược lại
+  const typographySection = (
+    show("typography", TYPO) && <Section title={t.style_typography} modified={has(TYPO)} onReset={() => reset(TYPO)} moreOpen={has(["fontFamily", "letterSpacing", "textDecoration", "textTransform", "textShadow", "writingMode"])}
         more={<>
           {row("fontFamily", t.style_fontFamily,
             <select className="ecx-input" value={style.fontFamily ?? ""} aria-label={t.style_fontFamily} onChange={(e) => set("fontFamily", e.target.value || undefined)}>
@@ -195,7 +198,32 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         {row("lineHeight", t.style_lineHeight, <ValueInput label={t.style_lineHeight} value={get("lineHeight")} inherited={inherited("lineHeight")} check={ok("lineHeight")} placeholder="1.5" onCommit={(v) => set("lineHeight", v == null ? undefined : Number(v))} />)}
         {row("textAlign", t.textAlign, <Seg label={t.textAlign} value={get("textAlign")} onChange={(v) => set("textAlign", v)}
           options={[["left", AlignLeft, t.alignLeft], ["center", AlignCenter, t.alignCenter], ["right", AlignRight, t.alignRight], ["justify", AlignJustify, t.alignJustify]]} />)}
-      </Section>}
+      </Section>
+  );
+  return (
+    <div className="ecx-style-tab">
+      {part !== "advanced" && hvId && (
+        <label className="ecx-check-row ecx-hover-preview-toggle">
+          <input type="checkbox" role="switch" className="ecx-switch" checked={hvUi.previewHoverId === hvId} onChange={(e) => hvUi.setPreviewHover(e.target.checked ? hvId : null)} />
+          <span>{lt.hoverPreview}</span>
+        </label>
+      )}
+
+      {part !== "advanced" && variants && variants.length > 0 && (
+        <div className="ecx-style-row">
+          <span className="ecx-field-label">{t.blockVariant}</span>
+          <div role="radiogroup" aria-label={t.blockVariant} className="ecx-seg is-text">
+            {[{ name: "", label: t.variant_default }, ...variants].map((v) => (
+              <button key={v.name || "default"} type="button" role="radio" aria-checked={(variant ?? "") === v.name} className={cx("ecx-seg-btn", (variant ?? "") === v.name && "is-active")}
+                onClick={() => onVariantChange?.(v.name || null)}>{v.label}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {parts && lead}
+
+      {!container && typographySection}
 
       {show("color", ["color", "textGradient", "link"]) && <Section title={t.style_color} modified={has(["color", "textGradient", "link"]) || !!style.hover?.color} onReset={() => commit({ ...style, color: undefined, textGradient: undefined, link: undefined, hover: style.hover && { ...style.hover, color: undefined } })}>
         {hoverOk && <StateTabs value={colorState} onChange={setColorState} />}
@@ -258,8 +286,43 @@ export function StyleTab({ type, style: raw, onChange, device, onDeviceChange, v
         </>}
       </Section>}
 
+      {container && typographySection}
+
+      {part === "advanced" && <PlaceTransformPanels style={style} device={device} commit={commit} />}
+
+      {part === "advanced" && <Section title={lt.backdrop} modified={!!style.backdropBlur} defaultOpen={!!style.backdropBlur} onReset={() => set("backdropBlur", undefined)}>
+        <label className="ecx-textshadow-row"><span>{lt.backdropBlur}: {style.backdropBlur ?? "0px"}</span>
+          <input type="range" className="ecx-range" min={0} max={40} step={1} aria-label={lt.backdropBlur} value={parseInt(style.backdropBlur ?? "0", 10) || 0}
+            onChange={(e) => set("backdropBlur", Number(e.target.value) > 0 ? `${e.target.value}px` : undefined)} /></label>
+        <p className="ecx-field-help">{lt.backdropHelp}</p>
+      </Section>}
+
       {part === "advanced" && fxOk && <Section title={lt.sticky} modified={!!style.position} defaultOpen={!!style.position}>
         <label className="ecx-check"><input type="checkbox" checked={!!style.position} onChange={(e) => set("position", e.target.checked ? { type: "sticky" } : undefined)} /> {lt.sticky}</label>
+      </Section>}
+
+      {part === "advanced" && <Section title={lt.audience} modified={!!style.audience} defaultOpen={!!style.audience} onReset={() => set("audience", undefined)}>
+        <div className="ecx-seg" role="radiogroup" aria-label={lt.audience}>
+          {([["", lt.audienceAll], ["guest", lt.audienceGuest], ["user", lt.audienceUser]] as const).map(([k, label]) => (
+            <label key={k} className="ecx-check"><input type="radio" name="ecx-audience" checked={(style.audience ?? "") === k} onChange={() => set("audience", k ? (k as "guest" | "user") : undefined)} /> {label}</label>))}
+        </div>
+        <p className="ecx-field-help">{lt.audienceHelp}</p>
+      </Section>}
+
+      {part === "advanced" && <Section title={lt.schedule} modified={!!style.schedule} defaultOpen={!!style.schedule} onReset={() => set("schedule", undefined)}>
+        {(["from", "until"] as const).map((k) => {
+          const iso = style.schedule?.[k];
+          const d = iso ? new Date(iso) : null;
+          const local = d && Number.isFinite(d.getTime()) ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}` : "";
+          return row(`schedule-${k}`, k === "from" ? lt.scheduleFrom : lt.scheduleUntil,
+            <input className="ecx-input" type="datetime-local" aria-label={k === "from" ? lt.scheduleFrom : lt.scheduleUntil} value={local}
+              onChange={(e) => { const next = { ...(style.schedule ?? {}) }; if (e.target.value) next[k] = new Date(e.target.value).toISOString(); else delete next[k]; set("schedule", Object.keys(next).length ? next : undefined); }} />);
+        })}
+        <p className="ecx-field-help">{lt.scheduleHelp}</p>
+      </Section>}
+
+      {part === "advanced" && <Section title={lt.customCss} modified={!!style.customCss} defaultOpen={!!style.customCss}>
+        <CustomCssField value={style.customCss ?? ""} onCommit={(v) => set("customCss", v)} lt={lt as Record<string, string>} />
       </Section>}
 
       {show("motion", ["motion"]) && <MotionPanel type={type} style={raw} onChange={onChange} />}

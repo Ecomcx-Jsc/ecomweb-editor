@@ -29,6 +29,8 @@ export interface CanvasProps {
   /** Vẽ thêm quanh nội dung (vd tiêu đề bài phía trên). */
   before?: ReactNode;
   after?: ReactNode;
+  /** Khung chỉ xem (xem trước khối / thư viện mẫu): không mang dấu nhận diện khung soạn chính (`data-ecx-canvas`). */
+  preview?: boolean;
 }
 
 const SRC_DOC = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head><body class="ecx-canvas-body"></body></html>`;
@@ -41,7 +43,7 @@ export const DESKTOP_MIN_WIDTH = 1025;
 /** Thu nhỏ dưới tỉ lệ này thì chữ quá nhỏ để đọc / gõ (máy thật là điện thoại, tablet dọc): vẽ đúng bề rộng khung, không thu. */
 export const MIN_FIT = 0.6;
 
-export function Canvas({ device: deviceProp, className, contentClassName = "ecx-content", before, after }: CanvasProps) {
+export function Canvas({ device: deviceProp, className, contentClassName = "ecx-content", before, after, preview }: CanvasProps) {
   const { ui, labels } = useEditor();
   const frameRef = useRef<HTMLIFrameElement>(null);
   const [doc, setDoc] = useState<Document | null>(null);
@@ -61,9 +63,10 @@ export function Canvas({ device: deviceProp, className, contentClassName = "ecx-
     if (!f || !d) return;
     ui.canvasFrame = f;
     ui.canvasDoc = d;
+    if (preview) d.documentElement.setAttribute("data-ecx-preview", "");
     setDoc(d);
     ui.bump();
-  }, [ui]);
+  }, [ui, preview]);
 
   // srcDoc có thể đã nạp xong trước khi React gắn onLoad
   useLayoutEffect(() => {
@@ -86,7 +89,7 @@ export function Canvas({ device: deviceProp, className, contentClassName = "ecx-
   return (
     <div ref={wrapRef} className={["ecx-canvas-wrap", `is-${device}`, zoom !== 1 && "is-zoomed-out", className].filter(Boolean).join(" ")}>
       <iframe ref={frameRef} className="ecx-canvas-frame" title={labels.canvas} srcDoc={SRC_DOC} onLoad={onLoad}
-        style={style} data-ecx-canvas="" />
+        style={style} {...(preview ? { "data-ecx-preview": "" } : { "data-ecx-canvas": "" })} />
       {doc && createPortal(<CanvasWrapper><CanvasRoot doc={doc} contentClassName={contentClassName} before={before} after={after} /></CanvasWrapper>, doc.body)}
     </div>
   );
@@ -113,6 +116,7 @@ function CanvasRoot({ doc, contentClassName, before, after }: { doc: Document; c
   const title = useEditorState(useCallback((s) => s.docs[activeId]?.title, [activeId]));
   useCanvasDocument(doc);
   useCanvasStyles(doc);
+  useHoverPreview(doc);
   useCanvasKeys(doc);
   useCanvasEvents(doc);
   useMoveAnimation(doc);
@@ -152,6 +156,50 @@ function useCanvasDocument(doc: Document) {
 }
 
 /** CSS trong iframe: nền của trình soạn, CSS website (host), preset theme, kiểu dáng các khối. */
+/**
+ * Xem trước trạng thái rê chuột của một khối: lấy mọi quy tắc :hover có nhắc class riêng của khối (ecx-s-… / ecx-c-…), sao thành quy tắc thường
+ * (`:hover` → `:not(#ecx-hv)` để thắng quy tắc nền về độ ưu tiên). Quy tắc của theme / khối khác không bị đụng.
+ */
+function useHoverPreview(doc: Document) {
+  const { ui, store } = useEditor();
+  const tick = useUiTick();
+  const selected = useEditorState((s) => s.selection.ids.join(",") + "|" + (s.selection.editing ?? ""));
+  // Chọn khối khác (hoặc bỏ chọn) → tự tắt xem trước
+  useLayoutEffect(() => { if (ui.previewHoverId && !store.currentIds.includes(ui.previewHoverId)) ui.setPreviewHover(null); }, [selected, ui, store]);
+  useLayoutEffect(() => {
+    doc.getElementById("ecx-hover-preview")?.remove();
+    const id = ui.previewHoverId;
+    if (!id) return;
+    const el = doc.querySelector<HTMLElement>(`[data-ecx-block="${CSS.escape(id)}"]`);
+    if (!el) return;
+    const classes = [...el.classList].filter((c) => /^ecx-(s|c)-/.test(c));
+    if (!classes.length) return;
+    const mine = (sel: string) => classes.some((c) => sel.includes(`.${c}`));
+    const out: string[] = [];
+    const walk = (rules: CSSRuleList, wrap: string[]) => {
+      for (const r of Array.from(rules)) {
+        // Quy tắc thuộc cửa sổ của iframe: `instanceof` với lớp của cửa sổ chính luôn sai → nhận biết bằng thuộc tính
+        if ("selectorText" in r) {
+          const r2 = r as CSSStyleRule;
+          if (!r2.selectorText.includes(":hover") || !mine(r2.selectorText)) continue;
+          const sel = r2.selectorText.split(",").filter((s) => s.includes(":hover") && mine(s)).map((s) => s.replace(/:hover/g, ":not(#ecx-hv)")).join(",");
+          if (sel) out.push(wrap.reduce((css, w) => `${w}{${css}}`, `${sel}{${r2.style.cssText}}`));
+        } else if ("cssRules" in r) {
+          const g = r as CSSGroupingRule & { conditionText?: string };
+          walk(g.cssRules, g.conditionText !== undefined && !("supportText" in r) && !("name" in r) ? [...wrap, `@media ${g.conditionText}`] : wrap);
+        }
+      }
+    };
+    for (const sheet of Array.from(doc.styleSheets)) { try { walk(sheet.cssRules, []); } catch { /* CSS từ nguồn khác: không đọc được, bỏ qua */ } }
+    if (!out.length) return;
+    const st = doc.createElement("style");
+    st.id = "ecx-hover-preview";
+    st.textContent = out.join("\n");
+    doc.head.appendChild(st);
+    return () => st.remove();
+  }, [doc, ui, tick, ui.previewHoverId]);
+}
+
 function useCanvasStyles(doc: Document) {
   const { host, store } = useEditor();
   const head = doc.head;

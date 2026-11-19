@@ -31,7 +31,7 @@ const CORE_KINDS: Record<string, BlockKind> = {
   paragraph: "text", heading: "text", codeBlock: "text", preformatted: "text",
   bulletList: "container", orderedList: "container", listItem: "container", taskList: "container", taskItem: "container",
   blockquote: "container", columns: "container", column: "container", group: "container", callout: "container",
-  buttons: "container", cover: "container", mediaText: "container", pullquote: "text", details: "container", accordion: "container", tabs: "container", tab: "container", carousel: "container",
+  buttons: "container", cover: "container", mediaText: "container", pullquote: "text", details: "container", testimonials: "container", popup: "container", accordion: "container", tabs: "container", tab: "container", carousel: "container",
   table: "container", tableRow: "container", tableCell: "container", tableHeader: "container",
   query: "container", postTemplate: "container", queryEmpty: "container", stack: "container",
   horizontalRule: "atom", image: "atom", gallery: "atom", video: "atom", audio: "atom", file: "atom", youtube: "atom",

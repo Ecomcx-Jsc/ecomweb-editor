@@ -43,6 +43,8 @@ export interface EditorHost {
   renderBlock?(node: { type: string; attrs?: Record<string, unknown>; content?: unknown[] }): Promise<string | null>;
   /** Nơi đang soạn: "template" = template / phần dùng chung của theme (chèn được khối riêng của theme); mặc định = nội dung bài. */
   scope?: "template" | "content";
+  /** Chỉ cho thử nghiệm / playground: hiện cả khối cũ đã gộp (người dùng thật không bao giờ thấy). */
+  showAllBlocks?: boolean;
   /** Preset của theme (biến --ecx-*). */
   presets?: StylePresets;
   /**

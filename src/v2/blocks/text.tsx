@@ -1,4 +1,4 @@
-import { ICON_NAMES, blockCitation, blockShell } from "@ecomcx/ecomweb-content";
+import { blockCitation, blockShell , typedConfig } from "@ecomcx/ecomweb-content";
 import { Code, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, List, ListChecks, ListOrdered, Pilcrow, Quote, SquareCode, TextQuote, Type } from "lucide-react";
 import type { CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
@@ -36,9 +36,10 @@ function ParagraphEdit({ block, blockProps, editable }: BlockEditProps) {
 function HeadingEdit({ block, blockProps, editable }: BlockEditProps) {
   const tp = useMsgs("placeholders");
   const level = Math.min(6, Math.max(1, Number(block.attrs.level) || 2));
+  const tag = block.attrs.htmlTag === "p" || block.attrs.htmlTag === "span" || block.attrs.htmlTag === "div" ? block.attrs.htmlTag : `h${level}`;
   const bound = useBindingPreview(block, "content");
-  if (bound.bound) return <BoundText tagName={`h${level}`} preview={bound} blockProps={blockProps} style={align(block.attrs, "heading")} />;
-  return <RichText blockId={block.id} value={block.inline} tagName={`h${level}`} blockProps={{ ...blockProps, title: iconProps(block.attrs, "heading").title }} className={iconProps(block.attrs, "heading").className} style={align(block.attrs, "heading")} placeholder={tp.heading} placeholderAlways editable={editable} />;
+  if (bound.bound) return <BoundText tagName={tag} preview={bound} blockProps={blockProps} style={align(block.attrs, "heading")} />;
+  return <RichText blockId={block.id} value={block.inline} tagName={tag} blockProps={{ ...blockProps, title: iconProps(block.attrs, "heading").title, ...(typedConfig(block.attrs) ? { "data-ecx-typed": typedConfig(block.attrs)!.words[0] } : {}) } as typeof blockProps} className={iconProps(block.attrs, "heading").className} style={align(block.attrs, "heading")} placeholder={tp.heading} placeholderAlways editable={editable} />;
 }
 
 const CODE_LANGS = ["html", "css", "javascript", "typescript", "json", "bash", "python", "php", "sql", "csharp", "yaml", "markdown"];
@@ -148,12 +149,13 @@ export function textBlocks(): BlockType[] {
   return [
     {
       name: "paragraph", title: "Đoạn văn", icon: Pilcrow, category: "text", keywords: "doan van text paragraph p", kind: "text", edit: ParagraphEdit,
-      attributes: { textAlign: { type: "string", enum: ["left", "center", "right", "justify"] }, icon: { type: "string", enum: [...ICON_NAMES] }, iconPosition: { type: "string", enum: ["left", "right"], default: "left" }, iconTitle: { type: "string" } },
+      attributes: { textAlign: { type: "string", enum: ["left", "center", "right", "justify"] }, icon: { type: "string" }, iconPosition: { type: "string", enum: ["left", "right"], default: "left" }, iconTitle: { type: "string" } },
       supports: { style: true, anchor: true, className: true }, transforms: textTransforms("paragraph"),
     },
     {
       name: "heading", title: "Tiêu đề", icon: Heading2, category: "text", keywords: "tieu de heading h1 h2 h3 h4", kind: "text", edit: HeadingEdit,
-      attributes: { level: { type: "integer", default: 2, min: 1, max: 6 }, textAlign: { type: "string", enum: ["left", "center", "right", "justify"] }, icon: { type: "string", enum: [...ICON_NAMES] }, iconPosition: { type: "string", enum: ["left", "right"], default: "left" }, iconTitle: { type: "string" }, tocTitle: { type: "string" } },
+      attributes: { htmlTag: { type: "string", enum: ["p", "span", "div"] }, level: { type: "integer", default: 2, min: 1, max: 6 }, textAlign: { type: "string", enum: ["left", "center", "right", "justify"] }, icon: { type: "string" }, iconPosition: { type: "string", enum: ["left", "right"], default: "left" }, iconTitle: { type: "string" }, tocTitle: { type: "string" },
+        typedWords: { type: "string" }, typedSpeed: { type: "integer", default: 80, min: 30, max: 200 }, typedPause: { type: "integer", default: 1800, min: 600, max: 6000 }, typedLoop: { type: "boolean", default: true } },
       create: (attrs) => makeBlock("heading", { level: 2, ...attrs }),
       variations: [1, 2, 3, 4, 5, 6].map((level) => ({ name: `h${level}`, title: `H${level}`, icon: HEADING_ICONS[level], keywords: `h${level}`, attrs: { level }, isActive: (a) => Number(a.level) === level })),
       supports: { style: true, anchor: true, className: true }, transforms: textTransforms("heading"),

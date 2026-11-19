@@ -50,6 +50,16 @@ export function withDefaults(node: BNode, map: BlockPresetMap | null): BNode {
   return { ...node, attrs };
 }
 
+/**
+ * Kho kiểu đặt sẵn mặc định khi ứng dụng chủ không cung cấp `host.blockPresets`: lưu trong trình duyệt (mỗi máy một bộ),
+ * để "Kiểu / Đặt làm mặc định" luôn dùng được. Ứng dụng có máy chủ nên cung cấp kho riêng để theo cả website.
+ */
+const LOCAL_KEY = "ecx-block-presets";
+export const localBlockPresets = {
+  async load(): Promise<Record<string, unknown>> { try { return JSON.parse(localStorage.getItem(LOCAL_KEY) ?? "{}") ?? {}; } catch { return {}; } },
+  async save(map: Record<string, unknown>): Promise<Record<string, unknown>> { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(map)); } catch { /* trình duyệt chặn bộ nhớ: giữ trong phiên */ } return map; },
+};
+
 // Kho trong bộ nhớ (một lần nạp mỗi phiên soạn); UI đăng ký nghe thay đổi
 let current: BlockPresetMap | null = null;
 let loading: Promise<void> | null = null;

@@ -1,8 +1,9 @@
 import { controlsCss, normalizeStyle, styleClass, widthClass } from "@ecomcx/ecomweb-content";
 import { blockControls } from "../../shared/panel-store";
-import { Component, memo, useCallback, useContext, useEffect, useMemo, useRef, type ErrorInfo, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode } from "react";
+import { Component, memo, useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore, type ErrorInfo, type MouseEvent, type PointerEvent, type ReactElement, type ReactNode } from "react";
 import { DocScopeProvider, LoopPostContext, useDocScope, useEditor, useEditorState } from "../context";
 import { ServerBlock } from "./server-block";
+import { VariationChooser } from "./variation-picker";
 import { startDrag } from "./dnd";
 import { docIdOf, type NestedDocRef } from "../core/host";
 import { blocksFromDoc, makeBlock, type BNode } from "../core/model";
@@ -23,7 +24,7 @@ export function sectionOf(store: ReturnType<typeof useEditor>["store"], el: HTML
 
 /** Props gắn vào phần tử gốc của khối: chọn, viền, kiểu dáng, neo. */
 /** Khối chứa mà con phủ kín: có nhãn rê chuột để bấm chọn chính khối chứa (xem canvas-css). */
-const LABELED = new Set(["query", "postTemplate", "queryEmpty", "templatePart", "tabs", "tab", "accordion", "details", "carousel", "columns", "column", "buttons", "form", "mediaText", "cover"]);
+const LABELED = new Set(["query", "postTemplate", "queryEmpty", "templatePart", "tabs", "tab", "accordion", "details", "popup", "testimonials", "carousel", "columns", "column", "buttons", "form", "mediaText", "cover"]);
 
 export function useBlockProps(block: BNode, state: { selected: boolean; editing: boolean; mode: EditingMode }): BlockProps {
   const ctx = useEditor();
@@ -120,10 +121,14 @@ export const Block = memo(function Block({ node }: { node: BNode }) {
   const type = registry.get(node.type);
   const blockProps = useBlockProps(node, { selected, editing, mode: scope.mode });
   const setAttrs = useCallback((attrs: Record<string, unknown>) => store.setAttrs([node.id], attrs), [node.id, store]);
+  const { ui } = useEditor();
+  const picking = useSyncExternalStore(ui.subscribe, () => ui.pickIds.has(node.id));
+  // (Hook phải gọi trước mọi return sớm — ô chọn bố cục trả về sớm khi đang chờ chọn.) Khối trong vòng lặp bài (query › postTemplate) giữ giao diện của trình soạn: website chỉ biết bài của trang, không biết bài của vòng lặp
+  const loop = useContext(LoopPostContext);
   const Edit = type?.edit ?? FallbackEdit;
   const props: BlockEditProps = { block: node, attrs: node.attrs, setAttrs, blockProps, selected: selected || editing, editable: scope.mode !== "disabled", labels };
-  // Khối trong vòng lặp bài (query › postTemplate) giữ giao diện của trình soạn: website chỉ biết bài của trang, không biết bài của vòng lặp
-  const loop = useContext(LoopPostContext);
+  if (picking && type?.layouts?.length && scope.mode !== "disabled")
+    return <BlockBoundary id={node.id} type={node.type}><VariationChooser type={type} attrs={node.attrs} blockProps={blockProps as unknown as Record<string, unknown>} onPick={(v) => { setAttrs(v.attrs); ui.resolvePick(node.id); }} onSkip={() => ui.resolvePick(node.id, true)} /></BlockBoundary>;
   // editWhenSelected: đang chọn → ô giữ chỗ của trình soạn; vẫn đi qua ServerBlock để ô nhập không bị dựng lại (mất focus) khi chọn / bỏ chọn
   if (type?.serverRender && host.renderBlock && !loop)
     return <BlockBoundary id={node.id} type={node.type}><ServerBlock node={node} blockProps={blockProps} fallback={<Edit {...props} />} live={!(type.editWhenSelected && (selected || editing) && scope.mode !== "disabled")} /></BlockBoundary>;
@@ -168,12 +173,33 @@ export function InnerBlocks({ parent, appender = "auto" }: { parent: BNode; appe
   const kids = parent.content ?? [];
   const { store } = useEditor();
   const showAppender = appender === "auto" && scope.mode === "default" && !kids.length && store.canInsertInto(parent.id);
+  // Khối chứa đã có nội dung (Cột, Nhóm, Tab, Hộp lưu ý): nút "+" nhỏ ngay dưới khối cuối, hiện khi rê chuột / chọn — để thấy chỗ thêm tiếp và chỗ thả (như dòng "gõ / để chọn khối" của WordPress)
+  const showTail = appender === "auto" && scope.mode === "default" && kids.length > 0 && TAIL_PARENTS.has(parent.type) && !isFlowLayout(parent) && store.canInsertInto(parent.id);
   const elements = useBlockElements(kids);
   return (
     <>
       {elements}
       {showAppender && <Appender docId={scope.docId} parentId={parent.id} index={0} />}
+      {showTail && <TailAppender docId={scope.docId} parentId={parent.id} index={kids.length} />}
     </>
+  );
+}
+
+const TAIL_PARENTS = new Set(["column", "group", "tab", "callout"]);
+/** Nhóm dạng hàng ngang / lưới: thêm một ô vào hàng sẽ làm lệch bố cục → không có nút + cuối (dùng thanh công cụ / bảng chèn). */
+const isFlowLayout = (b: BNode) => { const t = (b.attrs.style as { layout?: { type?: string } } | undefined)?.layout?.type; return t === "flex" || t === "grid"; };
+
+/** Nút "+" nhỏ cuối khối chứa đã có nội dung: ẩn khi không rê chuột / chọn. */
+function TailAppender({ docId, parentId, index }: { docId: string; parentId: string; index: number }) {
+  const { ui, labels } = useEditor();
+  return (
+    <button type="button" className="ecx-tail-appender" title={labels.addBlock} aria-label={labels.addBlock} contentEditable={false} data-ecx-ui="" tabIndex={-1}
+      onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      onClick={(e) => {
+        const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const f = ui.canvasFrame?.getBoundingClientRect();
+        ui.openInserter({ mode: "appender", docId, parentId, index, rect: { left: (f?.left ?? 0) + r.left, top: (f?.top ?? 0) + r.top, bottom: (f?.top ?? 0) + r.bottom } });
+      }} data-ecx-placeholder="add"><span aria-hidden="true">+</span></button>
   );
 }
 

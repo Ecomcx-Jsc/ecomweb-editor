@@ -31,7 +31,7 @@ test.describe("bảng cài đặt khối", () => {
   test("Danh sách bài: chuyên mục chọn từ danh sách thật; bật “Theo trang đang xem” thì ẩn các thiết lập truy vấn", async ({ page }) => {
     const c = await open(page, "?doc=loop");
     await page.getByRole("button", { name: "Cây khối" }).click();
-    await page.locator(".ecx-list-row", { hasText: "Danh sách bài" }).first().click();
+    await page.locator(".ecx-list-row", { hasText: "Posts (Query Loop)" }).first().click();
     const cat = insp(page).getByLabel("Chuyên mục", { exact: true });
     await expect(cat.locator("option")).toHaveText(["— Chọn —", "Tin tức", "Sản phẩm", "Hướng dẫn"]);
     await cat.selectOption("tin-tuc");
@@ -43,24 +43,23 @@ test.describe("bảng cài đặt khối", () => {
     await expect(insp(page).getByLabel("Loại bài")).toHaveCount(0);
   });
 
-  test("Mạng xã hội: thêm liên kết, chọn mạng, đổi thứ tự, xoá — khung soạn hiện theo", async ({ page }) => {
+  test("Mạng xã hội: có sẵn 3 mạng mẫu; sửa địa chỉ, thêm, chọn mạng, đổi thứ tự, xoá — khung soạn hiện theo", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");
     await page.keyboard.press("Enter");
     await page.keyboard.type("/mang xa hoi");
     await page.keyboard.press("Enter");
-    await expect(c.locator('[data-ecx-placeholder="social"]')).toBeVisible();
     const ed = insp(page).locator(".ecx-social-editor");
-    await ed.getByRole("button", { name: "Thêm liên kết" }).click();
+    await expect.poll(() => c.locator(".ecx-social li:not(.ecx-ph-add) a").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")))).toEqual(["Facebook", "YouTube", "Zalo"]);
     await ed.getByLabel("Địa chỉ 1").fill("https://facebook.com/ecomcx");
     await ed.getByRole("button", { name: "Thêm liên kết" }).click();
-    await ed.getByLabel("Mạng 2").selectOption("zalo");
-    await ed.getByLabel("Địa chỉ 2").fill("https://zalo.me/0900000000");
-    await expect(c.locator(".ecx-social li:not(.ecx-ph-add)")).toHaveText(["Facebook", "Zalo"]);
-    await ed.locator("[data-social-row='1']").getByRole("button", { name: "Lên" }).click();
-    expect((await blockOf(page, "socialLinks")).attrs.links.map((l: { service: string }) => l.service)).toEqual(["zalo", "facebook"]);
+    await ed.getByLabel("Mạng 4").selectOption("tiktok");
+    await ed.getByLabel("Địa chỉ 4").fill("https://tiktok.com/@ecomcx");
+    await expect.poll(() => c.locator(".ecx-social li:not(.ecx-ph-add) a").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")))).toEqual(["Facebook", "YouTube", "Zalo", "TikTok"]);
+    await ed.locator("[data-social-row='2']").getByRole("button", { name: "Lên" }).click();
+    expect((await blockOf(page, "socialLinks")).attrs.links.map((l: { service: string }) => l.service)).toEqual(["facebook", "zalo", "youtube", "tiktok"]);
     await ed.locator("[data-social-row='1']").getByRole("button", { name: "Xoá liên kết" }).click();
-    await expect(c.locator(".ecx-social li:not(.ecx-ph-add)")).toHaveText(["Zalo"]);
+    await expect.poll(() => c.locator(".ecx-social li:not(.ecx-ph-add) a").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label")))).toEqual(["Facebook", "YouTube", "TikTok"]);
   });
 
   test("tab Kiểu dáng: một kiểu giao diện, màu preset, đặt lại; cỡ chữ theo khổ điện thoại hiện giá trị kế thừa", async ({ page }) => {
@@ -123,7 +122,7 @@ test.describe("bảng cài đặt khối", () => {
     await clickEnd(c, "Tiêu đề bài");
     const insp = page.locator(".ecx-inspector");
     await insp.locator(".ecx-icon-picker-btn").click();
-    await page.getByRole("option", { name: "star" }).click();
+    await page.getByRole("option", { name: "star", exact: true }).click();
     const h = c.locator("h1, h2").filter({ hasText: "Tiêu đề bài" }).first();
     expect(await h.evaluate((n) => getComputedStyle(n, "::before").content)).toBe('""');
     expect(await h.evaluate((n) => getComputedStyle(n, "::before").width)).not.toBe("auto");
@@ -151,13 +150,31 @@ test.describe("bảng cài đặt khối", () => {
     const center = insp.getByRole("radio", { name: "Giữa", exact: true });
     await expect(center.locator("svg")).toHaveCount(1);
     await expect(center).toHaveAttribute("title", "Giữa");
-    // Chữ gợi ý trong nút nằm trọn trong nút (không tràn / bị cắt)
+    // Nút vừa chèn đã có chữ mẫu (không còn là ô trống)
     const btn = c.locator('[data-type="button"]').first();
-    // Chữ gợi ý bám mép trái của ô chữ và rộng bằng ô (không bắt đầu giữa ô rồi bị cắt đuôi)
-    const ph = await btn.evaluate((a) => { const cs = getComputedStyle(a.querySelector("[data-ecx-rich]")!, "::before"); return { left: cs.left, right: cs.right, italic: cs.fontStyle }; });
-    expect(ph).toEqual({ left: "0px", right: "0px", italic: "normal" });
+    await expect(btn).toContainText("Mua ngay");
     await btn.click();
     await expect(insp.getByRole("textbox", { name: "Chữ", exact: true })).toHaveAttribute("placeholder", "Ví dụ: Mua ngay");
     await expect(insp.getByRole("textbox", { name: "Liên kết", exact: true })).toHaveAttribute("placeholder", /https/);
   });
+});
+
+test("Kiểu của khối: không cần ứng dụng chủ cũng 'Đặt kiểu hiện tại làm mặc định' — khối mới chèn nhận kiểu đó", async ({ page }) => {
+  await open(page, "?doc=empty");
+  await page.evaluate(() => { localStorage.removeItem("ecx-block-presets"); const st = (window as any).__ecx.store; st.insert("root", null, 0, [{ id: "ib1", type: "iconBox", attrs: { icon: "star", title: "A", style: { color: "red" } } }]); });
+  await page.reload();
+  await page.waitForTimeout(500);
+  await page.evaluate(() => { const st = (window as any).__ecx.store; st.insert("root", null, 0, [{ id: "ib1", type: "iconBox", attrs: { icon: "star", title: "A", style: { textAlign: "right" } } }]); });
+  await page.waitForTimeout(300);
+  await page.evaluate(() => (window as any).__ecx.store.select(["ib1"]));
+  const bar = page.locator(".ecx-inspector .ecx-preset");
+  await expect(bar).toBeVisible();
+  await bar.locator(".ecx-preset-btn").click();
+  await page.getByRole("button", { name: /Đặt kiểu hiện tại làm mặc định/ }).click();
+  await expect.poll(() => page.evaluate(() => JSON.stringify(JSON.parse(localStorage.getItem("ecx-block-presets") ?? "{}").iconBox?.default?.style ?? null))).toContain("right");
+  // chèn Icon Box mới từ bảng chèn → có kiểu mặc định
+  await page.getByRole("button", { name: /Thêm khối/ }).first().click();
+  await page.locator('.ecx-inserter-popover [data-key="iconBox"], .ecx-inserter-panel [data-key="iconBox"]').first().click();
+  const styles = await page.evaluate(() => { const out: unknown[] = []; const w = (l: any[]) => l.forEach((b) => { if (b.type === "iconBox") out.push(b.attrs.style ?? null); b.content && w(b.content); }); w((window as any).__ecx.store.getState().docs.root.blocks); return out; });
+  expect(JSON.stringify(styles)).toContain("right");
 });

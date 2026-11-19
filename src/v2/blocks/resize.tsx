@@ -22,7 +22,7 @@ export function useActiveWithin(id: string) {
  * Đặt tuyệt đối trong khối cột nên không ảnh hưởng bố cục flex.
  */
 export function ColumnHandles({ block }: { block: BNode }) {
-  const { store, labels } = useEditor();
+  const { store, labels, ui } = useEditor();
   const ref = useRef<HTMLSpanElement>(null);
   const [gaps, setGaps] = useState<Array<{ left: number; top: number; height: number }>>([]);
   const cols = block.content ?? [];
@@ -60,6 +60,23 @@ export function ColumnHandles({ block }: { block: BNode }) {
     const handle = e.currentTarget as HTMLElement;
     handle.setPointerCapture(e.pointerId);
     handle.classList.add("is-dragging");
+    // Alt + kéo: đổi KHOẢNG CÁCH giữa các cột (ô "Khoảng giữa các cột") thay vì độ rộng; số px hiện cạnh tay nắm
+    if (e.altKey) {
+      const startGap = Math.max(0, Math.round(b.left - a.right)), x0 = e.clientX;
+      const device = ui.device === "desktop" ? "base" : ui.device;
+      const moveGap = (ev: PointerEvent) => {
+        const px = Math.max(0, Math.min(200, Math.round(startGap + (ev.clientX - x0) * 2)));
+        handle.dataset.left = `${px}px`; handle.dataset.right = "";
+        const cur = store.block(block.id)?.attrs.columnsGap;
+        const obj: Record<string, string> = cur && typeof cur === "object" ? { ...(cur as Record<string, string>) } : typeof cur === "string" && cur ? { base: cur } : {};
+        obj[device] = `${px}px`;
+        store.setAttrs([block.id], { columnsGap: obj });
+      };
+      const upGap = () => { handle.removeEventListener("pointermove", moveGap); handle.removeEventListener("pointerup", upGap); handle.classList.remove("is-dragging"); store.breakMerge(); focusCanvas(handle); };
+      handle.addEventListener("pointermove", moveGap);
+      handle.addEventListener("pointerup", upGap);
+      return;
+    }
     const move = (ev: PointerEvent) => {
       const ratio = Math.min(0.9, Math.max(0.1, (ev.clientX - a.left) / (b.right - a.left)));
       const wa = Math.round(pair * ratio), wb = Math.round(pair - pair * ratio);
@@ -80,7 +97,7 @@ export function ColumnHandles({ block }: { block: BNode }) {
   return (
     <span ref={ref} className="ecx-col-handles" contentEditable={false} aria-hidden="true">
       {gaps.map((g, i) => (
-        <span key={i} className="ecx-col-handle" style={{ left: g.left, top: g.top, height: g.height }} title={labels.resize}
+        <span key={i} className="ecx-col-handle" style={{ left: g.left, top: g.top, height: g.height }} title={`${labels.resize} · Alt: ${labels.resizeGap}`}
           data-ecx-col-handle={i} onPointerDown={(e) => start(i, e)} onMouseDown={(e) => e.stopPropagation()} />
       ))}
     </span>
@@ -163,30 +180,33 @@ export function PaddingHandles({ blockId }: { blockId: string }) {
   const { store, ui, labels: v2 } = useEditor();
   const L = labelsLegacy(v2.lang);
   const ref = useRef<HTMLSpanElement>(null);
-  // Cỡ thật (px) của đệm / lề trên, dưới: vùng kéo cao đúng bằng nó (tối thiểu 8px) — kéo ở bất kỳ đâu trong vùng
-  const [px, setPx] = useState({ pt: 0, pb: 0, mt: 0, mb: 0 });
+  type Side = "top" | "bottom" | "left" | "right";
+  // Cỡ thật (px) của đệm / lề từng cạnh: vùng kéo dày đúng bằng nó (tối thiểu 8px) — kéo ở bất kỳ đâu trong vùng
+  const [px, setPx] = useState({ pt: 0, pb: 0, pl: 0, pr: 0, mt: 0, mb: 0, ml: 0, mr: 0 });
   useLayoutEffect(() => {
     const el = ui.blockEl(blockId);
     if (!el) return;
     const cs = el.ownerDocument.defaultView!.getComputedStyle(el), n = (k: string) => Math.round(parseFloat(cs.getPropertyValue(k)) || 0);
-    const next = { pt: n("padding-top"), pb: n("padding-bottom"), mt: n("margin-top"), mb: n("margin-bottom") };
-    setPx((p) => (p.pt === next.pt && p.pb === next.pb && p.mt === next.mt && p.mb === next.mb ? p : next));
+    const next = { pt: n("padding-top"), pb: n("padding-bottom"), pl: n("padding-left"), pr: n("padding-right"), mt: n("margin-top"), mb: n("margin-bottom"), ml: n("margin-left"), mr: n("margin-right") };
+    setPx((p) => (JSON.stringify(p) === JSON.stringify(next) ? p : next));
   });
-  const start = (kind: "padding" | "margin", side: "top" | "bottom", e: React.PointerEvent) => {
+  const start = (kind: "padding" | "margin", side: Side, e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const handle = e.currentTarget as HTMLElement;
     const el = ui.blockEl(blockId);
     if (!el) return;
+    const horizontal = side === "left" || side === "right";
     const startPx = parseFloat(el.ownerDocument.defaultView!.getComputedStyle(el).getPropertyValue(`${kind}-${side}`)) || 0;
-    const y0 = e.clientY;
+    const p0 = horizontal ? e.clientX : e.clientY;
     const device = ui.device === "desktop" ? "base" : ui.device;
     handle.setPointerCapture(e.pointerId);
     handle.classList.add("is-dragging");
     const move = (ev: PointerEvent) => {
-      // Đệm dưới / lề dưới: kéo xuống là tăng; đệm trên: kéo xuống tăng; lề trên: kéo lên tăng
-      const d = ev.clientY - y0;
-      const px = Math.max(0, Math.round(startPx + (kind === "margin" && side === "top" ? -d : d)));
+      // Cạnh dưới / phải: kéo ra xa (xuống / sang phải) là tăng; đệm cạnh trên / trái: kéo vào trong tăng; lề trên / trái: kéo ra ngoài (lên / sang trái) tăng
+      const d = (horizontal ? ev.clientX : ev.clientY) - p0;
+      const outward = side === "top" || side === "left";
+      const px = Math.max(0, Math.round(startPx + (kind === "margin" && outward ? -d : d) * (kind === "padding" && side === "right" ? -1 : 1)));
       const node = store.block(blockId);
       if (!node) return;
       const style = (normalizeStyle(node.attrs.style) ?? {}) as BlockStyle & Record<"padding" | "margin", Record<string, unknown> | undefined>;
@@ -196,19 +216,28 @@ export function PaddingHandles({ blockId }: { blockId: string }) {
       store.setAttrs([blockId], { style: normalizeStyle({ ...style, [kind]: { ...(style[kind] ?? {}), [device]: sides } }) ?? undefined });
       requestAnimationFrame(() => showSpacingViz(ui.blockEl(blockId), kind, [side]));
     };
+    // Nghe ở cả tài liệu khung soạn (không dựa vào pointer capture): tay nắm dịch chỗ khi giá trị đổi (cạnh phải / dưới) làm capture mất giữa chừng
+    const doc = el.ownerDocument;
     const up = () => {
-      handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up);
+      doc.removeEventListener("pointermove", move, true); doc.removeEventListener("pointerup", up, true); doc.removeEventListener("pointercancel", up, true);
       handle.classList.remove("is-dragging"); hideSpacingViz(ui.canvasDoc); store.breakMerge(); focusCanvas(handle);
     };
-    handle.addEventListener("pointermove", move);
-    handle.addEventListener("pointerup", up);
+    doc.addEventListener("pointermove", move, true);
+    doc.addEventListener("pointerup", up, true);
+    doc.addEventListener("pointercancel", up, true);
   };
+  const w = (n: number) => Math.max(8, n);
   const zones = [
-    ["padding", "top", { top: 0, height: Math.max(8, px.pt) }],
-    ["padding", "bottom", { bottom: 0, height: Math.max(8, px.pb) }],
-    ["margin", "top", { top: -Math.max(8, px.mt), height: Math.max(8, px.mt) }],
-    ["margin", "bottom", { bottom: -Math.max(8, px.mb), height: Math.max(8, px.mb) }],
-  ] as const;
+    ["padding", "top", { top: 0, height: w(px.pt) }],
+    ["padding", "bottom", { bottom: 0, height: w(px.pb) }],
+    ["margin", "top", { top: -w(px.mt), height: w(px.mt) }],
+    ["margin", "bottom", { bottom: -w(px.mb), height: w(px.mb) }],
+    // Hai cạnh ngang chỉ có tay nắm khi giá trị đã > 0 (dải rộng đúng bằng nó, nằm trong vùng đệm / lề) — không phủ lên chữ hay khối bên cạnh
+    ...(px.pl > 0 ? [["padding", "left", { left: 0, width: px.pl }]] : []),
+    ...(px.pr > 0 ? [["padding", "right", { right: 0, width: px.pr }]] : []),
+    ...(px.ml > 0 ? [["margin", "left", { left: -px.ml, width: px.ml }]] : []),
+    ...(px.mr > 0 ? [["margin", "right", { right: -px.mr, width: px.mr }]] : []),
+  ] as ReadonlyArray<readonly ["padding" | "margin", Side, React.CSSProperties]>;
   return (
     <span ref={ref} className="ecx-pad-handles" contentEditable={false} aria-hidden="true">
       {zones.map(([kind, side, pos]) => (
@@ -268,6 +297,8 @@ export function ContentWidthHandles({ blockId }: { blockId: string }) {
   if (!box) return null;
   return (
     <span className="ecx-cw-handles" contentEditable={false} aria-hidden="true">
+      {/* Vùng nội dung hiện rõ giữa hai tay: nội dung canh giữa (chữ, logo) co lại đối xứng nên nhìn như đứng yên — khung này cho thấy độ rộng đang đổi */}
+      <span className={`ecx-cw-guide${drag !== null ? " is-dragging" : ""}`} style={{ left: box.left, width: box.right - box.left }} />
       {([["left", box.left, -1], ["right", box.right, 1]] as const).map(([side, x, dir]) => (
         <span key={side} className={`ecx-cw-handle is-${side}`} style={{ left: x }} data-ecx-zone={`content-width-${side}`}
           onPointerDown={(e) => start(dir === 1 ? 1 : -1, e)} onMouseDown={(e) => e.stopPropagation()}>

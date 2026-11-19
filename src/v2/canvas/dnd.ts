@@ -169,6 +169,13 @@ function findTarget(ctx: EditorContextValue, x: number, y: number, src: Source):
 
   let el = doc.elementFromPoint(ix, iy) as HTMLElement | null;
   let blockEl = el?.closest<HTMLElement>("[data-ecx-block]") ?? null;
+  // Phần dùng chung (header / footer) có lớp phủ cùng cỡ nằm trên khối con: lấy khối SÂU nhất (theo DOM) dưới con trỏ
+  const domDepth = (b: HTMLElement) => { let n = 0; for (let p = b.parentElement; p; p = p.parentElement) if (p.hasAttribute("data-ecx-block")) n++; return n; };
+  let depth = blockEl ? domDepth(blockEl) : -1;
+  for (const e of doc.elementsFromPoint(ix, iy)) {
+    const b = (e as HTMLElement).closest<HTMLElement>("[data-ecx-block]");
+    if (b && domDepth(b) > depth) { blockEl = b; depth = domDepth(b); }
+  }
   // Không thả vào chính khối đang kéo / con của nó
   while (blockEl && src.ids.some((id) => blockEl!.dataset.ecxBlock === id || isInside(store, blockEl!.dataset.ecxBlock!, id))) {
     blockEl = blockEl.parentElement?.closest<HTMLElement>("[data-ecx-block]") ?? null;

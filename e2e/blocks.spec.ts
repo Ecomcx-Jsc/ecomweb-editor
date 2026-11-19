@@ -35,12 +35,12 @@ test.describe("chọn khối + thanh công cụ", () => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");
     await tool(page, "Đổi loại khối").click();
-    await page.getByRole("menuitem", { name: "Tiêu đề H3" }).click();
+    await page.getByRole("menuitem", { name: /Heading H3/ }).click();
     let st = await state(page);
     expect(st.docs.root.blocks[2]).toMatchObject({ type: "heading", attrs: { level: 3 } });
     await clickEnd(c, "Đoạn thứ hai.");
     await tool(page, "Đổi loại khối").click();
-    await page.getByRole("menuitem", { name: "Danh sách", exact: true }).click();
+    await page.getByRole("menuitem", { name: "List", exact: true }).click();
     expect(((await shape(page)) as unknown[])[2]).toEqual({ bulletList: [{ listItem: ["paragraph"] }] });
     st = await state(page);
     expect(st.docs.root.blocks[2].content[0].content[0].inline[0].text).toBe("Đoạn thứ hai.");
@@ -138,7 +138,7 @@ test.describe("chèn khối", () => {
     await page.keyboard.type("/tieu de");
     const pop = page.locator(".ecx-inserter-popover");
     await expect(pop).toBeVisible();
-    await expect(pop.getByRole("option").first()).toContainText("Tiêu đề");
+    await expect(pop.getByRole("option").first()).toContainText("Advanced Heading");
     await page.keyboard.press("Enter");
     await expect(pop).toBeHidden();
     await page.keyboard.type("Mới");
@@ -332,7 +332,7 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     await page.getByRole("button", { name: "Cây khối" }).click();
     const tree = page.locator(".ecx-listview");
     await expect(tree.locator(".ecx-list-row", { hasText: "Phần dùng chung · header" })).toBeVisible();
-    await tree.locator(".ecx-list-row", { hasText: "Cột" }).first().click();
+    await tree.locator(".ecx-list-row", { hasText: "Row Layout" }).first().click();
     const st = await state(page);
     expect(st.selection.ids).toEqual([st.docs.root.blocks.find((b: { type: string }) => b.type === "columns").id]);
     await expect(page.locator(".ecx-toolbar")).toBeVisible();

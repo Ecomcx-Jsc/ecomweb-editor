@@ -12,7 +12,7 @@ export const controls = {
   linkSides: "Bốn cạnh như nhau",
   unlinkSides: "Chỉnh từng cạnh",
   noMotion: "Chưa có hiệu ứng",
-  noIcon: "Không có icon", searchIcons: "Tìm icon…", noIconFound: "Không thấy icon",
+  chooseIcon: "Chọn icon", iconLibrary: "Thư viện", iconCustom: "SVG riêng", iconCustomHint: "Dán mã SVG của bạn (hoặc chọn file .svg). Chỉ giữ hình vẽ; script, liên kết và kiểu bị loại. Màu của icon sẽ theo màu chữ.", iconCustomCode: "Mã SVG", iconCustomFile: "Chọn file .svg", iconCustomPreview: "Xem trước", iconCustomInvalid: "Không đọc được SVG này (cần thẻ <svg> có hình vẽ, tối đa {max} ký tự sau khi lọc).", iconCustomUse: "Dùng icon này", iconMore: "Hiện thêm ({n} icon)", iconLibraryLoading: "Đang nạp thư viện icon…", noIcon: "Không có icon", searchIcons: "Tìm icon…", noIconFound: "Không thấy icon",
   tablet: "Máy tính bảng",
   mobile: "Điện thoại",
   modified: "đã chỉnh",

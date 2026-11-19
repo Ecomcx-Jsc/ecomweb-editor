@@ -12,7 +12,7 @@ test.describe("trải nghiệm soạn", () => {
     const pop = page.locator(".ecx-inserter-popover");
     await expect(pop.locator(".ecx-quick-grid .ecx-block-tile")).toHaveCount(6);
     await pop.getByRole("searchbox").or(pop.locator("input.ecx-search")).first().fill("bang");
-    await expect(pop.locator(".ecx-inserter-list [role=option]").first()).toContainText("Bảng");
+    await expect(pop.locator(".ecx-inserter-list [role=option]").first()).toContainText("Table");
     await pop.locator("input.ecx-search").fill("");
     await pop.getByRole("button", { name: "Xem tất cả" }).click();
     await expect(page.locator(".ecx-inserter-panel")).toBeVisible();
@@ -32,26 +32,29 @@ test.describe("trải nghiệm soạn", () => {
     await expect(pop).toHaveCount(0);
   });
 
-  test("carousel: hiện từng trang slide cạnh nhau, thanh chuyển slide, chọn khối trong slide ẩn thì nhảy tới", async ({ page }) => {
+  test("carousel: slide cạnh nhau trong track cuộn ngang, nút Sau cuộn tới slide sau, chọn khối trong slide ngoài khung nhìn thì cuộn tới", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await page.evaluate(() => {
       const g = (i: number) => ({ id: "s" + i, type: "group", attrs: {}, content: [{ id: "p" + i, type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Slide " + i }] }] });
       (window as any).__ecx.store.insert("root", null, 3, [{ id: "cr", type: "carousel", attrs: { slidesPerView: 2 }, content: [1, 2, 3].map(g) }]);
     });
     const car = c.locator('[data-ecx-block="cr"]');
-    await expect(c.locator('[data-ecx-block="s1"]')).toBeVisible();
-    await expect(c.locator('[data-ecx-block="s2"]')).toBeVisible();
-    await expect(c.locator('[data-ecx-block="s3"]')).toBeHidden();
+    // Vào khung nhìn của track = nằm trọn trong chiều ngang của track (slide thật vẫn có trong DOM, không bị ẩn bằng CSS)
+    const inView = (id: string) => c.locator(`[data-ecx-block="${id}"]`).evaluate((e) => { const t = e.closest(".ecx-carousel-track")!.getBoundingClientRect(), r = e.getBoundingClientRect(); return r.left >= t.left - 2 && r.right <= t.right + 2; });
+    await expect(c.locator('[data-ecx-block="s3"]')).toBeAttached();
+    await expect.poll(() => inView("s2")).toBe(true);
+    expect(await inView("s1")).toBe(true); expect(await inView("s3")).toBe(false);
     const [b1, b2] = [await c.locator('[data-ecx-block="s1"]').boundingBox(), await c.locator('[data-ecx-block="s2"]').boundingBox()];
     expect(Math.abs(b1!.y - b2!.y)).toBeLessThan(2); // cạnh nhau, không chồng dọc
-    await car.locator(".ecx-carousel-nav").getByRole("button", { name: "Slide sau" }).click();
-    await expect(c.locator('[data-ecx-block="s1"]')).toBeHidden();
-    await expect(c.locator('[data-ecx-block="s3"]')).toBeVisible();
-    await page.evaluate(() => (window as any).__ecx.store.select(["p3"]));
-    await expect(c.locator('[data-ecx-block="s3"]')).toBeVisible();
+    await car.getByRole("button", { name: "Slide sau" }).click();
+    await expect.poll(() => inView("s3")).toBe(true);
+    await expect.poll(() => inView("s1")).toBe(false);
+    // Chọn khối trong slide ngoài khung nhìn → cuộn tới; chọn lại trong slide đầu → cuộn về
+    await page.evaluate(() => (window as any).__ecx.store.select(["p2"]));
     await page.evaluate(() => (window as any).__ecx.store.select(["p1"]));
-    await expect(c.locator('[data-ecx-block="s1"]')).toBeVisible();
-    await expect(c.locator('[data-ecx-block="s3"]')).toBeHidden();
+    await expect.poll(() => inView("s1")).toBe(true);
+    await page.evaluate(() => (window as any).__ecx.store.select(["p3"]));
+    await expect.poll(() => inView("s3")).toBe(true);
   });
 
   test("tìm kiếm có ô chọn phạm vi; danh sách bài dạng cuộn ngang; menu có mức tablet", async ({ page }) => {
@@ -86,6 +89,31 @@ test.describe("trải nghiệm soạn", () => {
     expect(await selected()).toBe("sr2");
     await expect(c.locator('[data-ecx-block="qf"] input[type=search]')).toBeVisible();
     await expect(c.locator('[data-ecx-block="qf"] select')).toHaveCount(1);
+  });
+
+  test("thanh lọc: công tắc Có ô chọn năm / Có nút Xoá bộ lọc ở bảng phải hiện ô năm và nút trên khung soạn", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 3, [{ id: "qf2", type: "queryFilter", attrs: { termStyle: "none" } }]); s.select(["qf2"]); });
+    const insp = page.locator(".ecx-inspector");
+    await expect(c.locator('[data-ecx-block="qf2"] select')).toHaveCount(0);
+    await insp.getByLabel("Có ô chọn năm").first().check();
+    await insp.getByLabel("Có nút Xoá bộ lọc").first().check();
+    await expect(c.locator('[data-ecx-block="qf2"] select')).toHaveCount(1);
+    await expect(c.locator('[data-ecx-block="qf2"] .ecx-filter-reset')).toHaveText("Xoá bộ lọc");
+    const at = await page.evaluate(() => (window as any).__ecx.store.block("qf2").attrs);
+    expect([at.showYear, at.showReset]).toEqual([true, true]);
+  });
+
+  test("thanh lọc: kiểu Ô tích + ô lọc khoảng hiện đúng trên khung soạn; ô tên bộ lọc chỉ hiện khi bật khoảng", async ({ page }) => {
+    const c = await open(page, "?doc=post");
+    await page.evaluate(() => { const s = (window as any).__ecx.store; s.insert("root", null, 3, [{ id: "qf3", type: "queryFilter", attrs: { termStyle: "none", taxonomy: "category" } }]); s.select(["qf3"]); });
+    const insp = page.locator(".ecx-inspector");
+    await expect(insp.getByLabel("Tên bộ lọc khoảng")).toHaveCount(0);
+    await insp.getByLabel("Có ô lọc khoảng (từ – đến)").first().check();
+    await expect(insp.getByLabel("Tên bộ lọc khoảng")).toBeVisible();
+    await insp.getByLabel("Tên bộ lọc khoảng").fill("price");
+    await expect(c.locator('[data-ecx-block="qf3"] .ecx-filter-range input')).toHaveCount(2);
+    expect(await page.evaluate(() => (window as any).__ecx.store.block("qf3").attrs)).toMatchObject({ showRange: true, rangeParam: "price" });
   });
 
   test("bộ cột: nút + ở mép phải thêm cột, con trỏ vào cột mới", async ({ page }) => {

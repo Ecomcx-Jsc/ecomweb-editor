@@ -41,15 +41,18 @@ function withStyleAttrs(t: BlockType): BlockType["attributes"] {
 
 export function coreBlockTypes(labels: V2Labels): BlockType[] {
   const names = messages("blockTitles", labels.lang);
-  return [...textBlocks(), ...layoutBlocks(), ...mediaBlocks(), ...formBlocks(labels.lang), ...widgetBlocks(labels.lang), ...themeBlocks()].map((t) => {
+  return [...textBlocks(), ...layoutBlocks(labels.lang), ...mediaBlocks(), ...formBlocks(labels.lang), ...widgetBlocks(labels.lang), ...themeBlocks()].map((t) => {
     const key = TITLE_KEYS[t.name];
     const str = (v: unknown) => (typeof v === "string" ? v : undefined);
-    const title = key ? String(labels[key]) : str(names[t.name]) ?? t.title;
+    const title = str(names[t.name]) ?? (key ? String(labels[key]) : t.title);
     // Biến thể đứng riêng (Hàng ngang / Xếp dọc / Lưới) theo ngôn ngữ
     // Icon 2 lớp của bộ lõi (block-icons.tsx); biến thể dùng icon riêng nếu có, không thì icon của khối
     const icon = BLOCK_ICONS[t.name] ?? t.icon;
     const variations = t.variations?.map((v) => { const vt = str(names[`${t.name}/${v.name}`]); return { ...v, ...(vt ? { title: vt } : {}), icon: BLOCK_ICONS[v.name] ?? (t.name === "columns" ? columnsIcon(v.name) : undefined) ?? (BLOCK_ICONS[t.name] ? icon : v.icon) }; });
-    return { ...t, title, icon, variations, description: t.description ?? blockDescription(t.name, labels.lang), attributes: withStyleAttrs(t) };
+    // Nhóm rộng hết trang có khung nội dung = Section (ô "Section" ở bảng chèn): bảng phải ghi đúng tên người dùng vừa chèn
+    const titleOf = t.name === "group" ? (a: Record<string, unknown>) => (a.align === "full" && a.constrained === true ? str(names["group/section"]) : undefined) : t.titleOf;
+    const aliases = [...new Set([t.title, key ? String(labels[key]) : "", ...(t.aliases ?? [])].filter((x) => x && x !== title))];
+    return { ...t, title, aliases, titleOf, icon, variations, description: t.description ?? blockDescription(t.name, labels.lang), attributes: withStyleAttrs(t) };
   });
 }
 

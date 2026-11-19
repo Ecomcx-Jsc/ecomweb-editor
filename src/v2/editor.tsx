@@ -1,7 +1,7 @@
-import { ensurePresets } from "./core/block-presets";
+import { ensurePresets, localBlockPresets } from "./core/block-presets";
 import type { RichNode } from "@ecomcx/ecomweb-content";
 import { normalizeContent } from "@ecomcx/ecomweb-content";
-import { ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight, ZoomOut } from "lucide-react";
+import { Command as CommandIcon, ListTree, Monitor, Plus, Redo2, Smartphone, Tablet, Undo2, X, PanelRight, ZoomOut } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { coreBlockTypes, registerCoreBlocks } from "./blocks";
 import { registeredPatterns, syncPluginBlocks } from "./blocks/compat";
@@ -11,6 +11,7 @@ import { Canvas, type Device } from "./canvas/canvas";
 import { EditorContext, EditorUi, useEditor, useEditorState, useUiTick, type EditorContextValue } from "./context";
 import type { EditorHost } from "./core/host";
 import { InserterPanel, InserterPopover } from "./ui/inserter";
+import { CommandPalette } from "./ui/command-palette";
 import { SectionAdder } from "./ui/section-adder";
 import { AiWrite } from "./ui/ai";
 import { labelsV2, type V2Labels } from "./labels";
@@ -93,6 +94,7 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
     store.setFrame("frame");
   }, [frame, store]);
   const ui = useMemo(() => new EditorUi(), []);
+  ui.currentIds = () => store.currentIds;
   const ownPrefs = useMemo(() => (givenPrefs ? null : new PrefsStore(prefsStorage)), [givenPrefs, prefsStorage]);
   const prefs = givenPrefs ?? ownPrefs!;
   // Đang mở trình soạn: focus không ở ô nhập nào (vd Tab ra khỏi khung soạn) thì Backspace / ⌘← / ⌘→ là lệnh quay lại /
@@ -109,7 +111,7 @@ export function EditorProvider({ store: given, value, kind, title, host = {}, la
   // Khối của plugin (registerBlock) + mẫu có sẵn của lõi
   useEffect(() => syncPluginBlocks(registry), [registry]);
   // Kiểu đặt sẵn / mặc định khi chèn: nạp ngay khi mở trình soạn (khối chèn đầu tiên đã nhận mặc định)
-  useEffect(() => ensurePresets(host.blockPresets?.load), [host]);
+  useEffect(() => ensurePresets((host.blockPresets ?? localBlockPresets).load), [host]);
   useEffect(() => { registerCoreBindingSources(allLabels.lang); }, [allLabels.lang]);
   useEffect(() => { if (!registeredPatterns().some((p) => p.name.startsWith("core/"))) registerCorePatterns(allLabels.lang); }, [allLabels.lang]);
   const ctx: EditorContextValue = useMemo(() => ({ store, registry, host, labels: allLabels, ui, prefs }), [store, registry, host, allLabels, ui, prefs]);
@@ -181,8 +183,12 @@ export function BlockEditor({ className, onSave, header, actions, menuExtra, can
 
 function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefore, defaultDevice, blockStyles, saveHandle, onDirtyChange }: Pick<BlockEditorProps, "saveHandle" | "onDirtyChange" | "className" | "onSave" | "header" | "actions" | "menuExtra" | "canvasBefore" | "defaultDevice" | "blockStyles">) {
   const ctx = useEditor();
+  const previewRender = (value: { version: number; blocks: unknown[] }) => <EditorProvider value={value} kind="pattern-preview" registry={ctx.registry} labels={ctx.labels} host={{ ...ctx.host, documents: undefined, ai: undefined }}><Canvas preview /></EditorProvider>;
+  ctx.ui.renderPreview = previewRender;
   const { store, labels } = ctx;
   const p = usePrefs(ctx.prefs);
+  const [palette, setPalette] = useState(false);
+  const [inserterQuery, setInserterQuery] = useState<string | undefined>(undefined);
   const [left, setLeft] = useState<"inserter" | "list" | null>(() => (ctx.prefs.get().showListView ? "list" : null));
   useEffect(() => { ctx.ui.browseAll = () => setLeft("inserter"); return () => { ctx.ui.browseAll = null; }; }, [ctx.ui]);
   // Điện thoại: bảng bên phải mở đè lên canvas nên mặc định đóng (mở bằng nút ở thanh trên)
@@ -218,6 +224,10 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
       if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); void saveRef.current(); }
+      // Bảng lệnh: ⌘⇧P luôn mở; ⌘K chỉ khi không đang gõ chữ (trong ô chữ ⌘K là chèn liên kết)
+      const t = e.target as HTMLElement | null;
+      const typing = !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+      if (mod && ((e.shiftKey && e.key.toLowerCase() === "p") || (!e.shiftKey && !e.altKey && e.key.toLowerCase() === "k" && !typing))) { e.preventDefault(); setPalette(true); }
       // ⌘⇧⌥M: đổi soạn trực quan ↔ soạn mã
       if (mod && e.shiftKey && e.altKey && e.code === "KeyM") { e.preventDefault(); ctx.prefs.set({ mode: ctx.prefs.get().mode === "code" ? "visual" : "code" }); }
     };
@@ -235,10 +245,11 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
         <div className="ecx-topbar-start">
           {header}
           {!p.distractionFree && <ToolButton label={labels.addBlock} active={left === "inserter"} className="ecx-tool-primary" onClick={() => setLeft(left === "inserter" ? null : "inserter")}>{left === "inserter" ? <X className="ecx-icon" /> : <Plus className="ecx-icon" />}</ToolButton>}
+          {!p.distractionFree && <ToolButton label={`${labels.commandPalette} (${/Mac|iPhone|iPad/.test(typeof navigator === "undefined" ? "" : navigator.platform) ? "⌘⇧P" : "Ctrl+Shift+P"})`} onClick={() => setPalette(true)}><CommandIcon className="ecx-icon" /></ToolButton>}
           <ToolButton label={labels.undo} disabled={!store.canUndo} onClick={() => store.undo()}><Undo2 className="ecx-icon" /></ToolButton>
           <ToolButton label={labels.redo} disabled={!store.canRedo} onClick={() => store.redo()}><Redo2 className="ecx-icon" /></ToolButton>
           {!p.distractionFree && <ToolButton label={labels.listView} active={left === "list"} onClick={() => setLeft(left === "list" ? null : "list")}><ListTree className="ecx-icon" /></ToolButton>}
-          {!p.distractionFree && p.mode === "visual" && <PatternLibraryButton renderPreview={(value) => <EditorProvider value={value} kind="pattern-preview" registry={ctx.registry} labels={ctx.labels} host={{ ...ctx.host, documents: undefined, ai: undefined }}><Canvas /></EditorProvider>} />}
+          {!p.distractionFree && p.mode === "visual" && <PatternLibraryButton renderPreview={previewRender} />}
           <FrameToggle />
           {p.mode === "visual" && <ZoomToggle />}
         </div>
@@ -254,10 +265,14 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
           )}
         </div>
       </div>
+      <CommandPalette open={palette} onClose={() => setPalette(false)} actions={{
+        save: () => void saveRef.current(), toggleList: () => setLeft((l) => (l === "list" ? null : "list")), toggleSettings: () => setRight((r) => !r),
+        openInserter: (q) => { setInserterQuery(q); setLeft("inserter"); },
+      }} />
       {error && <div className="ecx-notice is-error" role="alert">{error}</div>}
       {p.fixedToolbar && p.mode === "visual" && <div className="ecx-fixed-toolbar"><BlockToolbar placement="fixed" /></div>}
       <div className="ecx-body">
-        {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel onClose={() => setLeft(null)} onInserted={() => { /* Điện thoại: bảng đè lên canvas nên chèn xong thì đóng để tiếp tục soạn */ if (window.innerWidth <= 640) setLeft(null); }} /> : <ListView onClose={() => setLeft(null)} />}</aside>}
+        {left && !p.distractionFree && <aside className="ecx-left">{left === "inserter" ? <InserterPanel key={inserterQuery ?? ""} initialQuery={inserterQuery} onClose={() => setLeft(null)} onInserted={() => { /* Điện thoại: bảng đè lên canvas nên chèn xong thì đóng để tiếp tục soạn */ if (window.innerWidth <= 640) setLeft(null); }} /> : <ListView onClose={() => setLeft(null)} />}</aside>}
         <main className="ecx-main">{p.mode === "code" ? <CodeEditor /> : <Canvas before={canvasBefore} />}</main>
         {right && !p.distractionFree && <aside className="ecx-right"><Inspector blockStyles={blockStyles} /></aside>}
       </div>

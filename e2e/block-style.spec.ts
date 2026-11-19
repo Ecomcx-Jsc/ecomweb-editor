@@ -16,11 +16,12 @@ const shot = async (page: Page, name: string) => { if (process.env.ECX_SHOTS) aw
 const insp = (page: Page) => page.locator(".ecx-inspector");
 
 test.describe("kiểu dáng khối kiểu Elementor", () => {
-  test("nhóm: ô Nền ở tab Cài đặt (Màu | Chuyển màu | Ảnh), màu nền cũ được chuyển sang style", async ({ page }) => {
+  test("nhóm: ô Nền ở tab Kiểu dáng (Màu | Chuyển màu | Ảnh), màu nền cũ được chuyển sang style", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await insert(page, [{ id: "g1", type: "group", attrs: { background: "#fef3c7" }, content: [p("g1p", "Trong nhóm")] }]);
     await page.evaluate(() => (window as any).__ecx.store.select(["g1"]));
     const panel = insp(page).locator(".ecx-style-section", { hasText: "Nền" }).first();
+    await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
     await expect(panel.getByRole("radio", { name: "Ảnh" })).toBeVisible();
     await expect(panel.getByRole("radio", { name: "Chuyển màu" })).toBeVisible();
     await shot(page, "group-background-settings");
@@ -36,14 +37,12 @@ test.describe("kiểu dáng khối kiểu Elementor", () => {
     await expect(c.locator('[data-ecx-block="g1"]')).toBeVisible();
   });
 
-  test("danh sách: mục Kiểu dáng › Danh sách đổi dấu đầu dòng / màu dấu / khoảng cách → CSS thật trên khung soạn", async ({ page }) => {
+  test("danh sách: kiểu dấu đầu dòng ở Cài đặt › Bố cục danh sách (như tab Content của Elementor) → CSS thật trên khung soạn", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await insert(page, [{ id: "l1", type: "bulletList", attrs: {}, content: [{ id: "li1", type: "listItem", attrs: {}, content: [p("lp1", "Một")] }, { id: "li2", type: "listItem", attrs: {}, content: [p("lp2", "Hai")] }] }]);
     await page.evaluate(() => (window as any).__ecx.store.select(["l1"]));
-    await insp(page).getByRole("tab", { name: "Kiểu dáng" }).click();
-    await insp(page).getByRole("button", { name: "Danh sách", exact: true }).click();
-    const sec = insp(page).locator(".ecx-style-section", { hasText: "Danh sách" }).first();
-    await sec.getByLabel("Kiểu dấu đầu dòng").selectOption("square");
+    await insp(page).getByRole("tab", { name: "Cài đặt" }).click();
+    await insp(page).getByLabel("Kiểu dấu đầu dòng").selectOption("square");
     expect((await block(page, "l1")).attrs.listMarker).toBe("square");
     const ul = c.locator('[data-ecx-block="l1"]');
     await expect.poll(() => ul.evaluate((n) => getComputedStyle(n).listStyleType)).toBe("square");

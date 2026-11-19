@@ -8,7 +8,6 @@ import { useMsgs } from "../i18n";
 import { Row, Section, Seg, cx } from "../ui/style-controls";
 import { byStep } from "../ui/style-tab";
 import { UnitInput } from "../ui/unit-controls";
-import { DividerSection } from "../ui/divider-panel";
 import { makeBlock } from "../core/model";
 
 type Responsive<T> = T | Partial<Record<Device, T>>;
@@ -135,7 +134,6 @@ export function ColumnsInspector({ block, attrs, setAttrs }: BlockEditProps) {
         <UnitInput label={t.rowMaxWidth} value={rowMax} units={["px", "rem", "%"]} max={1600} onChange={setRowMax} />
       </Row>
     </Section>
-      <DividerSection attrs={attrs} setAttrs={setAttrs} />
     </>
   );
 }
@@ -157,6 +155,9 @@ export function ColumnInspector({ attrs, setAttrs }: BlockEditProps) {
   const resp = <K extends "textAlign" | "maxWidth">(k: K) => atDevice<string>(style[k] as Responsive<string>, device);
   const setResp = (k: "textAlign" | "maxWidth", v: string | undefined) => setAttrs({ style: normalizeStyle({ ...style, [k]: mapDevice(style[k] as Responsive<string>, device, v) }) ?? undefined });
   const href = typeof attrs.href === "string" ? attrs.href : "";
+  const orderMobile = (style.order as { mobile?: number } | undefined)?.mobile;
+  const mobileOrder = typeof orderMobile === "number" ? Math.sign(orderMobile) : 0;
+  const setMobileOrder = (v: number) => setAttrs({ style: normalizeStyle({ ...style, order: { ...((style.order as object) ?? {}), mobile: v === 0 ? undefined : v } }) ?? undefined });
   const gap = atDevice<string>(style.gap as Responsive<string>, device);
   const setGap = (v: string | undefined) => setAttrs({ style: normalizeStyle({ ...style, gap: mapDevice(style.gap as Responsive<string>, device, v), ...(v === undefined ? {} : { layout }) }) ?? undefined });
   return (
@@ -192,6 +193,14 @@ export function ColumnInspector({ attrs, setAttrs }: BlockEditProps) {
     <Section title={t.secMaxWidth} modified={!!resp("maxWidth")} defaultOpen={!!resp("maxWidth")}>
       <Row label={t.maxWidth} device={device} onReset={resp("maxWidth") ? () => setResp("maxWidth", undefined) : undefined}>
         <UnitInput label={t.maxWidth} value={resp("maxWidth")} units={["px", "rem", "%"]} max={1600} onChange={(v) => setResp("maxWidth", v)} />
+      </Row>
+    </Section>
+    {/* Thứ tự khi các cột xếp chồng trên điện thoại: đưa cột này lên đầu / xuống cuối mà không phải đổi thứ tự trong khung soạn */}
+    <Section title={t.mobileOrder} modified={mobileOrder !== 0} defaultOpen={mobileOrder !== 0}>
+      <Row label={t.mobileOrder} onReset={mobileOrder !== 0 ? () => setMobileOrder(0) : undefined}>
+        <Seg label={t.mobileOrder} value={String(mobileOrder)} onChange={(v) => setMobileOrder(Number(v))}
+          options={[["0", ArrowDown, t.orderKeep], ["-1", ArrowUp, t.orderFirst], ["1", ArrowDown, t.orderLast]]} />
+        <p className="ecx-field-help">{t.mobileOrderHelp}</p>
       </Row>
     </Section>
     {/* Liên kết phủ cả cột (cả cột thành một vùng bấm) */}

@@ -176,7 +176,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
 
   return (
     <>
-      <div className={fixed ? "ecx-toolbar is-fixed" : "ecx-toolbar"} role="toolbar" aria-label={type?.title ?? first.type} style={fixed ? undefined : { top, left, maxWidth: maxW }} data-block={first.id}
+      <div ref={fixed ? undefined : (el) => { if (el && rect && frame) { /* Đo bề ngang thật: thanh dài (tiêu đề, danh sách…) không được tràn khỏi khung soạn đè lên bảng phải */ const l = Math.round(Math.max(frame.left + 4, Math.min(rect.left, frame.right - 4 - el.offsetWidth))); if (el.style.left !== `${l}px`) el.style.left = `${l}px`; } }} className={fixed ? "ecx-toolbar is-fixed" : "ecx-toolbar"} role="toolbar" aria-label={type?.title ?? first.type} style={fixed ? undefined : { top, left, maxWidth: maxW }} data-block={first.id}
         onKeyDown={(e) => {
           // Bàn phím trên thanh công cụ: ←/→ đi giữa các nút, Esc quay về khối
           const buttons = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > .ecx-tool-group button:not(:disabled), :scope > .ecx-tool-group .ecx-dropdown > button"));

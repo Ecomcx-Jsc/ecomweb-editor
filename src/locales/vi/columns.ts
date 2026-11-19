@@ -7,6 +7,7 @@ export const columns = {
   innerGap: "Khe giữa các khối", verticalReverse: "Dọc, đảo thứ tự", horizontalReverse: "Ngang, đảo thứ tự", around: "Dàn đều quanh", evenly: "Cách đều nhau",
   textAlign: "Căn chữ", maxWidth: "Rộng tối đa", rowMaxWidth: "Rộng tối đa của hàng", overlayLink: "Liên kết cả cột", newTab: "Mở tab mới", linkLabel: "Tên liên kết (cho trình đọc màn hình)",
   overlayNote: "Khi có liên kết này, các thứ khác trong cột không bấm được trên website.",
+  mobileOrder: "Thứ tự trên điện thoại", orderKeep: "Giữ nguyên", orderFirst: "Lên đầu", orderLast: "Xuống cuối", mobileOrderHelp: "Khi các cột xếp chồng trên điện thoại, cột này nằm đầu hoặc cuối (ví dụ đưa ảnh lên trên chữ).",
   secLayout: "Bố cục", secFlex: "Bố cục bên trong", secMaxWidth: "Rộng tối đa của nội dung",
   linkUrl: "Đường dẫn",
 };

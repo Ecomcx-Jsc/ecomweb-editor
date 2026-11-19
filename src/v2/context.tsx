@@ -32,6 +32,9 @@ export class EditorUi {
   typing = false;
   /** Thu nhỏ: cả trang trong tầm nhìn, chỉ chọn / sắp xếp các phần (khối cấp cao nhất). */
   zoomOut = false;
+  /** Khối đang "xem trước khi rê chuột": khung soạn vẽ mọi quy tắc :hover của khối đó như đang rê (Kiểu dáng › Xem trước khi rê chuột). */
+  previewHoverId: string | null = null;
+  setPreviewHover(id: string | null) { if (this.previewHoverId !== id) { this.previewHoverId = id; this.bump(); } }
   /** Khổ màn hình đang soạn: khung soạn vẽ theo bề rộng này, tab Kiểu dáng sửa giá trị của khổ này (dùng chung, đổi một nơi thì nơi kia theo). */
   device: "desktop" | "tablet" | "mobile" = "desktop";
   setDevice(d: "desktop" | "tablet" | "mobile") { if (this.device !== d) { this.device = d; this.bump(); } }
@@ -66,6 +69,51 @@ export class EditorUi {
     return new DOMRect(f.left + r.left * scale, f.top + r.top * scale, r.width * scale, r.height * scale);
   }
   openInserter(req: InserterRequest | null) { this.inserter = req; this.bump(); }
+  /** Vẽ nội dung bằng khung soạn chỉ xem (tầng editor gán; ui không import editor): xem trước thật ở bảng chèn và thư viện mẫu. */
+  renderPreview: ((value: { version: number; blocks: unknown[] }) => ReactNode) | null = null;
+  /** Mục con đang chọn trong khối dạng danh sách (Icon List, Mạng xã hội…): khung soạn tô mục, bảng phải hiện cài đặt riêng của mục. */
+  activeItem = new Map<string, number>();
+  setActiveItem(blockId: string, i: number) { if (this.activeItem.get(blockId) !== i) { this.activeItem.set(blockId, i); this.bump(); } }
+  /** Khối vừa chèn còn chữ mẫu chưa sửa: bấm vào ô chữ lần đầu thì chọn hết để gõ là thay (không chèn thêm vào chữ mẫu). Bỏ cờ khi khối có thay đổi đầu tiên. */
+  fresh = new Set<string>();
+  /**
+   * Khối vừa chèn từ bảng chèn + vùng chọn "tự đến" sau đó (con trỏ vào ô chữ đầu của khối). Lần chèn kế tiếp, nếu người dùng chưa bấm chỗ khác,
+   * đặt khối mới NGAY SAU khối vừa chèn cùng cấp — thay vì lồng vào trong khối vừa chèn (vì con trỏ đang nằm sâu trong nó).
+   */
+  insertAnchor: { id: string; sel: string } | null = null;
+  /** Cầu nối tới vùng chọn hiện tại của store (EditorProvider gắn vào). */
+  currentIds: () => readonly string[] = () => [];
+  private anchorTimer: ReturnType<typeof setTimeout> | null = null;
+  markInsertAnchor(id: string, delay = 500) {
+    this.insertAnchor = null;
+    if (this.anchorTimer) clearTimeout(this.anchorTimer); // chèn nhanh nhiều khối: chỉ lần chèn cuối được đặt mốc
+    this.anchorTimer = setTimeout(() => { this.anchorTimer = null; this.insertAnchor = { id, sel: this.currentIds().join(",") }; }, delay);
+  }
+  /** Khối vừa chèn đang chờ chọn bố cục (không lưu vào nội dung). */
+  pickIds = new Set<string>();
+  requestPick(id: string) { this.pickIds.add(id); this.bump(); }
+  // Chọn / bỏ qua bố cục xong khối vẫn được chọn (bảng phải hiện lưới bố cục vừa chọn) — không đẩy con trỏ vào chữ
+  // `focus`: "Bỏ qua" = dùng bố cục mặc định và gõ luôn → con trỏ vào ô chữ đầu; chọn một thẻ thì giữ khối được chọn để bảng phải hiện thẻ đó
+  resolvePick(id: string, focus = false) { if (this.pickIds.delete(id)) { this.bump(); if (focus) { this.focusFirstField(id); this.markInsertAnchor(id, 450); } } }
+  /**
+   * Khối widget vừa chèn (Icon Box, Đếm số, Đánh giá…) có ô gõ ngay trên khối (ô chữ, không phải khối chữ) nên không tự nhận con trỏ như Đoạn văn:
+   * gõ ngay sau khi chèn không vào đâu. Đưa con trỏ vào ô chữ đầu tiên của khối (chữ mẫu đã chọn sẵn nên gõ là thay). Khối đang chờ chọn bố cục thì để ô chọn giữ focus.
+   */
+  focusFirstField(id: string) {
+    let tries = 0;
+    const attempt = () => {
+      if (this.pickIds.has(id)) return;
+      const el = this.blockEl(id);
+      if (!el) { if (++tries < 8) setTimeout(attempt, 40); return; }
+      const doc = el.ownerDocument, active = doc.activeElement as HTMLElement | null;
+      if (active && active !== doc.body && el.contains(active) && !active.closest(".ecx-variation-chooser")) return;
+      const field = el.querySelector<HTMLElement>('input[data-ecx-placeholder="text"], textarea[data-ecx-placeholder="text"], [contenteditable="true"]');
+      if (field && !field.closest("[data-ecx-inert]")) { field.focus({ preventScroll: true }); return; }
+      // Khối không có ô gõ (Ảnh, Khoảng trống, Cột…): đưa focus về khung soạn — nếu để ở nút của bảng chèn thì ⌘Z, Delete, mũi tên không tới trình soạn
+      (doc.querySelector<HTMLElement>(".ecx-canvas-root"))?.focus({ preventScroll: true });
+    };
+    setTimeout(attempt, 60);
+  }
   /** Thông báo cho trình đọc màn hình (vùng aria-live). */
   announcement = "";
   announce(text: string) { this.announcement = ""; this.bump(); setTimeout(() => { this.announcement = text; this.bump(); }, 30); }

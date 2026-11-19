@@ -66,13 +66,32 @@ export interface TextPlaceholderProps {
   id?: string;
   className?: string;
   style?: CSSProperties;
+  /** Phím bấm trong ô (Enter / Backspace để thêm, xoá mục). */
+  onKeyDown?(e: { key: string; shiftKey: boolean; preventDefault(): void; currentTarget: HTMLInputElement | HTMLTextAreaElement }): void;
 }
 
 /** Ô gõ ngay trên khối: chữ gợi ý luôn hiện khi trống, cỡ chữ = cỡ chữ thật của chỗ đặt ô (kế thừa font). */
-export function TextPlaceholder({ value, onChange, placeholder, multiline, label, required, id, className, style }: TextPlaceholderProps) {
+export function TextPlaceholder({ value, onChange, placeholder, multiline, label, required, id, className, style, onKeyDown }: TextPlaceholderProps) {
+  const { ui } = useEditor();
+  const bid = (el: Element) => el.closest("[data-ecx-block]")?.getAttribute("data-ecx-block") ?? "";
   const props = {
     ...stop, id, className: cx("ecx-ph-text", className), style, value, placeholder, required, "aria-label": label ?? placeholder, "aria-required": required || undefined,
-    "data-ecx-placeholder": "text", onChange: (e: { target: { value: string } }) => onChange(e.target.value),
+    "data-ecx-placeholder": "text", onKeyDown,
+    // Chữ mẫu chưa sửa và ô đã lấy nét (tự vào lúc chèn, đang chọn hết): giữ nguyên vùng chọn khi bấm — không để trình duyệt đặt con trỏ vào giữa chữ mẫu
+    onMouseDown: (e: { stopPropagation(): void; preventDefault(): void; currentTarget: HTMLInputElement | HTMLTextAreaElement }) => {
+      e.stopPropagation();
+      const el = e.currentTarget;
+      if (ui.fresh.has(bid(el)) && el.ownerDocument.activeElement === el && el.selectionStart !== el.selectionEnd) e.preventDefault();
+    },
+    // Chữ mẫu chưa sửa: bấm vào là chọn hết (gõ là thay)
+    onFocus: (e: { currentTarget: HTMLInputElement | HTMLTextAreaElement }) => { if (ui.fresh.has(bid(e.currentTarget))) e.currentTarget.select(); },
+    // Chữ mẫu chưa sửa: bấm vào (kể cả khi con trỏ đã tự vào ô lúc chèn) cũng chọn hết — bấm rồi gõ là thay, không chèn vào giữa chữ mẫu
+    onClick: (e: { currentTarget: HTMLInputElement | HTMLTextAreaElement }) => {
+      const el = e.currentTarget;
+      // Trình duyệt thu con trỏ về một điểm SAU sự kiện click (khi ô đã lấy nét sẵn và đang chọn hết) → chọn lại hết sau một nhịp
+      if (ui.fresh.has(bid(el))) setTimeout(() => { if (ui.fresh.has(bid(el)) && el.ownerDocument.activeElement === el && el.selectionStart === el.selectionEnd) el.select(); }, 0);
+    },
+    onChange: (e: { target: HTMLInputElement | HTMLTextAreaElement }) => { ui.fresh.delete(bid(e.target)); onChange(e.target.value); },
   };
   return multiline ? <textarea {...props} rows={2} /> : <input {...props} type="text" />;
 }

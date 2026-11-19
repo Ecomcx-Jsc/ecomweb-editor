@@ -103,6 +103,8 @@ export const v2 = {
   queryEmptyCollapsed: "When there are no posts (hidden because the list has posts) — click to edit",
   undo: "Undo",
   redo: "Redo",
+  commandPalette: "Command palette",
+  resizeGap: "change column gap",
   listView: "List view",
   settings: "Settings",
   noSelection: "Select a block to edit",
