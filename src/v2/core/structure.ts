@@ -26,8 +26,6 @@ const RULES: Record<string, StructureRule> = {
   bulletList: { allowedChildren: ["listItem"], wrapChildrenWith: "listItem", removeWhenEmpty: true },
   orderedList: { allowedChildren: ["listItem"], wrapChildrenWith: "listItem", removeWhenEmpty: true },
   listItem: { parents: ["bulletList", "orderedList"], wrapSelfWith: "bulletList", required: p, firstChild: "paragraph" },
-  taskList: { allowedChildren: ["taskItem"], wrapChildrenWith: "taskItem", removeWhenEmpty: true },
-  taskItem: { parents: ["taskList"], wrapSelfWith: "taskList", required: p, firstChild: "paragraph" },
   // Bộ cột rỗng (vừa chèn, chưa chọn bố cục) giữ lại như bảng rỗng: trình soạn hiện lưới chọn bố cục cột
   columns: { allowedChildren: ["column"], wrapChildrenWith: "column" },
   column: { parents: ["columns"], wrapSelfWith: "columns" },
@@ -41,7 +39,7 @@ const RULES: Record<string, StructureRule> = {
 };
 
 /** Mục danh sách / việc chỉ nhận chữ và danh sách lồng: khối lớn (bảng, ảnh, nhóm…) chèn mới thì phải ra ngoài danh sách. */
-export const leavesItem = (parentType: string | null | undefined, child: string) => (parentType === "listItem" || parentType === "taskItem") && !/^(paragraph|bulletList|orderedList|taskList)$/.test(child);
+export const leavesItem = (parentType: string | null | undefined, child: string) => (parentType === "listItem") && !/^(paragraph|bulletList|orderedList)$/.test(child);
 
 const extra = new Map<string, StructureRule>();
 export function setStructureRule(type: string, rule: StructureRule | null) {

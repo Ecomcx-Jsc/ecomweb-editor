@@ -74,7 +74,6 @@ test("Carousel: có 3 slide mẫu thật; thêm slide, xoá slide, đếm \"n / 
 // Khối nhỏ: không bật ô chọn khi chèn, nhưng bảng phải có lưới bố cục
 const INSPECTOR_ONLY: Array<[key: string, type: string, pick: string, expected: Record<string, unknown>]> = [
   ["iconBox", "iconBox", "Icon phải", { position: "right" }],
-  ["mediaText", "mediaText", "Ảnh phải 33%", { position: "right", width: 33 }],
   ["progressBar", "progressBar", "Chữ phía dưới", { textPosition: "below" }],
 ];
 for (const [key, type, pick, expected] of INSPECTOR_ONLY) {
@@ -189,7 +188,7 @@ test("Icon Box: tab Kiểu dáng có phần riêng cho nút Xem thêm", async ({
 test("thanh công cụ của khối nằm bên phải khung soạn không tràn ra đè bảng phải", async ({ page }) => {
   await open(page, "?doc=post");
   await page.getByRole("button", { name: "Thêm khối" }).first().click();
-  await page.locator(".ecx-block-tile[data-key='mediaText']").click();
+  await page.locator(".ecx-block-tile[data-key='iconBox']").click();
   await page.waitForTimeout(300);
   const r = await page.evaluate(() => ({ t: document.querySelector(".ecx-toolbar")!.getBoundingClientRect().right, f: document.querySelector("iframe[data-ecx-canvas]")!.getBoundingClientRect().right }));
   expect(r.t).toBeLessThanOrEqual(r.f);

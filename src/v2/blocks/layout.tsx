@@ -1,15 +1,15 @@
-import { resolveIcon, coverVideo, countdownRules, nextTarget, CORE_NODES, testimonialsConfig, testimonialsVars, popupClass, popupConfig, popupPlayStyle, popupVars, carouselConfig, carouselData, carouselVars, COUNTDOWN_ZONES, countdownParts, countdownTarget, wallInZone, blockShell, buttonIcon, buttonWrapShell, colorCss, controlsCss, coverParts, spacingValue, tabsClass } from "@ecomcx/ecomweb-content";
+import { resolveIcon, coverVideo, countdownRules, nextTarget, CORE_NODES, testimonialsConfig, testimonialsVars, popupClass, popupConfig, popupPlayStyle, popupVars, carouselConfig, carouselData, carouselVars, COUNTDOWN_ZONES, countdownParts, countdownTarget, wallInZone, blockShell, buttonIcon, buttonWrapShell, controlsCss, coverParts, tabsClass } from "@ecomcx/ecomweb-content";
 import { IconPicker } from "../ui/icon-picker";
 import { BgVideoPreview } from "../ui/bg-video-preview";
 import { IconSvg } from "../ui/icon-svg";
 import { blockControls } from "../../shared/panel-store";
-import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, Info, LayoutPanelLeft, Minus, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, ChevronsUpDown, Columns2, Columns3, Columns4, LayoutPanelLeft, MousePointerClick, PanelTop, RectangleHorizontal, Square, Table2, Image as ImageIcon } from "lucide-react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
 import { withoutOverridden } from "./inline-style";
 import { makeBlock, type BNode } from "../core/model";
 import { messages } from "../../i18n";
-import { accordionLayouts, carouselLayouts, mediaTextLayouts, tabsLayouts } from "./layout-options";
+import { accordionLayouts, carouselLayouts, tabsLayouts } from "./layout-options";
 import type { BlockEditProps, BlockType } from "../core/registry";
 import { RichText } from "../text/rich-text";
 import { BoundText, useBindingPreview } from "../ui/bindings";
@@ -28,8 +28,6 @@ import { useMsgs } from "../i18n";
 import { Section } from "../ui/style-controls";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
-const PADDING: Record<string, string> = { none: "0", small: "0.75rem", medium: "1.5rem", large: "3rem" };
-const TONES: Record<string, string> = { info: "#1a597b", success: "#16a34a", warning: "#d97706", danger: "#dc2626" };
 /** Gộp props của khối với class + style inline riêng; `attrs` có `style` thì bỏ phần inline mà kiểu dáng đã thay (khớp website). */
 const merge = (bp: BlockEditProps["blockProps"], className: string, style?: CSSProperties, attrs?: Record<string, unknown>) =>
   ({ ...bp, className: cx(bp.className, className), style: { ...(bp.style ?? {}), ...(attrs?.style ? withoutOverridden(style ?? {}, attrs.style) : style) } });
@@ -215,22 +213,6 @@ function SpacerEdit({ block, blockProps, selected, editable }: BlockEditProps) {
   const h = block.attrs.height ?? "lg"; // tên cỡ (xl) hoặc độ dài người nhập — không in chuỗi var(--…) thô
   // Nhãn kích thước chỉ trong trình soạn (CSS ::before, không thêm phần tử con — website là div rỗng)
   return <div {...props} data-ecx-size={tp.spacer.replace("{size}", String(h ?? ""))}>{selected && editable && <HeightHandle blockId={block.id} />}</div>;
-}
-
-function SeparatorEdit({ blockProps }: BlockEditProps) {
-  return <hr {...(blockProps as object)} />;
-}
-
-function CalloutEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
-  const tp = useMsgs("placeholders");
-  const title = String(block.attrs.title ?? "");
-  return (
-    <div {...shellProps(blockProps, "callout", block.attrs)}>
-      {/* website chỉ in tiêu đề khi có chữ: trình soạn luôn có ô tiêu đề (gợi ý "không bắt buộc") để thấy chỗ gõ */}
-      {(title || editable) && <RichText blockId={block.id} field="title" tagName="p" className="ecx-callout-title cms-callout-title" style={{ margin: 0, fontWeight: 600 }} value={title} onChange={(v) => setAttrs({ title: v })} placeholder={tp.calloutTitle} placeholderAlways editable={editable} />}
-      <InnerBlocks parent={block} />
-    </div>
-  );
 }
 
 /** Popup khi soạn: nút mở (sửa chữ ngay trên nút) + khung "Nội dung popup" luôn mở để dựng nội dung bên trong như mọi khối khác. */
@@ -644,19 +626,6 @@ function CountdownPreview({ block, blockProps }: Pick<BlockEditProps, "block" | 
 }
 
 /** Sao xám → bấm vào sao để chấm ngay trên khối. */
-function RatingEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
-  const tp = useMsgs("placeholders");
-  const max = Math.min(10, Math.max(1, Number(block.attrs.max) || 5)), v = Number(block.attrs.value) || 0;
-  return (
-    <div {...(merge(blockProps, "ecx-rating") as object)} aria-label={`${v}/${max}`} title={editable ? tp.rateHint : undefined} data-ecx-placeholder={editable && !v ? "rating" : undefined}>
-      {Array.from({ length: max }, (_, i) => editable
-        ? <button key={i} type="button" className="ecx-ph-star" contentEditable={false} aria-label={tp.rateStar.replace("{n}", String(i + 1))} aria-pressed={i < Math.round(v)} onMouseDown={(e) => e.stopPropagation()} onClick={() => setAttrs({ value: i + 1 })} style={{ color: i < Math.round(v) ? "#f59e0b" : "#d4d4d8" }}>★</button>
-        : <span key={i} style={{ color: i < Math.round(v) ? "#f59e0b" : "#d4d4d8" }}>★</span>)}
-      {editable && !v && <span className="ecx-placeholder-hint" contentEditable={false}>{tp.rateHint}</span>}
-    </div>
-  );
-}
-
 function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
   const a = block.attrs;
   const src = typeof a.src === "string" ? a.src : "";
@@ -685,17 +654,6 @@ function CoverEdit({ block, blockProps, setAttrs, labels }: BlockEditProps) {
       {src && !fixed && !coverVideo(a) && <img className="ecx-cover-img" src={src} alt={String(a.alt ?? "")} draggable={false} style={imgStyle as CSSProperties} />}
       {overlay && <span className="ecx-cover-overlay" aria-hidden="true" style={overlayStyle as CSSProperties} />}
       <div className="ecx-cover-inner"><InnerBlocks parent={block} /></div>
-    </div>
-  );
-}
-
-function MediaTextEdit({ block, blockProps }: BlockEditProps) {
-  // Ô ảnh rỗng = vùng thả lớn (cùng kiểu ô thả với khối Ảnh)
-  const a = block.attrs;
-  return (
-    <div {...shellProps(blockProps, "mediaText", a)}>
-      <figure className="ecx-media-text-media" style={{ margin: 0 }}>{typeof a.src === "string" && a.src ? <img src={a.src} alt={String(a.alt ?? "")} draggable={false} /> : <MediaPick blockId={block.id} />}</figure>
-      <div className="ecx-media-text-content"><InnerBlocks parent={block} /></div>
     </div>
   );
 }
@@ -810,12 +768,6 @@ export function layoutBlocks(lang?: string): BlockType[] {
       attributes: { height: { type: "string", default: "lg" }, line: { type: "boolean", default: false }, lineStyle: { type: "string", enum: ["solid", "dashed", "dotted", "double"], default: "solid" }, lineWeight: { type: "integer", min: 1, max: 12, default: 1 },
         lineWidth: { type: "integer", min: 5, max: 100, default: 100 }, lineAlign: { type: "string", enum: ["left", "center", "right"], default: "center" }, lineColor: { type: "string", control: "color" } }, summary: (a) => a.height,
     },
-    { name: "horizontalRule", title: "Đường kẻ", icon: Minus, category: "design", keywords: "duong ke divider hr separator", kind: "atom", edit: SeparatorEdit, supports: { style: true, className: true, blockStyle: true } },
-    {
-      name: "callout", title: "Hộp lưu ý", icon: Info, category: "design", keywords: "luu y callout thong bao canh bao note", kind: "container", edit: CalloutEdit,
-      attributes: { tone: { type: "string", enum: ["info", "success", "warning", "danger"], default: "info" }, title: { type: "string" } },
-      create: () => makeBlock("callout", { tone: "info" }, [p(m.sampleCallout)]), supports: { style: true, anchor: true, className: true },
-    },
     {
       name: "popup", title: "Popup", icon: PanelTop, category: "design", keywords: "popup hop thoai modal cua so noi bat nut mo dialog lightbox", kind: "container", edit: PopupEdit,
       attributes: { ...CORE_NODES.popup.attrs, align: { type: "string", enum: ["wide", "full"], control: "hidden" }, triggerText: { type: "string", control: "hidden" }, label: { type: "string" } },
@@ -877,19 +829,10 @@ export function layoutBlocks(lang?: string): BlockType[] {
         evergreenReset: { type: "integer", min: 0, max: 365, default: 30 }, pauseButton: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true },
     },
     {
-      name: "rating", title: "Đánh giá sao", icon: Square, category: "design", keywords: "danh gia sao rating review", kind: "atom", edit: RatingEdit,
-      attributes: { value: { type: "number", default: 5, min: 0, max: 10 }, max: { type: "integer", default: 5, min: 1, max: 10 }, label: { type: "string" } }, supports: { style: true, anchor: true, className: true },
-    },
-    {
       name: "cover", title: "Ảnh bìa", icon: ImageIcon, category: "media", keywords: "anh bia cover banner hero", kind: "container", edit: CoverEdit,
       attributes: { src: { type: "url", control: "media" }, alt: { type: "string" }, overlay: { type: "string", control: "color" }, opacity: { type: "integer", default: 50, min: 0, max: 100 }, minHeight: { type: "string", default: "400px" }, contentAlign: { type: "string", enum: ["top", "center", "bottom"], default: "center" }, fixed: { type: "boolean", default: false }, constrained: { type: "boolean", default: false }, videoSrc: { type: "url" } },
       create: () => makeBlock("cover", { opacity: 50, minHeight: "400px" }, [makeBlock("heading", { level: 2, textAlign: "center" })]),
       supports: { style: true, anchor: true, className: true },
-    },
-    {
-      name: "mediaText", layouts: mediaTextLayouts(m), layoutsOnInsert: false, layoutOwns: ["position"], title: "Ảnh + chữ", icon: LayoutPanelLeft, category: "media", keywords: "anh chu media text", kind: "container", edit: MediaTextEdit,
-      attributes: { src: { type: "url", control: "media" }, alt: { type: "string" }, position: { type: "string", enum: ["left", "right"], default: "left" }, width: { type: "integer", default: 50, min: 20, max: 80 }, verticalAlign: { type: "string", enum: ["top", "center", "bottom"], default: "center" }, stack: { type: "boolean", default: true } },
-      create: () => makeBlock("mediaText", {}, [makeBlock("heading", { level: 3 }), makeBlock("paragraph")]), supports: { style: true, anchor: true, className: true },
     },
     {
       name: "table", title: "Bảng", icon: Table2, category: "text", keywords: "bang table", kind: "container", edit: TableEdit,

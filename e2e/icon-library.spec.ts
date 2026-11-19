@@ -85,7 +85,9 @@ test("Tooltip: Icon có ô Chú thích → khung hiện khi rê chuột; mục I
   const shape = c.locator('[data-ecx-block="x"] .ecx-icon-shape');
   await expect(shape).toHaveAttribute("data-ecx-tip", "Gọi ngay");
   await shape.hover();
-  expect(await shape.evaluate((e) => getComputedStyle(e, "::after").content)).toBe('"Gọi ngay"');
+  // Firefox trả về chính biểu thức attr(...) thay vì chuỗi đã thay → chấp nhận cả hai; khung thật phải có kích thước
+  expect(['"Gọi ngay"', "attr(data-ecx-tip)"]).toContain(await shape.evaluate((e) => getComputedStyle(e, "::after").content));
+  expect(await shape.evaluate((e) => getComputedStyle(e, "::after").opacity)).toBe("1");
   const c2 = await setup(page, { id: "x", type: "iconList", attrs: { items: [{ text: "Một", tip: "Mẹo", color: "#ff0000", textColor: "#0000ff" }, { text: "Hai" }] } });
   const li = c2.locator('[data-ecx-block="x"] li').first();
   await expect(li).toHaveAttribute("data-ecx-tip", "Mẹo");

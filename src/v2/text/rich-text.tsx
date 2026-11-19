@@ -217,10 +217,10 @@ function syncSelection(view: EditorView | undefined): EditorState | null {
 function atStart(view: EditorView) { const s = view.state.selection; return s.empty && s.from === 0; }
 function atEnd(view: EditorView) { const s = view.state.selection; return s.empty && s.from === view.state.doc.content.size; }
 
-/** Mục danh sách chứa khối chữ (khối chữ là con đầu của listItem/taskItem). */
+/** Mục danh sách chứa khối chữ (khối chữ là con đầu của listItem). */
 function listItemOf(store: EditorStore, blockId: string): BNode | null {
   const loc = store.locate(blockId);
-  return loc?.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0 ? loc.parent : null;
+  return loc?.parent && (loc.parent.type === "listItem") && loc.index === 0 ? loc.parent : null;
 }
 
 /** Ô gõ kế bên theo thứ tự trên khung soạn (đi xuyên qua header/footer lồng nhau). */
@@ -318,10 +318,10 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef, keepCaret: (
         dispatch?.(state.tr.insertText("\n"));
         return true;
       }
-      // "---" + Enter → đường kẻ
+      // "---" + Enter → khoảng cách có đường kẻ (Spacer)
       const blk = store.block(p.blockId);
       if (blk?.type === "paragraph" && state.doc.textContent === "---") {
-        const hr = makeBlock("horizontalRule");
+        const hr = makeBlock("spacer", { height: "md", line: true });
         const para = makeBlock("paragraph");
         now(() => store.replace(p.blockId, [hr, para], { select: { ids: [], editing: para.id }, caret: { id: para.id, offset: 0 } }));
         return true;
@@ -407,7 +407,6 @@ const PREFIX_RULES: Array<{ re: RegExp; make(rest: RichNode[]): { blocks: BNode[
   })),
   { re: /^[-*+]$/, make: (rest) => { const p = makeBlock("paragraph", {}, rest); return { blocks: [makeBlock("bulletList", {}, [makeBlock("listItem", {}, [p])])], focus: p }; } },
   { re: /^1[.)]$/, make: (rest) => { const p = makeBlock("paragraph", {}, rest); return { blocks: [makeBlock("orderedList", {}, [makeBlock("listItem", {}, [p])])], focus: p }; } },
-  { re: /^\[ ?\]$/, make: (rest) => { const p = makeBlock("paragraph", {}, rest); return { blocks: [makeBlock("taskList", {}, [makeBlock("taskItem", { checked: false }, [p])])], focus: p }; } },
   { re: /^>$/, make: (rest) => { const p = makeBlock("paragraph", {}, rest); return { blocks: [makeBlock("blockquote", {}, [p])], focus: p }; } },
 ];
 

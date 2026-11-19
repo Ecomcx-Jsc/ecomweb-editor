@@ -21,16 +21,14 @@ const CONTAINERS: Record<string, () => { root: B[]; type: string }> = {
   tab: () => ({ type: "tab", root: [wrap("tabs", {}, [wrap("tab", { title: "Một" }, [slot()]), wrap("tab", { title: "Hai" }, [p("Nội dung 2")])])] }),
   accordion: () => ({ type: "details", root: [wrap("accordion", {}, [wrap("details", { summary: "Câu hỏi", open: true }, [slot()]), wrap("details", { summary: "Câu 2" }, [p("Trả lời")])])] }),
   carousel: () => ({ type: "carousel", root: [wrap("carousel", { slidesPerView: 2 }, [wrap("group", {}, [slot()]), wrap("group", {}, [p("Slide 2")]), wrap("group", {}, [p("Slide 3")])])] }),
-  anh_chu: () => ({ type: "mediaText", root: [wrap("mediaText", { position: "left" }, [slot()])] }),
   anh_bia: () => ({ type: "cover", root: [wrap("cover", { overlay: "primary", opacity: 50, minHeight: "280px", align: "full" }, [slot()])] }),
-  hop_luu_y: () => ({ type: "callout", root: [wrap("callout", { tone: "info" }, [slot()])] }),
   chi_tiet: () => ({ type: "details", root: [wrap("details", { summary: "Chi tiết", open: true }, [slot()])] }),
   trich_dan: () => ({ type: "blockquote", root: [wrap("blockquote", {}, [slot()])] }),
   luoi: () => ({ type: "group", root: [wrap("group", { style: { layout: { type: "grid", columns: { base: 3, tablet: 2, mobile: 1 } } } }, [slot(), p("b"), p("c")])] }),
   hang_ngang: () => ({ type: "group", root: [wrap("group", { style: { layout: { type: "flex", direction: { base: "row" } } } }, [slot(), p("b")])] }),
 };
 
-const CHILD_KEYS = ["paragraph", "heading", "bulletList", "orderedList", "blockquote", "pullquote", "codeBlock", "preformatted", "image", "gallery", "cover", "mediaText", "group", "horizontalRule", "spacer", "details", "table", "buttons", "columns/50-50", "accordion", "tabs", "countdown", "counter", "iconList", "iconBox", "testimonial", "progressBar", "map", "form", "tableOfContents", "socialLinks", "video", "customHtml", "callout", "carousel", "file"];
+const CHILD_KEYS = ["paragraph", "heading", "bulletList", "orderedList", "blockquote", "codeBlock", "image", "gallery", "cover", "group", "spacer", "details", "table", "buttons", "columns/50-50", "accordion", "tabs", "countdown", "counter", "iconList", "iconBox", "testimonial", "progressBar", "map", "form", "tableOfContents", "socialLinks", "video", "customHtml", "carousel", "file"];
 const TYPE_OF: Record<string, string> = { "columns/50-50": "columns", tableOfContents: "tableOfContents" };
 
 test.use({ actionTimeout: 6000 });

@@ -216,14 +216,7 @@ function IconEdit({ block, blockProps }: BlockEditProps) {
   const stroke = Math.min(4, Math.max(0.5, Number(block.attrs.stroke) || 2));
   const shape = block.attrs.iconStyle === "circle" || block.attrs.iconStyle === "square" ? block.attrs.iconStyle : undefined;
   return <div {...merge(blockProps, "ecx-icon-block", align(block.attrs))}><span className={`ecx-icon-shape${shape ? ` is-${shape}` : ""}`} data-ecx-tip={typeof block.attrs.tooltip === "string" && block.attrs.tooltip.trim() ? block.attrs.tooltip.trim().slice(0, 120) : undefined} style={shape ? ({ "--ecx-icon-pad-auto": `${Math.round(size * 0.4)}px` } as CSSProperties) : undefined}><IconSvg name={resolveIcon(block.attrs.name) ? block.attrs.name : "star"} size={size} stroke={stroke} /></span></div>;
-}
-function FootnotesEdit({ block, blockProps }: BlockEditProps) {
-  return <aside {...merge(blockProps, "ecx-footnotes")}>{block.attrs.title ? <p className="ecx-footnotes-title">{String(block.attrs.title)}</p> : null}<ol><li>Chú thích 1</li><li>Chú thích 2</li></ol></aside>;
-}
-function PageBreakEdit({ blockProps }: BlockEditProps) {
-  return <div {...merge(blockProps, "ecx-page-break")} style={{ ...(blockProps.style ?? {}), borderTop: "2px dashed currentColor", opacity: 0.5, textAlign: "center", fontSize: 12 }}>Ngắt trang</div>;
-}
-function PageListEdit({ blockProps }: BlockEditProps) {
+}function PageListEdit({ blockProps }: BlockEditProps) {
   return <nav {...merge(blockProps, "ecx-page-list")}><ul><li>Trang A<ul><li>Trang con</li></ul></li><li>Trang B</li></ul></nav>;
 }
 function ArchivesEdit({ block, blockProps }: BlockEditProps) {
@@ -518,8 +511,6 @@ export function themeBlocks(): BlockType[] {
     { name: "termList", title: "Danh sách chuyên mục / thẻ", icon: Tag, category: theme, keywords: "danh sach chuyen muc the category tag cloud term list", kind: "atom", edit: TermListEdit, attributes: { taxonomy: { type: "string", default: "category" }, display: { type: "string", enum: ["list", "cloud"], default: "list" }, showCount: { type: "boolean", default: false }, hierarchical: { type: "boolean", default: false }, hideEmpty: { type: "boolean", default: true } }, supports: { style: true, className: true }, summary: (a) => a.taxonomy },
     { name: "loginout", title: "Đăng nhập / Đăng xuất", icon: User, category: theme, keywords: "dang nhap dang xuat login logout", kind: "atom", edit: LoginOutEdit, attributes: { loginText: { type: "string" }, logoutText: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "icon", title: "Icon", icon: Star, category: theme, keywords: "icon bieu tuong", kind: "atom", edit: IconEdit, attributes: { tooltip: { type: "string" }, name: { type: "string", default: "star" }, size: { type: "integer", default: 24, min: 12, max: 128 }, label: { type: "string" }, textAlign: TEXT_ALIGN, stroke: { type: "number", default: 2, min: 0.5, max: 4 }, iconStyle: { type: "string", enum: ["plain", "circle", "square"], default: "plain" }, href: { type: "url" }, linkTarget: { type: "string", enum: ["_self", "_blank"] } }, supports: { style: true, className: true }, summary: (a) => a.name },
-    { name: "footnotes", title: "Chú thích cuối bài", icon: ListOrdered, category: theme, keywords: "chu thich cuoi bai footnotes", kind: "atom", edit: FootnotesEdit, attributes: { title: { type: "string" } }, supports: { style: true, className: true } },
-    { name: "pageBreak", title: "Ngắt trang", icon: PanelTop, category: theme, keywords: "ngat trang page break nextpage", kind: "atom", edit: PageBreakEdit, supports: { className: true } },
     { name: "pageList", title: "Danh sách trang", icon: ListOrdered, category: theme, keywords: "danh sach trang page list sitemap", kind: "atom", edit: PageListEdit, attributes: { parentId: { type: "integer", min: 1 }, depth: { type: "integer", default: 2, min: 1, max: 3 } }, supports: { style: true, className: true } },
     { name: "archives", title: "Lưu trữ theo tháng", icon: CalendarDays, category: theme, keywords: "luu tru thang archives", kind: "atom", edit: ArchivesEdit, attributes: { showCount: { type: "boolean", default: true }, limit: { type: "integer", default: 12, min: 1, max: 60 } }, supports: { style: true, className: true } },
     { name: "queryTitle", title: "Tiêu đề trang lưu trữ", icon: Heading1, category: theme, keywords: "tieu de luu tru chuyen muc archive query title h1", kind: "atom", edit: QueryTitleEdit, attributes: { level: { type: "integer", default: 1, min: 1, max: 6 }, prefix: { type: "boolean", default: false }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },

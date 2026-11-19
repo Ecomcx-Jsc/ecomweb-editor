@@ -36,7 +36,7 @@ const CASES: Array<{ name: string; build: () => B }> = [
   { name: "danh-sach-icon-ngang", build: () => wid("iconList", { layout: "inline", items: Array.from({ length: 10 }, (_, i) => ({ text: "Mục dài số " + (i + 1) })) }) },
   { name: "mang-xa-hoi-10", build: () => wid("socialLinks", { links: ["facebook", "x", "instagram", "youtube", "tiktok", "linkedin", "github", "zalo", "telegram", "email"].map((s) => ({ service: s, url: "https://example.com/" + s })) }) },
   { name: "form", build: () => wid("form", {}) },
-  { name: "video-youtube", build: () => wid("youtube", { src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }) },
+  { name: "video-youtube", build: () => wid("video", { src: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }) },
   { name: "ban-do", build: () => wid("map", { address: "Hà Nội", height: 600 }) },
   { name: "html-rong", build: () => wid("customHtml", { html: `<div style="width:2400px;height:80px;background:#f26251">rộng 2400px</div>` }) },
   { name: "dem-so-6", build: () => grp(Array.from({ length: 6 }, (_, i) => wid("counter", { end: 1000 * (i + 1), title: "Chỉ số dài số " + i })), { style: { layout: { type: "flex", direction: { base: "row" } }, gap: { base: "md" } } }) },

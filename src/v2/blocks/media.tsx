@@ -1,7 +1,7 @@
 import { makeBlock } from "../core/model";
 import { SOCIAL_ICONS } from "./social-icons";
 import { blockShell, embedInfo, imageFx, isSafeUrl } from "@ecomcx/ecomweb-content";
-import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Play, Globe, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Globe, X } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { useEditor } from "../context";
 import { AiAltButton } from "../ui/ai";
@@ -78,18 +78,6 @@ function FileEdit({ block, blockProps }: BlockEditProps) {
   const src = safe(block.attrs.src);
   if (!src) return <MediaDrop blockId={block.id} kind="file" blockProps={blockProps} />;
   return <div {...blockProps} className={cx(blockProps.className, "ecx-file cms-file")}><span className="ecx-file-link cms-file-link">{String(block.attrs.name || src)}</span></div>;
-}
-
-const YT = /(?:v=|youtu\.be\/|embed\/)([\w-]{11})/; // cùng mẫu với website (theme-sdk)
-function YoutubeEdit({ block, blockProps, setAttrs }: BlockEditProps) {
-  const m = String(block.attrs.src ?? "").match(YT);
-  const tp = useMsgs("placeholders");
-  if (!m) return <LinkPlaceholder blockProps={blockProps} icon={Play} title={tp.pasteToEmbed} label="YouTube URL" validate={(u) => YT.test(u)} onSubmit={(src) => setAttrs({ src })} />;
-  return (
-    <div {...blockProps} className={cx(blockProps.className, "ecx-youtube embed")}>
-      <img src={`https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`} alt="YouTube" draggable={false} style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover" }} />
-    </div>
-  );
 }
 
 function EmbedEdit({ block, blockProps, setAttrs }: BlockEditProps) {
@@ -279,7 +267,6 @@ export function mediaBlocks(): BlockType[] {
     { name: "video", title: "Video", icon: Video, category: "media", keywords: "video mp4 phim", kind: "atom", edit: VideoEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, poster: { type: "url", control: "media" }, autoplay: { type: "boolean", default: false }, loop: { type: "boolean", default: false }, muted: { type: "boolean", default: false }, controls: { type: "boolean", default: true }, playsInline: { type: "boolean", default: true }, preload: { type: "string", enum: ["none", "metadata", "auto"], default: "metadata" } }, supports: { style: true, anchor: true } },
     { name: "audio", title: "Âm thanh", icon: Music, category: "media", keywords: "am thanh audio nhac mp3 podcast", kind: "atom", edit: AudioEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, autoplay: { type: "boolean", default: false }, loop: { type: "boolean", default: false }, preload: { type: "string", enum: ["none", "metadata", "auto"], default: "metadata" } }, supports: { style: true, anchor: true } },
     { name: "file", title: "Tệp", icon: FileIcon, category: "media", keywords: "tep file pdf tai xuong download tai lieu", kind: "atom", edit: FileEdit, attributes: { ...media, name: { type: "string" }, mime: { type: "string" }, size: { type: "number" }, embed: { type: "boolean", default: true }, download: { type: "boolean" } }, supports: { style: true, anchor: true } },
-    { name: "youtube", title: "YouTube", icon: Play, category: "embed", keywords: "video youtube", kind: "atom", edit: YoutubeEdit, attributes: { src: { type: "url" }, start: { type: "integer" } }, supports: { style: true, anchor: true } },
     { name: "embed", title: "Nhúng", icon: Globe, category: "embed", keywords: "nhung embed youtube vimeo tiktok facebook twitter x instagram spotify google map", kind: "atom", edit: EmbedEdit, attributes: { url: { type: "url" }, caption: { type: "string" } }, supports: { style: true, anchor: true }, summary: (a) => a.url },
     { name: "customHtml", title: "HTML tuỳ chỉnh", icon: Code2, category: "widgets", keywords: "html tuy chinh custom code", kind: "atom", edit: HtmlEdit, attributes: { html: { type: "string", control: "textarea" } } },
     { name: "socialLinks", title: "Mạng xã hội", icon: Share2, category: "widgets", keywords: "mang xa hoi social facebook zalo youtube tiktok", kind: "atom", edit: SocialEdit, inspector: SocialInspector, create: () => makeBlock("socialLinks", { links: [{ service: "facebook", url: "https://facebook.com" }, { service: "youtube", url: "https://youtube.com" }, { service: "zalo", url: "https://zalo.me" }], size: "medium", showLabels: false }), attributes: { links: { type: "json", default: [] }, size: { type: "string", enum: ["small", "medium", "large"], default: "medium" }, align: { type: "string", enum: ["left", "center", "right"] }, showLabels: { type: "boolean", default: false } }, supports: { style: true, anchor: true, className: true } },

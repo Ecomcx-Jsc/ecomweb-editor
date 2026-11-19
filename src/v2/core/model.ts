@@ -28,14 +28,14 @@ export const newId = () => `b${prefix}${(++seq).toString(36)}`;
 
 /** Các loại khối của lõi theo cách chứa nội dung. Khối lạ (plugin) suy từ nội dung. */
 const CORE_KINDS: Record<string, BlockKind> = {
-  paragraph: "text", heading: "text", codeBlock: "text", preformatted: "text",
-  bulletList: "container", orderedList: "container", listItem: "container", taskList: "container", taskItem: "container",
-  blockquote: "container", columns: "container", column: "container", group: "container", callout: "container",
-  buttons: "container", cover: "container", mediaText: "container", pullquote: "text", details: "container", testimonials: "container", popup: "container", accordion: "container", tabs: "container", tab: "container", carousel: "container",
+  paragraph: "text", heading: "text", codeBlock: "text",
+  bulletList: "container", orderedList: "container", listItem: "container",
+  blockquote: "container", columns: "container", column: "container", group: "container",
+  buttons: "container", cover: "container", details: "container", testimonials: "container", popup: "container", accordion: "container", tabs: "container", tab: "container", carousel: "container",
   table: "container", tableRow: "container", tableCell: "container", tableHeader: "container",
   query: "container", postTemplate: "container", queryEmpty: "container", stack: "container",
-  horizontalRule: "atom", image: "atom", gallery: "atom", video: "atom", audio: "atom", file: "atom", youtube: "atom",
-  button: "atom", embed: "atom", spacer: "atom", customHtml: "atom", socialLinks: "atom", tableOfContents: "atom", countdown: "atom", rating: "atom", shortcode: "atom",
+  image: "atom", gallery: "atom", video: "atom", audio: "atom", file: "atom",
+  button: "atom", embed: "atom", spacer: "atom", customHtml: "atom", socialLinks: "atom", tableOfContents: "atom", countdown: "atom", shortcode: "atom",
 };
 const kindOverrides = new Map<string, BlockKind>();
 export function setBlockKind(type: string, kind: BlockKind) { kindOverrides.set(type, kind); }

@@ -14,9 +14,9 @@ import { blockDescription } from "../ui/block-descriptions";
 /** Tên khối theo ngôn ngữ giao diện (khối có nhãn trong bộ chữ). */
 const TITLE_KEYS: Partial<Record<string, keyof V2Labels>> = {
   paragraph: "paragraph", heading: "heading", bulletList: "list", orderedList: "orderedList", blockquote: "quote", codeBlock: "codeBlock",
-  preformatted: "preformatted", horizontalRule: "separator", image: "image", group: "groupBlock", columns: "columns", column: "column", buttons: "buttons",
-  button: "button", spacer: "spacer", callout: "callout", details: "details", table: "table", templatePart: "templatePart", syncedPattern: "syncedPattern",
-  pullquote: "pullquote", cover: "cover", customHtml: "html", embed: "embed",
+  image: "image", group: "groupBlock", columns: "columns", column: "column", buttons: "buttons",
+  button: "button", spacer: "spacer", details: "details", table: "table", templatePart: "templatePart", syncedPattern: "syncedPattern",
+  cover: "cover", customHtml: "html", embed: "embed",
 };
 
 /**

@@ -140,6 +140,6 @@ test("bảng chèn gọn khi soạn bài: khối cũ đã gộp và khối giao 
   await page.getByRole("button", { name: /Thêm khối/ }).first().click();
   const keys = await page.locator(".ecx-inserter-popover [data-key], .ecx-inserter-panel [data-key]").evaluateAll((els) => els.map((e) => e.getAttribute("data-key")));
   expect(keys.filter((k) => /^(group|columns)\//.test(k!)), "ô biến thể Nhóm / Cột").toEqual(["group/section"]);
-  for (const k of ["taskList", "preformatted", "pullquote", "rating", "footnotes", "pageBreak", "details", "youtube", "siteTitle", "postTitle", "comments", "navigation"]) expect(keys, k).not.toContain(k);
+  for (const k of ["details", "siteTitle", "postTitle", "comments", "navigation"]) expect(keys, k).not.toContain(k);
   for (const k of ["paragraph", "heading", "image", "tabs", "accordion", "carousel", "query", "search", "iconBox", "buttons"]) expect(keys, k).toContain(k);
 });

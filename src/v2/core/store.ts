@@ -593,19 +593,19 @@ export class EditorStore {
     const b = loc.block;
     const docId = loc.docId;
     // Khối chứa bị khoá thêm khối: Enter không tạo khối mới
-    const newParent = loc.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0 ? this.locate(loc.parent.id)?.parent?.id ?? null : loc.parent?.id ?? null;
+    const newParent = loc.parent && (loc.parent.type === "listItem") && loc.index === 0 ? this.locate(loc.parent.id)?.parent?.id ?? null : loc.parent?.id ?? null;
     if (!this.canInsertInto(newParent)) return;
     let inline = b.inline!;
     if (selectionEnd > offset) inline = joinInline(splitInline(inline, offset)[0], splitInline(inline, selectionEnd)[1]);
     const len = inlineLength(inline);
-    const item = loc.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0 ? this.locate(loc.parent.id) : null;
+    const item = loc.parent && (loc.parent.type === "listItem") && loc.index === 0 ? this.locate(loc.parent.id) : null;
 
     if (item) {
       // Mục danh sách trống: thụt ra (lồng) hoặc thoát khỏi danh sách
       if (!len && item.block.content!.length === 1) return this.outdentItem(item.block.id, true);
       const [before, after] = splitInline(inline, offset);
       const para = makeBlock("paragraph", {}, after);
-      const newItem = makeBlock(item.block.type, item.block.type === "taskItem" ? { checked: false } : {}, [para]);
+      const newItem = makeBlock(item.block.type, {}, [para]);
       const blocks = this.state.docs[docId].blocks;
       let next = mapBlock(blocks, id, (x) => ({ ...x, inline: before }));
       next = insertBlocks(next, item.parent!.id, item.index + 1, [newItem]);
@@ -640,7 +640,7 @@ export class EditorStore {
     const blocks = this.state.docs[docId].blocks;
     const b = loc.block;
     // Khối không xoá được (khoá): Backspace ở đầu chỉ đưa con trỏ về khối chữ trước
-    if (!this.canRemove(id) || (loc.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0 && !this.canRemove(loc.parent.id))) {
+    if (!this.canRemove(id) || (loc.parent && (loc.parent.type === "listItem") && loc.index === 0 && !this.canRemove(loc.parent.id))) {
       const order = flatten(blocks).filter((x) => x.inline);
       const prev = order[order.findIndex((x) => x.id === id) - 1];
       if (prev) this.focusText(prev.id, -1);
@@ -648,7 +648,7 @@ export class EditorStore {
     }
 
     // Đầu mục danh sách: nối vào mục trước, hoặc (mục đầu) thụt ra
-    if (loc.parent && (loc.parent.type === "listItem" || loc.parent.type === "taskItem") && loc.index === 0) {
+    if (loc.parent && (loc.parent.type === "listItem") && loc.index === 0) {
       const item = this.locate(loc.parent.id)!;
       const prevItem = item.index > 0 ? item.parent!.content![item.index - 1] : null;
       if (!prevItem) return this.outdentItem(item.block.id, true);
@@ -730,7 +730,7 @@ export class EditorStore {
     blocks = mapBlock(blocks, prev.id, (pi) => {
       const kids = pi.content ?? [];
       const last = kids[kids.length - 1];
-      if (last && (last.type === "bulletList" || last.type === "orderedList" || last.type === "taskList")) {
+      if (last && (last.type === "bulletList" || last.type === "orderedList")) {
         return { ...pi, content: [...kids.slice(0, -1), { ...last, content: [...last.content!, loc.block] }] };
       }
       return { ...pi, content: [...kids, makeBlock(listType, {}, [loc.block])] };
@@ -744,7 +744,7 @@ export class EditorStore {
     const loc = this.locate(itemId);
     if (!loc || !loc.parent || !this.canMove(itemId) || !this.canRemove(itemId)) return false;
     const list = this.locate(loc.parent.id)!;
-    const outerItem = list.parent && (list.parent.type === "listItem" || list.parent.type === "taskItem") ? this.locate(list.parent.id) : null;
+    const outerItem = list.parent && (list.parent.type === "listItem") ? this.locate(list.parent.id) : null;
     const docId = loc.docId;
     const firstId = loc.block.content![0].id;
     const caret: Caret = this.lastCaret && this.lastCaret.id === firstId ? this.lastCaret : { id: firstId, offset: 0 };
@@ -765,9 +765,9 @@ export class EditorStore {
 }
 
 /** Khối chứa thoát ra được bằng Enter ở đoạn trống cuối / Backspace ở đầu. */
-const ESCAPE_CONTAINERS = new Set(["blockquote", "callout", "pullquote", "details"]);
+const ESCAPE_CONTAINERS = new Set(["blockquote", "details"]);
 /** Enter ở cuối khối này tạo khối gì. */
-const SPLIT_AS: Record<string, string> = { heading: "paragraph", codeBlock: "paragraph", preformatted: "paragraph" };
+const SPLIT_AS: Record<string, string> = { heading: "paragraph", codeBlock: "paragraph" };
 
 const firstText = (b: BNode): string | null => (b.inline ? b.id : b.content ? (b.content.map(firstText).find(Boolean) ?? null) : null);
 const firstTextDeep = (b: BNode): BNode | null => {

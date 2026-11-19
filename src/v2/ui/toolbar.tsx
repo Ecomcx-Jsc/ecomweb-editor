@@ -126,7 +126,7 @@ export function BlockToolbar({ placement = "floating" }: { placement?: "floating
   const view = editingText ? activeView(ui.activeRich, sel.editing!) : null;
   const ordered = topLevelOrdered(store.getState().docs[loc.docId].blocks, ids);
   const parent = loc.parent;
-  const listItem = parent && (parent.type === "listItem" || parent.type === "taskItem") && loc.index === 0 ? parent : null;
+  const listItem = parent && (parent.type === "listItem") && loc.index === 0 ? parent : null;
   const transforms = sameType ? (type?.transforms ?? []).filter((t) => nodes.length === 1 || t.multiple) : [];
   const height = 44;
   // Trên khối; không đủ chỗ (khối sát mép trên khung) thì xuống dưới khối nếu còn chỗ — không đè lên dòng chữ đang gõ

@@ -70,17 +70,6 @@ export function iconBoxLayouts(m: M): BlockLayout[] {
   ];
 }
 
-export function mediaTextLayouts(m: M): BlockLayout[] {
-  const pic = (x: number, w: number) => [box(x, 8, w, 46, true)];
-  const txt = (x: number, w: number) => [bar(x, 16, w), bar(x, 25, w - 8), bar(x, 34, w - 4)];
-  return [
-    { id: "l50", label: m.layoutMedia1, attrs: { position: "left", width: 50 }, thumb: <Thumb>{pic(8, 38)}{txt(54, 34)}</Thumb> },
-    { id: "l33", label: m.layoutMedia2, attrs: { position: "left", width: 33 }, thumb: <Thumb>{pic(8, 26)}{txt(42, 46)}</Thumb> },
-    { id: "r50", label: m.layoutMedia3, attrs: { position: "right", width: 50 }, thumb: <Thumb>{pic(50, 38)}{txt(8, 34)}</Thumb> },
-    { id: "r33", label: m.layoutMedia4, attrs: { position: "right", width: 33 }, thumb: <Thumb>{pic(62, 26)}{txt(8, 46)}</Thumb> },
-  ];
-}
-
 export function progressLayouts(m: M): BlockLayout[] {
   const track = (y: number, h = 6) => [<rect key={`t${y}`} x={8} y={y} width={80} height={h} rx={h / 2} />, <rect key={`f${y}`} x={8} y={y} width={56} height={h} rx={h / 2} className="is-accent" />];
   return [

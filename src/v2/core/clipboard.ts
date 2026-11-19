@@ -104,7 +104,7 @@ function blockOf(e: HTMLElement): RichNode | RichNode[] | null {
       const code = (e.textContent ?? "").replace(/\n$/, "");
       return { type: "codeBlock", ...(code ? { content: [{ type: "text", text: code }] } : {}) };
     }
-    case "HR": return { type: "horizontalRule" };
+    case "HR": return { type: "spacer", attrs: { height: "md", line: true } };
     case "IMG": {
       const src = e.getAttribute("src") ?? "";
       return src && isSafeUrl(src) ? { type: "image", attrs: { src, alt: e.getAttribute("alt") ?? undefined } } : null;
@@ -205,12 +205,12 @@ export function richToHtml(nodes: RichNode[]): string {
     switch (n.type) {
       case "paragraph": return `<p>${inl(n.content)}</p>`;
       case "heading": return `<h${Number(n.attrs?.level) || 2}>${inl(n.content)}</h${Number(n.attrs?.level) || 2}>`;
-      case "bulletList": case "taskList": return `<ul>${kids()}</ul>`;
+      case "bulletList": return `<ul>${kids()}</ul>`;
       case "orderedList": return `<ol>${kids()}</ol>`;
-      case "listItem": case "taskItem": return `<li>${kids()}</li>`;
+      case "listItem": return `<li>${kids()}</li>`;
       case "blockquote": return `<blockquote>${kids()}</blockquote>`;
-      case "codeBlock": case "preformatted": return `<pre>${esc((n.content ?? []).map((c) => c.text ?? "").join(""))}</pre>`;
-      case "horizontalRule": return "<hr>";
+      case "codeBlock": return `<pre>${esc((n.content ?? []).map((c) => c.text ?? "").join(""))}</pre>`;
+      case "spacer": return n.attrs?.line === true ? "<hr>" : "";
       case "image": return typeof n.attrs?.src === "string" && isSafeUrl(n.attrs.src) ? `<img src="${esc(n.attrs.src)}" alt="${esc(String(n.attrs.alt ?? ""))}">` : "";
       case "table": return `<table>${kids()}</table>`;
       case "tableRow": return `<tr>${kids()}</tr>`;

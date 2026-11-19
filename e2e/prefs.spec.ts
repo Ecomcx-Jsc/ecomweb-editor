@@ -123,7 +123,7 @@ test.describe("tuỳ chọn trình soạn (menu ⋮)", () => {
     await page.keyboard.type("/duong ke");
     await page.keyboard.press("Enter");
     await page.getByRole("button", { name: "Thêm khối" }).first().click();
-    await expect(page.locator("[data-section='most-used'] [data-key='horizontalRule']")).toBeVisible();
+    await expect(page.locator("[data-section='most-used'] [data-key='spacer']")).toBeVisible();
     await menu(page, "Chép toàn bộ nội dung");
     // Ghi clipboard là bất đồng bộ: chờ tới khi có nội dung (đọc clipboard chỉ cấp quyền được ở Chromium)
     if (test.info().project.name === "chromium") await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toContain("Tiêu đề bài");

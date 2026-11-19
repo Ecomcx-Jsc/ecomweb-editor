@@ -1,5 +1,5 @@
 import { blockCitation, blockShell , typedConfig } from "@ecomcx/ecomweb-content";
-import { Code, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, List, ListChecks, ListOrdered, Pilcrow, Quote, SquareCode, TextQuote, Type } from "lucide-react";
+import { Heading1, Heading2, Heading3, Heading4, Heading5, Heading6, List, ListOrdered, Pilcrow, Quote, SquareCode, Type } from "lucide-react";
 import type { CSSProperties } from "react";
 import { InnerBlocks } from "../canvas/block-list";
 import { inlineText, makeBlock, type BNode } from "../core/model";
@@ -29,7 +29,7 @@ function ParagraphEdit({ block, blockProps, editable }: BlockEditProps) {
   if (bound.bound) return <BoundText tagName="p" preview={bound} blockProps={blockProps} style={align(block.attrs)} />;
   // Gợi ý theo vai trò: mục danh sách / việc khác đoạn văn thường
   const parent = store.locate(block.id)?.parent?.type;
-  const ph = parent === "listItem" ? tp.listItem : parent === "taskItem" ? tp.taskItem : tp.paragraph;
+  const ph = parent === "listItem" ? tp.listItem : tp.paragraph;
   return <RichText blockId={block.id} value={block.inline} tagName="p" blockProps={{ ...blockProps, title: iconProps(block.attrs).title }} className={iconProps(block.attrs).className} style={align(block.attrs)} placeholder={ph} placeholderAlways editable={editable} />;
 }
 
@@ -64,24 +64,6 @@ function CodeEdit({ block, blockProps, editable, setAttrs }: BlockEditProps) {
   );
 }
 
-function PreformattedEdit({ block, blockProps, editable }: BlockEditProps) {
-  const tp = useMsgs("placeholders");
-  return <RichText blockId={block.id} value={block.inline} tagName="pre" className="ecx-pre" blockProps={blockProps} breakOnEnter placeholder={tp.preformatted} placeholderAlways editable={editable} />;
-}
-
-function PullquoteEdit({ block, blockProps, editable, setAttrs }: BlockEditProps) {
-  const tp = useMsgs("placeholders");
-  const cite = blockCitation(block.attrs) ?? "";
-  const sh = blockShell("pullquote", block.attrs)!;
-  return (
-    <figure {...blockProps} className={`${blockProps.className} ${sh.className}`}>
-      <blockquote><RichText blockId={block.id} value={block.inline} tagName="p" placeholder={tp.quote} placeholderAlways editable={editable} /></blockquote>
-      {/* website chỉ in nguồn khi có chữ: trình soạn luôn có ô người nói để thấy chỗ gõ */}
-      {(cite || editable) && <RichText blockId={block.id} field="citation" tagName="figcaption" value={cite} onChange={(v) => setAttrs({ citation: v })} placeholder={tp.speaker} placeholderAlways editable={editable} />}
-    </figure>
-  );
-}
-
 function ListEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   const Tag = block.type === "orderedList" ? "ol" : "ul";
   const start = Number(block.attrs.start);
@@ -102,15 +84,6 @@ function ListEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
 
 function ListItemEdit({ block, blockProps }: BlockEditProps) {
   return <li {...(blockProps as object)}><InnerBlocks parent={block} appender="none" /></li>;
-}
-
-function TaskItemEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
-  return (
-    <li {...(blockProps as object)} className={`${blockProps.className} ecx-task-item task-item`}>
-      <input type="checkbox" checked={!!block.attrs.checked} disabled={!editable} onChange={(e) => setAttrs({ checked: e.target.checked || undefined })} contentEditable={false} />{" "}
-      <InnerBlocks parent={block} appender="none" />
-    </li>
-  );
 }
 
 function QuoteEdit({ block, blockProps, editable, setAttrs }: BlockEditProps) {
@@ -155,6 +128,7 @@ export function textBlocks(): BlockType[] {
     {
       name: "heading", title: "Tiêu đề", icon: Heading2, category: "text", keywords: "tieu de heading h1 h2 h3 h4", kind: "text", edit: HeadingEdit,
       attributes: { htmlTag: { type: "string", enum: ["p", "span", "div"] }, level: { type: "integer", default: 2, min: 1, max: 6 }, textAlign: { type: "string", enum: ["left", "center", "right", "justify"] }, icon: { type: "string" }, iconPosition: { type: "string", enum: ["left", "right"], default: "left" }, iconTitle: { type: "string" }, tocTitle: { type: "string" },
+        href: { type: "url" }, linkTarget: { type: "string", enum: ["_self", "_blank"] }, linkRel: { type: "string" },
         typedWords: { type: "string" }, typedSpeed: { type: "integer", default: 80, min: 30, max: 200 }, typedPause: { type: "integer", default: 1800, min: 600, max: 6000 }, typedLoop: { type: "boolean", default: true } },
       create: (attrs) => makeBlock("heading", { level: 2, ...attrs }),
       variations: [1, 2, 3, 4, 5, 6].map((level) => ({ name: `h${level}`, title: `H${level}`, icon: HEADING_ICONS[level], keywords: `h${level}`, attrs: { level }, isActive: (a) => Number(a.level) === level })),
@@ -174,30 +148,16 @@ export function textBlocks(): BlockType[] {
     },
     { name: "listItem", title: "Mục danh sách", icon: List, kind: "container", edit: ListItemEdit, hidden: true },
     {
-      name: "taskList", title: "Danh sách việc", icon: ListChecks, category: "text", keywords: "viec can lam todo task checklist", kind: "container", edit: ListEdit,
-      create: () => makeBlock("taskList", {}, [makeBlock("taskItem", { checked: false }, [makeBlock("paragraph")])]),
-    },
-    { name: "taskItem", title: "Việc", icon: ListChecks, kind: "container", edit: TaskItemEdit, hidden: true, attributes: { checked: { type: "boolean", default: false } } },
-    {
       name: "blockquote", title: "Trích dẫn", icon: Quote, category: "text", keywords: "trich dan quote blockquote", kind: "container", edit: QuoteEdit,
       attributes: { citation: { type: "string" } },
       create: () => makeBlock("blockquote", {}, [makeBlock("paragraph")]),
       supports: { style: true, anchor: true, className: true, blockStyle: true },
-      transforms: [{ to: "paragraph", convert: toTextBlocks("paragraph"), multiple: true }, { to: "pullquote", convert: (b) => [makeBlock("pullquote", {}, textsOf(b)[0] ?? [])] }],
+      transforms: [{ to: "paragraph", convert: toTextBlocks("paragraph"), multiple: true }],
     },
     {
       name: "codeBlock", title: "Mã nguồn", icon: SquareCode, category: "text", keywords: "ma code nguon", kind: "text", edit: CodeEdit, multiline: true, plain: true,
       attributes: { language: { type: "string" } }, // nhãn lấy từ locales/*/attrs.ts (language) theo ngôn ngữ đang dùng
-      transforms: [{ to: "paragraph", convert: (b) => textsOf(b).map((i) => makeBlock("paragraph", {}, inlineText(i))) }, { to: "preformatted", convert: toTextBlocks("preformatted") }],
-    },
-    {
-      name: "preformatted", title: "Định dạng sẵn", icon: Code, category: "text", keywords: "dinh dang san preformatted pre khoang trang", kind: "text", edit: PreformattedEdit,
-      supports: { style: true, anchor: true, className: true }, transforms: textTransforms("preformatted"),
-    },
-    {
-      name: "pullquote", title: "Trích dẫn nổi bật", icon: TextQuote, category: "text", keywords: "trich dan noi bat pullquote", kind: "text", edit: PullquoteEdit,
-      attributes: { citation: { type: "string" } }, supports: { style: true, anchor: true, className: true },
-      transforms: [{ to: "blockquote", convert: toQuote }, { to: "paragraph", convert: toTextBlocks("paragraph") }],
+      transforms: [{ to: "paragraph", convert: (b) => textsOf(b).map((i) => makeBlock("paragraph", {}, inlineText(i))) }],
     },
   ];
 }

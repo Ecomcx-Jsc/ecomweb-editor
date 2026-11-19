@@ -10,7 +10,7 @@ import { Row, Section, Seg, cx } from "./style-controls";
  * Giá trị theo khổ (hướng, căn, số cột) sửa theo khổ đang chọn ở bảng Kiểu dáng (`device`).
  */
 /** Khối chứa (có khối con) mới có mục Bố cục. */
-const CONTAINERS = new Set(["group", "cover", "blockquote", "callout", "details", "query", "postTemplate", "mediaText"]);
+const CONTAINERS = new Set(["group", "cover", "blockquote", "details", "query", "postTemplate"]);
 
 type Kind = "flow" | "row" | "stack" | "grid";
 export const layoutKind = (l?: BlockLayout): Kind => (!l ? "flow" : l.type === "grid" ? "grid" : l.direction?.base === "column" ? "stack" : "row");

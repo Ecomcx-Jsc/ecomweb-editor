@@ -9,7 +9,7 @@ const put = async (page: Page, node: unknown) => {
   await page.evaluate(() => (window as any).__ecx.store.select(["x"], { editing: null }));
 };
 
-test("tab Cài đặt có ô bố cục riêng của khối: danh sách chia cột / kiểu dấu, đường kẻ, nhóm nút — sửa là thấy trên canvas", async ({ page }) => {
+test("tab Cài đặt có ô bố cục riêng của khối: danh sách chia cột / kiểu dấu, nhóm nút — sửa là thấy trên canvas", async ({ page }) => {
   const c = await open(page, "?empty=1&content=1");
   const insp = page.locator(".ecx-inspector");
   await put(page, { id: "x", type: "bulletList", attrs: {}, content: ["Một", "Hai", "Ba", "Bốn"].map((t, i) => ({ id: `li${i}`, type: "listItem", attrs: {}, content: [p(`lp${i}`, t)] })) });
@@ -25,10 +25,8 @@ test("tab Cài đặt có ô bố cục riêng của khối: danh sách chia c�
   await expect(insp.getByLabel("Chia cột", { exact: true })).toHaveCount(0);
 
   await page.evaluate(() => (window as any).__ecx.store.remove(["x"]));
-  await put(page, { id: "x", type: "horizontalRule", attrs: {} });
+  await put(page, { id: "x", type: "buttons", attrs: {}, content: [{ id: "b1", type: "button", attrs: { text: "A" } }, { id: "b2", type: "button", attrs: { text: "B" } }] });
   await insp.getByText("Cài đặt", { exact: true }).first().click();
-  const sep = insp.getByRole("button", { name: /^Đường kẻ/ }).first();
-  if (await sep.getAttribute("aria-expanded") === "false") await sep.click();
-  await insp.getByLabel("Kiểu đường kẻ").selectOption("dashed");
-  await expect.poll(() => c.locator('[data-ecx-block="x"]').evaluate((el) => getComputedStyle(el).borderTopStyle)).toBe("dashed");
+  await insp.getByLabel("Hướng xếp", { exact: true }).selectOption("column"); // ô ở mục "Bố cục nhóm nút" (select), khác ô "Hướng xếp nút" ở trên
+  await expect.poll(() => c.locator('[data-ecx-block="x"]').evaluate((el) => getComputedStyle(el).flexDirection)).toBe("column");
 });

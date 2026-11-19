@@ -34,7 +34,7 @@ export interface InsertOption {
 }
 
 /** Các lựa chọn chèn: khối + biến thể có hàm tạo riêng (cột 30/70…). */
-const LEGACY_BLOCKS = new Set(["taskList", "preformatted", "pullquote", "rating", "footnotes", "pageBreak", "details", "youtube", "testimonial", "horizontalRule", "mediaText", "callout"]);
+const LEGACY_BLOCKS = new Set(["details", "testimonial"]);
 const PAGE_THEME_BLOCKS = new Set(["search", "query", "icon"]);
 
 export function useInsertOptions(): InsertOption[] {

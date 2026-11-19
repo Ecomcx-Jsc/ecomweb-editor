@@ -386,8 +386,6 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-spacer[data-ecx-size] { display: flex; align-items: center; justify-content: center; min-height: 24px; }
 .ecx-spacer[data-ecx-size]::after { position: relative; z-index: 1; content: attr(data-ecx-size); padding: 2px 8px; border-radius: 4px; background: rgb(255 255 255 / .85); color: #33414d; font: 12px/1.4 var(--ecx-ui-font); opacity: 0; transition: opacity .15s; pointer-events: none; }
 .ecx-spacer[data-ecx-size]:hover::after, .ecx-spacer.is-selected[data-ecx-size]::after { opacity: 1; }
-.ecx-rating[data-ecx-placeholder] { display: flex; align-items: center; gap: 2px; min-height: 40px; }
-.ecx-rating[data-ecx-placeholder] .ecx-placeholder-hint { margin: 0 0 0 8px; }
 hr.ecx-block { position: relative; overflow: visible; }
 hr.ecx-block::before { content: ""; position: absolute; left: 0; right: 0; top: -20px; bottom: -20px; }
 `;

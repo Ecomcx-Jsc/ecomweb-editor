@@ -496,7 +496,7 @@ function useCanvasKeys(doc: Document) {
 }
 
 /** Khối không chọn riêng bằng phím mũi tên (đi thẳng vào chữ bên trong). */
-const HIDDEN_NAV = new Set(["listItem", "taskItem", "tableRow"]);
+const HIDDEN_NAV = new Set(["listItem", "tableRow"]);
 
 /** Thôi thu nhỏ: phần đang chọn cuộn vào giữa màn hình. */
 export function zoomIn(store: { getState(): { selection: { ids: string[] } } }, ui: { setZoomOut(v: boolean): void; blockEl(id: string): HTMLElement | null }) {

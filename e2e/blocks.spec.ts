@@ -175,10 +175,9 @@ test.describe("chèn khối", () => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Nội dung bài viết.");
     await page.getByRole("button", { name: "Thêm khối" }).first().click();
-    await page.locator(".ecx-inserter-panel .ecx-search").fill("duong ke");
-    await page.locator(".ecx-block-tile", { hasText: "Đường kẻ" }).click();
-    expect(((await shape(page)) as unknown[]).slice(0, 4)).toEqual(["heading", "paragraph", "horizontalRule", "paragraph"]);
-    await expect(c.locator("hr")).toBeVisible();
+    await page.locator(".ecx-inserter-panel .ecx-search").fill("duong ke"); // tên cũ "Đường kẻ" vẫn tìm ra Spacer
+    await page.locator(".ecx-block-tile", { hasText: "Spacer" }).first().click();
+    expect(((await shape(page)) as unknown[]).slice(0, 4)).toEqual(["heading", "paragraph", "spacer", "paragraph"]);
   });
 
   test("thư viện khối: kéo thả khối vào giữa hai đoạn", async ({ page }) => {

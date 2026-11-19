@@ -171,7 +171,7 @@ test.describe("trải nghiệm soạn", () => {
   test("thư viện khối: rê chuột lên khối hiện thẻ mô tả", async ({ page }) => {
     await open(page, "?doc=post");
     await page.locator(".ecx-topbar").getByRole("button", { name: "Thêm khối" }).click();
-    await page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="mediaText"]').first().hover();
-    await expect(page.locator(".ecx-block-preview")).toContainText("Ảnh và chữ đặt cạnh nhau");
+    await page.locator('.ecx-inserter-panel .ecx-block-tile[data-key="accordion"]').first().hover();
+    await expect(page.locator(".ecx-block-preview")).toContainText("Accordion");
   });
 });

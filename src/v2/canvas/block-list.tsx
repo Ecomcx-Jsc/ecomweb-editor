@@ -185,7 +185,7 @@ export function InnerBlocks({ parent, appender = "auto" }: { parent: BNode; appe
   );
 }
 
-const TAIL_PARENTS = new Set(["column", "group", "tab", "callout"]);
+const TAIL_PARENTS = new Set(["column", "group", "tab"]);
 /** Nhóm dạng hàng ngang / lưới: thêm một ô vào hàng sẽ làm lệch bố cục → không có nút + cuối (dùng thanh công cụ / bảng chèn). */
 const isFlowLayout = (b: BNode) => { const t = (b.attrs.style as { layout?: { type?: string } } | undefined)?.layout?.type; return t === "flex" || t === "grid"; };
 

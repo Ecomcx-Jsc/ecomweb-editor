@@ -65,17 +65,6 @@ test.describe("bố cục + hiệu ứng", () => {
     await expect(insp).not.toContainText("overlayMenu");
   });
 
-  test("YouTube: dán link vào ô trống → hiện ảnh xem trước, không lỗi (hook phải gọi trước return sớm)", async ({ page }) => {
-    const c = await open(page, "?doc=post");
-    await clickEnd(c, "Đoạn thứ hai.");
-    await insertVia(page, "youtube");
-    const yt = c.locator('[data-type="youtube"]');
-    await yt.getByLabel("YouTube URL").fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-    await yt.getByRole("button").last().click();
-    await expect(c.locator(".ecx-block-error")).toHaveCount(0);
-    await expect(c.locator('[data-type="youtube"] img')).toBeVisible();
-  });
-
   test("chèn Hàng ngang: hai khối nằm cạnh nhau; đổi sang Xếp dọc rồi Lưới từ thanh công cụ", async ({ page }) => {
     const c = await open(page, "?doc=post");
     await clickEnd(c, "Đoạn thứ hai.");

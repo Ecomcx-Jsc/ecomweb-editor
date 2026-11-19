@@ -106,7 +106,6 @@ test.describe("gõ tắt", () => {
     ["- ", "bulletList", [{ bulletList: [{ listItem: ["paragraph"] }] }]],
     ["1. ", "orderedList", [{ orderedList: [{ listItem: ["paragraph"] }] }]],
     ["> ", "blockquote", [{ blockquote: ["paragraph"] }]],
-    ["[] ", "taskList", [{ taskList: [{ taskItem: ["paragraph"] }] }]],
   ];
   for (const [typed, name, expected] of cases) {
     test(`"${typed.trim()}" + dấu cách → ${name}`, async ({ page }) => {
@@ -142,7 +141,7 @@ test.describe("gõ tắt", () => {
     await page.keyboard.press("Enter");
     await page.keyboard.type("---");
     await page.keyboard.press("Enter");
-    expect(((await shape(page)) as unknown[]).slice(3)).toEqual(["horizontalRule", "paragraph"]);
+    expect(((await shape(page)) as unknown[]).slice(3)).toEqual(["spacer", "paragraph"]);
   });
 
   test("**đậm** và *nghiêng* và `mã` khi gõ dấu đóng", async ({ page }) => {
