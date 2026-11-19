@@ -225,12 +225,13 @@ test("Carousel: bảng phải có đủ tuỳ chỉnh slider (số slide theo kh
   expect((await blockOf(page, "carousel")).attrs.autoplay).toBe(true);
 });
 
-test("Cột có nội dung: đủ chỗ thả (cao ≥ 90px), nút + cuối cột hiện khi rê chuột, bấm mở bảng chèn vào đúng cột; nhãn khối không che chữ", async ({ page }) => {
+test("Cột có nội dung: cao đúng như website (không độn chỗ thả), nút + cuối cột hiện khi rê chuột, bấm mở bảng chèn vào đúng cột; nhãn khối không che chữ", async ({ page }) => {
   const c = await open(page, "");
   const col = c.locator("[data-type=column]").first();
   await col.scrollIntoViewIfNeeded();
   const b = (await col.boundingBox())!;
-  expect(b.height).toBeGreaterThanOrEqual(90);
+  // Khung soạn khớp website: cột có nội dung không bị độn min-height; chỗ thả nằm ở nút + cuối cột (hiện khi rê chuột)
+  expect(b.height).toBeLessThan(90);
   const tail = col.locator(".ecx-tail-appender");
   await expect(tail).toHaveCount(1);
   expect(await tail.evaluate((e) => getComputedStyle(e).opacity)).toBe("0");

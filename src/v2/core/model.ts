@@ -35,7 +35,7 @@ const CORE_KINDS: Record<string, BlockKind> = {
   table: "container", tableRow: "container", tableCell: "container", tableHeader: "container",
   query: "container", postTemplate: "container", queryEmpty: "container", stack: "container",
   image: "atom", gallery: "atom", video: "atom", audio: "atom", file: "atom",
-  button: "atom", embed: "atom", spacer: "atom", customHtml: "atom", socialLinks: "atom", tableOfContents: "atom", countdown: "atom", shortcode: "atom",
+  button: "atom", embed: "atom", spacer: "atom", customHtml: "atom", socialLinks: "atom", tableOfContents: "atom", countdown: "atom", lottie: "atom", shortcode: "atom",
 };
 const kindOverrides = new Map<string, BlockKind>();
 export function setBlockKind(type: string, kind: BlockKind) { kindOverrides.set(type, kind); }
