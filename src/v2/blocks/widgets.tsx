@@ -63,6 +63,7 @@ function WidgetEdit(props: BlockEditProps) {
 function IconListEdit({ block, blockProps, setAttrs, editable }: BlockEditProps) {
   const tp = useMsgs("placeholders");
   const { ui } = useEditor();
+  const active = useActiveWithin(block.id); // nút "Thêm dòng" chỉ hiện khi đang chọn / gõ trong khối (chiều cao khung soạn khớp website)
   const activeIdx = useSyncExternalStore(ui.subscribe, () => ui.activeItem.get(block.id) ?? 0);
   const items: Array<{ text: string; href?: string; icon?: string; tip?: string; color?: string; iconBg?: string; textColor?: string }> = Array.isArray(block.attrs.items) ? block.attrs.items : [];
   const list = items.length || !editable ? items : [{ text: "" }];
@@ -85,7 +86,7 @@ function IconListEdit({ block, blockProps, setAttrs, editable }: BlockEditProps)
           ? <span style={colorCss(it.textColor) ? { color: colorCss(it.textColor) } : undefined}><TextPlaceholder value={it.text} placeholder={i === 0 ? tp.iconListItem : `${tp.addRow}…`} label={`${tp.addRow} ${i + 1}`} onKeyDown={key(i)} onChange={(v) => save(list.map((x, k) => (k === i ? { ...x, text: v } : x)))} /></span>
           : <span style={colorCss(it.textColor) ? { color: colorCss(it.textColor) } : undefined}>{it.text}</span>}</li>
       ))}
-      {editable && <li className="ecx-ph-list-add"><AddItemButton label={tp.addRow} onClick={() => { focusAt.current = list.length; save([...list, { text: "" }]); }} /></li>}
+      {editable && active && <li className="ecx-ph-list-add"><AddItemButton label={tp.addRow} onClick={() => { focusAt.current = list.length; save([...list, { text: "" }]); }} /></li>}
     </ul>
   );
 }

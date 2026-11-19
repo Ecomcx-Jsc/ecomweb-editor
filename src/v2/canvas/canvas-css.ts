@@ -292,6 +292,7 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-ph-skip:hover { color: var(--ecx-ui); }
 /* Ô gõ của plugin / icon list: kế thừa phông + cỡ chữ của chỗ đặt ô */
 .ecx-ph-text { box-sizing: border-box; width: 100%; min-width: 4em; margin: 0; padding: 0 0 1px; border: 0; border-bottom: 1px dashed color-mix(in srgb, currentColor 35%, transparent); border-radius: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; line-height: inherit; resize: vertical; outline: none; field-sizing: content; }
+.ecx-icon-list .ecx-ph-text { height: 1lh; padding-bottom: 0; } /* hàng danh sách cao bằng dòng chữ ngoài website */
 .ecx-ph-text::placeholder { color: inherit; opacity: .85; }
 .ecx-ph-text:focus { border-bottom-color: var(--ecx-ui); }
 .ecx-ph-field .ecx-ph-text.ecx-input { border: 1px solid #c9d0d7; border-radius: 6px; padding: 6px 8px; height: auto; min-height: 36px; background: #fff; color: #1f2d38; font: 14px/1.4 var(--ecx-ui-font); }
@@ -385,7 +386,9 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-ph-note { margin: .25rem 0; }
 .ecx-ph-table .ecx-ph-field { flex: 0 1 110px; }
 /* Khoảng trống: sọc mờ + kích thước; đường kẻ: vùng bấm cao ≥ 40px (không đổi bố cục) */
-.ecx-spacer[data-ecx-size] { display: flex; align-items: center; justify-content: center; min-height: 24px; }
+/* Chiều cao thật như website (không độn min-height); vùng bấm rộng thêm bằng ::before để spacer thấp vẫn chọn được */
+.ecx-spacer[data-ecx-size] { position: relative; display: flex; align-items: center; justify-content: center; }
+.ecx-spacer[data-ecx-size]::before { content: ""; position: absolute; inset: -8px 0; }
 .ecx-spacer[data-ecx-size]::after { position: relative; z-index: 1; content: attr(data-ecx-size); padding: 2px 8px; border-radius: 4px; background: rgb(255 255 255 / .85); color: #33414d; font: 12px/1.4 var(--ecx-ui-font); opacity: 0; transition: opacity .15s; pointer-events: none; }
 .ecx-spacer[data-ecx-size]:hover::after, .ecx-spacer.is-selected[data-ecx-size]::after { opacity: 1; }
 hr.ecx-block { position: relative; overflow: visible; }
