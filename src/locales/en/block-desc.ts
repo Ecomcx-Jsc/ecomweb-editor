@@ -82,4 +82,5 @@ export const blockDesc = {
   testimonial: "Customer testimonial: quote, name, role and avatar.",
   progressBar: "Labelled progress bar with a percentage (skills, goals) that fills when scrolled into view.",
   "map": "Google map for a typed address (store, office).",
+  "lottie": "Lottie animation (.lottie / .json) — plays automatically, on hover, click or scroll; falls back to a poster image.",
 };

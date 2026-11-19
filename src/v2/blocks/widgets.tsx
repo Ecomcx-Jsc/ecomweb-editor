@@ -1,8 +1,8 @@
-import { CORE_NODES, colorCss, iconListClass, resolveIcon, widgetMarkup, type WidgetEl } from "@ecomcx/ecomweb-content";
+import { CORE_NODES, lottieConfig, colorCss, iconListClass, resolveIcon, widgetMarkup, type WidgetEl } from "@ecomcx/ecomweb-content";
 import { IconPicker } from "../ui/icon-picker";
 import { ColorInput } from "../ui/color-field";
 import { IconSvg } from "../ui/icon-svg";
-import { BarChart3, Hash, Image as ImageIcon, ListChecks, MapPin, Quote, Star } from "lucide-react";
+import { BarChart3, Film, Hash, Image as ImageIcon, ListChecks, MapPin, Quote, Star } from "lucide-react";
 import { createElement, useEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { useEditor } from "../context";
 import { makeBlock } from "../core/model";
@@ -157,6 +157,23 @@ function IconListInspector({ block, attrs, setAttrs }: BlockEditProps) {
   );
 }
 
+/** Lottie trong trình soạn: không chạy thư viện (nhẹ, an toàn) — hiện poster hoặc ô giữ chỗ có tên tệp; chạy thật xem ở website / xem trước. */
+function LottieEdit({ block, blockProps }: BlockEditProps) {
+  const t = useMsgs("blocks") as Record<string, string>;
+  const c = lottieConfig(block.attrs);
+  const file = c.src.split(/[?#]/)[0].split("/").pop() ?? "";
+  const style: CSSProperties = { ...(c.height ? { height: c.height } : {}), ...(c.maxWidth ? { maxWidth: c.maxWidth } : {}), ...(c.align === "left" ? { marginRight: "auto" } : c.align === "right" ? { marginLeft: "auto" } : { margin: "0 auto" }) };
+  return (
+    <div {...blockProps} className={cx(blockProps.className, "ecx-lottie", "ecx-lottie-edit")} style={{ ...blockProps.style, ...style }} role="img" aria-label={c.label || undefined}>
+      {c.poster ? <img className="ecx-lottie-poster" src={c.poster} alt="" /> : (
+        <div className="ecx-placeholder-block" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, minHeight: c.height ?? 160 }}>
+          <Film className="ecx-icon" /> <span>{file || t.lottieEmpty}</span>{c.src && !c.kind && <span className="ecx-muted"> — .lottie / .json</span>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const spec = (name: string) => CORE_NODES[name]?.attrs;
 /** Thứ tự ô ở bảng phải: phần đầu hộp (icon / ảnh / số) trước, rồi chữ, rồi liên kết. Ô không kể tên giữ thứ tự cũ ở cuối. */
 const ICON_BOX_ORDER = ["media", "icon", "number", "src", "alt", "width", "height", "iconStyle", "position", "verticalAlign", "hover", "title", "text", "level", "textAlign", "href", "linkMode", "buttonText", "fullHeight"];
@@ -181,6 +198,8 @@ export function widgetBlocks(lang?: string): BlockType[] {
     { ...base, name: "counter", title: "Counter", icon: Hash, keywords: "counter dem so con so thong ke number", attributes: spec("counter"), create: () => makeBlock("counter", { end: 1200, suffix: "+", title: m.sampleCounterTitle, textAlign: "center" }), summary: (a) => a.title },
     { ...base, name: "testimonial", layouts: testimonialLayouts(m), layoutOwns: ["variant"], title: "Testimonial", icon: Quote, keywords: "testimonial loi chung thuc danh gia khach hang review", attributes: ordered({ ...spec("testimonial"), src: { type: "url", control: "media" } }, ["variant", "quoteMark", "rating", "quote", "name", "role", "src", "alt", "textAlign"]), create: () => makeBlock("testimonial", { quote: m.sampleQuote, name: m.sampleName, role: m.sampleRole, rating: 5 }), summary: (a) => a.name },
     { ...base, name: "map", title: "Map", icon: MapPin, keywords: "map ban do dia chi google maps vi tri", attributes: ordered(spec("map") ?? {}, ["address", "title", "zoom", "height", "mapType"]), create: () => makeBlock("map", { address: m.sampleAddress }), summary: (a) => a.address },
+    { ...base, name: "lottie", title: "Lottie", icon: Film, keywords: "lottie hoat anh animation json dotlottie chuyen dong", edit: LottieEdit,
+      attributes: ordered({ ...spec("lottie"), poster: { type: "url", control: "media" } }, ["src", "poster", "trigger", "autoplay", "loop", "speed", "height", "maxWidth", "align", "label"]), create: () => makeBlock("lottie", {}), summary: (a) => String(a.src ?? "").split("/").pop() },
     { ...base, name: "progressBar", layouts: progressLayouts(m), layoutsOnInsert: false, layoutOwns: ["textPosition"], title: "Progress Bar", icon: BarChart3, keywords: "progress bar thanh tien do ky nang phan tram", attributes: spec("progressBar"), create: () => makeBlock("progressBar", { label: m.sampleSkill, value: 80 }), summary: (a) => a.label },
   ];
 }

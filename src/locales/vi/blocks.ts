@@ -92,6 +92,7 @@ export const blocks = {
   aiwOptHint: "Tuỳ chọn", aiwInsertAt: "Chèn vào bài",
   countdownWhen: "Ngày giờ kết thúc",
   sampleSectionTitle: "Tiêu đề của phần", sampleSectionText: "Viết nội dung của phần này, hoặc thêm cột, ảnh, nút vào đây.",
+  lottieEmpty: "Chưa chọn tệp hoạt ảnh",
   widgetEmpty: "Thêm mục ở bảng cài đặt bên phải",
   iconListItems: "Các mục", iconListText: "Chữ", iconListIcon: "Icon", iconListIconDefault: "Theo danh sách", iconListIconNone: "Không icon", iconListLink: "Liên kết", iconListTip: "Chú thích khi rê chuột", iconListColor: "Màu icon", iconListBg: "Nền icon", iconListTextColor: "Màu chữ", iconListRemove: "Xoá mục", iconListAdd: "Thêm mục",
   widget_number: "01",

@@ -92,6 +92,7 @@ export const blocks = {
   aiwOptHint: "Options", aiwInsertAt: "Insert into page",
   countdownWhen: "End date and time",
   sampleSectionTitle: "Section title", sampleSectionText: "Write the content of this section, or add columns, images and buttons here.",
+  lottieEmpty: "No animation file yet",
   widgetEmpty: "Add items in the settings panel",
   iconListItems: "Items", iconListText: "Text", iconListIcon: "Icon", iconListIconDefault: "List default", iconListIconNone: "No icon", iconListLink: "Link", iconListTip: "Hover tooltip", iconListColor: "Icon color", iconListBg: "Icon background", iconListTextColor: "Text color", iconListRemove: "Remove item", iconListAdd: "Add item",
   widget_number: "01",

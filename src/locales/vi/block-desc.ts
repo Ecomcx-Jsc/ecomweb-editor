@@ -82,4 +82,5 @@ export const blockDesc = {
   testimonial: "Đánh giá của khách hàng: nội dung, tên, chức danh, ảnh đại diện và số sao.",
   progressBar: "Thanh tiến độ có nhãn và phần trăm (kỹ năng, mục tiêu), chạy lên khi cuộn tới.",
   "map": "Bản đồ Google theo địa chỉ gõ tay (cửa hàng, văn phòng).",
+  "lottie": "Hoạt ảnh Lottie (.lottie / .json) — chạy tự động, khi rê chuột, bấm hoặc cuộn tới; có ảnh poster dự phòng.",
 };

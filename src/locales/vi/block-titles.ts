@@ -84,4 +84,5 @@ export const blockTitles = {
   testimonial: "Testimonial",
   progressBar: "Progress Bar",
   map: "Google Maps",
+  lottie: "Lottie",
 };
