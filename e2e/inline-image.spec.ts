@@ -61,7 +61,8 @@ test.describe("ảnh trong dòng chữ", () => {
   });
 });
 
-test("chép / dán: ảnh trong dòng chữ đi theo đoạn qua clipboard giữa hai trình soạn", async ({ browser }) => {
+test("chép / dán: ảnh trong dòng chữ đi theo đoạn qua clipboard giữa hai trình soạn", async ({ browser, browserName }) => {
+  test.skip(browserName !== "chromium", "quyền clipboard-read/write chỉ có ở Chromium");
   const ctx = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"] });
   const a = await ctx.newPage(); const ca = await open(a, "?doc=post");
   await a.evaluate((src) => { const s = (window as any).__ecx.store; s.insert("root", null, 0, [{ id: "hh", type: "paragraph", attrs: {}, inline: [{ type: "text", text: "Có ảnh " }, { type: "inlineImage", attrs: { src, alt: "L", width: "1.5em" } }, { type: "text", text: " giữa chữ" }] }]); }, PNG);
