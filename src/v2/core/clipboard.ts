@@ -26,6 +26,12 @@ function inlineOf(node: globalThis.Node, marks: RichMark[] = [], out: RichNode[]
     if (c.nodeType !== 1) return;
     const el = c as HTMLElement;
     if (el.tagName === "BR") { out.push({ type: "hardBreak" }); return; }
+    // Ảnh trong dòng chữ do chính trình soạn / website xuất ra (class ecx-inline-image): giữ lại như nút inline
+    if (el.tagName === "IMG" && el.classList.contains("ecx-inline-image")) {
+      const src = el.getAttribute("src") ?? "";
+      if (src && isSafeUrl(src)) out.push({ type: "inlineImage", attrs: { src, ...(el.getAttribute("alt") ? { alt: el.getAttribute("alt")! } : {}), ...(el.style.width ? { width: el.style.width } : {}), ...(el.style.height ? { height: el.style.height } : {}), ...(el.style.borderRadius ? { radius: el.style.borderRadius } : {}) } });
+      return;
+    }
     if (el.tagName === "IMG" || BLOCK_TAGS.has(el.tagName)) { inlineOf(el, marks, out); return; }
     let next = marks;
     const m = MARK_TAGS[el.tagName];
@@ -201,6 +207,11 @@ const MARK_HTML: Record<string, string> = { bold: "strong", italic: "em", underl
 export function richToHtml(nodes: RichNode[]): string {
   const inl = (list: RichNode[] = []) => list.map((n) => {
     if (n.type === "hardBreak") return "<br>";
+    if (n.type === "inlineImage" && typeof n.attrs?.src === "string" && isSafeUrl(n.attrs.src)) {
+      const a = n.attrs;
+      const style = [typeof a.width === "string" && `width:${a.width}`, typeof a.height === "string" && `height:${a.height}`, typeof a.radius === "string" && `border-radius:${a.radius}`].filter(Boolean).join(";");
+      return `<img class="ecx-inline-image" src="${esc(String(a.src))}" alt="${esc(String(a.alt ?? ""))}"${style ? ` style="${esc(style)}"` : ""}>`;
+    }
     if (n.type !== "text") return "";
     let s = esc(n.text ?? "");
     for (const m of n.marks ?? []) {

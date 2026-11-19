@@ -1,4 +1,4 @@
-import { linkRel } from "@ecomcx/ecomweb-content";
+import { isSafeUrl, linkRel } from "@ecomcx/ecomweb-content";
 import type { RichMark, RichNode } from "@ecomcx/ecomweb-content";
 import { Fragment, Schema, type Mark, type MarkSpec, type Node as PMNode } from "prosemirror-model";
 
@@ -38,7 +38,16 @@ const inlineNodes = (pre: boolean) => ({
   hardBreak: { group: "inline", inline: true, selectable: false, parseDOM: [{ tag: "br" }], toDOM: () => ["br"] as const },
   inlineAtom: {
     group: "inline", inline: true, atom: true, attrs: { json: { default: null } },
-    toDOM: (n: PMNode) => ["span", { "data-ecx-inline": (n.attrs.json as RichNode | null)?.type ?? "", contenteditable: "false", class: "ecx-inline-atom" }, `⟨${(n.attrs.json as RichNode | null)?.type ?? "?"}⟩`] as const,
+    toDOM: (n: PMNode) => {
+      const j = n.attrs.json as RichNode | null;
+      // Ảnh trong dòng chữ (content 1.30): vẽ ảnh thật, cùng class / style với website để khung soạn khớp
+      if (j?.type === "inlineImage" && typeof j.attrs?.src === "string" && isSafeUrl(j.attrs.src)) {
+        const a = j.attrs;
+        const style = [typeof a.width === "string" && `width:${a.width}`, typeof a.height === "string" && `height:${a.height}`, typeof a.radius === "string" && `border-radius:${a.radius}`, typeof a.valign === "string" && a.valign !== "middle" && `vertical-align:${a.valign}`].filter(Boolean).join(";");
+        return ["img", { class: "ecx-inline-image", src: a.src, alt: typeof a.alt === "string" ? a.alt : "", "data-ecx-inline": "inlineImage", draggable: "false", ...(style ? { style } : {}) }] as const;
+      }
+      return ["span", { "data-ecx-inline": j?.type ?? "", contenteditable: "false", class: "ecx-inline-atom" }, `⟨${j?.type ?? "?"}⟩`] as const;
+    },
   },
 });
 

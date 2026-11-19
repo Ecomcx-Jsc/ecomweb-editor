@@ -1,8 +1,8 @@
 import { WIDE_BLOCKS, CONTENT_VERSION } from "@ecomcx/ecomweb-content";
 import { addColumn, addRow, canMerge, canSplit, clearCells, deleteColumn, deleteRow, hasHeaderRow, mergeCells, mergeRange, selectedCellRect, splitCell, tableContext, toggleHeaderRow } from "../core/tables";
 import { AiTools } from "./ai";
-import { Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter, Paintbrush, ClipboardPaste, Scissors, PenLine, Eye, EyeOff, ArrowLeftToLine, ArrowRightToLine, TableCellsSplit, Heading } from "lucide-react";
-import { TextSelection } from "prosemirror-state";
+import { Image as ImageIcon, Trash2 as TrashIcon, Eraser, TableCellsMerge, StickyNote, Keyboard, MoveHorizontal, Maximize2, RectangleHorizontal, AlignCenter, AlignLeft, AlignRight, ArrowUpLeft, Bold, ChevronDown, ChevronUp, Code, Copy, CopyPlus, GripVertical, IndentDecrease, IndentIncrease, Italic, Link2, Link2Off, MoreVertical, PanelTop, Strikethrough, Trash2, Underline, Ungroup, Group as GroupIcon, Blocks, ArrowUpToLine, ArrowDownToLine, Shapes, Lock, Subscript, Superscript, Highlighter, Paintbrush, ClipboardPaste, Scissors, PenLine, Eye, EyeOff, ArrowLeftToLine, ArrowRightToLine, TableCellsSplit, Heading } from "lucide-react";
+import { NodeSelection, TextSelection } from "prosemirror-state";
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
@@ -282,9 +282,64 @@ function activeView(activeKey: string | null, editing: string): EditorView | nul
   return richViews.get(editing) ?? null;
 }
 
-function MarkTools({ view, onLink }: { view: EditorView; onLink(): void }) {
+type InlineImg = { pos: number; attrs: Record<string, string> };
+/** Ảnh trong dòng chữ đang được chọn (NodeSelection của inlineAtom mang node inlineImage). */
+function selectedInlineImage(view: EditorView): InlineImg | null {
+  const sel = view.state.selection;
+  if (!(sel instanceof NodeSelection) || sel.node.type.name !== "inlineAtom") return null;
+  const j = sel.node.attrs.json as { type?: string; attrs?: Record<string, string> } | null;
+  return j?.type === "inlineImage" ? { pos: sel.from, attrs: { ...(j.attrs ?? {}) } } : null;
+}
+
+/** Chỉnh ảnh trong dòng chữ: rộng, bo góc, căn dọc, mô tả, liên kết, xoá. Giá trị lạ bị lược đồ content chặn khi lưu (width / radius đúng dạng "1.4em" / "50%"). */
+function InlineImageTools({ view, img }: { view: EditorView; img: InlineImg }) {
   const { labels } = useEditor();
+  const set = (patch: Record<string, string | undefined>) => {
+    const next = { ...img.attrs, ...patch };
+    for (const k of Object.keys(next)) if (next[k] === undefined || next[k] === "") delete next[k];
+    const tr = view.state.tr.setNodeMarkup(img.pos, undefined, { json: { type: "inlineImage", attrs: next } });
+    tr.setSelection(NodeSelection.create(tr.doc, img.pos));
+    view.dispatch(tr);
+  };
+  const remove = () => { view.dispatch(view.state.tr.deleteSelection()); view.focus(); };
+  const SIZE = /^\d{1,4}(\.\d{1,2})?(em|px|rem)$/;
+  return (
+    <div className="ecx-tool-group ecx-inline-image-tools" role="group" aria-label={labels.inlineImage}>
+      <label className="ecx-tool-field"><span>{labels.inlineImageWidth}</span>
+        <input className="ecx-input" style={{ width: 84 }} defaultValue={img.attrs.width ?? ""} placeholder="1.2em" onBlur={(e) => { const v = e.target.value.trim(); set({ width: v && SIZE.test(v) ? v : undefined, height: undefined }); }} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+      </label>
+      <label className="ecx-tool-field"><span>{labels.inlineImageRadius}</span>
+        <select className="ecx-input" value={img.attrs.radius ?? ""} onChange={(e) => set({ radius: e.target.value || undefined })}>
+          <option value="">{labels.radiusNone}</option><option value="4px">4px</option><option value="8px">8px</option><option value="50%">{labels.radiusRound}</option>
+        </select>
+      </label>
+      <label className="ecx-tool-field"><span>{labels.inlineImageAlign}</span>
+        <select className="ecx-input" value={img.attrs.valign ?? "middle"} onChange={(e) => set({ valign: e.target.value === "middle" ? undefined : e.target.value })}>
+          <option value="middle">{labels.alignMiddle}</option><option value="baseline">{labels.alignBaseline}</option><option value="top">{labels.alignTop}</option><option value="bottom">{labels.alignBottom}</option>
+        </select>
+      </label>
+      <label className="ecx-tool-field"><span>{labels.inlineImageAlt}</span>
+        <input className="ecx-input" style={{ width: 120 }} defaultValue={img.attrs.alt ?? ""} onBlur={(e) => set({ alt: e.target.value.trim() || undefined })} onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+      </label>
+      <ToolButton label={labels.inlineImageRemove} onClick={remove}><TrashIcon className="ecx-icon" /></ToolButton>
+    </div>
+  );
+}
+
+function MarkTools({ view, onLink }: { view: EditorView; onLink(): void }) {
+  const { labels, host } = useEditor();
   const state = view.state;
+  const inlineImg = selectedInlineImage(view);
+  /** Chèn ảnh vào vị trí con trỏ: chọn từ thư viện media của host, ảnh cao bằng chữ (1.2em). */
+  const insertImage = async () => {
+    if (!host.media) return;
+    const [item] = (await host.media.pick({ kind: "image", multiple: false })) ?? [];
+    if (!item?.url) return;
+    const node = view.state.schema.nodes.inlineAtom.create({ json: { type: "inlineImage", attrs: { src: item.url, ...(item.alt ? { alt: item.alt } : {}), height: "1.2em" } } });
+    const tr = view.state.tr.replaceSelectionWith(node, false);
+    view.dispatch(tr);
+    view.focus();
+  };
   const isActive = (name: string) => {
     const type = state.schema.marks[name];
     const { from, to, empty, $from } = state.selection;
@@ -308,12 +363,13 @@ function MarkTools({ view, onLink }: { view: EditorView; onLink(): void }) {
   };
   const main: Array<[string, typeof Bold, string, string]> = [["bold", Bold, labels.bold, `${mod}B`], ["italic", Italic, labels.italic, `${mod}I`], ["underline", Underline, labels.underline, `${mod}U`]];
   const more: Array<[string, typeof Bold, string]> = [["strike", Strikethrough, labels.strike], ["code", Code, labels.code], ["kbd", Keyboard, labels.kbd], ["footnote", StickyNote, labels.footnote], ["subscript", Subscript, labels.subscript], ["superscript", Superscript, labels.superscript], ["highlight", Highlighter, labels.highlight]];
+  if (inlineImg) return <InlineImageTools view={view} img={inlineImg} />;
   return (
     <div className="ecx-tool-group">
       {main.map(([name, I, l, k]) => <ToolButton key={name} label={`${l} (${k})`} active={isActive(name)} onClick={() => toggle(name)}><I className="ecx-icon" /></ToolButton>)}
       <ToolButton label={`${labels.link} (${mod}K)`} active={isActive("link")} onClick={onLink}><Link2 className="ecx-icon" /></ToolButton>
       <Dropdown label={labels.moreFormats} trigger={<ChevronDown className="ecx-icon ecx-icon-sm" />}>
-        {(close) => more.map(([name, I, l]) => <MenuItem key={name} icon={I} label={isActive(name) ? `✓ ${l}` : l} onClick={() => { close(); toggle(name); }} />)}
+        {(close) => <>{more.map(([name, I, l]) => <MenuItem key={name} icon={I} label={isActive(name) ? `✓ ${l}` : l} onClick={() => { close(); toggle(name); }} />)}{host.media && state.schema.nodes.inlineAtom && <MenuItem icon={ImageIcon} label={labels.inlineImage} onClick={() => { close(); void insertImage(); }} />}</>}
       </Dropdown>
     </div>
   );

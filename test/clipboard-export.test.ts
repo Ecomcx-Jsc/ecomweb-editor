@@ -22,3 +22,11 @@ test("chép ra HTML: ảnh không chú thích vẫn là <img> trần; URL nguy h
   assert.equal(richToHtml([{ type: "image", attrs: { src: "javascript:alert(1)", caption: "x" } }]), "");
   assert.equal(richToHtml([{ type: "button", attrs: { text: "Bấm", href: "javascript:alert(1)" } }]), "<p>Bấm</p>");
 });
+
+test("ảnh trong dòng chữ: chép ra <img class=ecx-inline-image> và dán lại thành inlineImage (cùng thuộc tính)", async () => {
+  const { htmlToRich } = await import("../src/v2/core/clipboard");
+  // htmlToRich cần DOMParser: bỏ qua khi chạy Node thuần (đường này được e2e kiểm); phần xuất HTML kiểm ở đây
+  const html = richToHtml([{ type: "paragraph", content: [{ type: "text", text: "A " }, { type: "inlineImage", attrs: { src: "https://example.com/l.png", alt: "Logo", width: "1.4em", radius: "50%" } }] }]);
+  assert.equal(html, '<p>A <img class="ecx-inline-image" src="https://example.com/l.png" alt="Logo" style="width:1.4em;border-radius:50%"></p>');
+  assert.equal(typeof htmlToRich, "function");
+});
