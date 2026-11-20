@@ -140,12 +140,14 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
         const node = field(k, spec, hint);
         // Ô đã đổi khác mặc định: nút ↶ về mặc định (như ô của tab Kiểu dáng)
         const v = attrs[k];
-        if (v === undefined || v === null || v === "" || JSON.stringify(v) === JSON.stringify(spec.default) || !node) return node;
+        if (!node) return node;
+        const changed = !(v === undefined || v === null || v === "" || JSON.stringify(v) === JSON.stringify(spec.default));
         const label = hintText(hint, "label", lang) ?? attrLabel(k, spec, lang, translate);
+        // Luôn bọc cùng một cấu trúc: đổi cấu trúc giữa lúc kéo thanh trượt thì React dựng lại ô → mất thao tác kéo
         return (
-          <div key={k} className="ecx-field-wrap">
+          <div key={k} className={changed ? "ecx-field-wrap" : "ecx-field-wrap is-default"}>
             {node}
-            <button type="button" className="ecx-row-reset ecx-field-reset" title={resetLabel} aria-label={`${resetLabel}: ${label}`} onClick={() => onChange({ [k]: undefined })}><RotateCcw className="ecx-icon" /></button>
+            {changed && <button type="button" className="ecx-row-reset ecx-field-reset" title={resetLabel} aria-label={`${resetLabel}: ${label}`} onClick={() => onChange({ [k]: undefined })}><RotateCcw className="ecx-icon" /></button>}
           </div>
         );
       })}
