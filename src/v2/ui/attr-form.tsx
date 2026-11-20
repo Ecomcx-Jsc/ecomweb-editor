@@ -17,7 +17,7 @@ export const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x ===
 /** Tên thuộc tính theo ngôn ngữ (chữ: src/locales/<ngôn ngữ>/attrs.ts, khoá = tên thuộc tính). */
 export const attrName = (name: string, lang: string): string | undefined => { const v = messages("attrs", lang)[name]; return typeof v === "string" ? v : undefined; };
 /** Thuộc tính sửa ở chỗ khác (thanh công cụ, trên khung soạn) hoặc dữ liệu kỹ thuật. */
-const HIDDEN_ATTRS = new Set(["style", "blockStyle", "anchor", "className", "mediaId", "srcset", "webpSrcset", "avifSrcset", "images", "links", "colwidth", "colspan", "rowspan", "_v", "id"]); // gộp ô: dùng lệnh Gộp / Tách của công cụ bảng (sửa số tay làm lệch bảng)
+const HIDDEN_ATTRS = new Set(["style", "blockStyle", "anchor", "className", "mediaId", "srcset", "webpSrcset", "images", "links", "colwidth", "colspan", "rowspan", "_v", "id"]); // gộp ô: dùng lệnh Gộp / Tách của công cụ bảng (sửa số tay làm lệch bảng)
 
 export const attrLabel = (name: string, spec: BlockAttrSpec, lang: string, translate?: (s: string) => string) =>
   spec.label ? (translate ? translate(spec.label) : spec.label) : attrName(name, lang) ?? name;
