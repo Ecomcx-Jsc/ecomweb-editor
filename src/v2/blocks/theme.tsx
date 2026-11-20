@@ -357,6 +357,8 @@ function QueryInspector({ block }: BlockEditProps) {
     let at = kids.length;
     for (let i = 0; i < kids.length; i++) { const r = order.indexOf(kids[i].type); if (r > rank) { at = i; break; } }
     store.insert(docId, tpl.id, at, [part.make()], { select: false, focus: false });
+    // Nút "Đọc tiếp" riêng thì bỏ chữ "đọc tiếp" gắn sau đoạn mô tả (tránh hai nút trùng nhau)
+    if (part.type === "readMore") { const ex = find("postExcerpt"); if (ex?.attrs.moreText) store.setAttrs([ex.id], { moreText: undefined }); }
     store.select([block.id], { editing: null });   // bảng này không đóng sau mỗi lần bật / tắt
   };
   const togglePagination = () => {
