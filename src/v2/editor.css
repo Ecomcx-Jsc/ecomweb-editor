@@ -338,10 +338,10 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-pop-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--ecx-ed-line); }
 .ecx-pop-custom { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; }
 /* Mô tả khối: nút ⓘ + chú thích khi rê */
-.ecx-block-card { align-items: center; }
-.ecx-card-info { position: relative; display: inline-grid; place-items: center; width: 20px; height: 20px; margin-left: -4px; border-radius: 50%; color: var(--ecx-ed-muted); cursor: help; }
+.ecx-block-card { align-items: center; position: relative; }
+.ecx-card-info { position: static; display: inline-grid; place-items: center; width: 20px; height: 20px; margin-left: -4px; border-radius: 50%; color: var(--ecx-ed-muted); cursor: help; }
 .ecx-card-info .ecx-icon { width: 14px; height: 14px; }
-.ecx-card-tip { position: absolute; z-index: 30; top: calc(100% + 6px); left: -40px; width: 230px; padding: 8px 10px; border-radius: 8px; background: var(--ecx-ed-fg, #0f1e29); color: var(--ecx-ed-panel, #fff); font-size: 12px; font-weight: 400; line-height: 1.45; opacity: 0; pointer-events: none; transition: opacity .1s linear .3s; }
+.ecx-card-tip { position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; /* neo vào cả thẻ khối (không neo vào icon): không bao giờ tràn mép phải → thanh bên không có thanh cuộn ngang */ padding: 8px 10px; border-radius: 8px; background: var(--ecx-ed-fg, #0f1e29); color: var(--ecx-ed-panel, #fff); font-size: 12px; font-weight: 400; line-height: 1.45; opacity: 0; pointer-events: none; transition: opacity .1s linear .3s; }
 .ecx-card-info:hover .ecx-card-tip, .ecx-card-info:focus .ecx-card-tip { opacity: 1; }
 /* Tab có icon */
 .ecx-inspector .ecx-tabs button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: 54px; font-size: 12.5px; }
