@@ -10,9 +10,11 @@ const ACCEPT: Record<MediaKind, string> = { image: "image/*", gallery: "image/*"
 
 /** Thuộc tính ghi vào khối từ tệp media đã chọn / tải lên. */
 export function mediaAttrs(kind: MediaKind, items: MediaItem[]): Record<string, unknown> {
-  if (kind === "gallery") return { images: items.map((m) => ({ src: m.url, alt: m.alt, width: m.width ?? undefined, height: m.height ?? undefined, id: m.id })) };
+  if (kind === "gallery") return { images: items.map((m) => ({ src: m.url, alt: m.alt, width: m.width ?? undefined, height: m.height ?? undefined, id: m.id, ...mediaSrcsets(m) })) };
   const m = items[0];
-  return { src: m.url, alt: kind === "image" ? m.alt || undefined : undefined, name: kind !== "image" ? m.fileName : undefined, mime: m.mimeType, mediaId: m.id, ...(kind === "image" ? mediaSrcsets(m) : {}), width: kind === "image" ? m.width ?? undefined : undefined, height: kind === "image" ? m.height ?? undefined : undefined };
+  const sized = kind === "image" || kind === "video";   // video: width/height giữ khung đúng tỉ lệ trước khi tải (không nhảy layout)
+  return { src: m.url, alt: kind === "image" ? m.alt || undefined : undefined, name: kind !== "image" ? m.fileName : undefined, mime: m.mimeType, mediaId: m.id, ...(kind === "image" ? mediaSrcsets(m) : {}),
+    ...(kind === "video" && m.posterUrl ? { poster: m.posterUrl } : {}), width: sized ? m.width ?? undefined : undefined, height: sized ? m.height ?? undefined : undefined };
 }
 
 /**

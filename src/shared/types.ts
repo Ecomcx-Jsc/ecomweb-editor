@@ -1,5 +1,5 @@
 /** Kích thước ảnh đã tạo sẵn (thumbnail, medium, large…), kèm bản WebP nếu có. */
-export interface MediaSize { url: string; width: number; height: number; webpUrl?: string | null }
+export interface MediaSize { url: string; width: number; height: number; webpUrl?: string | null; avifUrl?: string | null }
 
 /** File media mà ứng dụng cung cấp cho trình soạn (ảnh, video, âm thanh, tài liệu). */
 export interface MediaItem {
@@ -15,6 +15,10 @@ export interface MediaItem {
   size?: number;
   sizes?: Record<string, MediaSize>;
   webpUrl?: string | null;
+  /** Bản AVIF của ảnh gốc (có thể chưa có: máy chủ tạo nền sau khi tải lên). */
+  avifUrl?: string | null;
+  /** Video: ảnh poster do máy chủ tạo / người dùng chọn. */
+  posterUrl?: string | null;
 }
 
 export type MediaKind = "image" | "gallery" | "video" | "audio" | "file";
