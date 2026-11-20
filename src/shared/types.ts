@@ -19,7 +19,7 @@ export interface MediaItem {
   posterUrl?: string | null;
 }
 
-export type MediaKind = "image" | "gallery" | "video" | "audio" | "file";
+export type MediaKind = "image" | "gallery" | "video" | "audio" | "file" | "lottie";
 
 /**
  * Nguồn media do ứng dụng nhúng cung cấp (thư viện media của CMS, S3, Cloudinary…).

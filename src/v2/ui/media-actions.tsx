@@ -6,7 +6,7 @@ import { useEditor } from "../context";
 import { mediaSrcsets } from "../core/media";
 
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
-const ACCEPT: Record<MediaKind, string> = { image: "image/*", gallery: "image/*", video: "video/*", audio: "audio/*", file: "" };
+const ACCEPT: Record<MediaKind, string> = { image: "image/*", gallery: "image/*", video: "video/*", audio: "audio/*", file: "", lottie: ".json,.lottie" };
 
 /** Thuộc tính ghi vào khối từ tệp media đã chọn / tải lên. */
 export function mediaAttrs(kind: MediaKind, items: MediaItem[]): Record<string, unknown> {

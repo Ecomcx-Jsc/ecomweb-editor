@@ -122,7 +122,10 @@ export class EditorUi {
   setDrag(d: DragState | null) { this.drag = d; this.bump(); }
   /** Menu chuột phải đang mở: vị trí theo toạ độ trang ngoài + các khối áp dụng. */
   contextMenu: { x: number; y: number; ids: string[] } | null = null;
-  openContextMenu(m: { x: number; y: number; ids: string[] } | null) { if (m || this.contextMenu) { this.contextMenu = m; this.bump(); } }
+  openContextMenu(m: { x: number; y: number; ids: string[] } | null) {
+    if (m) for (const d of [document, this.canvasDoc]) d?.dispatchEvent(new Event("ecx-close-menus"));   // đóng menu ⋮ đang mở
+    if (m || this.contextMenu) { this.contextMenu = m; this.bump(); }
+  }
 }
 
 export interface InserterRequest {

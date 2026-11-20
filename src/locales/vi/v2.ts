@@ -160,6 +160,7 @@ export const v2 = {
   html: "HTML tuỳ chỉnh",
   embed: "Nhúng",
   chooseImage: "Chọn ảnh",
+  chooseFile: "Chọn tệp",
   imageUrl: "Địa chỉ ảnh",
   upload: "Tải lên",
   browseAll: "Xem tất cả",

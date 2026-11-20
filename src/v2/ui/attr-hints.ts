@@ -13,7 +13,7 @@ export interface AttrHint {
   label?: true;
   /** Khoá của hint (do hintOf điền) — dùng tra chữ. */
   key?: string;
-  control?: "select" | "segmented" | "range" | "choice" | "multichoice" | "newTab" | "suggest" | "code" | "hidden" | "icon";
+  control?: "select" | "segmented" | "range" | "choice" | "multichoice" | "newTab" | "suggest" | "code" | "hidden" | "icon" | "media";
   /** control "icon": có lựa chọn "Không có icon". */
   allowNone?: true;
   options?: Opt[];
@@ -416,3 +416,7 @@ export function optionLabel(hint: AttrHint, value: unknown, lang: string, fallba
 /** Cỡ ảnh mặc định khi ứng dụng không khai báo (nhãn: hints "imageSize.<cỡ>"). */
 export const DEFAULT_IMAGE_SIZES: Opt[] = ["thumbnail", "medium", "large", "full"];
 export const imageSizeLabel = (size: string, lang: string): string => text(messages("hints", lang)[`imageSize.${size}`]) ?? size;
+
+// Trường địa chỉ tệp / ảnh: nút chọn từ thư viện (vẫn dán được URL) thay vì ô chữ thuần
+for (const k of ["video.src", "video.poster", "audio.src", "file.src", "cover.src", "cover.videoSrc", "popup.triggerImage", "inlineImage.src", "iconBox.src", "imageBox.src", "imageOverlay.src"])
+  ATTR_HINTS[k] = { ...ATTR_HINTS[k], control: "media" };

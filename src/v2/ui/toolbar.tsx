@@ -33,11 +33,19 @@ export function ToolButton({ label, onClick, active, disabled, children, classNa
 /** Menu thả xuống (không lấy focus khỏi ô gõ). */
 export function Dropdown({ label, trigger, children, className }: { label: string; trigger: ReactNode; children: (close: () => void) => ReactNode; className?: string }) {
   const [open, setOpen] = useState(false);
+  const { ui } = useEditor();
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   useEffect(() => {
     if (!open) return;
+    // Bấm ra ngoài ở BẤT KỲ khung nào (trang admin / khung soạn iframe) đều đóng; menu chuột phải mở ra thì đóng luôn menu này
+    const docs = new Set<Document>([document]);
+    try { if (ui.canvasDoc) docs.add(ui.canvasDoc); if (window.parent !== window) docs.add(window.parent.document); } catch { /* khác origin */ }
+    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node) && !menuRef.current?.contains(e.target as Node)) setOpen(false); };
+    const closeAll = () => setOpen(false);
+    for (const d of docs) { d.addEventListener("mousedown", onDown, true); d.addEventListener("ecx-close-menus", closeAll); }
+    const offDocs = () => { for (const d of docs) { d.removeEventListener("mousedown", onDown, true); d.removeEventListener("ecx-close-menus", closeAll); } };
     const close = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node) && !menuRef.current?.contains(e.target as Node)) setOpen(false); };
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     const away = (e: Event) => { if (!menuRef.current?.contains(e.target as Node)) setOpen(false); };
@@ -45,8 +53,8 @@ export function Dropdown({ label, trigger, children, className }: { label: strin
     document.addEventListener("keydown", esc);
     window.addEventListener("resize", away);
     document.addEventListener("scroll", away, true);
-    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); window.removeEventListener("resize", away); document.removeEventListener("scroll", away, true); };
-  }, [open]);
+    return () => { offDocs(); document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); window.removeEventListener("resize", away); document.removeEventListener("scroll", away, true); };
+  }, [open, ui]);
   // Menu nằm ở body (vị trí fixed): không bị cắt bởi thanh cuộn ngang của thanh công cụ cố định / khung có overflow;
   // sát mép phải / dưới thì lật sang trái / lên trên
   useLayoutEffect(() => {
@@ -62,7 +70,7 @@ export function Dropdown({ label, trigger, children, className }: { label: strin
   }, [open]);
   return (
     <div className={cx("ecx-dropdown", className)} ref={ref}>
-      <ToolButton label={label} onClick={() => setOpen((o) => !o)} active={open} aria-haspopup="menu" aria-expanded={open}>{trigger}</ToolButton>
+      <ToolButton label={label} onClick={() => { if (!open) ui.openContextMenu(null); setOpen((o) => !o); }} active={open} aria-haspopup="menu" aria-expanded={open}>{trigger}</ToolButton>
       {open && createPortal(
         <div ref={menuRef} className="ecx-menu is-floating" role="menu" style={pos ? { top: pos.top, left: pos.left } : { visibility: "hidden", top: 0, left: 0 }}>{children(() => setOpen(false))}</div>,
         (ref.current?.closest(".ecx-editor") as HTMLElement | null) ?? document.body,
@@ -502,6 +510,7 @@ export function BlockContextMenu() {
   useEffect(() => {
     if (!at) return;
     const docs = [document, ui.canvasDoc].filter(Boolean) as Document[];
+    try { if (window.parent !== window) docs.push(window.parent.document); } catch { /* khác origin */ }
     const outside = (e: Event) => { if (!ref.current?.contains(e.target as Node)) close(); };
     const resize = () => close();
     for (const d of docs) { d.addEventListener("mousedown", outside, true); d.addEventListener("scroll", outside, true); }

@@ -11,6 +11,8 @@ import { ColorInput } from "./color-field";
 import { IconPicker } from "./icon-picker";
 import { PickTiles, frameThumb, iconHoverThumb } from "./option-thumbs";
 import { mediaSrcsets } from "../core/media";
+import { mediaAttrs } from "./media-actions";
+import type { MediaKind } from "../../shared/types";
 
 export const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 
@@ -119,6 +121,9 @@ function MultiChoiceField({ hint, attrs, value, set, label }: { hint: AttrHint; 
 /** Ô segmented có hình minh hoạ: `<khối>.<thuộc tính>` → hàm vẽ hình theo giá trị. */
 const ATTR_THUMBS: Record<string, (v: string) => ReactNode> = { "iconBox.iconStyle": frameThumb, "icon.iconStyle": frameThumb, "iconList.iconStyle": frameThumb, "iconBox.hover": iconHoverThumb };
 
+/** Trường tệp (không phải ảnh): mở thư viện theo loại này. */
+const MEDIA_KIND: Record<string, MediaKind> = { "video.src": "video", "cover.videoSrc": "video", "audio.src": "audio", "file.src": "file", "lottie.src": "lottie" };
+
 export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Record<string, any>; onChange(a: Record<string, unknown>): void }) {
   const { host, labels } = useEditor();
   const lang = labels.lang;
@@ -226,7 +231,7 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
               <Field key={k} label={label}>
                 <span className="ecx-color-row">
                   <input className="ecx-input" type="url" value={value == null ? "" : String(value)} onChange={(e) => set(e.target.value)} placeholder="https://…" />
-                  {host.media && <button type="button" className="ecx-btn" onClick={async () => { const [m] = await host.media!.pick({ kind: "image", multiple: false }); if (m) onChange({ [k]: m.url, ...(k === "src" ? { mediaId: m.id, alt: attrs.alt ?? (m.alt || undefined), width: m.width ?? undefined, height: m.height ?? undefined, ...mediaSrcsets(m) } : {}) /* đổi ảnh thì kích thước khai báo theo ảnh mới (không giữ cỡ ảnh cũ → méo tỉ lệ / nhảy layout) */ }); }}>{labels.chooseImage}</button>}
+                  {host.media && <button type="button" className="ecx-btn" onClick={async () => { const tn = String((type as { name?: string }).name ?? type); const mk: MediaKind = MEDIA_KIND[`${tn}.${k}`] ?? "image"; const [m] = await host.media!.pick({ kind: mk, multiple: false }); if (m && mk !== "image") { onChange(k === "src" && mk !== "lottie" ? mediaAttrs(mk, [m]) : { [k]: m.url }); return; } if (m) onChange({ [k]: m.url, ...(k === "src" ? { mediaId: m.id, alt: attrs.alt ?? (m.alt || undefined), width: m.width ?? undefined, height: m.height ?? undefined, ...mediaSrcsets(m) } : {}) /* đổi ảnh thì kích thước khai báo theo ảnh mới (không giữ cỡ ảnh cũ → méo tỉ lệ / nhảy layout) */ }); }}>{MEDIA_KIND[`${String((type as { name?: string }).name ?? type)}.${k}`] ? labels.chooseFile : labels.chooseImage}</button>}
                 </span>
                 {help}
               </Field>

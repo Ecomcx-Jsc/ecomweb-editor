@@ -160,7 +160,7 @@ export const v2 = {
   html: "Custom HTML",
   embed: "Embed",
   chooseImage: "Choose image",
-  imageUrl: "Image URL",
+  chooseFile: "Choose file",  imageUrl: "Image URL",
   upload: "Upload",
   browseAll: "Browse all",
   mediaLibrary: "Media library",

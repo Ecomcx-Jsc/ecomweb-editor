@@ -13,7 +13,7 @@ import type { MediaItem, MediaKind } from "../../shared/types";
  */
 const cx = (...c: unknown[]) => c.filter((x): x is string => typeof x === "string" && x !== "").join(" ");
 type Icon = ComponentType<{ className?: string }>;
-const KIND_ICON: Record<MediaKind, Icon> = { image: ImageIcon, gallery: Images, video: Video, audio: Music, file: FileIcon };
+const KIND_ICON: Record<MediaKind, Icon> = { image: ImageIcon, gallery: Images, video: Video, audio: Music, file: FileIcon, lottie: FileIcon };
 /** Bấm vào ô nhập / nút trong khối: không chọn khối, không để khung soạn bắt phím. */
 const stop = { contentEditable: false, onMouseDown: (e: MouseEvent) => e.stopPropagation() } as const;
 

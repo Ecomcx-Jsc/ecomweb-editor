@@ -106,6 +106,8 @@ function VideoEdit({ block, blockProps, labels }: BlockEditProps) {
   const src = safe(block.attrs.src);
   if (!src) return <MediaDrop blockId={block.id} kind="video" blockProps={blockProps} />;
   void labels;
+  const embed = embedInfo(src);   // YouTube / Vimeo…: khung nhúng như website
+  if (embed) return <figure {...blockProps} className={cx(blockProps.className, "ecx-video cms-video")}><div style={embed.aspect ? { position: "relative", aspectRatio: String(embed.aspect) } : { position: "relative", height: embed.height }}><iframe src={embed.src} title={embed.title} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0, pointerEvents: "none" }} /></div></figure>;
   return <figure {...blockProps} className={cx(blockProps.className, "ecx-video cms-video")}><video src={src} controls preload="metadata" style={{ width: "100%", pointerEvents: "none" }} /></figure>;
 }
 
