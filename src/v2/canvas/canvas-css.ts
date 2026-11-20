@@ -47,6 +47,12 @@ body.ecx-canvas-body { padding: 0; }
 /* Ô bảng đang chọn (một hoặc cả vùng): tô màu như bôi đen, không viền (viền ô chồng lên viền bảng) */
 .ecx-block.is-selected:is([data-type="tableCell"], [data-type="tableHeader"]) { outline: none !important; box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--ecx-ui) 16%, transparent); }
 .ecx-block.is-selected:is([data-type="tableCell"], [data-type="tableHeader"], [data-type="tableRow"])::after { display: none; }
+/* Hàng đang chọn: viền + nền vẽ trên TỪNG ô bằng box-shadow (outline của <tr> bị ô có nền riêng — cột đầu, hàng xen kẽ của theme — che mất nên cột đầu không có viền) */
+.ecx-block.is-selected[data-type="tableRow"] { outline: none !important; }
+.ecx-block.is-selected[data-type="tableRow"] > :is(td, th) { box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--ecx-ui) 10%, transparent), inset 0 2px 0 var(--ecx-ui), inset 0 -2px 0 var(--ecx-ui) !important; }
+.ecx-block.is-selected[data-type="tableRow"] > :is(td, th):first-child { box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--ecx-ui) 10%, transparent), inset 0 2px 0 var(--ecx-ui), inset 0 -2px 0 var(--ecx-ui), inset 2px 0 0 var(--ecx-ui) !important; }
+.ecx-block.is-selected[data-type="tableRow"] > :is(td, th):last-child { box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--ecx-ui) 10%, transparent), inset 0 2px 0 var(--ecx-ui), inset 0 -2px 0 var(--ecx-ui), inset -2px 0 0 var(--ecx-ui) !important; }
+.ecx-block.is-selected[data-type="tableRow"] > :is(td, th):only-child { box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--ecx-ui) 10%, transparent), inset 0 0 0 2px var(--ecx-ui) !important; }
 /* Đang kéo bôi vùng ô: tắt bôi chữ của trình duyệt (chỉ tô ô) */
 .ecx-cell-selecting, .ecx-cell-selecting * { user-select: none !important; -webkit-user-select: none !important; caret-color: transparent; }
 .ecx-block.is-selected.ecx-nested { outline-color: var(--ecx-ui-nested) !important; }
@@ -188,6 +194,12 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-pad-zone.is-left, .ecx-pad-zone.is-right { top: 0; bottom: 0; left: auto; right: auto; cursor: ew-resize; }
 .ecx-pad-zone.is-left { left: 0; } .ecx-pad-zone.is-right { right: 0; }
 .ecx-pad-zone.is-left::after, .ecx-pad-zone.is-right::after { top: 50%; left: 50%; width: 4px; height: 36px; margin: -18px 0 0 -2px; }
+/* Kéo cạnh ô bảng: phải = độ rộng cột, dưới = chiều cao hàng (vùng bấm 8px, hiện vạch xanh khi rê / kéo) */
+.ecx-cell-handles { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.ecx-cell-handle { position: absolute; pointer-events: auto; touch-action: none; }
+.ecx-cell-handle.is-col { top: 0; right: -4px; width: 8px; height: 100%; cursor: col-resize; }
+.ecx-cell-handle.is-row { left: 0; bottom: -4px; width: 100%; height: 8px; cursor: row-resize; }
+.ecx-cell-handle:hover, .ecx-cell-handle.is-dragging { background: color-mix(in srgb, var(--ecx-ui) 55%, transparent); }
 .ecx-col-handle { position: absolute; width: 12px; margin-left: -6px; cursor: col-resize; pointer-events: auto; touch-action: none; }
 .ecx-col-handle.is-dragging::before, .ecx-col-handle.is-dragging::after { position: absolute; top: 8px; padding: 1px 6px; border-radius: 4px; background: var(--ecx-ui); color: #fff; font: 600 11px/1.5 system-ui, sans-serif; white-space: nowrap; pointer-events: none; }
 .ecx-col-handle.is-dragging::before { content: attr(data-left); right: 14px; }
@@ -239,7 +251,7 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 .ecx-cover-placeholder { min-height: 220px; }
 /* Bảng: ô trống vẫn thấy lưới + có chỗ bấm dù theme bỏ viền bảng (chỉ trong trình soạn — outline không đổi bố cục) */
 .ecx-canvas-root .ecx-table table { width: 100%; border-collapse: collapse; }
-.ecx-canvas-root .ecx-table :is(td, th) { min-width: 3em; height: 2.5em; outline: 1px dashed color-mix(in srgb, currentColor 22%, transparent); outline-offset: -1px; }
+.ecx-canvas-root .ecx-table :is(td, th) { position: relative; min-width: 3em; height: 2.5em; outline: 1px dashed color-mix(in srgb, currentColor 22%, transparent); outline-offset: -1px; }
 /* Tabs: thanh tiêu đề luôn thấy và bấm được (thẻ đang ẩn: display none inline) */
 .ecx-canvas-root .ecx-tabs-list { min-height: 2.5em; }
 .ecx-canvas-root .ecx-tab-button { cursor: pointer; }

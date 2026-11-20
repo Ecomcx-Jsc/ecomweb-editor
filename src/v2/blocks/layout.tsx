@@ -696,12 +696,46 @@ function TableEdit(props: BlockEditProps) {
   );
 }
 function RowEdit({ block, blockProps }: BlockEditProps) {
-  return <tr {...(blockProps as object)}><InnerBlocks parent={block} appender="none" /></tr>;
+  const h = Number(block.attrs.height) > 0 ? Number(block.attrs.height) : undefined;
+  return <tr {...(blockProps as object)} style={{ ...((blockProps as { style?: CSSProperties }).style ?? {}), ...(h ? { height: h } : {}) }}><InnerBlocks parent={block} appender="none" /></tr>;
 }
-function CellEdit({ block, blockProps }: BlockEditProps) {
+/**
+ * Kéo cạnh phải của ô → đổi độ rộng cả cột (lưu px ở mọi ô cùng cột); kéo cạnh dưới → đổi chiều cao cả hàng. Chỉ hiện khi đang soạn.
+ */
+function CellResize({ block }: { block: BNode }) {
+  const { store, ui } = useEditor();
+  const drag = (axis: "col" | "row") => (e: React.PointerEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    const handle = e.currentTarget as HTMLElement;
+    const el = ui.blockEl(block.id);
+    const row = store.locate(block.id)?.parent;
+    const table = row ? store.locate(row.id)?.parent : null;
+    if (!el || !row || !table) return;
+    const idx = (row.content ?? []).findIndex((c) => c.id === block.id);
+    const cols = (table.content ?? []).map((r) => r.content?.[idx]?.id).filter((x): x is string => !!x);
+    const r0 = el.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
+    handle.setPointerCapture(e.pointerId);
+    handle.classList.add("is-dragging");
+    const move = (ev: PointerEvent) => {
+      if (axis === "col") store.setAttrs(cols, { colwidth: [Math.max(32, Math.round(r0.width + ev.clientX - x0))] });
+      else store.setAttrs([row.id], { height: Math.max(20, Math.round(r0.height + ev.clientY - y0)) });
+    };
+    const up = () => { handle.removeEventListener("pointermove", move); handle.removeEventListener("pointerup", up); handle.classList.remove("is-dragging"); store.breakMerge(); };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+  };
+  return (
+    <span className="ecx-cell-handles" contentEditable={false} data-ecx-ui aria-hidden="true">
+      <span className="ecx-cell-handle is-col" onPointerDown={drag("col")} onMouseDown={(e) => e.stopPropagation()} />
+      <span className="ecx-cell-handle is-row" onPointerDown={drag("row")} onMouseDown={(e) => e.stopPropagation()} />
+    </span>
+  );
+}
+function CellEdit({ block, blockProps, editable }: BlockEditProps) {
   const Tag = block.type === "tableHeader" ? "th" : "td";
   const span = (n: unknown) => (Number(n) > 1 ? Number(n) : undefined);
-  return <Tag {...(blockProps as object)} colSpan={span(block.attrs.colspan)} rowSpan={span(block.attrs.rowspan)}><InnerBlocks parent={block} appender="none" /></Tag>;
+  const w = Array.isArray(block.attrs.colwidth) && Number(block.attrs.colwidth[0]) > 0 ? Number(block.attrs.colwidth[0]) : undefined;
+  return <Tag {...(blockProps as object)} colSpan={span(block.attrs.colspan)} rowSpan={span(block.attrs.rowspan)} style={{ ...((blockProps as { style?: CSSProperties }).style ?? {}), ...(w ? { width: w, minWidth: w } : {}) }}><InnerBlocks parent={block} appender="none" />{editable && <CellResize block={block} />}</Tag>;
 }
 
 // Cột mới chèn để trống (nút "+ Thêm khối" giữa cột); cột đều không đặt `width` (website chia đều), cột lệch đặt % thật (33 / 67)
@@ -846,8 +880,8 @@ export function layoutBlocks(lang?: string): BlockType[] {
       create: () => makeBlock("table", {}, [[m.sampleTh1, m.sampleTh2, m.sampleTh3], [m.sampleTd1, m.sampleTd2, m.sampleTd3], [m.sampleTd4, m.sampleTd5, m.sampleTd6]].map((row, r) => makeBlock("tableRow", {}, row.map((t) => makeBlock(r === 0 ? "tableHeader" : "tableCell", {}, [p(t)]))))), contextToolbar: TableTools,
       supports: { style: true, anchor: true, className: true, blockStyle: true },
     },
-    { name: "tableRow", title: "Hàng", icon: Table2, kind: "container", edit: RowEdit, hidden: true },
-    { name: "tableCell", title: "Ô", icon: Table2, kind: "container", edit: CellEdit, hidden: true, attributes: { colspan: { type: "integer", default: 1 }, rowspan: { type: "integer", default: 1 } } },
-    { name: "tableHeader", title: "Ô tiêu đề", icon: Table2, kind: "container", edit: CellEdit, hidden: true, attributes: { colspan: { type: "integer", default: 1 }, rowspan: { type: "integer", default: 1 } } },
+    { name: "tableRow", title: "Hàng", icon: Table2, kind: "container", edit: RowEdit, hidden: true, attributes: { height: { type: "integer", min: 16, max: 1200 } } },
+    { name: "tableCell", title: "Ô", icon: Table2, kind: "container", edit: CellEdit, hidden: true, attributes: { colspan: { type: "integer", default: 1 }, rowspan: { type: "integer", default: 1 }, colwidth: { type: "json" } } },
+    { name: "tableHeader", title: "Ô tiêu đề", icon: Table2, kind: "container", edit: CellEdit, hidden: true, attributes: { colspan: { type: "integer", default: 1 }, rowspan: { type: "integer", default: 1 }, colwidth: { type: "json" } } },
   ];
 }
