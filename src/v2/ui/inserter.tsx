@@ -71,7 +71,8 @@ export function rankOptions(list: InsertOption[], query: string): InsertOption[]
     if (title === q) return 4; // "/anh" → Ảnh trước Ảnh bìa, Ảnh + chữ
     if (title.startsWith(q)) return 3;
     if (title.split(/\s+/).some((w) => w.startsWith(q))) return 2;
-    const words = [...title.split(/\s+/), ...norm(i.keywords).split(/\s+/)];
+    // Từ khoá ẩn (tiếng Việt không dấu) chỉ so khi gõ ≥ 3 ký tự: "da" mà khớp "danh sach", "dai", "du"… ra khối chẳng liên quan tên
+    const words = [...title.split(/\s+/), ...(q.length >= 3 ? norm(i.keywords).split(/\s+/) : [])];
     if (words.some((w) => w.startsWith(q)) || i.key.toLowerCase().startsWith(q)) return 1;
     const parts = q.split(/\s+/);
     return parts.length > 1 && parts.every((p) => words.some((w) => w.startsWith(p))) ? 0.5 : 0;
