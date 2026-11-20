@@ -1,6 +1,6 @@
 import { makeBlock } from "../core/model";
 import { SOCIAL_ICONS } from "./social-icons";
-import { blockShell, carouselConfig, carouselData, carouselVars, embedInfo, imageFx, isSafeUrl } from "@ecomcx/ecomweb-content";
+import { blockShell, carouselConfig, carouselData, carouselVars, embedInfo, imageFx, isSafeUrl, sizedImage } from "@ecomcx/ecomweb-content";
 import { ArrowDown, ArrowUp, Code2, File as FileIcon, Image as ImageIcon, Images, ListTree, Music, Plus, Share2, Video, Globe, X } from "lucide-react";
 import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useEditor } from "../context";
@@ -30,14 +30,15 @@ function ImageEdit({ block, blockProps, setAttrs, editable, selected }: BlockEdi
   const a = block.attrs;
   const tp = useMsgs("placeholders");
   const bSrc = useBindingPreview(block, "src"), bAlt = useBindingPreview(block, "alt"), bCap = useBindingPreview(block, "caption");
-  const src = bSrc.bound ? safe(bSrc.value) : safe(a.src);
+  const sz = bSrc.bound ? null : sizedImage(a); // cỡ Nhỏ / Vừa: giống website (bản thu nhỏ, đúng cỡ)
+  const src = bSrc.bound ? safe(bSrc.value) : safe(sz?.src ?? a.src);
   if (bSrc.bound && !src) return <figure {...blockProps} className={cx(blockProps.className, "ecx-image cms-image")}><BoundText tagName="div" className="ecx-bound-media" preview={bSrc} /></figure>;
   if (!src) return <MediaDrop blockId={block.id} kind="image" blockProps={blockProps} />;
   const cls = blockShell("image", a)!.className;
   return (
     <figure {...blockProps} className={cx(blockProps.className, cls)} style={{ ...(blockProps.style ?? {}), position: "relative" }}>
       {selected && editable && <ImageHandle blockId={block.id} />}
-      <img src={src} alt={bAlt.bound ? bAlt.value ?? "" : String(a.alt ?? "")} data-ecx-bound={bSrc.bound ? "" : undefined} title={bSrc.bound ? bSrc.label : undefined} width={Number(a.width) || undefined} height={Number(a.height) || undefined} draggable={false} className={imageFx(a).className || undefined} style={{ ...(Number(a.width) ? { width: Number(a.width), maxWidth: "100%", height: "auto" } : {}), ...(imageFx(a).style as CSSProperties | undefined) }} />
+      <img src={src} alt={bAlt.bound ? bAlt.value ?? "" : String(a.alt ?? "")} data-ecx-bound={bSrc.bound ? "" : undefined} title={bSrc.bound ? bSrc.label : undefined} width={sz?.width ?? (Number(a.width) || undefined)} height={sz?.height ?? (Number(a.height) || undefined)} draggable={false} className={imageFx(a).className || undefined} style={{ ...(sz ? { width: sz.width, maxWidth: "100%", height: "auto" } : Number(a.width) ? { width: Number(a.width), maxWidth: "100%", height: "auto" } : {}), ...(imageFx(a).style as CSSProperties | undefined) }} />
       {bCap.bound ? <BoundText tagName="figcaption" preview={bCap} /> : (a.caption || editable) && (
         <RichText blockId={block.id} field="caption" tagName="figcaption" value={String(a.caption ?? "")} onChange={(v) => setAttrs({ caption: v })} placeholder={tp.caption} editable={editable} />
       )}
