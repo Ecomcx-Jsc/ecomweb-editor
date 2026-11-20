@@ -364,7 +364,7 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 .ecx-device-tag { margin-left: 6px; padding: 0 5px; border-radius: 4px; background: var(--ecx-ed-accent-soft); color: var(--ecx-ed-accent); font-style: normal; font-size: 10px; }
 /* Cụm nút chọn: khung viền kín hết chiều ngang, ô đang chọn tô đặc màu chính (dễ thấy lựa chọn hiện tại) */
 .ecx-seg { display: flex; width: 100%; gap: 2px; padding: 2px; border: 1px solid var(--ecx-ed-line-strong); border-radius: 7px; background: var(--ecx-ed-panel); }
-.ecx-seg-btn { display: inline-flex; align-items: center; justify-content: center; flex: 1 1 0; min-width: 28px; height: 30px; padding: 0 6px; border: 0; border-radius: 5px; background: none; color: var(--ecx-ed-fg); cursor: pointer; transition: background-color .12s ease, color .12s ease; }
+.ecx-seg-btn { display: inline-flex; align-items: center; justify-content: center; flex: 1 1 0; min-width: 28px; min-height: 30px; height: auto; line-height: 1.25; text-align: center; padding: 4px 6px; border: 0; border-radius: 5px; background: none; color: var(--ecx-ed-fg); cursor: pointer; transition: background-color .12s ease, color .12s ease; }
 .ecx-seg-btn:hover { background: var(--ecx-ed-hover); }
 .ecx-seg-btn.is-active { background: var(--ecx-ed-accent); color: var(--ecx-ed-accent-fg); }
 .ecx-state-tabs { border: 0; padding: 3px; background: var(--ecx-ed-subtle); }
