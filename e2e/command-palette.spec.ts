@@ -40,8 +40,8 @@ test("nhảy tới khối theo chữ trong trang; chèn khối theo tên cũ ('n
   const go = pal(page).getByRole("option", { name: /Đi tới: .*thứ hai/i });
   await expect(go).toBeVisible();
   await go.click();
-  const sel = await page.evaluate(() => { const s = (window as any).__ecx.store; return s.block(s.getState().selection.ids[0])?.inline?.map((n: any) => n.text).join(""); });
-  expect(sel).toContain("thứ hai");
+  // Chờ vùng chọn chuyển tới khối (bảng lệnh đóng rồi mới chọn — đọc ngay có lúc còn vùng chọn cũ)
+  await expect.poll(() => page.evaluate(() => { const s = (window as any).__ecx.store; return s.block(s.getState().selection.ids[0])?.inline?.map((n: any) => n.text).join("") ?? ""; })).toContain("thứ hai");
   await page.keyboard.press(`${mod}+Shift+P`);
   await pal(page).getByRole("combobox").fill("nhom");
   await pal(page).getByRole("option", { name: /Chèn: Group/ }).click();
