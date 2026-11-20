@@ -174,6 +174,28 @@ function PickerField({ hint, attrs, value, set, label }: { hint: AttrHint; attrs
   );
 }
 
+/**
+ * Chọn cỡ / độ dài (vd chiều cao khoảng trống): cỡ có sẵn bấm một chạm + thanh trượt + ô nhập px. Giá trị lưu: tên cỡ ("lg") hoặc độ dài ("48px"; "3rem" nhập tay vẫn giữ nguyên).
+ */
+function SizeField({ hint, value, set, label }: { hint: AttrHint; value: unknown; set(v: unknown): void; label: string }) {
+  const presets = hint.suggestions ?? [];
+  const v = value == null ? "" : String(value);
+  const px = /^(\d+(?:\.\d+)?)px$/.exec(v);
+  const num = px ? Number(px[1]) : null;
+  return (
+    <div className="ecx-size-field" role="group" aria-label={label}>
+      <div className="ecx-size-presets ecx-seg" role="radiogroup" aria-label={label}>
+        {presets.map((p) => <button key={p} type="button" role="radio" aria-checked={v === p} className={cx("ecx-seg-btn", v === p && "is-active")} onClick={() => set(v === p ? undefined : p)}>{p}</button>)}
+      </div>
+      <span className="ecx-range-row">
+        <input type="range" min={0} max={400} step={4} value={num ?? 0} aria-label={`${label} (px)`} onChange={(e) => set(Number(e.target.value) ? `${e.target.value}px` : undefined)} />
+        <input className="ecx-input ecx-size-num" type="number" min={0} max={2000} value={num ?? ""} placeholder="px" aria-label={`${label} (px)`} onChange={(e) => set(e.target.value === "" ? undefined : `${Math.max(0, Number(e.target.value))}px`)} />
+      </span>
+      {v && !px && !presets.includes(v) && <span className="ecx-muted">{v}</span>}
+    </div>
+  );
+}
+
 /** Form thuộc tính tự sinh từ mô tả khối + gợi ý hiển thị (attr-hints): không phải viết giao diện cho từng khối. */
 /** Ô segmented có hình minh hoạ: `<khối>.<thuộc tính>` → hàm vẽ hình theo giá trị. */
 const ATTR_THUMBS: Record<string, (v: string) => ReactNode> = { "iconBox.iconStyle": frameThumb, "icon.iconStyle": frameThumb, "iconList.iconStyle": frameThumb, "iconBox.hover": iconHoverThumb };
@@ -252,6 +274,8 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
             return <Field key={k} label={label}><IconPicker label={label} value={value == null ? undefined : String(value)} allowNone={hint.allowNone} onChange={(v) => set(v)} />{help}</Field>;
           case "multichoice":
             return <Field key={k} label={label}><MultiChoiceField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
+          case "size":
+            return <Field key={k} label={label} group><SizeField hint={hint} value={value} set={set} label={label} /></Field>;
           case "picker":
             return <Field key={k} label={label}><PickerField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
           case "choice":

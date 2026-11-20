@@ -167,6 +167,12 @@ body.is-dragging, body.is-dragging * { cursor: grabbing !important; user-select:
 /* vắt qua mép: khối không đệm thì tay nắm chỉ lấn 6px, không che chữ của khối con */
 .ecx-pad-handle.is-top { top: -6px; }
 .ecx-pad-handle.is-bottom { bottom: -6px; }
+/* Tay nắm chiều cao (Spacer…): luôn thấy khi khối đang chọn, rộng hơn để kéo trúng */
+/* Lệch trái: nút "+" thêm khối / phần nằm giữa cạnh dưới và nuốt chuột nếu tay nắm đặt ở giữa */
+.ecx-pad-handle.is-visible { left: 8px; width: 120px; height: 18px; z-index: 2; }
+.ecx-pad-handle.is-visible.is-bottom { bottom: -9px; }
+.ecx-pad-handle.is-visible::after { left: 32px; width: 56px; height: 6px; opacity: .85; bottom: 6px; }
+.ecx-pad-handle.is-visible:hover::after, .ecx-pad-handle.is-visible.is-dragging::after { opacity: 1; height: 8px; }
 .ecx-pad-handle::after { content: ""; position: absolute; left: 16px; width: 36px; height: 4px; border-radius: 3px; background: var(--ecx-ui); opacity: 0; transition: opacity .1s linear; }
 .ecx-pad-handle.is-top::after { top: 4px; }
 .ecx-pad-handle.is-bottom::after { bottom: 4px; }
@@ -388,7 +394,7 @@ img[data-ecx-bound] { outline: 2px solid color-mix(in srgb, var(--ecx-ui) 45%, t
 /* Khoảng trống: sọc mờ + kích thước; đường kẻ: vùng bấm cao ≥ 40px (không đổi bố cục) */
 /* Chiều cao thật như website (không độn min-height); vùng bấm rộng thêm bằng ::before để spacer thấp vẫn chọn được */
 .ecx-spacer[data-ecx-size] { position: relative; display: flex; align-items: center; justify-content: center; }
-.ecx-spacer[data-ecx-size]::before { content: ""; position: absolute; inset: -8px 0; }
+.ecx-spacer[data-ecx-size]:not(.has-line)::before { content: ""; position: absolute; inset: -8px 0; }   /* có đường kẻ thì ::before là chính đường kẻ — không đè lên nó */
 .ecx-spacer[data-ecx-size]::after { position: relative; z-index: 1; content: attr(data-ecx-size); padding: 2px 8px; border-radius: 4px; background: rgb(255 255 255 / .85); color: #33414d; font: 12px/1.4 var(--ecx-ui-font); opacity: 0; transition: opacity .15s; pointer-events: none; }
 .ecx-spacer[data-ecx-size]:hover::after, .ecx-spacer.is-selected[data-ecx-size]::after { opacity: 1; }
 hr.ecx-block { position: relative; overflow: visible; }

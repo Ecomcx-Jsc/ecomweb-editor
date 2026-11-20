@@ -167,7 +167,7 @@ export function HeightHandle({ blockId }: { blockId: string }) {
   };
   return (
     <span className="ecx-pad-handles" contentEditable={false} aria-hidden="true">
-      <span className="ecx-pad-handle is-bottom" title={labels.resize} onPointerDown={start} onMouseDown={(e) => e.stopPropagation()} />
+      <span className="ecx-pad-handle is-bottom is-visible" title={labels.resize} onPointerDown={start} onMouseDown={(e) => e.stopPropagation()} />
     </span>
   );
 }

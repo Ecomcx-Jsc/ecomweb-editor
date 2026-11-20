@@ -13,7 +13,7 @@ export interface AttrHint {
   label?: true;
   /** Khoá của hint (do hintOf điền) — dùng tra chữ. */
   key?: string;
-  control?: "select" | "segmented" | "range" | "choice" | "multichoice" | "picker" | "newTab" | "suggest" | "code" | "hidden" | "icon" | "media";
+  control?: "select" | "segmented" | "range" | "choice" | "multichoice" | "picker" | "newTab" | "suggest" | "code" | "hidden" | "icon" | "media" | "size";
   /** control "icon": có lựa chọn "Không có icon". */
   allowNone?: true;
   options?: Opt[];
@@ -201,7 +201,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "spacer.lineWidth": { control: "range", label: true, min: 5, max: 100, step: 5, unit: "%", when: (a) => a.line === true },
   "spacer.lineAlign": { control: "segmented", label: true, options: ["left", "center", "right"], when: (a) => a.line === true && Number(a.lineWidth ?? 100) < 100 },
   "spacer.lineColor": { label: true, when: (a) => a.line === true },
-  "spacer.height": { control: "suggest", suggestions: ["xs", "sm", "md", "lg", "xl", "2xl", "2rem", "4rem", "80px"], help: true },
+  "spacer.height": { control: "size", suggestions: ["xs", "sm", "md", "lg", "xl", "2xl"], label: true },
   "image.align": { control: "select", options: [...ALIGN, "wide", "full"] },
   "image.size": { control: "choice", choice: { kind: "imageSize" } },
   "featuredImage.size": { control: "choice", choice: { kind: "imageSize" } },
