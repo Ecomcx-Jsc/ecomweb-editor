@@ -31,3 +31,16 @@ test("ô Kiểu dáng lõi có trong thuộc tính khối (danh mục AI) nhưng
   assert.equal(types.heading.attributes?.level?.control, undefined);
   assert.equal(types.spacer.attributes?.textShadow, undefined);
 });
+
+test("soạn bài / trang thường: Danh sách bài, Tìm kiếm, Icon chèn được; khối giao diện khác chỉ có ở Trình dựng", async () => {
+  const { BlockTypeRegistry } = await import("../src/v2/core/registry");
+  const { registerCoreBlocks } = await import("../src/v2/blocks");
+  const r = new BlockTypeRegistry();
+  registerCoreBlocks(r, labelsV2("vi"));
+  const hidden = (n: string) => r.all().find((t) => t.name === n)?.hidden === true;
+  for (const n of ["query", "search", "icon"]) assert.equal(hidden(n), false, n);
+  assert.equal(hidden("postTitle"), true);
+  const d = new BlockTypeRegistry();
+  registerCoreBlocks(d, labelsV2("vi"), { dynamic: true });
+  assert.equal(d.all().find((t) => t.name === "postTitle")?.hidden === true, false);
+});

@@ -1,3 +1,4 @@
+import { PAGE_THEME_BLOCKS } from "../core/structure";
 import { BLOCK_ICONS, columnsIcon } from "../ui/block-icons";
 import { CORE_NODES, coreControlsFor, type AttrSpec, type BlockAttrSpec } from "@ecomcx/ecomweb-content";
 import { messages } from "../../i18n";
@@ -61,6 +62,6 @@ export function registerCoreBlocks(registry: BlockTypeRegistry, labels: V2Labels
   const dynamicNames = new Set(themeBlocks().map((t) => t.name));
   for (const t of coreBlockTypes(labels)) {
     // Khối giao diện chỉ hiện trong trình chèn khi soạn template / trang dựng bằng khối (vẫn vẽ được nếu nội dung có sẵn)
-    registry.register(dynamicNames.has(t.name) && !opts.dynamic ? { ...t, hidden: true } : t);
+    registry.register(dynamicNames.has(t.name) && !opts.dynamic && !PAGE_THEME_BLOCKS.has(t.name) ? { ...t, hidden: true } : t);
   }
 }

@@ -107,3 +107,6 @@ function fixChildren(b: BNode): BNode[] {
 export function fixTree(blocks: BNode[]): BNode[] {
   return fixList(blocks, null);
 }
+
+/** Khối giao diện vẫn chèn được khi soạn bài / trang thường (Danh sách bài, Tìm kiếm, Icon). */
+export const PAGE_THEME_BLOCKS = new Set(["search", "query", "icon"]);

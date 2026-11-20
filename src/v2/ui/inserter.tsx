@@ -11,7 +11,7 @@ import { norm } from "../../shared/util";
 import { useEditor, useEditorState, useUiTick, type InserterRequest } from "../context";
 import { cloneBlock, inlineLength, makeBlock, type BNode } from "../core/model";
 import type { BlockType } from "../core/registry";
-import { canContain } from "../core/structure";
+import { PAGE_THEME_BLOCKS, canContain } from "../core/structure";
 import { startDragBlocks, startDragNew } from "../canvas/dnd";
 import { usePrefs } from "../prefs";
 import { onPatternsChange, patternBlocks, registeredPatterns, type Pattern } from "../core/patterns";
@@ -35,7 +35,6 @@ export interface InsertOption {
 
 /** Các lựa chọn chèn: khối + biến thể có hàm tạo riêng (cột 30/70…). */
 const LEGACY_BLOCKS = new Set(["details", "testimonial"]);
-const PAGE_THEME_BLOCKS = new Set(["search", "query", "icon"]);
 
 export function useInsertOptions(): InsertOption[] {
   const { registry, prefs, host, labels } = useEditor();
