@@ -10,7 +10,7 @@ export const bindings = {
   attrSrc: "Ảnh",
   attrAlt: "Mô tả ảnh",
   attrCaption: "Chú thích",
-  attrText: "Chữ trên nút",
+  attrText: "Chữ",
   attrHref: "Liên kết",
   attrTitle: "Tiêu đề", attrSubtitle: "Phụ đề", attrQuote: "Lời đánh giá", attrName: "Tên", attrRole: "Chức vụ", attrPoster: "Ảnh xem trước", attrAddress: "Địa chỉ",
   attrPlaceholder: "Chữ gợi ý", attrButtonText: "Chữ trên nút", attrSummary: "Tiêu đề mục", attrCitation: "Nguồn trích dẫn", attrLabel: "Nhãn", attrTooltip: "Chú thích khi rê chuột",

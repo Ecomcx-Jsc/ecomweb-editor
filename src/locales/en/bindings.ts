@@ -10,7 +10,7 @@ export const bindings = {
   attrSrc: "Image",
   attrAlt: "Alt text",
   attrCaption: "Caption",
-  attrText: "Button text",
+  attrText: "Text",
   attrHref: "Link",
   attrTitle: "Title", attrSubtitle: "Subtitle", attrQuote: "Quote", attrName: "Name", attrRole: "Role", attrPoster: "Poster image", attrAddress: "Address",
   attrPlaceholder: "Placeholder", attrButtonText: "Button text", attrSummary: "Item title", attrCitation: "Citation", attrLabel: "Label", attrTooltip: "Hover tooltip",
