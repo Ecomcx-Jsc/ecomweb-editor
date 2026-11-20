@@ -67,7 +67,7 @@ export const blockTitles = {
   pageList: "Danh sách trang",
   archives: "Lưu trữ theo tháng",
   postNavigation: "Bài trước / bài sau",
-  query: "Posts (Query Loop)",
+  query: "Danh sách bài",
   postTemplate: "Khuôn mỗi bài",
   queryFilter: "Query Filter",
   pagination: "Pagination",

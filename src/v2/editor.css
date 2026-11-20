@@ -82,7 +82,7 @@
 .ecx-tool-group { display: flex; align-items: center; }
 .ecx-tool:active:not(:disabled) { transform: scale(.97); }
 
-.ecx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--ecx-ed-line); border-radius: 6px;
+.ecx-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 32px; padding: 4px 12px; border: 1px solid var(--ecx-ed-line); border-radius: 6px;
   background: var(--ecx-ed-panel); color: var(--ecx-ed-fg); font: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background-color .12s ease, border-color .12s ease; }
 .ecx-btn:hover:not(:disabled) { background: var(--ecx-ed-hover); }
 .ecx-btn-primary { border-color: var(--ecx-ed-accent); background: var(--ecx-ed-accent); color: var(--ecx-ed-accent-fg); }
