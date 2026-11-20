@@ -251,6 +251,8 @@ export const v2 = {
   lockContentOnly: "Allow editing content only inside (layout and styles fixed)",
   apply2: "Done",
   choiceLoading: "Loading…",
+  pickerSearch: "Search to add…",
+  pickerEmpty: "Nothing found",
   choiceSelect: "— Select —",
   choiceMissing: "(missing)",
   openInNewTab: "Open in new tab",

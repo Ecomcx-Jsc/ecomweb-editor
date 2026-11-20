@@ -320,10 +320,80 @@ function PostContentEdit({ blockProps }: BlockEditProps) {
 
 /** Kiểu hiển thị của danh sách bài khi chèn (như Query Loop của WordPress: chọn mẫu trước rồi hiện bài thật). */
 const QUERY_LAYOUTS = {
-  list: () => [makeBlock("postTemplate", { layout: "list" }, [makeBlock("postTitle", { level: 2, link: true }), makeBlock("postDate"), makeBlock("postExcerpt")]), makeBlock("pagination")],
-  grid: () => [makeBlock("postTemplate", { layout: "grid", columns: 3 }, [makeBlock("postTitle", { level: 3, link: true }), makeBlock("postExcerpt")]), makeBlock("pagination")],
-  cards: () => [makeBlock("postTemplate", { layout: "grid", columns: 3 }, [makeBlock("featuredImage", { link: true, aspect: "16/9" }), makeBlock("postTitle", { level: 3, link: true }), makeBlock("postDate")]), makeBlock("pagination")],
+  // Mô tả có giới hạn ký tự sẵn (không đổ cả bài vào thẻ); mọi phần bật / tắt được ở bảng "Hiển thị trong mỗi bài"
+  list: () => [makeBlock("postTemplate", { layout: "list" }, [makeBlock("postTitle", { level: 2, link: true }), makeBlock("postDate"), makeBlock("postExcerpt", { length: 160 }), makeBlock("readMore")]), makeBlock("pagination")],
+  grid: () => [makeBlock("postTemplate", { layout: "grid", columns: 3 }, [makeBlock("featuredImage", { link: true, aspect: "16/9" }), makeBlock("postTitle", { level: 3, link: true }), makeBlock("postExcerpt", { length: 100 })]), makeBlock("pagination")],
+  cards: () => [makeBlock("postTemplate", { layout: "grid", columns: 3 }, [makeBlock("featuredImage", { link: true, aspect: "16/9" }), makeBlock("postTitle", { level: 3, link: true }), makeBlock("postDate"), makeBlock("postExcerpt", { length: 100 }), makeBlock("readMore")]), makeBlock("pagination")],
 };
+/**
+ * Bảng "Hiển thị trong mỗi bài" của khối Danh sách bài: bật / tắt từng phần (ảnh, tiêu đề, ngày, tác giả, mô tả, nút xem thêm, phân trang)
+ * và chỉnh riêng từng phần (tỉ lệ ảnh, cỡ tiêu đề, giới hạn ký tự mô tả, chữ nút). Bật / tắt = thêm / bỏ khối con trong "Khuôn mỗi bài" — vẫn kéo thả, sửa tay được như khối thường.
+ */
+const QUERY_PARTS = [
+  { type: "featuredImage", label: "queryShowImage", make: () => makeBlock("featuredImage", { link: true, aspect: "16/9" }) },
+  { type: "postTitle", label: "queryShowName", make: () => makeBlock("postTitle", { level: 3, link: true }) },
+  { type: "postDate", label: "queryShowDate", make: () => makeBlock("postDate") },
+  { type: "postAuthor", label: "queryShowAuthor", make: () => makeBlock("postAuthor") },
+  { type: "postExcerpt", label: "queryShowExcerpt", make: () => makeBlock("postExcerpt", { length: 120 }) },
+  { type: "readMore", label: "queryShowMore", make: () => makeBlock("readMore") },
+] as const;
+function QueryInspector({ block }: BlockEditProps) {
+  const t = useMsgs("blocks") as Record<string, string>;
+  const { store } = useEditor();
+  useEditorState((s) => s.docs);
+  const live = store.block(block.id);
+  const tpl = live?.content?.find((c) => c.type === "postTemplate");
+  const pagination = live?.content?.find((c) => c.type === "pagination");
+  const docId = store.locate(block.id)?.docId;
+  if (!live || !tpl || !docId) return null;
+  const kids = tpl.content ?? [];
+  const find = (type: string) => kids.find((c) => c.type === type);
+  const toggle = (part: (typeof QUERY_PARTS)[number]) => {
+    const cur = find(part.type);
+    if (cur) { store.remove([cur.id], { focusNeighbor: false }); store.select([block.id], { editing: null }); return; }
+    // Chèn đúng thứ tự chuẩn của các phần (ảnh → tiêu đề → ngày → tác giả → mô tả → xem thêm), giữ khối khác người dùng tự thêm
+    const order = QUERY_PARTS.map((p) => p.type as string);
+    const rank = order.indexOf(part.type);
+    let at = kids.length;
+    for (let i = 0; i < kids.length; i++) { const r = order.indexOf(kids[i].type); if (r > rank) { at = i; break; } }
+    store.insert(docId, tpl.id, at, [part.make()], { select: false, focus: false });
+    store.select([block.id], { editing: null });   // bảng này không đóng sau mỗi lần bật / tắt
+  };
+  const togglePagination = () => {
+    if (pagination) store.remove([pagination.id], { focusNeighbor: false });
+    else store.insert(docId, block.id, (live.content ?? []).length, [makeBlock("pagination")], { select: false, focus: false });
+    store.select([block.id], { editing: null });
+  };
+  const img = find("featuredImage"), title = find("postTitle"), excerpt = find("postExcerpt"), more = find("readMore");
+  return (
+    <div className="ecx-query-parts" role="group" aria-label={t.queryShowTitle}>
+      <span className="ecx-field-label">{t.queryShowTitle}</span>
+      {QUERY_PARTS.map((p) => <label key={p.type} className="ecx-check"><input type="checkbox" checked={!!find(p.type)} onChange={() => toggle(p)} /> {t[p.label]}</label>)}
+      <label className="ecx-check"><input type="checkbox" checked={!!pagination} onChange={togglePagination} /> {t.queryShowPagination}</label>
+      {img && (
+        <label className="ecx-field"><span className="ecx-field-label">{t.queryAspect}</span>
+          <select className="ecx-input" value={String(img.attrs.aspect ?? "auto")} onChange={(e) => store.setAttrs([img.id], { aspect: e.target.value })}>
+            {["auto", "16/9", "4/3", "1/1", "3/4"].map((a) => <option key={a} value={a}>{a}</option>)}
+          </select></label>
+      )}
+      {title && (
+        <label className="ecx-field"><span className="ecx-field-label">{t.queryTitleLevel}</span>
+          <select className="ecx-input" value={String(title.attrs.level ?? 3)} onChange={(e) => store.setAttrs([title.id], { level: Number(e.target.value) })}>
+            {[1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>H{n}</option>)}
+          </select></label>
+      )}
+      {excerpt && (
+        <label className="ecx-field"><span className="ecx-field-label">{t.queryExcerptLimit}</span>
+          <input className="ecx-input" type="number" min={0} max={2000} value={Number(excerpt.attrs.length ?? 0)} onChange={(e) => store.setAttrs([excerpt.id], { length: Math.max(0, Number(e.target.value) || 0) || undefined })} /></label>
+      )}
+      {more && (
+        <label className="ecx-field"><span className="ecx-field-label">{t.queryMoreText}</span>
+          <input className="ecx-input" value={String(more.attrs.text ?? "")} placeholder="Đọc tiếp" onChange={(e) => store.setAttrs([more.id], { text: e.target.value || undefined })} /></label>
+      )}
+    </div>
+  );
+}
+
 function QueryEdit({ block, blockProps, editable }: BlockEditProps) {
   const { store } = useEditor();
   const tp = useMsgs("placeholders");
@@ -518,7 +588,7 @@ export function themeBlocks(): BlockType[] {
     { name: "breadcrumbs", title: "Breadcrumb", icon: ChevronsRight, category: theme, keywords: "breadcrumb duong dan dieu huong", kind: "atom", edit: BreadcrumbsEdit, attributes: { separator: { type: "string", default: "›" }, showHome: { type: "boolean", default: true }, showCurrent: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     { name: "postNavigation", title: "Bài trước / bài sau", icon: ArrowLeftRight, category: theme, keywords: "bai truoc bai sau dieu huong post navigation", kind: "atom", edit: PostNavigationEdit, attributes: { showTitle: { type: "boolean", default: true } }, supports: { style: true, className: true } },
     {
-      name: "query", title: "Danh sách bài", icon: Rows3, category: theme, keywords: "danh sach bai query loop tin tuc", kind: "container", edit: QueryEdit,
+      name: "query", title: "Danh sách bài", icon: Rows3, category: theme, keywords: "danh sach bai query loop tin tuc", kind: "container", edit: QueryEdit, inspector: QueryInspector,
       attributes: { inherit: { type: "boolean", default: true }, postType: { type: "string", default: "post" }, perPage: { type: "integer", default: 10, min: 1, max: 100 }, category: { type: "string" }, tag: { type: "string" }, taxonomy: { type: "string" }, term: { type: "string" }, terms: { type: "string" }, termMode: { type: "string", enum: ["any", "all", "none"], default: "any" }, source: { type: "string", enum: ["latest", "manual", "related"], default: "latest" }, include: { type: "string" }, metaKey: { type: "string" }, metaCompare: { type: "string", enum: ["=", "!=", ">", ">=", "<", "<=", "LIKE", "EXISTS", "NOT EXISTS"], default: "=" }, metaValue: { type: "string" }, dateRange: { type: "string", enum: ["any", "7", "30", "90", "365"], default: "any" }, after: { type: "string" }, before: { type: "string" }, parent: { type: "integer", min: 1 }, offset: { type: "integer", min: 0, max: 1000 }, excludeCurrent: { type: "boolean", default: true }, authorCurrent: { type: "boolean", default: false }, urlFilters: { type: "boolean", default: false }, orderBy: { type: "string", enum: ["date", "title", "modified", "menu_order", "comment_count", "rand"], default: "date" }, order: { type: "string", enum: ["desc", "asc"], default: "desc" }, authorId: { type: "integer", min: 1 }, search: { type: "string" }, exclude: { type: "string" }, sticky: { type: "string", enum: ["any", "only", "exclude"], default: "any" }, orderByMeta: { type: "string" }, paginate: { type: "boolean", default: false } },
       // Mới chèn: chưa có khuôn → hỏi kiểu hiển thị trước (Danh sách / Lưới / Thẻ có ảnh)
       create: () => makeBlock("query", { inherit: true }, []),

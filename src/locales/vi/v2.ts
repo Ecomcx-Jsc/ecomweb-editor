@@ -252,6 +252,8 @@ export const v2 = {
   lockContentOnly: "Chỉ cho sửa nội dung bên trong (không đổi bố cục, kiểu dáng)",
   apply2: "Xong",
   choiceLoading: "Đang tải…",
+  pickerSearch: "Tìm để thêm…",
+  pickerEmpty: "Không có mục nào",
   choiceSelect: "— Chọn —",
   choiceMissing: "(không còn)",
   openInNewTab: "Mở trong tab mới",

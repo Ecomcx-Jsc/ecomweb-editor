@@ -106,7 +106,7 @@ export type DynamicPost = { title?: string; date?: string; author?: string; exce
 /** Thiết lập của khối "Danh sách bài" (attrs của query). */
 export interface QueryArgs { inherit: boolean; postType: string; perPage: number; category?: string; tag?: string; taxonomy?: string; term?: string; orderBy: string; order: "asc" | "desc" }
 
-export type ChoiceKind = "menuLocation" | "postType" | "taxonomy" | "term" | "templatePart" | "imageSize";
+export type ChoiceKind = "menuLocation" | "postType" | "taxonomy" | "term" | "templatePart" | "imageSize" | "post" | "author";
 export interface Choice { value: string; label: string }
 
 export interface DynamicData {

@@ -666,3 +666,16 @@ body.is-dragging .ecx-section-adder { display: none; }
 .ecx-palette-item kbd { font: 11px ui-monospace, monospace; padding: 2px 6px; border: 1px solid var(--ecx-ed-line); border-radius: 5px; color: var(--ecx-ed-muted, #6b7785); }
 .ecx-palette-empty { margin: 0; padding: 20px; text-align: center; color: var(--ecx-ed-muted, #6b7785); }
 .ecx-palette-foot { padding: 8px 14px; border-top: 1px solid var(--ecx-ed-line); font-size: 12px; color: var(--ecx-ed-muted, #6b7785); }
+
+/* Ô chọn bài / mục có tìm kiếm (PickerField) */
+.ecx-picker { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ecx-picker-chips { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ecx-picker-chip { display: flex; align-items: center; gap: 2px; padding: 2px 2px 2px 8px; border: 1px solid var(--ecx-ed-line); border-radius: 6px; background: var(--ecx-ed-panel); min-width: 0; }
+.ecx-picker-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+.ecx-picker-btn { width: 24px; height: 24px; flex: none; border: 0; border-radius: 4px; background: none; color: var(--ecx-ed-muted); cursor: pointer; }
+.ecx-picker-btn:hover:not(:disabled) { background: var(--ecx-ed-hover); color: var(--ecx-ed-fg); }
+.ecx-picker-btn:disabled { opacity: .35; cursor: default; }
+.ecx-picker-list { display: flex; flex-direction: column; max-height: 180px; margin: 0; padding: 2px; overflow-y: auto; list-style: none; border: 1px solid var(--ecx-ed-line); border-radius: 6px; }
+.ecx-picker-list .ecx-muted { padding: 6px 8px; font-size: 12.5px; }
+.ecx-picker-item { display: block; width: 100%; padding: 5px 8px; border: 0; border-radius: 4px; background: none; text-align: left; font: inherit; font-size: 12.5px; color: var(--ecx-ed-fg); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ecx-picker-item:hover { background: var(--ecx-ed-hover); }

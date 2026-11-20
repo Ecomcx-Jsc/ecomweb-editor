@@ -13,7 +13,7 @@ export interface AttrHint {
   label?: true;
   /** Khoá của hint (do hintOf điền) — dùng tra chữ. */
   key?: string;
-  control?: "select" | "segmented" | "range" | "choice" | "multichoice" | "newTab" | "suggest" | "code" | "hidden" | "icon" | "media";
+  control?: "select" | "segmented" | "range" | "choice" | "multichoice" | "picker" | "newTab" | "suggest" | "code" | "hidden" | "icon" | "media";
   /** control "icon": có lựa chọn "Không có icon". */
   allowNone?: true;
   options?: Opt[];
@@ -340,9 +340,9 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "query.term": { control: "choice", choice: { kind: "term", args: (a) => ({ taxonomy: String(a.taxonomy ?? "") }) }, label: true, when: (a) => a.inherit === false && !!a.taxonomy },
   "query.perPage": { when: notInherit },
   "query.orderBy": { control: "select", options: ["date", "modified", "title", "comment_count", "menu_order", "rand"], when: notInherit },
-  "query.authorId": { label: true, when: notInherit },
+  "query.authorId": { control: "choice", choice: { kind: "author" }, label: true, when: notInherit },
   "query.search": { label: true, when: notInherit },
-  "query.exclude": { label: true, when: notInherit },
+  "query.exclude": { control: "picker", choice: { kind: "post", args: (a) => ({ postType: String(a.postType ?? "post") }) }, label: true, when: notInherit },
   "query.sticky": { control: "select", options: ["any", "only", "exclude"], when: notInherit },
   "image.href": { label: true },
   "image.lightbox": { label: true },
@@ -351,7 +351,7 @@ export const ATTR_HINTS: Record<string, AttrHint> = {
   "blockquote.citation": { label: true },
   "postDate.displayType": { control: "segmented", label: true, options: ["published", "modified"] },
   "query.source": { control: "segmented", label: true, options: ["latest", "manual", "related"], when: notInherit },
-  "query.include": { label: true, help: true, placeholder: true, when: (a) => a.inherit === false && a.source === "manual" },
+  "query.include": { control: "picker", choice: { kind: "post", args: (a) => ({ postType: String(a.postType ?? "post") }) }, label: true, help: true, when: (a) => a.inherit === false && a.source === "manual" },
   "query.terms": { control: "multichoice", choice: { kind: "term", args: (a) => ({ taxonomy: String(a.taxonomy ?? "") }) }, label: true, when: (a) => !!a.taxonomy },
   "query.termMode": { control: "segmented", label: true, options: ["any", "all", "none"], when: (a) => !!a.taxonomy && !!String(a.terms ?? "").trim() },
   "query.metaKey": { label: true, help: true, placeholder: true, when: notInherit },

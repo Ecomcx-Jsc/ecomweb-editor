@@ -18,6 +18,8 @@ export const blocks = {
   down: "Xuống",
   removeLink: "Xoá liên kết",
   addLink: "Thêm liên kết",
+  queryShowTitle: "Hiển thị trong mỗi bài", queryShowImage: "Ảnh đại diện", queryShowName: "Tiêu đề", queryShowDate: "Ngày đăng", queryShowAuthor: "Tác giả", queryShowExcerpt: "Mô tả ngắn", queryShowMore: "Nút xem thêm",
+  queryShowPagination: "Phân trang", queryAspect: "Tỉ lệ ảnh", queryExcerptLimit: "Giới hạn ký tự mô tả (0 = đầy đủ)", queryMoreText: "Chữ của nút", queryTitleLevel: "Cỡ tiêu đề", queryTitleLink: "Tiêu đề là liên kết",
   imageLink: "Liên kết riêng (tuỳ chọn)", imageLinkN: "Liên kết ảnh {n}", galleryImages: "Ảnh trong gallery",
   imageAltN: "Mô tả ảnh {n}",
   removeImage: "Xoá ảnh",

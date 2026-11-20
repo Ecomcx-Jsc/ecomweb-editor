@@ -18,6 +18,8 @@ export const blocks = {
   down: "Down",
   removeLink: "Remove link",
   addLink: "Add link",
+  queryShowTitle: "Shown in each post", queryShowImage: "Featured image", queryShowName: "Title", queryShowDate: "Date", queryShowAuthor: "Author", queryShowExcerpt: "Short description", queryShowMore: "Read more button",
+  queryShowPagination: "Pagination", queryAspect: "Image ratio", queryExcerptLimit: "Description character limit (0 = full)", queryMoreText: "Button text", queryTitleLevel: "Title size", queryTitleLink: "Title is a link",
   imageLink: "Own link (optional)", imageLinkN: "Link of image {n}", galleryImages: "Gallery images",
   imageAltN: "Image {n} description",
   removeImage: "Remove image",

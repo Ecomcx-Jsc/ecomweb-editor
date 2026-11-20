@@ -117,6 +117,63 @@ function MultiChoiceField({ hint, attrs, value, set, label }: { hint: AttrHint; 
   );
 }
 
+/**
+ * Chọn nhiều bài / mục từ danh sách có ô tìm (thay ô gõ mã "12, 7, 31"): chip theo thứ tự chọn (↑ ↓ đổi chỗ, × bỏ), giá trị lưu là các mã cách nhau dấu phẩy.
+ * Host không có danh sách (choices không trả về gì) → ô gõ mã như cũ.
+ */
+function PickerField({ hint, attrs, value, set, label }: { hint: AttrHint; attrs: Record<string, unknown>; value: unknown; set(v: unknown): void; label: string }) {
+  const { host, labels } = useEditor();
+  const kind = hint.choice?.kind;
+  const args = hint.choice?.args?.(attrs) ?? {};
+  const argKey = JSON.stringify(args);
+  const ids = String(value ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  const [q, setQ] = useState("");
+  const [results, setResults] = useState<Choice[] | null | undefined>(undefined);
+  const [names, setNames] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (!kind || !host.choices) { setResults(null); return; }
+    let live = true;
+    const h = setTimeout(() => {
+      Promise.resolve(host.choices!(kind, { ...args, search: q })).then((l) => { if (live) { setResults(l); setNames((n) => ({ ...n, ...Object.fromEntries(l.map((c) => [c.value, c.label])) })); } }, () => { if (live) setResults(null); });
+    }, q ? 250 : 0);
+    return () => { live = false; clearTimeout(h); };
+  }, [kind, argKey, q, host]);
+  // Tên các mục đã chọn nhưng không nằm trong kết quả tìm hiện tại
+  const missing = ids.filter((i) => !(i in names)).join(",");
+  useEffect(() => {
+    if (!kind || !host.choices || !missing) return;
+    let live = true;
+    Promise.resolve(host.choices(kind, { ...args, ids: missing })).then((l) => { if (live) setNames((n) => ({ ...n, ...Object.fromEntries(l.map((c) => [c.value, c.label])) })); }, () => {});
+    return () => { live = false; };
+  }, [kind, argKey, missing, host]);
+  if (results === null) return <input className="ecx-input" aria-label={label} value={String(value ?? "")} placeholder="12, 7, 31" onChange={(e) => set(e.target.value || undefined)} />;
+  const write = (next: string[]) => set(next.length ? next.join(",") : undefined);
+  const move = (i: number, d: number) => { const n = ids.slice(); const j = i + d; if (j < 0 || j >= n.length) return; [n[i], n[j]] = [n[j], n[i]]; write(n); };
+  const free = (results ?? []).filter((c) => !ids.includes(c.value));
+  return (
+    <div className="ecx-picker" role="group" aria-label={label}>
+      {ids.length > 0 && (
+        <ol className="ecx-picker-chips">
+          {ids.map((id, i) => (
+            <li key={id} className="ecx-picker-chip">
+              <span className="ecx-picker-name" title={names[id] ?? id}>{names[id] ?? `#${id}`}</span>
+              <button type="button" className="ecx-picker-btn" aria-label={`${labels.moveUp}: ${names[id] ?? id}`} disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
+              <button type="button" className="ecx-picker-btn" aria-label={`${labels.moveDown}: ${names[id] ?? id}`} disabled={i === ids.length - 1} onClick={() => move(i, 1)}>↓</button>
+              <button type="button" className="ecx-picker-btn" aria-label={`${labels.remove}: ${names[id] ?? id}`} onClick={() => write(ids.filter((x) => x !== id))}>×</button>
+            </li>
+          ))}
+        </ol>
+      )}
+      <input className="ecx-input" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={labels.pickerSearch} aria-label={`${label}: ${labels.pickerSearch}`} />
+      <ul className="ecx-picker-list" role="listbox" aria-label={label}>
+        {results === undefined && <li className="ecx-muted">{labels.choiceLoading}</li>}
+        {results && !free.length && <li className="ecx-muted">{labels.pickerEmpty}</li>}
+        {free.map((c) => <li key={c.value}><button type="button" role="option" aria-selected="false" className="ecx-picker-item" onClick={() => write([...ids, c.value])}>{c.label}</button></li>)}
+      </ul>
+    </div>
+  );
+}
+
 /** Form thuộc tính tự sinh từ mô tả khối + gợi ý hiển thị (attr-hints): không phải viết giao diện cho từng khối. */
 /** Ô segmented có hình minh hoạ: `<khối>.<thuộc tính>` → hàm vẽ hình theo giá trị. */
 const ATTR_THUMBS: Record<string, (v: string) => ReactNode> = { "iconBox.iconStyle": frameThumb, "icon.iconStyle": frameThumb, "iconList.iconStyle": frameThumb, "iconBox.hover": iconHoverThumb };
@@ -195,6 +252,8 @@ export function AttrForm({ type, attrs, onChange }: { type: BlockType; attrs: Re
             return <Field key={k} label={label}><IconPicker label={label} value={value == null ? undefined : String(value)} allowNone={hint.allowNone} onChange={(v) => set(v)} />{help}</Field>;
           case "multichoice":
             return <Field key={k} label={label}><MultiChoiceField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
+          case "picker":
+            return <Field key={k} label={label}><PickerField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
           case "choice":
             return <Field key={k} label={label}><ChoiceField hint={hint} attrs={attrs} value={value} set={set} label={label} />{help}</Field>;
           case "range": {
