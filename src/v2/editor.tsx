@@ -223,7 +223,7 @@ function EditorShell({ className, onSave, header, actions, menuExtra, canvasBefo
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.metaKey || e.ctrlKey;
-      if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); void saveRef.current(); }
+      if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); (document.activeElement as HTMLElement | null)?.blur?.(); setTimeout(() => void saveRef.current(), 30); }
       // Bảng lệnh: ⌘⇧P luôn mở; ⌘K chỉ khi không đang gõ chữ (trong ô chữ ⌘K là chèn liên kết)
       const t = e.target as HTMLElement | null;
       const typing = !!t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
