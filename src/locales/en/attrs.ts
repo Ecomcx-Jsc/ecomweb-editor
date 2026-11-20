@@ -51,6 +51,7 @@ export const attrs = {
   buttonText: "Button text",
   link: "Link",
   moreText: "Read more text",
+  length: "Character limit (0 = full)",
   aspect: "Aspect ratio",
   avatar: "Avatar",
   taxonomy: "Taxonomy",

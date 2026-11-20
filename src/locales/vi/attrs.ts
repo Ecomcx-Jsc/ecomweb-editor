@@ -51,6 +51,7 @@ export const attrs = {
   buttonText: "Chữ trên nút",
   link: "Có liên kết",
   moreText: "Chữ “đọc tiếp”",
+  length: "Giới hạn ký tự (0 = đầy đủ)",
   aspect: "Tỉ lệ khung",
   avatar: "Ảnh đại diện",
   taxonomy: "Phân loại",

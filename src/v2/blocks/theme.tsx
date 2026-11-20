@@ -1,6 +1,6 @@
 import { ListFilter, Star, AlignLeft, ArrowLeftRight, CalendarDays, ChevronsRight, Heading1, Copyright, FileText, Globe2, Image as ImageIcon, LayoutTemplate, ListOrdered, Menu, MessageSquare, PanelTop, Repeat2, Rows3, Search, SquareDashed, Tag, Type, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import { SEARCH_ICON_PATH, resolveIcon, spacingValue } from "@ecomcx/ecomweb-content";
+import { SEARCH_ICON_PATH, clipExcerpt, resolveIcon, spacingValue } from "@ecomcx/ecomweb-content";
 import { IconSvg } from "../ui/icon-svg";
 import { useChoices } from "../ui/attr-form";
 import { Block, DocBlocks, InnerBlocks, NestedDoc } from "../canvas/block-list";
@@ -156,7 +156,7 @@ function PostTitleEdit({ block, blockProps }: BlockEditProps) {
 }
 function PostExcerptEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
-  return <p {...merge(blockProps, "ecx-post-excerpt")}>{d.post?.excerpt || "Lorem ipsum dolor sit amet…"}{block.attrs.moreText ? <> <a className="ecx-more-link">{String(block.attrs.moreText)}</a></> : null}</p>;
+  return <p {...merge(blockProps, "ecx-post-excerpt")}>{clipExcerpt(d.post?.excerpt || "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.", block.attrs.length)}{block.attrs.moreText ? <> <a className="ecx-more-link">{String(block.attrs.moreText)}</a></> : null}</p>;
 }
 function FeaturedImageEdit({ block, blockProps }: BlockEditProps) {
   const d = useDynamic();
@@ -498,7 +498,7 @@ export function themeBlocks(): BlockType[] {
     { name: "copyright", title: "Bản quyền", icon: Copyright, category: theme, keywords: "ban quyen copyright", kind: "atom", edit: CopyrightEdit, attributes: { text: { type: "string" }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "postTitle", title: "Tiêu đề bài", icon: Type, category: theme, keywords: "tieu de bai post title", kind: "atom", edit: PostTitleEdit, attributes: { level: { type: "integer", default: 1, min: 1, max: 6 }, link: { type: "boolean", default: false }, textAlign: TEXT_ALIGN }, supports: { style: true, className: true } },
     { name: "postContent", title: "Nội dung bài", icon: FileText, category: theme, keywords: "noi dung bai post content", kind: "atom", edit: PostContentEdit },
-    { name: "postExcerpt", title: "Tóm tắt bài", icon: FileText, category: theme, keywords: "tom tat excerpt", kind: "atom", edit: PostExcerptEdit, attributes: { moreText: { type: "string" } }, supports: { style: true, className: true } },
+    { name: "postExcerpt", title: "Tóm tắt bài", icon: FileText, category: theme, keywords: "tom tat excerpt", kind: "atom", edit: PostExcerptEdit, attributes: { length: { type: "integer", default: 0, min: 0, max: 2000 }, moreText: { type: "string" } }, supports: { style: true, className: true } },
     { name: "featuredImage", title: "Ảnh đại diện", icon: ImageIcon, category: theme, keywords: "anh dai dien featured image thumbnail", kind: "atom", edit: FeaturedImageEdit, attributes: { size: { type: "string", default: "large" }, link: { type: "boolean", default: false }, aspect: { type: "string", enum: ["auto", "16/9", "4/3", "1/1", "3/4"], default: "auto" } }, supports: { style: true, className: true } },
     { name: "postDate", title: "Ngày đăng", icon: CalendarDays, category: theme, keywords: "ngay dang date", kind: "atom", edit: PostDateEdit, attributes: { textAlign: TEXT_ALIGN, displayType: { type: "string", enum: ["published", "modified"], default: "published" } }, supports: { style: true, className: true } },
     { name: "postAuthor", title: "Tác giả", icon: User, category: theme, keywords: "tac gia author", kind: "atom", edit: PostAuthorEdit, attributes: { avatar: { type: "boolean", default: false }, showName: { type: "boolean", default: true }, showBio: { type: "boolean", default: false }, avatarSize: { type: "integer", default: 32, min: 16, max: 128 }, link: { type: "boolean", default: true } }, supports: { style: true, className: true } },
@@ -525,9 +525,9 @@ export function themeBlocks(): BlockType[] {
       supports: { style: true, className: true },
     },
     { name: "postTemplate", title: "Khuôn mỗi bài", icon: LayoutTemplate, kind: "container", edit: PostTemplateEdit, hidden: true, attributes: { layout: { type: "string", enum: ["list", "grid", "carousel"], default: "list" }, columns: { type: "integer", default: 3, min: 1, max: 6 }, columnsTablet: { type: "integer", min: 1, max: 6 }, columnsMobile: { type: "integer", min: 1, max: 4 }, gap: { type: "string" }, arrows: { type: "boolean", default: true } }, structure: { parents: ["query"] } },
-    { name: "pagination", title: "Phân trang", icon: ListOrdered, kind: "atom", edit: PaginationEdit, attributes: { type: { type: "string", enum: ["numbers", "prevNext", "both"], default: "both" }, midSize: { type: "integer", default: 2, min: 0, max: 5 } }, hidden: true, structure: { parents: ["query"] } },
+    { name: "pagination", title: "Phân trang", icon: ListOrdered, kind: "atom", edit: PaginationEdit, attributes: { type: { type: "string", enum: ["numbers", "prevNext", "both"], default: "both" }, midSize: { type: "integer", default: 2, min: 0, max: 5 } }, structure: { parents: ["query"] } },
     { name: "queryFilter", title: "Thanh lọc", icon: ListFilter, category: theme, keywords: "loc bo loc thanh loc filter danh muc sap xep tim", kind: "atom", edit: QueryFilterEdit, attributes: { taxonomy: { type: "string" }, termStyle: { type: "string", enum: ["none", "links", "chips", "select", "checks"], default: "links" }, showRange: { type: "boolean", default: false }, rangeParam: { type: "string" }, rangeLabel: { type: "string" }, rangeMax: { type: "number" }, allLabel: { type: "string" }, showSearch: { type: "boolean", default: false }, showSort: { type: "boolean", default: false }, showYear: { type: "boolean", default: false }, showReset: { type: "boolean", default: false }, sortOptions: { type: "string" }, placeholder: { type: "string" }, submitText: { type: "string" }, action: { type: "string" } }, supports: { style: true, className: true, align: true } },
-    { name: "queryEmpty", title: "Khi không có bài", icon: SquareDashed, kind: "container", edit: QueryEmptyEdit, hidden: true, structure: { parents: ["query"] } },
+    { name: "queryEmpty", title: "Khi không có bài", icon: SquareDashed, kind: "container", edit: QueryEmptyEdit, structure: { parents: ["query"] } },
     { name: "templatePart", title: "Phần dùng chung", icon: PanelTop, category: theme, keywords: "phan dung chung template part header footer", kind: "atom", edit: TemplatePartEdit, attributes: { slug: { type: "string" }, tagName: { type: "string", enum: ["div", "header", "footer", "aside", "section"], default: "div" } }, summary: (a) => a.slug },
     { name: "syncedPattern", title: "Mẫu đồng bộ", icon: Repeat2, category: "widgets", keywords: "mau dong bo synced pattern reusable", kind: "atom", edit: SyncedPatternEdit, attributes: { ref: { type: "integer" } }, hidden: true },
   ];

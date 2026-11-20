@@ -109,4 +109,4 @@ export function fixTree(blocks: BNode[]): BNode[] {
 }
 
 /** Khối giao diện vẫn chèn được khi soạn bài / trang thường (Danh sách bài, Tìm kiếm, Icon). */
-export const PAGE_THEME_BLOCKS = new Set(["search", "query", "icon"]);
+export const PAGE_THEME_BLOCKS = new Set(["search", "query", "icon", "postTitle", "postExcerpt", "featuredImage", "postDate", "postAuthor", "postTerms", "readMore", "pagination", "queryEmpty", "queryTotal"]);

@@ -38,9 +38,10 @@ test("soạn bài / trang thường: Danh sách bài, Tìm kiếm, Icon chèn đ
   const r = new BlockTypeRegistry();
   registerCoreBlocks(r, labelsV2("vi"));
   const hidden = (n: string) => r.all().find((t) => t.name === n)?.hidden === true;
-  for (const n of ["query", "search", "icon"]) assert.equal(hidden(n), false, n);
-  assert.equal(hidden("postTitle"), true);
+  for (const n of ["query", "search", "icon", "postTitle"]) assert.equal(hidden(n), false, n);
+  for (const n of ["featuredImage", "postExcerpt", "readMore", "pagination"]) assert.equal(hidden(n), false, n);
+  const hiddenCount = (reg: { all(): { hidden?: boolean }[] }) => reg.all().filter((t) => t.hidden).length;
   const d = new BlockTypeRegistry();
   registerCoreBlocks(d, labelsV2("vi"), { dynamic: true });
-  assert.equal(d.all().find((t) => t.name === "postTitle")?.hidden === true, false);
+  assert.ok(hiddenCount(r) > hiddenCount(d), "Trình dựng (dynamic) hiện thêm khối giao diện so với soạn bài thường");
 });

@@ -11,7 +11,7 @@ export const blockDesc = {
   details: "Nội dung ẩn, bấm để mở (câu hỏi thường gặp…).",
   table: "Bảng dữ liệu hàng / cột, gộp ô được.",
   image: "Ảnh có chú thích, alt cho SEO, đổi cỡ bằng tay kéo.",
-  gallery: "Nhiều ảnh xếp lưới.",
+  inlineImage: "Ảnh nhỏ nằm trong dòng chữ (icon, huy hiệu, logo nhỏ).",  gallery: "Nhiều ảnh xếp lưới.",
   cover: "Ảnh phủ kín (hoặc màu / chuyển màu) với lớp phủ và chữ đè lên — phần mở đầu trang; ảnh, điểm lấy nét, lớp phủ ở mục Nền.",
   video: "Video tải lên hoặc từ địa chỉ.",
   audio: "Tệp âm thanh có trình phát.",

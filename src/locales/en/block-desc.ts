@@ -11,7 +11,7 @@ export const blockDesc = {
   details: "Hide content until the visitor opens it (FAQ…).",
   table: "Rows and columns of data; cells can be merged.",
   image: "An image with caption and alt text; drag to resize.",
-  gallery: "Several images in a grid.",
+  inlineImage: "A small image inside a line of text (icon, badge, small logo).",  gallery: "Several images in a grid.",
   cover: "A covering image (or colour / gradient) with an overlay and text on top — a page hero; image, focal point and overlay in Background.",
   video: "An uploaded or linked video.",
   audio: "An audio player.",
