@@ -16,7 +16,9 @@ body.ecx-canvas-body { padding: 0; }
 .ecx-server-html [class*="stagger"], .ecx-server-html [class*="reveal"], .ecx-server-html [class*="animate"], .ecx-server-html [class*="fade-"], .ecx-server-html [class*="aos"], .ecx-server-html [data-aos] { opacity: 1 !important; visibility: visible !important; transform: none !important; animation: none !important; transition: none !important; }
 .ecx-canvas-root { min-height: 100vh; padding: 52px clamp(1rem, 4vw, 3rem) 40vh; box-sizing: border-box; outline: none; }
 /* --ecx-canvas-col: bề rộng cột của khung soạn; KHÔNG đổi --ecx-content-width (nhóm "giữ chữ theo cột" của nội dung dùng biến đó) */
-.ecx-canvas-root > * { max-width: var(--ecx-canvas-col, var(--ecx-content-width, 760px)); margin-left: auto; margin-right: auto; }
+.ecx-canvas-root > * { max-width: var(--ecx-canvas-col, var(--ecx-content-width, 760px)); }
+/* Cột chữ căn giữa bằng lề tự động !important (như bố cục "constrained" của website): theme xoá lề của đoạn văn (.prose p { margin: 1rem 0 0 }) không làm đoạn lệch khỏi tiêu đề. Khối rộng / toàn trang / trôi trái-phải có lề riêng. */
+.ecx-canvas-root > :not(.ecx-align-wide, .ecx-align-full, .ecx-align-left, .ecx-align-right) { margin-left: auto !important; margin-right: auto !important; }
 /* Mặc định của trình soạn: độ ưu tiên chỉ bằng "1 class" (:where) — đứng sau dòng trên nên thắng nó, nhưng CSS theme nạp sau (vd .ecx-template > * { max-width: 960px }) thắng lại, như trên website */
 :where(.ecx-canvas-root) > :is(.ecx-nested, .ecx-cover, [data-type="columns"], .ecx-align-wide) { max-width: var(--ecx-wide-width, 1200px); }
 .ecx-canvas-root.ecx-canvas-root > .ecx-align-full { max-width: none; }
@@ -27,6 +29,8 @@ body.ecx-canvas-body { padding: 0; }
 /* Template (theme dựng bằng khối): website không giới hạn bề rộng khối con và không có lề soạn — canvas làm y hệt, theme tự quyết bằng CSS của nó
    (chỉ đổi giá trị mặc định của biến, nên CSS theme vẫn thắng nếu có đặt max-width cho .ecx-template > *). */
 .ecx-canvas-root.ecx-template, .ecx-canvas-root.entry-content { --ecx-canvas-col: none; padding-left: 0; padding-right: 0; }
+/* Theme khai báo nút nội dung không giới hạn bề rộng (class max-w-none, như "prose max-w-none"): website không có cột 760px nên canvas cũng bỏ cột — không thì tiêu đề (lề tự căn giữa) lệch vào so với đoạn văn mà theme đã xoá lề tự động */
+.ecx-canvas-root.max-w-none { --ecx-canvas-col: none; }
 /* padding-top 52px (canvas mặc định + template) = chỗ cho thanh công cụ nổi (44px + 8) trên khối đầu: thiếu chỗ thì thanh đè lên chữ, bấm vào khối trúng nút của thanh.
    Bài (.entry-content): ô tiêu đề nằm trên khối đầu nên đã đủ chỗ — giữ 0 như website (thêm khoảng làm khung bao của trang bài lệch so với lúc mở) */
 .ecx-canvas-root.entry-content { padding-top: 0; }
