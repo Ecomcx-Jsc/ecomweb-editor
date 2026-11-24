@@ -94,6 +94,13 @@ export function RichText(props: RichTextProps) {
       },
       handlePaste: (v, event) => (propsRef.current.onChange ? false : pasteIntoBlock(ctx, propsRef.current.blockId, v, event)),
       handleDOMEvents: {
+        keydown: (v, e) => {
+          if (e.key === "Backspace" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+            syncSelection(v);
+            backspaceKeydown.set(v, { start: atStart(v), t: Date.now() });
+          }
+          return false;
+        },
         // Kéo chuột từ ô này sang khối chữ khác → chọn chữ qua nhiều khối
         // Chữ mẫu chưa sửa: nhả chuột xong mà chỉ có con trỏ (không kéo chọn) → chọn hết để gõ là thay
         mouseup: (v) => {
@@ -212,6 +219,18 @@ function syncSelection(view: EditorView | undefined): EditorState | null {
   if (!view) return null;
   (view as unknown as { domObserver?: { flush?(): void } }).domObserver?.flush?.();
   return view.state;
+}
+
+/**
+ * Backspace thật vừa bấm: con trỏ có ở đầu khối *trước khi* trình duyệt xoá không. ProseMirror (domchange.ts "Same for backspace") gọi lại
+ * handleKeyDown giả sau khi đã đọc thay đổi DOM — lúc đó chữ đầu đã bị xoá, con trỏ về 0 nên atStart() sai và nối nhầm khối trên.
+ * Có bản ghi này thì lấy "ở đầu khối" theo lúc bấm phím, không theo trạng thái sau khi xoá.
+ */
+const backspaceKeydown = new WeakMap<EditorView, { start: boolean; t: number }>();
+function backspaceAtStart(view: EditorView): boolean {
+  const rec = backspaceKeydown.get(view);
+  if (rec && Date.now() - rec.t < 400) return rec.start;
+  return atStart(view);
 }
 
 function atStart(view: EditorView) { const s = view.state.selection; return s.empty && s.from === 0; }
@@ -335,7 +354,7 @@ function richKeymap(store: EditorStore, ui: EditorUi, pr: PropsRef, keepCaret: (
       return true;
     }),
     Backspace: fresh((_s, _d, view) => {
-      if (!view || !atStart(view) || !textMode()) return false;
+      if (!view || !backspaceAtStart(view) || !textMode()) return false;
       now(() => store.mergeBackward(pr.current.blockId));
       return true;
     }),
