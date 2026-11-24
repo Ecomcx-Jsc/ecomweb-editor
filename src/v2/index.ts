@@ -25,7 +25,7 @@ export { canContain, fixTree, setStructureRule, type StructureRule } from "./cor
 export { htmlToRich, textToRich, richToHtml, BLOCKS_MIME } from "./core/clipboard";
 export { viV2, enV2, labelsV2, type V2Labels } from "./labels";
 export { registerLocale, availableLocales, type Messages } from "../i18n";
-export type { EditorHost, DocumentHost, DynamicData, DynamicPost, QueryArgs, Choice, ChoiceKind, NestedDocRef, LoadedDoc, SavedContent } from "./core/host";
+export type { EditorHost, LinkHit, DocumentHost, DynamicData, DynamicPost, QueryArgs, Choice, ChoiceKind, NestedDocRef, LoadedDoc, SavedContent } from "./core/host";
 export { MoreMenu, PreferencesModal, ShortcutsModal, CodeEditor, Breadcrumbs } from "./ui/options";
 export { PrefsStore, localPrefsStorage, usePrefs, DEFAULT_PREFS, type EditorPrefs, type PrefsStorage } from "./prefs";
 export { DocTitle } from "./ui/doc-title";

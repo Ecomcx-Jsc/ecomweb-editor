@@ -103,8 +103,8 @@ test.describe("tuỳ chọn trình soạn (menu ⋮)", () => {
     const c = await open(page);
     await clickEnd(c, "Cột trái");
     const crumbs = page.locator(".ecx-breadcrumbs");
-    await expect(crumbs).toContainText("Row Layout");
-    await crumbs.getByRole("button", { name: "Row Layout", exact: true }).first().click();
+    await expect(crumbs).toContainText("Bố cục hàng");
+    await crumbs.getByRole("button", { name: "Bố cục hàng", exact: true }).first().click();
     const st = await state(page);
     const columns = st.docs.root.blocks.find((b: { type: string }) => b.type === "columns");
     expect(st.selection.ids).toEqual([columns.id]);

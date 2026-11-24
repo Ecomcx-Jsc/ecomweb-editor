@@ -7,6 +7,7 @@ import type { EditorView } from "prosemirror-view";
 import { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { serializeBlocks } from "../core/clipboard";
+import type { LinkHit } from "../core/host";
 
 /** Khối → nội dung lưu (ContentDoc). */
 const contentFromBlocks = (blocks: BNode[]) => ({ version: CONTENT_VERSION, blocks: [{ type: "richtext", data: docFromBlocks(blocks) }] });
@@ -545,7 +546,7 @@ export function BlockContextMenu() {
 
 /** Hộp sửa liên kết của chữ đang chọn (con trỏ trong liên kết → sửa cả liên kết). */
 function LinkPopover({ viewKey, top, left, onClose }: { viewKey: string; top: number; left: number; onClose(): void }) {
-  const { labels } = useEditor();
+  const { labels, host } = useEditor();
   const view = richViews.get(viewKey);
   const range = view ? linkRange(view) : null;
   const current = range?.mark?.attrs as { href?: string; target?: string } | undefined;
@@ -553,6 +554,17 @@ function LinkPopover({ viewKey, top, left, onClose }: { viewKey: string; top: nu
   const [blank, setBlank] = useState(current?.target === "_blank");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => { input.current?.focus(); input.current?.select(); }, []);
+  // Gõ vài ký tự (không phải URL đầy đủ) → gợi ý trang / bài viết của website
+  const [hits, setHits] = useState<LinkHit[]>([]);
+  const [pick, setPick] = useState(-1);
+  const typed = href.trim();
+  const isUrl = /^(https?:|mailto:|tel:|#)/i.test(typed);
+  useEffect(() => {
+    if (!host.searchLinks || isUrl) { setHits([]); setPick(-1); return; }
+    let alive = true;
+    const h = setTimeout(() => { host.searchLinks!(typed.replace(/^\//, "")).then((r) => { if (alive) { setHits(r); setPick(-1); } }).catch(() => { if (alive) setHits([]); }); }, 220);
+    return () => { alive = false; clearTimeout(h); };
+  }, [typed, isUrl, host]);
   if (!view || !range) return null;
   const apply = () => {
     const url = href.trim();
@@ -566,7 +578,27 @@ function LinkPopover({ viewKey, top, left, onClose }: { viewKey: string; top: nu
   };
   return (
     <form className="ecx-popover ecx-link-popover" style={{ top, left }} onSubmit={(e) => { e.preventDefault(); apply(); }} onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); onClose(); view.focus(); } }}>
-      <input ref={input} className="ecx-search" type="text" inputMode="url" placeholder="https://…" value={href} onChange={(e) => setHref(e.target.value)} aria-label={labels.linkUrl} />
+      <input ref={input} className="ecx-search" type="text" inputMode="url" placeholder={host.searchLinks ? labels.linkSearchPlaceholder : "https://…"} value={href} onChange={(e) => setHref(e.target.value)} aria-label={labels.linkUrl}
+        role={host.searchLinks ? "combobox" : undefined} aria-expanded={hits.length > 0} aria-autocomplete="list"
+        onKeyDown={(e) => {
+          if (!hits.length) return;
+          if (e.key === "ArrowDown") { e.preventDefault(); setPick((i) => (i + 1) % hits.length); }
+          else if (e.key === "ArrowUp") { e.preventDefault(); setPick((i) => (i <= 0 ? hits.length - 1 : i - 1)); }
+          else if (e.key === "Enter" && pick >= 0) { e.preventDefault(); e.stopPropagation(); setHref(hits[pick].url); setHits([]); setPick(-1); }
+        }} />
+      {hits.length > 0 && (
+        <ul role="listbox" className="ecx-link-hits" style={{ listStyle: "none", margin: "4px 0 0", padding: 0, maxHeight: 220, overflowY: "auto", border: "1px solid var(--ecx-ed-line, #e2e8f0)", borderRadius: 6 }}>
+          {hits.map((h, i) => (
+            <li key={h.url + i} role="option" aria-selected={i === pick}>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); setHref(h.url); setHits([]); setPick(-1); input.current?.focus(); }}
+                style={{ display: "flex", width: "100%", gap: 8, alignItems: "baseline", padding: "6px 8px", textAlign: "left", border: 0, cursor: "pointer", background: i === pick ? "var(--ecx-ed-active, #e6eef3)" : "transparent", color: "inherit", font: "inherit" }}>
+                <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title || h.url}<span style={{ display: "block", fontSize: 11, opacity: 0.65 }}>{h.url}</span></span>
+                {h.type && <span style={{ fontSize: 11, opacity: 0.7, flex: "none" }}>{h.type}</span>}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <label className="ecx-check"><input type="checkbox" checked={blank} onChange={(e) => setBlank(e.target.checked)} /> {labels.openNewTab}</label>
       <div className="ecx-popover-actions">
         {current && <button type="button" className="ecx-btn" onClick={() => { view.dispatch(view.state.tr.removeMark(range.from, range.to, view.state.schema.marks.link)); view.focus(); onClose(); }}><Link2Off className="ecx-icon" /> {labels.unlink}</button>}

@@ -17,7 +17,7 @@ test("widget lõi có trong thư viện khối: tên theo ngôn ngữ, mô tả,
       assert.equal(b.type, name);
     }
   }
-  assert.equal(coreBlockTypes(labelsV2("vi")).find((x) => x.name === "counter")!.title, "Count Up");
+  assert.equal(coreBlockTypes(labelsV2("vi")).find((x) => x.name === "counter")!.title, "Số đếm tăng");
 });
 
 test("ô Kiểu dáng lõi có trong thuộc tính khối (danh mục AI) nhưng ẩn khỏi form Cài đặt; khối chưa khai attributes giữ mô tả CORE_NODES", () => {

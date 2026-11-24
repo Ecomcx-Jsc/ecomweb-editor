@@ -73,6 +73,7 @@ export const v2 = {
   unlink: "Bỏ liên kết",
   linkUrl: "Địa chỉ liên kết",
   openNewTab: "Mở tab mới",
+  linkSearchPlaceholder: "Gõ để tìm trang / bài viết, hoặc dán https://…",
   buttonLink: "Liên kết của nút",
   buttonsAlign: "Căn các nút",
   spaceBetween: "Dàn đều hai đầu",

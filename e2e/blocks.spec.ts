@@ -137,7 +137,7 @@ test.describe("chèn khối", () => {
     await page.keyboard.type("/tieu de");
     const pop = page.locator(".ecx-inserter-popover");
     await expect(pop).toBeVisible();
-    await expect(pop.getByRole("option").first()).toContainText("Advanced Heading");
+    await expect(pop.getByRole("option").first()).toContainText("Tiêu đề");
     await page.keyboard.press("Enter");
     await expect(pop).toBeHidden();
     await page.keyboard.type("Mới");
@@ -330,7 +330,7 @@ test.describe("kéo thả + chép dán + cây khối + cài đặt", () => {
     await page.getByRole("button", { name: "Cây khối" }).click();
     const tree = page.locator(".ecx-listview");
     await expect(tree.locator(".ecx-list-row", { hasText: "Phần dùng chung · header" })).toBeVisible();
-    await tree.locator(".ecx-list-row", { hasText: "Row Layout" }).first().click();
+    await tree.locator(".ecx-list-row", { hasText: "Bố cục hàng" }).first().click();
     const st = await state(page);
     expect(st.selection.ids).toEqual([st.docs.root.blocks.find((b: { type: string }) => b.type === "columns").id]);
     await expect(page.locator(".ecx-toolbar")).toBeVisible();

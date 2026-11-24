@@ -76,6 +76,7 @@ export const v2 = {
   buttonsAlign: "Align buttons",
   spaceBetween: "Space between",
   openNewTab: "Open in new tab",
+  linkSearchPlaceholder: "Type to search pages / posts, or paste https://…",
   apply: "Apply",
   cancel: "Cancel",
   alignLeft: "Align left",

@@ -117,7 +117,6 @@ const textTransforms = (except: string): BlockTransform[] => [
   { to: "orderedList", convert: toList("orderedList"), multiple: true },
   { to: "blockquote", convert: toQuote, multiple: true },
   { to: "codeBlock", convert: toCode, multiple: true },
-  { to: "preformatted", convert: toTextBlocks("preformatted") },
 ].filter((t) => t.to !== except || t.to === "heading");
 
 export function textBlocks(): BlockType[] {

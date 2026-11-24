@@ -6,7 +6,12 @@ import type { BNode } from "./model";
  * Mọi thứ trình soạn cần từ ứng dụng nhúng — trình soạn không gọi API của CMS nào.
  * Dự án khác chỉ cần viết lại lớp này (thư viện ảnh, chỗ lưu tài liệu lồng nhau…).
  */
+/** Kết quả tìm trang / bài viết để chèn link. */
+export interface LinkHit { title: string; url: string; /** nhãn loại nội dung (Trang, Bài viết, Sản phẩm…) */ type?: string }
+
 export interface EditorHost {
+  /** Tìm trang / bài viết của website để chèn link (gõ vài ký tự là gợi ý, như WordPress). Không có → chỉ nhập URL. `query` rỗng → các mục mới nhất. */
+  searchLinks?(query: string): Promise<LinkHit[]>;
   /** Thư viện media (không có → nhập URL). */
   media?: MediaProvider;
   /**
