@@ -1,6 +1,6 @@
 {
   "name": "@ecomcx/ecomweb-editor",
-  "version": "1.36.2",
+  "version": "1.37.0",
   "description": "Trình soạn nội dung dạng khối của CMS — dùng độc lập trong mọi dự án React (1.x: TipTap; ./v2: cây khối, khung soạn iframe, sửa header/footer tại chỗ).",
   "license": "MIT",
   "repository": {
@@ -19,7 +19,8 @@
     ".": "./src/index.ts",
     "./style.css": "./src/v2/editor.css",
     "./v2": "./src/v2/index.ts",
-    "./v2/style.css": "./src/v2/editor.css"
+    "./v2/style.css": "./src/v2/editor.css",
+    "./rich": "./src/rich/index.ts"
   },
   "files": [
     "src",
@@ -36,11 +37,15 @@
   "dependencies": {
     "lucide-react": "1.56.0",
     "prosemirror-commands": "1.7.2",
+    "prosemirror-dropcursor": "1.8.4",
+    "prosemirror-gapcursor": "1.4.1",
     "prosemirror-history": "1.5.1",
     "prosemirror-inputrules": "1.5.1",
     "prosemirror-keymap": "1.2.3",
     "prosemirror-model": "1.25.12",
+    "prosemirror-schema-list": "1.5.1",
     "prosemirror-state": "1.4.4",
+    "prosemirror-tables": "1.8.5",
     "prosemirror-transform": "1.12.3",
     "prosemirror-view": "1.42.7"
   },

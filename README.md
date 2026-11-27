@@ -40,6 +40,30 @@ const { main, others } = contentToEditor(saved);
 
 Không truyền `media` → chèn ảnh/video bằng URL.
 
+## Trình soạn văn bản HTML — `@ecomcx/ecomweb-editor/rich` (1.37)
+
+Phần **không có giao diện** của trình soạn văn bản HTML (ProseMirror, **vào / ra là chuỗi HTML**): lược đồ, chuyển HTML, lệnh, cấu hình thanh công cụ, bộ điều khiển.
+Giao diện do ứng dụng chủ dựng bằng bộ UI của nó; trong CMS đó là `RichTextEditor` của bộ UI admin (`admin/src/ui/rich-text.tsx`), plugin dùng qua `@ecomcx/ecomweb-admin-sdk` ≥ 2.11.
+
+```ts
+import { RichController, commandMap, setBlock, setLink, resolveToolbar, isKnownTool } from "@ecomcx/ecomweb-editor/rich";
+
+const ctl = new RichController(hostElement, {
+  value: html, onChange: (h) => save(h),
+  onUpdate: () => rerenderToolbar(),          // sau mỗi giao dịch (đổi vùng chọn / tài liệu)
+  onLinkShortcut: () => openLinkBox(),        // ⌘K / Ctrl+K
+});
+commandMap.bold.run(ctl.state, ctl.view.dispatch);   // lệnh dùng cho nút thanh công cụ
+ctl.sync(valueFromParent);                           // true = thay đổi thật từ ngoài đã nạp; false = bản cũ của chính mình về muộn (bỏ qua)
+```
+
+- **Lọc:** `parseHtml` / `toHtml` / `sanitizeHtml` giữ đúng lược đồ (không script, `on*`, `javascript:`, `data:`, `style` ngoài `color`, `background-color`, `text-align`). Lệnh liên kết và ảnh từ chối địa chỉ không an toàn. Nơi lưu **vẫn phải lọc lại**: danh sách thẻ cho phép phải khớp lược đồ.
+- **Thanh công cụ:** `TOOLBAR_PRESETS` (`basic` · `standard` · `full`), `resolveToolbar(spec, isKnownTool)` (danh sách id, `"|"` ngăn nhóm, hoặc `{ preset, add, remove, more }`), `resolveMore` / `DEFAULT_MORE` cho menu "Thêm công cụ". Nút riêng: `registerRichButton({ id, title, icon, run({ view, state }), isActive?, isEnabled? })`.
+- **Gõ nhanh kiểu Markdown:** `# `, `- `, `1. `, `> `, ``` ` ``` `. Phím tắt ⌘/Ctrl + B I U Z K.
+- **Đồng bộ giá trị từ ngoài:** `sync()` bỏ qua giá trị cũ về muộn do chính trình soạn vừa phát ra (React vẽ muộn khi gõ nhanh), tránh nạp lại tài liệu làm mất con trỏ.
+- `labels` (`richLabels`) có chữ tiếng Việt / tiếng Anh cho giao diện dựng ngoài.
+- Test E2E: `e2e/rich.spec.ts` chạy trên `playground/rich.html` (Chromium, Firefox, WebKit). Test giao diện nằm ở admin CMS (`admin/e2e/rich-text.spec.ts`).
+
 ## Bảng, mạng xã hội (1.13)
 
 Ứng dụng dùng Vite và tiền xử lý TipTap lồng trong gói (`optimizeDeps.include: ["@ecomcx/ecomweb-editor > @tiptap/pm/state", …]`) cần có cả `pm/view` (trình soạn tạo decoration).
